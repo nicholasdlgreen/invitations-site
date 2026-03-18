@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Upload & Print — Invitations</title>
+<style>
+/* ============================================================
+   INVITATIONS — SHARED STYLESHEET
+   All pages load this file. Edit here to change site-wide styles.
+   ============================================================ */
+
+/* ── GOOGLE FONTS ── */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;1,400&family=Cinzel:wght@400;500&family=Lora:ital,wght@0,400;1,400&family=Great+Vibes&family=Alex+Brush&display=swap');
+
+/* ── CSS VARIABLES ── */
+:root {
+  --cream:      #FAF7F2;
+  --blush:      #F0DDD8;
+  --lav:        #DDD5E8;
+  --sage:       #D1DDD0;
+  --mist:       #E8EBF0;
+  --gold:       #B8976A;
+  --gold-lt:    #D4B896;
+  --brown:      #6B4F3A;
+  --text:       #3D2E24;
+  --soft:       #7A6558;
+  --pale:       #B0A098;
+  --white:      #FFFFFF;
+  --border:     #E8DDD8;
+  --ok:         #5A9E6F;
+  --warn:       #C97B3A;
+  --err:        #C94A3A;
+}
+
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  background: var(--cream);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+.serif { font-family: 'Cormorant Garamond', serif; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp  { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes bounce  { 0%,80%,100% { transform:scale(1);opacity:.5; } 40% { transform:scale(1.4);opacity:1; } }
+
+/* ── HEADER ── */
+header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 200;
+}
+.hinner {
+  max-width: 1180px; margin: 0 auto; padding: 0 32px;
+  height: 64px; display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem; font-weight: 400; letter-spacing: .06em;
+  color: var(--text); text-decoration: none;
+}
+.logo span { color: var(--gold); }
+nav { display: flex; align-items: center; gap: 32px; }
+nav a {
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--soft); text-decoration: none; transition: color .2s;
+}
+nav a:hover, nav a.active { color: var(--gold); }
+.cart-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 22px; background: var(--gold); color: #fff;
+  border: none; font-family: 'Jost', sans-serif;
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  font-weight: 500; cursor: pointer; transition: background .2s;
+}
+.cart-btn:hover { background: var(--brown); }
+.cart-count { background: rgba(255,255,255,.25); padding: 2px 7px; font-size: 10px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 36px; background: var(--gold); color: #fff; border: none;
+  font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; font-weight: 500; cursor: pointer;
+  transition: background .2s; text-decoration: none;
+}
+.btn:hover { background: var(--brown); }
+.btn:disabled { background: var(--pale); cursor: not-allowed; }
+.btn-out {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 35px; background: transparent; color: var(--gold);
+  border: 1px solid var(--gold); font-family: 'Jost', sans-serif;
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  font-weight: 500; cursor: pointer; transition: all .2s; text-decoration: none;
+}
+.btn-out:hover { background: var(--gold); color: #fff; }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 28px; background: transparent; color: var(--soft);
+  border: 1px solid var(--border); font-family: 'Jost', sans-serif;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer; transition: all .2s; text-decoration: none;
+}
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.spin-el {
+  width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .7s linear infinite; display: none; flex-shrink: 0;
+}
+.spin-el.on { display: inline-block; }
+
+/* ── LAYOUT ── */
+.container { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+.section { padding: 90px 0; }
+.tag { font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 14px; display: block; }
+.section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem,3.5vw,3rem); font-weight: 400; line-height: 1.2; color: var(--text); }
+.divider { width: 48px; height: 1px; background: var(--gold-lt); margin: 20px 0; }
+.section-sub { font-size: 14px; color: var(--soft); max-width: 520px; line-height: 1.9; }
+.centered { text-align: center; }
+.centered .divider { margin: 20px auto; }
+
+/* ── FORMS ── */
+.form-row { margin-bottom: 20px; }
+.form-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); display: block; margin-bottom: 8px; font-weight: 400; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 12px 16px; border: 1px solid var(--border);
+  background: var(--white); font-family: 'Jost', sans-serif;
+  font-size: 13px; font-weight: 300; color: var(--text);
+  outline: none; transition: border-color .2s; appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--gold-lt); }
+.form-textarea { resize: vertical; min-height: 90px; line-height: 1.7; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.hint { font-size: 11px; color: var(--pale); margin-top: 7px; line-height: 1.6; }
+.field-group { margin-bottom: 20px; }
+.field-group.error .form-input { border-color: var(--err); }
+
+/* ── CARD ── */
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  padding: 28px; margin-bottom: 20px;
+}
+.card h3 {
+  font-family: 'Cormorant Garamond', serif; font-size: 1.25rem;
+  font-weight: 400; margin-bottom: 22px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--border);
+}
+
+/* ── COLLECTION CARDS ── */
+.col-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 48px; }
+.col-card { background: var(--white); border: 1px solid var(--border); cursor: pointer; transition: all .3s; overflow: hidden; }
+.col-card:hover { box-shadow: 0 16px 48px rgba(61,46,36,.1); transform: translateY(-4px); }
+.col-img { height: 320px; display: flex; align-items: center; justify-content: center; }
+.col-img-inner { width: 130px; height: 180px; border: 1.5px solid currentColor; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; text-align: center; transition: transform .3s; }
+.col-card:hover .col-img-inner { transform: scale(1.03); }
+.col-body { padding: 24px; }
+.col-name { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 400; margin-bottom: 6px; }
+.col-desc { font-size: 12px; color: var(--soft); line-height: 1.7; margin-bottom: 14px; }
+.col-price { font-size: 13px; color: var(--gold); letter-spacing: .06em; }
+.col-price span { font-size: 11px; color: var(--pale); }
+
+/* ── FOOTER ── */
+footer { background: var(--text); color: rgba(255,255,255,.6); padding: 60px 0 32px; }
+.footer-inner { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+.footer-top { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+.footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 400; color: #fff; margin-bottom: 12px; }
+.footer-logo span { color: var(--gold); }
+.footer-tagline { font-size: 12px; line-height: 1.8; color: rgba(255,255,255,.5); }
+.footer-col h5 { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 16px; font-weight: 500; }
+.footer-col a { display: block; font-size: 12px; color: rgba(255,255,255,.5); text-decoration: none; margin-bottom: 8px; transition: color .2s; }
+.footer-col a:hover { color: var(--gold-lt); }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+
+/* ── MODAL ── */
+.modal-bg { position: fixed; inset: 0; background: rgba(61,46,36,.5); z-index: 500; display: none; align-items: center; justify-content: center; padding: 24px; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--white); max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal-head { padding: 28px 32px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; }
+.modal-head h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400; }
+.modal-close { background: none; border: none; font-size: 20px; color: var(--pale); cursor: pointer; line-height: 1; padding: 4px; }
+.modal-body { padding: 28px 32px; }
+
+/* ── CART DRAWER ── */
+.cart-bg { position: fixed; inset: 0; background: rgba(61,46,36,.4); z-index: 400; display: none; }
+.cart-bg.open { display: block; }
+.cart-drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 420px; background: var(--white); z-index: 401; transform: translateX(100%); transition: transform .35s ease; display: flex; flex-direction: column; }
+.cart-drawer.open { transform: translateX(0); }
+.cart-head { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.cart-head h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; }
+.cart-scroll { flex: 1; overflow-y: auto; padding: 20px 28px; }
+.cart-item { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.cart-item-img { width: 60px; height: 80px; background: var(--cream); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
+.cart-item-info { flex: 1; }
+.cart-item-name { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 400; margin-bottom: 4px; }
+.cart-item-meta { font-size: 11px; color: var(--soft); margin-bottom: 8px; }
+.cart-item-price { font-size: 13px; color: var(--gold); }
+.cart-remove { background: none; border: none; font-size: 18px; color: var(--pale); cursor: pointer; padding: 4px; }
+.cart-foot { padding: 20px 28px; border-top: 1px solid var(--border); }
+.cart-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+.cart-row.vat { font-size: 11px; color: var(--soft); }
+.cart-row.total { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; margin-bottom: 20px; padding-top: 12px; border-top: 1px solid var(--border); }
+.cart-empty { text-align: center; padding: 60px 20px; color: var(--pale); }
+
+/* ── STATUS PILLS (admin) ── */
+.pill { display: inline-block; padding: 3px 10px; border-radius: 2px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; }
+.pill-new        { background: var(--blush);  color: var(--brown); }
+.pill-proof      { background: #FDF4E7; color: #C97B3A; }
+.pill-printing   { background: #EAF2EA; color: #5A9E6F; }
+.pill-dispatched { background: #EAF0F7; color: #4A7FAA; }
+.pill-delivered  { background: #EAEAEA; color: #888; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .col-grid        { grid-template-columns: 1fr 1fr; }
+  .footer-top      { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .hinner nav      { display: none; }
+  .grid-2          { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .col-grid { grid-template-columns: 1fr; }
+  .footer-top { grid-template-columns: 1fr; }
+}
+
+
+/* ── ROUNDED STYLE GUIDE ── */
+.btn {
+  display:inline-flex;align-items:center;gap:8px;
+  padding:15px 38px;background:var(--gold);color:#fff;border:none;
+  font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;font-weight:500;cursor:pointer;
+  transition:background .25s,box-shadow .25s;text-decoration:none;
+  border-radius:60px;box-shadow:0 4px 18px rgba(184,151,106,.25);
+}
+.btn:hover { background:var(--brown);box-shadow:0 6px 24px rgba(107,79,58,.3); }
+.btn:disabled { background:var(--pale);cursor:not-allowed;box-shadow:none; }
+.btn-out {
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 37px;background:transparent;color:var(--gold);
+  border:1px solid var(--gold);font-family:'Jost',sans-serif;
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:500;cursor:pointer;transition:all .25s;text-decoration:none;
+  border-radius:60px;
+}
+.btn-out:hover { background:var(--gold);color:#fff;box-shadow:0 6px 24px rgba(184,151,106,.25); }
+.cart-btn {
+  display:flex;align-items:center;gap:8px;padding:10px 22px;
+  background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:500;cursor:pointer;transition:background .25s;border-radius:60px;
+}
+.cart-btn:hover { background:var(--brown); }
+.cart-count { background:rgba(255,255,255,.25);padding:2px 8px;font-size:10px;border-radius:20px; }
+
+/* ── UPLOAD PAGE ── */
+.upload-wrap { max-width:760px;margin:0 auto;padding:64px 32px 100px; }
+.step-bar { display:flex;align-items:center;gap:0;margin-bottom:56px; }
+.step-item { display:flex;align-items:center;gap:12px;flex:1; }
+.step-item:last-child { flex:0; }
+.step-num {
+  width:32px;height:32px;border-radius:50%;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--pale);font-weight:500;flex-shrink:0;
+  transition:all .3s;background:var(--white);
+}
+.step-num.active { border-color:var(--gold);color:var(--gold); }
+.step-num.done { background:var(--gold);border-color:var(--gold);color:#fff; }
+.step-label { font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);transition:color .3s; }
+.step-label.active { color:var(--text); }
+.step-line { flex:1;height:1px;background:var(--border);margin:0 16px; }
+
+/* ── DROP ZONE ── */
+.drop-zone {
+  border:1.5px dashed var(--border);border-radius:24px;
+  padding:72px 40px;text-align:center;cursor:pointer;
+  transition:all .3s;background:var(--white);position:relative;
+}
+.drop-zone:hover,.drop-zone.drag-over {
+  border-color:var(--gold);background:rgba(184,151,106,.04);
+}
+.drop-icon { font-size:36px;margin-bottom:20px;display:block;color:var(--pale); }
+.drop-title { font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;margin-bottom:10px;color:var(--text); }
+.drop-sub { font-size:13px;color:var(--soft);line-height:1.8;margin-bottom:28px; }
+.drop-formats { font-size:11px;color:var(--pale);letter-spacing:.06em; }
+#fileInput { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+
+/* ── CHECK RESULTS ── */
+.check-card {
+  background:var(--white);border:1px solid var(--border);
+  border-radius:20px;padding:32px;margin-bottom:16px;
+}
+.check-card h3 { font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:20px;color:var(--text); }
+.check-row { display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border); }
+.check-row:last-child { border-bottom:none;padding-bottom:0; }
+.check-icon { width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px; }
+.check-icon.ok { background:#EAF4EE;color:#5A9E6F; }
+.check-icon.warn { background:#FDF4E7;color:#C97B3A; }
+.check-icon.err { background:#FCEAEA;color:#C94A3A; }
+.check-icon.info { background:#EAF0F7;color:#4A7FAA; }
+.check-label { font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:4px; }
+.check-val { font-size:14px;color:var(--text);font-weight:400; }
+.check-note { font-size:12px;color:var(--soft);margin-top:3px;line-height:1.6; }
+
+/* ── PAPER SELECTOR ── */
+.paper-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px; }
+.paper-opt {
+  border:1.5px solid var(--border);border-radius:16px;padding:20px 18px;
+  cursor:pointer;transition:all .25s;text-align:center;background:var(--white);
+}
+.paper-opt:hover { border-color:var(--gold-lt); }
+.paper-opt.selected { border-color:var(--gold);background:rgba(184,151,106,.04); }
+.paper-opt .paper-name { font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:400;margin-bottom:4px;color:var(--text); }
+.paper-opt .paper-sub { font-size:11px;color:var(--soft);line-height:1.6;margin-bottom:8px; }
+.paper-opt .paper-price { font-size:12px;color:var(--gold); }
+
+/* ── QTY ── */
+.qty-row { display:flex;align-items:center;gap:16px;margin-top:16px; }
+.qty-btn { width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--soft);transition:all .2s; }
+.qty-btn:hover { border-color:var(--gold);color:var(--gold); }
+.qty-val { font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;min-width:48px;text-align:center; }
+.qty-label { font-size:12px;color:var(--soft); }
+
+/* ── PRICE SUMMARY ── */
+.price-strip { background:var(--cream);border-radius:16px;padding:24px 28px;margin-top:24px; }
+.price-row { display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;color:var(--soft); }
+.price-row.total { font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--text);font-weight:400;margin-bottom:0;padding-top:12px;border-top:1px solid var(--border);margin-top:8px; }
+
+/* ── HIDDEN ── */
+.hidden { display:none!important; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hinner">
+    <a class="logo" href="index.html">Invita<span>tions</span></a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="upload.html" class="active">Upload & Print</a>
+      <a href="studio.html">Design Studio</a>
+      <a href="tracking.html">Track Order</a>
+    </nav>
+    <button class="cart-btn" onclick="openCart()">
+      Basket <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- CART DRAWER -->
+<div class="cart-bg" id="cartBg" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-head">
+    <h3 class="serif">Your Basket</h3>
+    <button class="modal-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-scroll" id="cartScroll"></div>
+  <div class="cart-foot" id="cartFoot" style="display:none">
+    <div class="cart-row"><span>Subtotal (excl. VAT)</span><span id="cartNet">£0.00</span></div>
+    <div class="cart-row vat"><span>VAT (20%)</span><span id="cartVat">£0.00</span></div>
+    <div class="cart-row total serif"><span>Total</span><span id="cartTotal">£0.00</span></div>
+    <a class="btn" style="width:100%;justify-content:center;" href="checkout.html">Proceed to Checkout</a>
+  </div>
+</div>
+
+<!-- PAGE -->
+<div style="background:var(--cream);min-height:100vh;padding-top:0;">
+<div class="upload-wrap">
+
+  <!-- PAGE TITLE -->
+  <div style="text-align:center;margin-bottom:52px;">
+    <span class="tag centered">Upload & Print</span>
+    <h1 class="serif" style="font-size:clamp(2.2rem,4vw,3.2rem);font-weight:300;line-height:1.15;margin-bottom:14px;">Your design, beautifully printed.</h1>
+    <p style="font-size:14px;color:var(--soft);max-width:460px;margin:0 auto;line-height:1.9;">Upload your artwork and we handle everything from here — quality checked, printed on premium paper and delivered to your door.</p>
+  </div>
+
+  <!-- STEP BAR -->
+  <div class="step-bar">
+    <div class="step-item">
+      <div class="step-num active" id="sn1">1</div>
+      <div class="step-label active" id="sl1">Upload</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-num" id="sn2">2</div>
+      <div class="step-label" id="sl2">File Check</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-num" id="sn3">3</div>
+      <div class="step-label" id="sl3">Paper & Quantity</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-num" id="sn4">4</div>
+      <div class="step-label" id="sl4">Checkout</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: UPLOAD -->
+  <div id="step1">
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".pdf,.ai,.indd,.jpg,.jpeg,.png,.tif,.tiff,.eps" onchange="handleFile(this.files[0])"/>
+      <div style="width:72px;height:72px;border-radius:50%;background:rgba(184,151,106,.1);border:1.5px solid var(--gold-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B8976A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="drop-title">Upload your artwork</div>
+      <p class="drop-sub">Drag and drop your file here, or click to browse.<br>We accept most professional print formats.</p>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:1px solid var(--gold);border-radius:60px;color:var(--gold);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;margin-bottom:24px;transition:all .2s;" onmouseover="this.style.background='rgba(184,151,106,.08)'" onmouseout="this.style.background=''">
+        Click to choose a file
+      </div>
+      <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+        <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">PDF</span>
+        <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">AI</span>
+        <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">InDesign</span>
+        <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">PNG</span>
+        <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">JPG</span>
+        <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">TIFF</span>
+      </div>
+      <div class="drop-formats">Maximum file size 100MB · Colour mode: CMYK preferred</div>
+    </div>
+
+    <!-- What we check -->
+    <div style="margin-top:40px;background:var(--white);border-radius:20px;padding:32px;border:1px solid var(--border);">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;margin-bottom:20px;color:var(--text);">What we check before printing</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Resolution & Quality</div>
+            <div style="font-size:12px;color:var(--soft);line-height:1.7;">We check your file is at least 300 DPI for crisp, professional printing.</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Dimensions & Bleed</div>
+            <div style="font-size:12px;color:var(--soft);line-height:1.7;">We verify your artwork is the correct size and has sufficient bleed for trimming.</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Colour Mode</div>
+            <div style="font-size:12px;color:var(--soft);line-height:1.7;">CMYK files are print-ready. We will flag RGB files before converting.</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">File Format</div>
+            <div style="font-size:12px;color:var(--soft);line-height:1.7;">We confirm your file type is compatible with our print process before proceeding.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: FILE CHECK -->
+  <div id="step2" class="hidden">
+    <div class="check-card">
+      <h3>Checking your file…</h3>
+      <div id="checkResults"></div>
+    </div>
+    <div id="checkActions" class="hidden" style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+      <button class="btn" onclick="goStep(3)" id="proceedBtn">Continue to Paper & Quantity</button>
+      <button class="btn-out" onclick="goStep(1)">Upload a Different File</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: PAPER & QUANTITY -->
+  <div id="step3" class="hidden">
+
+    <!-- File summary -->
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:24px 28px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">✦</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:500;color:var(--text);" id="fileSummaryName">your-design.pdf</div>
+        <div style="font-size:12px;color:var(--soft);margin-top:2px;" id="fileSummaryMeta">File ready for print</div>
+      </div>
+      <button onclick="goStep(1)" style="font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;">Change</button>
+    </div>
+
+    <!-- Paper selection -->
+    <div class="check-card">
+      <h3>Choose your paper</h3>
+      <div class="paper-grid" id="paperGrid"></div>
+    </div>
+
+    <!-- Quantity -->
+    <div class="check-card">
+      <h3>How many invitations?</h3>
+      <p style="font-size:13px;color:var(--soft);margin-bottom:4px;line-height:1.8;">We print in multiples of 25. We recommend ordering a few extras — it is much harder to reprint a small batch later.</p>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="adjQty(-25)">−</button>
+        <div class="qty-val" id="qtyVal">50</div>
+        <button class="qty-btn" onclick="adjQty(25)">+</button>
+        <span class="qty-label">invitations</span>
+      </div>
+      <div class="price-strip">
+        <div class="price-row"><span>Paper upgrade</span><span id="priceUpgrade">£0.00</span></div>
+        <div class="price-row"><span>Subtotal (excl. VAT)</span><span id="priceNet">£0.00</span></div>
+        <div class="price-row"><span>VAT (20%)</span><span id="priceVat">£0.00</span></div>
+        <div class="price-row total"><span>Total</span><span id="priceTotal">£0.00</span></div>
+      </div>
+      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+        <button class="btn" onclick="addToCartAndCheckout()">Add to Basket</button>
+        <button class="btn-out" onclick="goStep(2)">Back</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">Invita<span>tions</span></div>
+        <p class="footer-tagline">Luxury wedding stationery crafted with care for couples who believe every detail matters.</p>
+      </div>
+      <div class="footer-col"><h5>Get Started</h5><a href="upload.html">Upload & Print</a><a href="studio.html">Design Studio</a></div>
+      <div class="footer-col"><h5>Help</h5><a href="tracking.html">Track Order</a><a href="#">FAQs</a><a href="#">Delivery Info</a></div>
+      <div class="footer-col"><h5>Legal</h5><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Invitations. All rights reserved. Prices include 20% VAT.</span>
+      <span>Made with love in the UK 🇬🇧</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+//  INVITATIONS — SITE CONFIGURATION
+//  Edit this file to update products, prices, copy and colours.
+//  Changes here reflect across the whole site automatically.
+// ============================================================
+
+const SITE_CONFIG = {
+
+  // ── BRAND ──────────────────────────────────────────────
+  brand: {
+    name:    'Invitations',
+    tagline: 'Luxury Wedding Stationery',
+    email:   'hello@invitations.co.uk',
+    phone:   '',
+    address: 'United Kingdom',
+  },
+
+  // ── COLOURS ────────────────────────────────────────────
+  // These feed the CSS variables used across every page.
+  colours: {
+    cream:      '#FAF7F2',
+    blush:      '#F0DDD8',
+    lavender:   '#DDD5E8',
+    sage:       '#D1DDD0',
+    mist:       '#E8EBF0',
+    gold:       '#B8976A',
+    goldLight:  '#D4B896',
+    brown:      '#6B4F3A',
+    text:       '#3D2E24',
+    textSoft:   '#7A6558',
+    textPale:   '#B0A098',
+    white:      '#FFFFFF',
+    border:     '#E8DDD8',
+  },
+
+  // ── HOMEPAGE COPY ───────────────────────────────────────
+  hero: {
+    eyebrow:  'Luxury Wedding Stationery',
+    heading:  'Where Every Detail Tells Your Story',
+    subtext:  'Handcrafted invitation suites for the modern romantic. Printed on the finest papers, delivered with care.',
+    cta1:     'Explore Collections',
+    cta2:     'Design Your Own',
+  },
+
+  // ── PRODUCTS ───────────────────────────────────────────
+  // To add a product: copy one block, change the id and details.
+  // To remove: delete the block.
+  // Prices are in GBP including 20% VAT, per 50 invitations.
+  products: [
+    {
+      id:          'margaux',
+      name:        'The Margaux Suite',
+      style:       'Classic · Foil Detail',
+      price:       185,
+      description: 'Timeless elegance on 400gsm cotton-rag with gold foil lettering and a blush envelope liner. A perennial favourite.',
+      icon:        '✦',
+      background:  '#F5EDE6',
+      textColour:  '#3D2E24',
+      featured:    true,
+    },
+    {
+      id:          'orchard',
+      name:        'The Orchard Suite',
+      style:       'Botanical · Watercolour',
+      price:       215,
+      description: 'Delicate botanical watercolour illustrations framing your details. Printed on textured 350gsm ivory stock.',
+      icon:        '🌿',
+      background:  '#E8EFF0',
+      textColour:  '#2A3D35',
+      featured:    true,
+    },
+    {
+      id:          'arch',
+      name:        'The Arch Suite',
+      style:       'Modern · Letterpress',
+      price:       235,
+      description: 'Bold arched typography with deep letterpress impression. A striking, contemporary choice.',
+      icon:        '◯',
+      background:  '#E8E4EE',
+      textColour:  '#2E2A3D',
+      featured:    true,
+    },
+    {
+      id:          'eden',
+      name:        'The Eden Suite',
+      style:       'Romantic · Pressed Foil',
+      price:       195,
+      description: 'Soft peonies and eucalyptus entwined with rose gold foil. Romance in every detail.',
+      icon:        '🌸',
+      background:  '#F0DDD8',
+      textColour:  '#3D2E24',
+      featured:    false,
+    },
+    {
+      id:          'grove',
+      name:        'The Grove Suite',
+      style:       'Minimalist · Engraved',
+      price:       175,
+      description: 'Clean geometric lines and deep engraving on smooth white 300gsm. Less is more.',
+      icon:        '□',
+      background:  '#EAEAEA',
+      textColour:  '#2A2A2A',
+      featured:    false,
+    },
+    {
+      id:          'soleil',
+      name:        'The Soleil Suite',
+      style:       'Art Deco · Gold',
+      price:       250,
+      description: 'Sunburst motifs and art deco flourishes with 24ct gold foil on black card.',
+      icon:        '☀',
+      background:  '#1C1C1C',
+      textColour:  '#D4B896',
+      featured:    false,
+    },
+  ],
+
+  // ── PAPER STOCKS ───────────────────────────────────────
+  papers: [
+    { id: 'smooth', name: 'Smooth White',   subtitle: '300gsm · Crisp & classic',  priceExtra: 0  },
+    { id: 'cotton', name: 'Cotton Rag',     subtitle: '400gsm · Luxury feel',      priceExtra: 20 },
+    { id: 'vellum', name: 'Vellum Overlay', subtitle: 'Translucent · Ethereal',    priceExtra: 35 },
+  ],
+
+  // ── BASE PRICING ───────────────────────────────────────
+  pricing: {
+    basePerFifty:  150,   // £ excl. VAT per 50 invitations (before paper upgrade)
+    vatRate:       0.20,  // 20% UK VAT
+    minQty:        25,
+    qtyStep:       25,
+  },
+
+  // ── DELIVERY ───────────────────────────────────────────
+  delivery: [
+    { id: 'standard', name: 'Standard',  subtitle: '5–7 working days', price: 0,    note: 'Free on all orders' },
+    { id: 'express',  name: 'Express',   subtitle: '2–3 working days', price: 12,   note: 'inc. VAT' },
+    { id: 'next',     name: 'Next Day',  subtitle: 'Order before 12pm', price: 18,  note: 'inc. VAT' },
+  ],
+
+  // ── PROCESS STEPS ──────────────────────────────────────
+  process: [
+    { num: '01', title: 'Browse & Select',  desc: 'Explore our curated collections and choose the suite that captures your vision.' },
+    { num: '02', title: 'Personalise',      desc: 'Share your names, date, venue and wording. Choose your paper and finishing touches.' },
+    { num: '03', title: 'Proof & Approve',  desc: 'Receive a digital proof within 3 business days. We refine until every detail is right.' },
+    { num: '04', title: 'Print & Deliver',  desc: 'Lovingly printed, quality-checked and shipped directly to your door via DPD.' },
+  ],
+
+  // ── TESTIMONIALS ───────────────────────────────────────
+  testimonials: [
+    {
+      quote:  'Absolutely breathtaking. Every guest commented on how beautiful our invitations were. Worth every penny.',
+      author: 'Charlotte & James',
+      date:   'Married June 2024',
+    },
+    {
+      quote:  'The design studio was so intuitive. We created exactly what we had in our minds and it came out perfectly.',
+      author: 'Amelia & Oliver',
+      date:   'Married August 2024',
+    },
+    {
+      quote:  'From ordering to delivery, the whole experience was luxurious. Our guests thought we had hired a designer.',
+      author: 'Isabella & William',
+      date:   'Married September 2024',
+    },
+  ],
+
+  // ── DESIGN STUDIO TEMPLATES ────────────────────────────
+  designTemplates: [
+    { id: 'classic',   name: 'Classic Border',   desc: 'Double-line border with ornamental details' },
+    { id: 'arch',      name: 'Arch Frame',        desc: 'Romantic arched panel with soft curves' },
+    { id: 'botanical', name: 'Botanical Wreath',  desc: 'Floral corner motifs with oval surround' },
+    { id: 'minimal',   name: 'Minimal Line',      desc: 'Single hairline rules, clean and refined' },
+    { id: 'deco',      name: 'Art Deco',          desc: 'Geometric frame with corner flourishes' },
+    { id: 'romantic',  name: 'Romantic Oval',     desc: 'Soft oval border with delicate accents' },
+  ],
+
+  // ── TEXT COLOUR SWATCHES ───────────────────────────────
+  textColours: [
+    { hex: '#3D2E24', name: 'Espresso'  },
+    { hex: '#1C1C1C', name: 'Midnight'  },
+    { hex: '#2C3E50', name: 'Navy'      },
+    { hex: '#2E4A3E', name: 'Forest'    },
+    { hex: '#4A3728', name: 'Chocolate' },
+    { hex: '#5C4A6E', name: 'Plum'      },
+    { hex: '#6B4F3A', name: 'Brown'     },
+    { hex: '#7A6558', name: 'Taupe'     },
+    { hex: '#8B7355', name: 'Warm Grey' },
+    { hex: '#4A5568', name: 'Slate'     },
+    { hex: '#C97B3A', name: 'Copper'    },
+    { hex: '#B8976A', name: 'Gold'      },
+  ],
+
+  // ── BORDER COLOUR SWATCHES ────────────────────────────
+  borderColours: [
+    { hex: '#B8976A', name: 'Gold'      },
+    { hex: '#C9A96E', name: 'Champagne' },
+    { hex: '#D4B896', name: 'Warm Gold' },
+    { hex: '#C0A882', name: 'Antique'   },
+    { hex: '#B87333', name: 'Copper'    },
+    { hex: '#A8C4B8', name: 'Sage'      },
+    { hex: '#D4A5A5', name: 'Blush'     },
+    { hex: '#B5A8D0', name: 'Lavender'  },
+    { hex: '#8FB8AD', name: 'Mint'      },
+    { hex: '#C4A882', name: 'Sand'      },
+    { hex: '#1C1C1C', name: 'Black'     },
+    { hex: '#7A8FA6', name: 'Steel'     },
+  ],
+
+  // ── DEMO TRACKING ORDERS ──────────────────────────────
+  // Remove these when you go live
+  demoOrders: {
+    'INV-2025-5678': {
+      email:  'charlotte@example.com',
+      name:   'Charlotte Thornton',
+      suite:  'The Margaux Suite',
+      qty:    75,
+      total:  '£277.50',
+      date:   '12 Nov 2024',
+      status: 'dispatched',
+      dpd:    'DPD1234567890',
+      stages: [
+        { name: 'Order Received',  desc: 'Your order was received and confirmed.',           date: '12 Nov 2024', done: true  },
+        { name: 'Design Approved', desc: 'Your digital proof was approved.',                 date: '14 Nov 2024', done: true  },
+        { name: 'Printing',        desc: 'Your invitations have been printed.',              date: '16 Nov 2024', done: true  },
+        { name: 'Dispatched',      desc: 'Dispatched via DPD. Tracking: DPD1234567890',     date: '19 Nov 2024', done: true, active: true },
+        { name: 'Delivered',       desc: 'Estimated delivery: 20–21 Nov 2024',              date: '—',           done: false },
+      ],
+    },
+    'INV-2025-9012': {
+      email:  'amelia@example.com',
+      name:   'Amelia Harrison',
+      suite:  'The Eden Suite',
+      qty:    50,
+      total:  '£195.00',
+      date:   '2 Dec 2024',
+      status: 'proof',
+      stages: [
+        { name: 'Order Received',  desc: 'Your order was received and confirmed.',           date: '2 Dec 2024',  done: true  },
+        { name: 'Design Approved', desc: 'Your digital proof has been sent to your inbox.',  date: '3 Dec 2024',  done: false, active: true },
+        { name: 'Printing',        desc: 'Will begin after proof approval.',                 done: false },
+        { name: 'Dispatched',      desc: 'Pending.',                                         done: false },
+        { name: 'Delivered',       desc: 'Pending.',                                         done: false },
+      ],
+    },
+  },
+
+  // ── ADMIN ─────────────────────────────────────────────
+  admin: {
+    username: 'admin',
+    password: 'invitations2025',  // Change before going live!
+  },
+
+  // ── STRIPE ────────────────────────────────────────────
+  stripe: {
+    publishableKey: 'pk_test_51TCFRRC3QRnCbN5msu0EUKnTNyFg4xKmYigz10VedpcPiGtowvuYHxNu4er5VoQ19K8tdaoN6FLriWhWHMH6E0hu00mTmj4IPN',
+  },
+
+};
+
+</script>
+<script>
+// ============================================================
+//  INVITATIONS — SHARED CART
+//  Loaded on every page. Persists cart in sessionStorage.
+// ============================================================
+
+let cart = JSON.parse(sessionStorage.getItem('inv_cart') || '[]');
+
+function saveCart()   { sessionStorage.setItem('inv_cart', JSON.stringify(cart)); }
+function updateCartBadge() {
+  document.querySelectorAll('#cartCount,.cart-count').forEach(el => el.textContent = cart.length);
+}
+
+function addToCart(item) {
+  cart.push(item);
+  saveCart();
+  updateCartBadge();
+}
+
+function removeCartItem(i) {
+  cart.splice(i, 1);
+  saveCart();
+  updateCartBadge();
+  renderCartDrawer();
+}
+
+function openCart() {
+  renderCartDrawer();
+  document.getElementById('cartBg')?.classList.add('open');
+  document.getElementById('cartDrawer')?.classList.add('open');
+}
+
+function closeCart() {
+  document.getElementById('cartBg')?.classList.remove('open');
+  document.getElementById('cartDrawer')?.classList.remove('open');
+}
+
+function renderCartDrawer() {
+  const scroll = document.getElementById('cartScroll');
+  const foot   = document.getElementById('cartFoot');
+  if (!scroll) return;
+  if (!cart.length) {
+    scroll.innerHTML = `<div class="cart-empty">
+      <div style="font-size:40px;margin-bottom:16px;">✦</div>
+      <p style="font-size:13px;color:var(--pale);">Your basket is empty</p>
+      <a href="shop.html" style="font-size:12px;color:var(--gold);margin-top:12px;display:block;">Browse collections →</a>
+    </div>`;
+    if (foot) foot.style.display = 'none';
+    return;
+  }
+  scroll.innerHTML = cart.map((item, i) => `
+    <div class="cart-item">
+      <div class="cart-item-img" style="background:${item.bg||'var(--cream)'};color:${item.tc||'var(--text)'};">${item.icon||'✦'}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name serif">${item.name}</div>
+        <div class="cart-item-meta">${item.qty} invitations · ${item.paper||'Smooth White'}</div>
+        <div class="cart-item-price">£${item.total.toFixed(2)}</div>
+      </div>
+      <button class="cart-remove" onclick="removeCartItem(${i})">✕</button>
+    </div>`).join('');
+  const sub = cart.reduce((s, i) => s + i.total, 0);
+  const vat = sub - sub / 1.2;
+  if (document.getElementById('cartNet'))   document.getElementById('cartNet').textContent   = '£' + (sub/1.2).toFixed(2);
+  if (document.getElementById('cartVat'))   document.getElementById('cartVat').textContent   = '£' + vat.toFixed(2);
+  if (document.getElementById('cartTotal')) document.getElementById('cartTotal').textContent = '£' + sub.toFixed(2);
+  if (foot) foot.style.display = 'block';
+}
+
+// Init badge on page load
+updateCartBadge();
+
+</script>
+<script>
+// ── STATE ──
+let currentFile = null;
+let currentStep = 1;
+let selectedPaper = 'smooth';
+let qty = 50;
+let checksPassed = true;
+
+// ── STEP NAVIGATION ──
+function goStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('step'+i)?.classList.add('hidden');
+    document.getElementById('sn'+i).className = 'step-num' + (i < n ? ' done' : i === n ? ' active' : '');
+    document.getElementById('sl'+i).className = 'step-label' + (i === n ? ' active' : '');
+  });
+  document.getElementById('step'+n)?.classList.remove('hidden');
+  currentStep = n;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── DRAG & DROP ──
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+// ── FILE HANDLING ──
+function handleFile(file) {
+  if (!file) return;
+  currentFile = file;
+  goStep(2);
+  checkFile(file);
+}
+
+function checkFile(file) {
+  const results = document.getElementById('checkResults');
+  results.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:16px 0;color:var(--soft);font-size:13px;"><div style="width:16px;height:16px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div>Checking your file…</div>';
+  document.getElementById('checkActions').classList.add('hidden');
+
+  setTimeout(() => {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    checksPassed = true;
+
+    const checks = [];
+
+    // File type check
+    const printFormats = ['pdf','ai','indd','eps','tif','tiff'];
+    const imageFormats = ['jpg','jpeg','png'];
+    const isProFormat = printFormats.includes(ext);
+    const isImage = imageFormats.includes(ext);
+    const isValid = isProFormat || isImage;
+
+    if (isProFormat) {
+      checks.push({ status:'ok', label:'File Format', val: ext.toUpperCase() + ' file', note:'Professional print format — ideal.' });
+    } else if (isImage) {
+      checks.push({ status:'warn', label:'File Format', val: ext.toUpperCase() + ' file', note:'Image files are accepted. For best results, supply a PDF or AI file at 300 DPI or above.' });
+    } else {
+      checks.push({ status:'err', label:'File Format', val: ext.toUpperCase() + ' — not supported', note:'Please upload a PDF, AI, InDesign, TIFF, PNG or JPG file.' });
+      checksPassed = false;
+    }
+
+    // File size
+    if (file.size > 100 * 1024 * 1024) {
+      checks.push({ status:'err', label:'File Size', val: sizeMB + ' MB', note:'Maximum file size is 100MB. Please compress your file and try again.' });
+      checksPassed = false;
+    } else if (file.size < 0.1 * 1024 * 1024) {
+      checks.push({ status:'warn', label:'File Size', val: sizeMB + ' MB', note:'This file is very small. It may not contain enough detail for high-quality printing.' });
+    } else {
+      checks.push({ status:'ok', label:'File Size', val: sizeMB + ' MB', note:'File size looks good.' });
+    }
+
+    // For images, check resolution via canvas
+    if (isImage && isValid) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        // A5 at 300dpi = 1748 x 2480px
+        const minDim = Math.min(w, h);
+        let resStatus = 'ok', resNote = '';
+        if (minDim < 1000) {
+          resStatus = 'err'; resNote = 'Resolution is too low for print quality. Please supply an image of at least 1748 × 2480px (A5 at 300 DPI).';
+          checksPassed = false;
+        } else if (minDim < 1748) {
+          resStatus = 'warn'; resNote = 'Resolution may be marginal for larger print sizes. For best results, aim for 1748 × 2480px or above.';
+        } else {
+          resNote = 'Resolution looks good for print.';
+        }
+        checks.push({ status: resStatus, label: 'Dimensions', val: w + ' × ' + h + ' px', note: resNote });
+
+        // Colour mode — we can't detect from browser, so flag for review
+        checks.push({ status:'info', label:'Colour Mode', val:'To be confirmed', note:'We will check your colour profile when we receive the file. CMYK is preferred for accurate colour reproduction.' });
+
+        renderChecks(checks);
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    } else {
+      // PDF/vector — can't inspect in browser
+      checks.push({ status:'info', label:'Dimensions', val:'Confirmed on receipt', note:'We will verify dimensions, bleed and margins when we receive your file and confirm before printing.' });
+      checks.push({ status:'info', label:'Colour Mode', val:'Confirmed on receipt', note:'We will check your colour profile on receipt. CMYK is preferred for accurate colour reproduction.' });
+      renderChecks(checks);
+    }
+  }, 1200);
+}
+
+function renderChecks(checks) {
+  const icons = { ok:'✓', warn:'!', err:'✕', info:'i' };
+  document.getElementById('checkResults').innerHTML = checks.map(c => `
+    <div class="check-row">
+      <div class="check-icon ${c.status}">${icons[c.status]}</div>
+      <div>
+        <div class="check-label">${c.label}</div>
+        <div class="check-val">${c.val}</div>
+        ${c.note ? `<div class="check-note">${c.note}</div>` : ''}
+      </div>
+    </div>`).join('');
+
+  const actions = document.getElementById('checkActions');
+  actions.classList.remove('hidden');
+  actions.style.display = 'flex';
+
+  const btn = document.getElementById('proceedBtn');
+  if (!checksPassed) {
+    btn.textContent = 'Fix Issues Before Continuing';
+    btn.disabled = true;
+  } else {
+    btn.textContent = 'Continue to Paper & Quantity';
+    btn.disabled = false;
+  }
+
+  // Update file summary for step 3
+  document.getElementById('fileSummaryName').textContent = currentFile.name;
+  document.getElementById('fileSummaryMeta').textContent = (currentFile.size/1024/1024).toFixed(1) + ' MB · ' + currentFile.name.split('.').pop().toUpperCase();
+}
+
+// ── PAPER SELECTOR ──
+function renderPapers() {
+  document.getElementById('paperGrid').innerHTML = SITE_CONFIG.papers.map(p => `
+    <div class="paper-opt ${p.id === selectedPaper ? 'selected':''}" onclick="selectPaper('${p.id}')">
+      <div class="paper-name">${p.name}</div>
+      <div class="paper-sub">${p.subtitle}</div>
+      <div class="paper-price">${p.priceExtra > 0 ? '+£'+p.priceExtra+' per 50' : 'Included'}</div>
+    </div>`).join('');
+}
+
+function selectPaper(id) {
+  selectedPaper = id;
+  renderPapers();
+  updatePrice();
+}
+
+// ── QUANTITY & PRICING ──
+function adjQty(d) {
+  qty = Math.max(SITE_CONFIG.pricing.minQty, qty + d);
+  document.getElementById('qtyVal').textContent = qty;
+  updatePrice();
+}
+
+function updatePrice() {
+  const paper = SITE_CONFIG.papers.find(p => p.id === selectedPaper);
+  const base = SITE_CONFIG.pricing.basePerFifty * (qty / 50);
+  const upgrade = (paper?.priceExtra || 0) * (qty / 50);
+  const net = base + upgrade;
+  const vat = net * SITE_CONFIG.pricing.vatRate;
+  const total = net + vat;
+  document.getElementById('priceUpgrade').textContent = upgrade > 0 ? '£' + upgrade.toFixed(2) : 'Included';
+  document.getElementById('priceNet').textContent = '£' + net.toFixed(2);
+  document.getElementById('priceVat').textContent = '£' + vat.toFixed(2);
+  document.getElementById('priceTotal').textContent = '£' + total.toFixed(2);
+}
+
+// ── ADD TO CART ──
+function addToCartAndCheckout() {
+  const paper = SITE_CONFIG.papers.find(p => p.id === selectedPaper);
+  const base = SITE_CONFIG.pricing.basePerFifty * (qty / 50);
+  const upgrade = (paper?.priceExtra || 0) * (qty / 50);
+  const net = base + upgrade;
+  const total = net * (1 + SITE_CONFIG.pricing.vatRate);
+  addToCart({
+    name: 'Upload & Print — ' + (currentFile?.name || 'Custom Artwork'),
+    qty, total,
+    icon: '✦',
+    bg: 'var(--cream)',
+    tc: 'var(--text)',
+    paper: paper?.name || 'Smooth White'
+  });
+  openCart();
+}
+
+// ── INIT ──
+renderPapers();
+updatePrice();
+</script>
+</body>
+</html>
