@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pricing Editor — Invitations Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FAF7F2;--gold:#B8976A;--gold-lt:#D4B896;--brown:#6B4F3A;
+  --text:#3D2E24;--soft:#7A6558;--pale:#B0A098;--white:#FFFFFF;--border:#E8DDD8;
+  --ok:#5A9E6F;--err:#C94A3A;--warn:#C97B3A;
+  --admin-dark:#1E2530;--admin-mid:#2A3340;--admin-border:#3A4450;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;font-weight:300;background:#F4F1EC;color:var(--text);min-height:100vh}
+
+/* TOP BAR */
+.topbar{background:var(--admin-dark);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-logo{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:#fff;letter-spacing:.06em}
+.topbar-logo span{color:var(--gold-lt)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-tag{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.4);background:rgba(255,255,255,.08);padding:4px 12px;border-radius:20px}
+.save-status{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.04em}
+
+/* LAYOUT */
+.page-wrap{max-width:900px;margin:0 auto;padding:40px 32px 80px}
+.page-header{margin-bottom:40px}
+.page-header h1{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:400;color:var(--text);margin-bottom:8px}
+.page-header p{font-size:13px;color:var(--soft);line-height:1.8;max-width:560px}
+
+/* SECTION */
+.section{background:var(--white);border:1px solid var(--border);border-radius:20px;margin-bottom:24px;overflow:hidden}
+.section-head{padding:22px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.section-head h2{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text)}
+.section-head p{font-size:12px;color:var(--pale);margin-top:3px}
+.section-body{padding:24px 28px}
+
+/* TABLE */
+.price-table{width:100%;border-collapse:collapse}
+.price-table th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--pale);font-weight:500;padding:0 12px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.price-table th:last-child{text-align:right}
+.price-table td{padding:10px 12px;border-bottom:1px solid #F5F0EB;vertical-align:middle}
+.price-table tr:last-child td{border-bottom:none}
+.price-table tr:hover td{background:#FDFAF7}
+
+/* INPUTS */
+.inp{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;width:100%}
+.inp:focus{border-color:var(--gold-lt);background:var(--white)}
+.inp-sm{width:90px}
+.inp-xs{width:68px}
+.inp-color{width:44px;height:36px;padding:2px 4px;border-radius:8px;cursor:pointer;border:1px solid var(--border)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:12px 28px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:background .2s;border-radius:60px;box-shadow:0 4px 14px rgba(184,151,106,.25)}
+.btn:hover{background:var(--brown)}
+.btn-sm{padding:8px 18px;font-size:10px}
+.btn-ghost{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;background:transparent;color:var(--soft);border:1px solid var(--border);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:60px}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-danger{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:transparent;color:#C94A3A;border:1px solid #f0c8c4;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:60px}
+.btn-danger:hover{background:#FFF0EE;border-color:#C94A3A}
+.btn-add{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:transparent;color:var(--gold);border:1.5px dashed var(--gold-lt);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:12px;margin-top:12px;width:100%;justify-content:center}
+.btn-add:hover{background:rgba(184,151,106,.05);border-color:var(--gold)}
+
+/* COLOUR SWATCH PREVIEW */
+.swatch-preview{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;display:inline-block}
+
+/* BASE PRICING GRID */
+.base-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.base-field label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:8px;font-weight:400}
+.base-field .hint{font-size:11px;color:var(--pale);margin-top:6px;line-height:1.5}
+
+/* TOAST */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--admin-dark);color:#fff;padding:14px 28px;border-radius:60px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:0;transition:all .35s;pointer-events:none;z-index:999;display:flex;align-items:center;gap:10px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast .tick{color:var(--gold-lt);font-size:15px}
+
+/* FOOTER ACTIONS */
+.footer-actions{position:sticky;bottom:0;background:var(--white);border-top:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;margin:0 -32px -80px;margin-top:32px}
+.last-saved{font-size:11px;color:var(--pale)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Invita<span>tions</span></div>
+  <div class="topbar-right">
+    <span class="topbar-tag">Pricing Editor</span>
+    <span class="save-status" id="saveStatus">No unsaved changes</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1>Pricing Editor</h1>
+    <p>Update prices here and click <strong>Save All Pricing</strong> at the bottom. Changes apply to the site instantly — no code editing required. Add or remove rows using the buttons in each section.</p>
+  </div>
+
+  <!-- BASE PRICING -->
+  <div class="section">
+    <div class="section-head">
+      <div><h2>Base Pricing Rules</h2><p>Core rates and rules that all other prices build from</p></div>
+    </div>
+    <div class="section-body">
+      <div class="base-grid" id="baseGrid">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- PAPER STOCKS -->
+  <div class="section">
+    <div class="section-head">
+      <div><h2>Paper Stocks</h2><p>Each stock can have a name, weight and price surcharge on top of base rate</p></div>
+      <button class="btn btn-sm" onclick="addRow('papers')">+ Add Stock</button>
+    </div>
+    <div class="section-body">
+      <table class="price-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Weight (gsm)</th>
+            <th style="text-align:right">Surcharge (£)</th>
+            <th style="text-align:right">Remove</th>
+          </tr>
+        </thead>
+        <tbody id="papersBody"></tbody>
+      </table>
+      <button class="btn-add" onclick="addRow('papers')">＋ Add Paper Stock</button>
+    </div>
+  </div>
+
+  <!-- ENVELOPES -->
+  <div class="section">
+    <div class="section-head">
+      <div><h2>Envelope Colours</h2><p>Price is per envelope, multiplied by the order quantity</p></div>
+      <button class="btn btn-sm" onclick="addRow('envelopes')">+ Add Colour</button>
+    </div>
+    <div class="section-body">
+      <table class="price-table">
+        <thead>
+          <tr>
+            <th>Colour</th>
+            <th>Name</th>
+            <th>Hex Code</th>
+            <th style="text-align:right">Price per envelope (£)</th>
+            <th style="text-align:right">Remove</th>
+          </tr>
+        </thead>
+        <tbody id="envelopesBody"></tbody>
+      </table>
+      <button class="btn-add" onclick="addRow('envelopes')">＋ Add Envelope Colour</button>
+    </div>
+  </div>
+
+  <!-- DELIVERY -->
+  <div class="section">
+    <div class="section-head">
+      <div><h2>Delivery Options</h2><p>Price of 0 = free (displayed as "Free" on site)</p></div>
+      <button class="btn btn-sm" onclick="addRow('delivery')">+ Add Option</button>
+    </div>
+    <div class="section-body">
+      <table class="price-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th style="text-align:right">Price (£ inc. VAT)</th>
+            <th style="text-align:right">Remove</th>
+          </tr>
+        </thead>
+        <tbody id="deliveryBody"></tbody>
+      </table>
+      <button class="btn-add" onclick="addRow('delivery')">＋ Add Delivery Option</button>
+    </div>
+  </div>
+
+  <!-- FOOTER ACTIONS -->
+  <div class="footer-actions">
+    <div>
+      <span class="last-saved" id="lastSaved">Not yet saved this session</span>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <button class="btn-ghost" onclick="resetToDefaults()">Reset to Defaults</button>
+      <button class="btn" onclick="saveAll()">✦ Save All Pricing</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="tick">✓</span><span id="toastMsg">Pricing saved</span></div>
+
+<script>
+// ── DEFAULT PRICING ──
+const DEFAULTS = {
+  base: {
+    ratePerFifty: 125,
+    minQty: 25,
+    qtyStep: 25,
+    vatRate: 20,
+  },
+  papers: [
+    {id:'smooth', name:'Smooth White',   desc:'Crisp & classic',         gsm:300, surcharge:0},
+    {id:'cotton', name:'Cotton Rag',     desc:'Luxury feel',             gsm:400, surcharge:20},
+    {id:'vellum', name:'Vellum Overlay', desc:'Translucent · Ethereal',  gsm:null, surcharge:35},
+  ],
+  envelopes: [
+    {id:'white',  name:'White',          hex:'#FFFFFF', border:'#E8DDD8', perUnit:0.15},
+    {id:'cream',  name:'Cream',          hex:'#FAF7F2', border:'#D4B896', perUnit:0.18},
+    {id:'blush',  name:'Blush Rose',     hex:'#F0DDD8', border:'#D4A5A5', perUnit:0.22},
+    {id:'sage',   name:'Sage Green',     hex:'#D1DDD0', border:'#A8C4B8', perUnit:0.22},
+    {id:'navy',   name:'Midnight Navy',  hex:'#1C2B3A', border:'#2C3E50', perUnit:0.28},
+  ],
+  delivery: [
+    {id:'standard', name:'Standard',  desc:'5–7 working days',    price:0},
+    {id:'express',  name:'Express',   desc:'2–3 working days',    price:12},
+    {id:'next',     name:'Next Day',  desc:'Order before 12pm',   price:18},
+  ],
+};
+
+// ── LOAD STATE ──
+function loadPricing() {
+  try {
+    const saved = localStorage.getItem('inv_pricing');
+    if (saved) return JSON.parse(saved);
+  } catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+
+let pricing = loadPricing();
+let changed = false;
+
+function markChanged() {
+  changed = true;
+  document.getElementById('saveStatus').textContent = 'Unsaved changes';
+  document.getElementById('saveStatus').style.color = '#C97B3A';
+}
+
+// ── RENDER BASE ──
+function renderBase() {
+  const fields = [
+    {key:'ratePerFifty', label:'Base rate per 50 invitations (£)', hint:'The starting price before any upgrades', prefix:'£'},
+    {key:'minQty',       label:'Minimum order quantity',           hint:'Lowest number of invitations you will print', prefix:''},
+    {key:'qtyStep',      label:'Quantity step size',               hint:'Orders increase in multiples of this number', prefix:''},
+    {key:'vatRate',      label:'VAT rate (%)',                     hint:'Applied to all net prices', prefix:''},
+  ];
+  document.getElementById('baseGrid').innerHTML = fields.map(f => `
+    <div class="base-field">
+      <label>${f.label}</label>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${f.prefix?`<span style="font-size:14px;color:var(--soft)">${f.prefix}</span>`:''}
+        <input class="inp" type="number" step="0.01" value="${pricing.base[f.key]}"
+          oninput="pricing.base['${f.key}']=parseFloat(this.value)||0;markChanged()" style="max-width:140px">
+      </div>
+      <div class="hint">${f.hint}</div>
+    </div>`).join('');
+}
+
+// ── RENDER PAPERS ──
+function renderPapers() {
+  document.getElementById('papersBody').innerHTML = pricing.papers.map((p,i) => `
+    <tr>
+      <td><input class="inp" value="${p.name}" oninput="pricing.papers[${i}].name=this.value;markChanged()" placeholder="e.g. Smooth White"/></td>
+      <td><input class="inp" value="${p.desc||''}" oninput="pricing.papers[${i}].desc=this.value;markChanged()" placeholder="e.g. Crisp & classic"/></td>
+      <td><input class="inp inp-sm" type="number" value="${p.gsm||''}" oninput="pricing.papers[${i}].gsm=parseInt(this.value)||null;markChanged()" placeholder="300"/></td>
+      <td style="text-align:right"><input class="inp inp-xs" type="number" step="0.01" value="${p.surcharge}" oninput="pricing.papers[${i}].surcharge=parseFloat(this.value)||0;markChanged()" style="text-align:right"/></td>
+      <td style="text-align:right"><button class="btn-danger" onclick="removeRow('papers',${i})">✕ Remove</button></td>
+    </tr>`).join('');
+}
+
+// ── RENDER ENVELOPES ──
+function renderEnvelopes() {
+  document.getElementById('envelopesBody').innerHTML = pricing.envelopes.map((e,i) => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="swatch-preview" id="swatch-env-${i}" style="background:${e.hex};outline:1.5px solid ${e.border||'#ccc'}"></span>
+          <input class="inp-color" type="color" value="${e.hex}" oninput="pricing.envelopes[${i}].hex=this.value;document.getElementById('swatch-env-${i}').style.background=this.value;document.getElementById('hexInput-${i}').value=this.value;markChanged()">
+        </div>
+      </td>
+      <td><input class="inp" value="${e.name}" oninput="pricing.envelopes[${i}].name=this.value;markChanged()" placeholder="e.g. Blush Rose"/></td>
+      <td><input class="inp inp-sm" id="hexInput-${i}" value="${e.hex}" oninput="pricing.envelopes[${i}].hex=this.value;document.getElementById('swatch-env-${i}').style.background=this.value;markChanged()" placeholder="#FFFFFF"/></td>
+      <td style="text-align:right"><input class="inp inp-xs" type="number" step="0.01" value="${e.perUnit}" oninput="pricing.envelopes[${i}].perUnit=parseFloat(this.value)||0;markChanged()" style="text-align:right"/></td>
+      <td style="text-align:right"><button class="btn-danger" onclick="removeRow('envelopes',${i})">✕ Remove</button></td>
+    </tr>`).join('');
+}
+
+// ── RENDER DELIVERY ──
+function renderDelivery() {
+  document.getElementById('deliveryBody').innerHTML = pricing.delivery.map((d,i) => `
+    <tr>
+      <td><input class="inp" value="${d.name}" oninput="pricing.delivery[${i}].name=this.value;markChanged()" placeholder="e.g. Express"/></td>
+      <td><input class="inp" value="${d.desc||''}" oninput="pricing.delivery[${i}].desc=this.value;markChanged()" placeholder="e.g. 2–3 working days"/></td>
+      <td style="text-align:right"><input class="inp inp-xs" type="number" step="0.01" value="${d.price}" oninput="pricing.delivery[${i}].price=parseFloat(this.value)||0;markChanged()" style="text-align:right"/></td>
+      <td style="text-align:right"><button class="btn-danger" onclick="removeRow('delivery',${i})">✕ Remove</button></td>
+    </tr>`).join('');
+}
+
+// ── ADD ROW ──
+function addRow(section) {
+  if(section==='papers') pricing.papers.push({id:'custom-'+Date.now(),name:'New Stock',desc:'',gsm:null,surcharge:0});
+  if(section==='envelopes') pricing.envelopes.push({id:'env-'+Date.now(),name:'New Colour',hex:'#E0E0E0',border:'#ccc',perUnit:0.20});
+  if(section==='delivery') pricing.delivery.push({id:'del-'+Date.now(),name:'New Option',desc:'',price:0});
+  markChanged();
+  renderAll();
+}
+
+// ── REMOVE ROW ──
+function removeRow(section, i) {
+  if(pricing[section].length <= 1){ showToast('You need at least one option in each section', true); return; }
+  pricing[section].splice(i,1);
+  markChanged();
+  renderAll();
+}
+
+// ── RENDER ALL ──
+function renderAll() {
+  renderBase();
+  renderPapers();
+  renderEnvelopes();
+  renderDelivery();
+}
+
+// ── SAVE ──
+function saveAll() {
+  try {
+    localStorage.setItem('inv_pricing', JSON.stringify(pricing));
+    changed = false;
+    const now = new Date();
+    const ts = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ', ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    document.getElementById('lastSaved').textContent = 'Last saved: ' + ts;
+    document.getElementById('saveStatus').textContent = 'All changes saved';
+    document.getElementById('saveStatus').style.color = 'var(--ok)';
+    showToast('Pricing saved — changes are live on the site');
+  } catch(e) {
+    showToast('Could not save — please try again', true);
+  }
+}
+
+// ── RESET ──
+function resetToDefaults() {
+  if(!confirm('Reset all pricing to defaults? This cannot be undone.')) return;
+  pricing = JSON.parse(JSON.stringify(DEFAULTS));
+  markChanged();
+  renderAll();
+  showToast('Reset to defaults — click Save to apply');
+}
+
+// ── TOAST ──
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  const m = document.getElementById('toastMsg');
+  m.textContent = msg;
+  t.style.background = isError ? 'var(--err)' : 'var(--admin-dark)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// ── WARN ON UNLOAD ──
+window.addEventListener('beforeunload', e => {
+  if(changed){ e.preventDefault(); e.returnValue=''; }
+});
+
+// ── INIT ──
+renderAll();
+
+// Show if loaded from saved or defaults
+const hasSaved = !!localStorage.getItem('inv_pricing');
+if(hasSaved) {
+  document.getElementById('lastSaved').textContent = 'Loaded from saved pricing';
+  document.getElementById('saveStatus').textContent = 'No unsaved changes';
+}
+</script>
+</body>
+</html>
