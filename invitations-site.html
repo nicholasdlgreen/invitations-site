@@ -259,8 +259,6 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
 .escalation-card strong{display:block;font-size:12px;margin-bottom:4px;color:var(--brown)}
 
 /* UPGRADE MODAL */
-.upgrade-overlay{position:fixed;inset:0;background:rgba(61,46,36,.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:24px}
-.upgrade-overlay.open{display:flex}
 .upgrade-modal{background:var(--white);border-radius:24px;max-width:400px;width:100%;padding:40px 36px;text-align:center;box-shadow:0 20px 60px rgba(61,46,36,.2);animation:fadeUp .3s ease both}
 .upgrade-modal h2{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;margin-bottom:12px}
 .upgrade-modal p{font-size:13px;color:var(--soft);line-height:1.8;margin-bottom:24px}
@@ -278,7 +276,6 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
   <div class="hinner">
     <div class="logo" onclick="showPage('home')">Invita<span>tions</span></div>
     <nav>
-      <a id="nav-home" class="active" onclick="showPage('home')">Home</a>
       <a id="nav-upload" onclick="showPage('upload')">Upload &amp; Print</a>
       <a id="nav-studio" onclick="showPage('studio')">Design Studio</a>
       <a id="nav-tracking" onclick="showPage('tracking')">Track Order</a>
@@ -314,7 +311,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
       <h1>Every love story deserves<br><em>a beautiful beginning.</em></h1>
       <p>We craft luxury wedding stationery that sets the tone for your day — whether you bring your own vision or let us help you find it.</p>
       <div class="hero-btns"><button class="btn" onclick="showPage('upload')">I Have a Design</button><button class="btn-out" onclick="showPage('studio')">Help Me Create One</button></div>
-      <p class="hero-note">Printed on premium papers · Delivered via DPD · From 25 invitations</p>
+      <p class="hero-note">Printed on premium papers · Delivered via DPD</p>
     </div>
   </section>
   <section class="section" style="background:var(--white)">
@@ -336,7 +333,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
       </div>
     </div>
   </section>
-  <div class="quality-strip"><div class="container"><div class="quality-grid"><div class="quality-item"><div class="quality-num">300gsm+</div><div class="quality-label">Premium Papers</div></div><div class="quality-item"><div class="quality-num">24hr</div><div class="quality-label">Digital Proofs</div></div><div class="quality-item"><div class="quality-num">25+</div><div class="quality-label">Minimum Order</div></div><div class="quality-item"><div class="quality-num">DPD</div><div class="quality-label">Tracked Delivery</div></div></div></div></div>
+  <div class="quality-strip"><div class="container"><div class="quality-grid"><div class="quality-item"><div class="quality-num">300gsm+</div><div class="quality-label">Premium Papers</div></div><div class="quality-item"><div class="quality-num">✦</div><div class="quality-label">Coming Soon</div></div><div class="quality-item"><div class="quality-num">✦</div><div class="quality-label">Coming Soon</div></div><div class="quality-item"><div class="quality-num">DPD</div><div class="quality-label">Tracked Delivery</div></div></div></div></div>
   <section class="section" style="background:var(--white)">
     <div class="container">
       <span class="tag centered">Happy Couples</span>
@@ -371,12 +368,18 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
           <div class="form-row"><label class="form-label">Paper Stock</label><select class="form-select" id="upPaper" onchange="calcUploadPrice()"><option value="0">Smooth White — 300gsm (included)</option><option value="20">Cotton Rag — 400gsm (+£20)</option><option value="35">Vellum Overlay — Translucent (+£35)</option></select></div>
           <div class="form-row" style="margin-bottom:8px">
             <label class="form-label">Envelopes</label>
-            <p style="font-size:11px;color:var(--pale);margin-bottom:14px;line-height:1.6">Matching envelopes included with your order. Choose a colour below — price shown per envelope.</p>
-            <div class="env-section" id="upEnvSection">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;transition:border-color .2s;" id="upEnvToggleWrap">
+              <input type="checkbox" id="upEnvToggle" onchange="toggleUpEnv()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
+              <div>
+                <div style="font-size:13px;color:var(--text);font-weight:400;">Add matching envelopes</div>
+                <div style="font-size:11px;color:var(--pale);margin-top:2px;">Price per envelope · colour selection below</div>
+              </div>
+            </label>
+            <div class="env-section" id="upEnvSection" style="display:none">
               <div class="env-picker" id="upEnvPicker"></div>
               <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
                 <span style="font-size:11px;color:var(--soft)">Envelope total</span>
-                <span style="font-size:13px;color:var(--gold)" id="upEnvTotal">£7.50</span>
+                <span style="font-size:13px;color:var(--gold)" id="upEnvTotal">£0.00</span>
               </div>
             </div>
           </div>
@@ -385,7 +388,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
           <div class="price-display">
             <div class="price-row"><span>Base price</span><span id="upBase">£125.00</span></div>
             <div class="price-row"><span>Paper upgrade</span><span id="upPaperCost">—</span></div>
-            <div class="price-row"><span>Envelopes</span><span id="upEnvCost">£7.50</span></div>
+            <div class="price-row"><span>Envelopes</span><span id="upEnvCost">—</span></div>
             <div class="price-row"><span>Delivery</span><span id="upDelCost">Free</span></div>
             <div class="price-row small"><span>VAT (20%)</span><span id="upVat">£25.00</span></div>
             <div class="price-total serif"><span>Total</span><span id="upTotal">£150.00</span></div>
@@ -395,7 +398,17 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
       </div>
       <div>
         <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:20px"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)">File Guidelines</h3><div style="font-size:13px;color:var(--soft);line-height:2"><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>PDF or vector files preferred (AI, EPS, InDesign)</span></div><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>If using images, minimum 300dpi at print size</span></div><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Include 3mm bleed on all sides</span></div><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Embed all fonts or convert to outlines</span></div><div style="display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Colour mode: CMYK for best results</span></div></div></div>
-        <div style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:28px"><div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:10px">Not sure about your file?</div><p style="font-size:12px;color:var(--soft);line-height:1.8;margin-bottom:16px">Upload it anyway and our team will check it for you before we go to print.</p><a style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);cursor:pointer">Contact us ›</a></div>
+        <div style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:28px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:8px">Professional File Check</div>
+          <p style="font-size:12px;color:var(--soft);line-height:1.8;margin-bottom:16px">Not confident your file is print-ready? Our team will thoroughly check your artwork — resolution, bleed, colour mode and fonts — and send you a detailed report before anything goes to print.</p>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--white);transition:border-color .2s;" id="fileCheckWrap">
+            <input type="checkbox" id="fileCheckToggle" onchange="toggleFileCheck()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px;">
+            <div>
+              <div style="font-size:13px;color:var(--text);font-weight:400;">Add professional file check — <span style="color:var(--gold)">£9.99</span></div>
+              <div style="font-size:11px;color:var(--pale);margin-top:2px;line-height:1.6;">Detailed artwork review · report within 24 hours · peace of mind before print</div>
+            </div>
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -444,12 +457,6 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
           </div>
           <!-- STEP 3: FONT + AI REFINE -->
           <div id="step3" class="hidden">
-            <!-- Font picker -->
-            <div class="studio-card">
-              <h3>Font Pairing</h3>
-              <p class="card-sub">Choose your typography first — then use AI below to refine the overall design.</p>
-              <div class="font-grid" id="fontGrid"></div>
-            </div>
             <!-- AI Refine -->
             <div class="studio-card" style="border:1.5px solid var(--gold-lt);">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
@@ -461,7 +468,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
                   <div class="refine-counter" id="refineCounter">
                     <span id="refineCreditsNum">3</span> refinements left
                   </div>
-                  <div id="upgradeLink" style="display:none;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);cursor:pointer;margin-top:4px" onclick="showUpgradeModal()">Upgrade →</div>
+
                 </div>
               </div>
               <!-- Credit bar -->
@@ -487,16 +494,21 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
               <!-- Out of credits state -->
               <div id="refineOutOfCredits" style="display:none;text-align:center;padding:24px 16px">
                 <div style="font-size:28px;margin-bottom:12px">✦</div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:8px">You've used your 3 free refinements</div>
-                <p style="font-size:12px;color:var(--soft);line-height:1.7;margin-bottom:20px">Happy with what you have? Continue to order, or unlock 5 more refinements for £4.99</p>
-                <button class="btn" onclick="showUpgradeModal()" style="margin-bottom:10px;width:100%;justify-content:center">Unlock 5 more refinements — £4.99</button>
-                <button class="btn-ghost" onclick="goStep(4)" style="width:100%;justify-content:center">Continue to order →</button>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:8px">You've used your 3 refinements</div>
+                <p style="font-size:12px;color:var(--soft);line-height:1.7;margin-bottom:20px">Happy with your design? Continue to the next step to choose your paper and place your order.</p>
+                <button class="btn" onclick="goStep(4)" style="width:100%;justify-content:center">Continue to order →</button>
               </div>
               <!-- Refine history -->
               <div id="refineHistory" style="margin-top:16px;display:none">
                 <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--pale);margin-bottom:10px">AI Suggestions Applied</div>
                 <div id="refineHistoryList"></div>
               </div>
+            </div>
+            <!-- Font picker -->
+            <div class="studio-card">
+              <h3>Font Pairing</h3>
+              <p class="card-sub">Choose a font pairing to complement your design.</p>
+              <div class="font-grid" id="fontGrid"></div>
             </div>
             <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:8px">
               <button class="btn-ghost" onclick="goStep(2)">← Back</button>
@@ -511,12 +523,18 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
               <div class="form-row"><label class="form-label">Paper Stock</label><select class="form-select" id="stPaper" onchange="calcStudioPrice()"><option value="0">Smooth White — 300gsm (included)</option><option value="20">Cotton Rag — 400gsm (+£20)</option><option value="35">Vellum Overlay — Translucent (+£35)</option></select></div>
               <div class="form-row" style="margin-bottom:8px">
                 <label class="form-label">Envelopes</label>
-                <p style="font-size:11px;color:var(--pale);margin-bottom:14px;line-height:1.6">Matching envelopes included with your order. Choose a colour below — price shown per envelope.</p>
-                <div class="env-section" id="stEnvSection">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;transition:border-color .2s;" id="stEnvToggleWrap">
+                  <input type="checkbox" id="stEnvToggle" onchange="toggleStEnv()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
+                  <div>
+                    <div style="font-size:13px;color:var(--text);font-weight:400;">Add matching envelopes</div>
+                    <div style="font-size:11px;color:var(--pale);margin-top:2px;">Price per envelope · colour selection below</div>
+                  </div>
+                </label>
+                <div class="env-section" id="stEnvSection" style="display:none">
                   <div class="env-picker" id="stEnvPicker"></div>
                   <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
                     <span style="font-size:11px;color:var(--soft)">Envelope total</span>
-                    <span style="font-size:13px;color:var(--gold)" id="stEnvTotal">£7.50</span>
+                    <span style="font-size:13px;color:var(--gold)" id="stEnvTotal">£0.00</span>
                   </div>
                 </div>
               </div>
@@ -525,7 +543,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
               <div class="price-display">
                 <div class="price-row"><span>Base price</span><span id="stBase">£125.00</span></div>
                 <div class="price-row"><span>Paper upgrade</span><span id="stPaperCost">—</span></div>
-                <div class="price-row"><span>Envelopes</span><span id="stEnvCost">£7.50</span></div>
+                <div class="price-row"><span>Envelopes</span><span id="stEnvCost">—</span></div>
                 <div class="price-row"><span>Delivery</span><span id="stDelCost">Free</span></div>
                 <div class="price-row small"><span>VAT (20%)</span><span id="stVat">£25.00</span></div>
                 <div class="price-total serif"><span>Total</span><span id="stTotal">£150.00</span></div>
@@ -649,20 +667,197 @@ function renderCart(){
 function removeItem(i){cart.splice(i,1);updateBadge();renderCart()}
 
 // ── UPLOAD ──
-function handleFileSelect(e){const f=e.target.files[0];if(f){document.getElementById('fileName').textContent=f.name;document.getElementById('fileConfirm').style.display='block'}}
-function handleDrop(e){e.preventDefault();document.getElementById('uploadZone').classList.remove('dragging');const f=e.dataTransfer.files[0];if(f){document.getElementById('fileName').textContent=f.name;document.getElementById('fileConfirm').style.display='block'}}
+// ── UPLOAD & PREFLIGHT ──
+let currentUploadFile = null;
+
+const FILE_ICONS = {
+  pdf:'📄', jpg:'🖼', jpeg:'🖼', png:'🖼', tif:'🖼', tiff:'🖼',
+  ai:'✦', eps:'✦', indd:'✦'
+};
+
+function handleFileSelect(e) {
+  const f = e.target.files[0];
+  if (f) startPreflight(f);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('dragging');
+  const f = e.dataTransfer.files[0];
+  if (f) startPreflight(f);
+}
+
+function resetUpload() {
+  currentUploadFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('upStep1').style.display = 'block';
+  document.getElementById('upStep2').style.display = 'none';
+  document.getElementById('upStep3').style.display = 'none';
+  document.getElementById('upPreflightChecking').style.display = 'block';
+  document.getElementById('upPreflightResults').style.display = 'none';
+}
+
+async function startPreflight(file) {
+  currentUploadFile = file;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const icon = FILE_ICONS[ext] || '✦';
+
+  // Show step 2
+  document.getElementById('upStep1').style.display = 'none';
+  document.getElementById('upStep2').style.display = 'block';
+  document.getElementById('upStep3').style.display = 'none';
+  document.getElementById('upPreflightChecking').style.display = 'block';
+  document.getElementById('upPreflightResults').style.display = 'none';
+
+  // Update file badge
+  document.getElementById('upFileName').textContent = file.name;
+  document.getElementById('upFileMeta').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB · ' + ext.toUpperCase();
+  document.getElementById('upFileIcon').textContent = icon;
+
+  try {
+    const formData = new FormData();
+    formData.append('artwork', file);
+
+    const res = await fetch('/.netlify/functions/preflight', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+    renderPreflightResults(data.checks || [], data.summary || {}, file.name, icon);
+
+  } catch (err) {
+    // Network error or function not deployed — show manual review message
+    renderPreflightResults([{
+      status: 'info',
+      label: 'File Received',
+      val: file.name,
+      note: 'Your file has been received. Our team will manually check dimensions, resolution, bleed and colour mode before printing. We will contact you with any issues.'
+    }], { errors: 0, warnings: 0, passed: 1 }, file.name, icon);
+  }
+}
+
+function renderPreflightResults(checks, summary, filename, icon) {
+  document.getElementById('upPreflightChecking').style.display = 'none';
+  document.getElementById('upPreflightResults').style.display = 'block';
+
+  // Summary bar
+  const hasErrors   = summary.errors   > 0;
+  const hasWarnings = summary.warnings > 0;
+  const summaryEl   = document.getElementById('upPreflightSummary');
+  const continueBtn = document.getElementById('upContinueBtn');
+
+  if (hasErrors) {
+    summaryEl.style.background = '#FFF0EE';
+    summaryEl.style.border = '1px solid #f0c8c4';
+    summaryEl.innerHTML = '<span style="font-size:20px">⚠️</span><div><div style="font-size:13px;font-weight:500;color:#C94A3A">Issues found — please review</div><div style="font-size:11px;color:var(--soft);margin-top:2px">' + summary.errors + ' error' + (summary.errors>1?'s':'') + (summary.warnings?' · '+summary.warnings+' warning'+(summary.warnings>1?'s':''):'') + ' · We recommend fixing these before proceeding</div></div>';
+    continueBtn.textContent = 'Continue anyway →';
+  } else if (hasWarnings) {
+    summaryEl.style.background = '#FDF4E7';
+    summaryEl.style.border = '1px solid #f0d9b5';
+    summaryEl.innerHTML = '<span style="font-size:20px">✦</span><div><div style="font-size:13px;font-weight:500;color:#C97B3A">A few things to review</div><div style="font-size:11px;color:var(--soft);margin-top:2px">' + summary.warnings + ' warning' + (summary.warnings>1?'s':'') + ' · ' + summary.passed + ' check' + (summary.passed>1?'s':'') + ' passed · You can continue or upload an improved file</div></div>';
+    continueBtn.textContent = 'Continue to paper & quantity →';
+  } else {
+    summaryEl.style.background = '#EAF5EE';
+    summaryEl.style.border = '1px solid #b8dfc6';
+    summaryEl.innerHTML = '<span style="font-size:20px">✓</span><div><div style="font-size:13px;font-weight:500;color:#3A7D52">Looking good!</div><div style="font-size:11px;color:var(--soft);margin-top:2px">All ' + (summary.passed||checks.length) + ' checks passed — your file looks print-ready</div></div>';
+    continueBtn.textContent = 'Continue to paper & quantity →';
+  }
+
+  // Check items
+  const statusConfig = {
+    ok:   { bg:'#EAF5EE', border:'#b8dfc6', dot:'#3A7D52',  label:'Pass' },
+    warn: { bg:'#FDF4E7', border:'#f0d9b5', dot:'#C97B3A',  label:'Warning' },
+    err:  { bg:'#FFF0EE', border:'#f0c8c4', dot:'#C94A3A',  label:'Error' },
+    info: { bg:'#EAF0F7', border:'#b8cfe8', dot:'#4A7FAA',  label:'Info' },
+  };
+
+  document.getElementById('upPreflightItems').innerHTML = checks.map((ch, i) => {
+    const s = statusConfig[ch.status] || statusConfig.info;
+    return `<div style="padding:16px 20px;${i>0?'border-top:1px solid var(--border)':''}display:flex;gap:14px;align-items:flex-start">
+      <div style="width:8px;height:8px;border-radius:50%;background:${s.dot};flex-shrink:0;margin-top:5px"></div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:500;color:var(--text)">${ch.label}</span>
+          <span style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${s.dot};background:${s.bg};border:1px solid ${s.border};padding:2px 8px;border-radius:20px">${s.label}</span>
+          ${ch.val ? `<span style="font-size:11px;color:var(--pale)">${ch.val}</span>` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--soft);line-height:1.7">${ch.note}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showUploadSpec() {
+  const file = currentUploadFile;
+  if (!file) return;
+  const ext  = file.name.split('.').pop().toLowerCase();
+  const icon = FILE_ICONS[ext] || '✦';
+
+  document.getElementById('upStep2').style.display = 'none';
+  document.getElementById('upStep3').style.display = 'block';
+  document.getElementById('upStep3Name').textContent = file.name;
+  document.getElementById('upStep3Icon').textContent = icon;
+
+  calcUploadPrice();
+}
+// ── ENVELOPE & FILE CHECK TOGGLES ──
+let upEnvChecked = false;
+let fileCheckChecked = false;
+
+function toggleUpEnv() {
+  upEnvChecked = document.getElementById('upEnvToggle').checked;
+  document.getElementById('upEnvSection').style.display = upEnvChecked ? 'block' : 'none';
+  document.getElementById('upEnvToggleWrap').style.borderColor = upEnvChecked ? 'var(--gold)' : 'var(--border)';
+  if (upEnvChecked) renderUpEnvPicker();
+  calcUploadPrice();
+}
+
+function renderUpEnvPicker() {
+  const P = getPricing();
+  const el = document.getElementById('upEnvPicker');
+  if (!el) return;
+  el.innerHTML = P.envelopes.map((e, i) => `
+    <label style="display:inline-flex;align-items:center;gap:8px;margin-right:12px;margin-bottom:8px;cursor:pointer;font-size:12px;color:var(--soft);">
+      <input type="radio" name="upEnv" value="${e.id}" ${i===0?'checked':''} onchange="calcUploadPrice()" style="accent-color:var(--gold);">
+      <span style="width:18px;height:18px;border-radius:50%;background:${e.hex};border:1.5px solid var(--border);display:inline-block;flex-shrink:0;"></span>
+      ${e.name} — ${e.perUnit ? '£'+e.perUnit.toFixed(2)+'/env' : ''}
+    </label>`).join('');
+}
+
+function getUpEnvCost() {
+  if (!upEnvChecked) return 0;
+  const P = getPricing();
+  const q = parseInt(document.getElementById('upQty').value) || 50;
+  const sel = document.querySelector('input[name="upEnv"]:checked');
+  const env = sel ? P.envelopes.find(e => e.id === sel.value) : P.envelopes[0];
+  return (env?.perUnit || 0) * q;
+}
+
+function toggleFileCheck() {
+  fileCheckChecked = document.getElementById('fileCheckToggle').checked;
+  document.getElementById('fileCheckWrap').style.borderColor = fileCheckChecked ? 'var(--gold)' : 'var(--border)';
+  calcUploadPrice();
+}
+
+function getFileCheckCost() {
+  if (!fileCheckChecked) return 0;
+  const P = getPricing();
+  return P.fileCheck !== undefined ? P.fileCheck : 9.99;
+}
+
 function calcUploadPrice(){
   const P=getPricing();
   const q=parseInt(document.getElementById('upQty').value);
   const p=parseFloat(document.getElementById('upPaper').value);
   const d=parseFloat(document.getElementById('upDelivery').value);
-  const env=getSelectedEnv('up');
-  const envCost=env.perUnit*q;
-  const base=(q/50)*P.base.ratePerFifty,net=base+p+envCost,vat=net*(P.base.vatRate/100),total=net+vat+d;
+  const envCost=getUpEnvCost();
+  const fcCost=getFileCheckCost();
+  const base=(q/50)*P.base.ratePerFifty,net=base+p+envCost+fcCost,vat=net*(P.base.vatRate/100),total=net+vat+d;
   document.getElementById('upBase').textContent='£'+base.toFixed(2);
   document.getElementById('upPaperCost').textContent=p?'£'+p.toFixed(2):'—';
-  document.getElementById('upEnvCost').textContent='£'+envCost.toFixed(2);
-  document.getElementById('upEnvTotal').textContent='£'+envCost.toFixed(2);
+  document.getElementById('upEnvCost').textContent=envCost?'£'+envCost.toFixed(2):'—';
+  if(document.getElementById('upEnvTotal')) document.getElementById('upEnvTotal').textContent='£'+envCost.toFixed(2);
+  if(document.getElementById('upFileCheckCost')) document.getElementById('upFileCheckCost').textContent=fcCost?'£'+fcCost.toFixed(2):'—';
   document.getElementById('upDelCost').textContent=d?'£'+d.toFixed(2):'Free';
   document.getElementById('upVat').textContent='£'+vat.toFixed(2);
   document.getElementById('upTotal').textContent='£'+total.toFixed(2);
@@ -673,7 +868,7 @@ function addUploadToCart(){
   const p=parseFloat(document.getElementById('upPaper').value);
   const env=getSelectedEnv('up');
   const pName=document.getElementById('upPaper').options[document.getElementById('upPaper').selectedIndex].text.split('—')[0].trim();
-  const net=(q/50)*P.base.ratePerFifty+p+(env.perUnit*q);
+  const net=(q/50)*P.base.ratePerFifty+p+envCostSt;
   cart.push({name:'Upload & Print',qty:q,paper:pName,envelope:env.name,bg:'var(--cream)',tc:'var(--text)',icon:'✦',total:net*(1+P.base.vatRate/100)});
   updateBadge();openCart();
 }
@@ -865,17 +1060,49 @@ function goStep(n){
   window.scrollTo(0,120);
 }
 
+// ── ENVELOPE TOGGLES ──
+let stEnvChecked = false;
+
+function toggleStEnv() {
+  stEnvChecked = document.getElementById('stEnvToggle').checked;
+  document.getElementById('stEnvSection').style.display = stEnvChecked ? 'block' : 'none';
+  document.getElementById('stEnvToggleWrap').style.borderColor = stEnvChecked ? 'var(--gold)' : 'var(--border)';
+  if (stEnvChecked) renderStEnvPicker();
+  calcStudioPrice();
+}
+
+function renderStEnvPicker() {
+  const P = getPricing();
+  const el = document.getElementById('stEnvPicker');
+  if (!el) return;
+  el.innerHTML = P.envelopes.map((e, i) => `
+    <label style="display:inline-flex;align-items:center;gap:8px;margin-right:12px;margin-bottom:8px;cursor:pointer;font-size:12px;color:var(--soft);">
+      <input type="radio" name="stEnv" value="${e.id}" ${i===0?'checked':''} onchange="calcStudioPrice()" style="accent-color:var(--gold);">
+      <span style="width:18px;height:18px;border-radius:50%;background:${e.hex};border:1.5px solid var(--border);display:inline-block;flex-shrink:0;"></span>
+      ${e.name} — ${e.perUnit ? '£'+e.perUnit.toFixed(2)+'/env' : ''}
+    </label>`).join('');
+}
+
+function getStEnvCost() {
+  if (!stEnvChecked) return 0;
+  const P = getPricing();
+  const q = parseInt(document.getElementById('stQty').value) || 50;
+  const sel = document.querySelector('input[name="stEnv"]:checked');
+  const env = sel ? P.envelopes.find(e => e.id === sel.value) : P.envelopes[0];
+  return (env?.perUnit || 0) * q;
+}
+
 function calcStudioPrice(){
   const P=getPricing();
   const p=parseFloat(document.getElementById('stPaper')?.value||0);
   const q=parseInt(document.getElementById('stQty')?.value||50);
   const d=parseFloat(document.getElementById('stDelivery')?.value||0);
-  const env=getSelectedEnv('st');
-  const envCost=env.perUnit*q;
+  const envCost=getStEnvCost();
   const base=(q/50)*P.base.ratePerFifty,net=base+p+envCost,vat=net*(P.base.vatRate/100),total=net+vat+d;
   document.getElementById('stBase').textContent='£'+base.toFixed(2);
   document.getElementById('stPaperCost').textContent=p?'£'+p.toFixed(2):'—';
-  document.getElementById('stEnvCost').textContent='£'+envCost.toFixed(2);
+  document.getElementById('stEnvCost').textContent=envCost?'£'+envCost.toFixed(2):'—';
+  if(document.getElementById('stEnvTotal')) document.getElementById('stEnvTotal').textContent='£'+envCost.toFixed(2);
   document.getElementById('stEnvTotal').textContent='£'+envCost.toFixed(2);
   document.getElementById('stDelCost').textContent=d?'£'+d.toFixed(2):'Free';
   document.getElementById('stVat').textContent='£'+vat.toFixed(2);
@@ -893,7 +1120,7 @@ function addStudioToCart(){
   const n2=document.getElementById('name2')?.value||'James';
   const sName=STYLES.find(s=>s.id===selStyle)?.name||'Custom';
   const tName=TEMPLATES[selStyle]?.[cIdx]?.name||'';
-  const net=(q/50)*P.base.ratePerFifty+p+(env.perUnit*q);
+  const net=(q/50)*P.base.ratePerFifty+p+envCostSt;
   cart.push({name:`${n1} & ${n2} — ${sName} (${tName})`,qty:q,paper:pName,envelope:env.name,bg:selBg,tc:selTc,icon:'✧',total:net*(1+P.base.vatRate/100)});
   updateBadge();openCart();
 }
@@ -981,24 +1208,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
 </div>
 
-<!-- ═══ UPGRADE MODAL ═══ -->
-<div class="upgrade-overlay" id="upgradeOverlay">
-  <div class="upgrade-modal">
-    <div style="font-size:32px;margin-bottom:12px">✦</div>
-    <h2>Unlock More Refinements</h2>
-    <p>You've used your 3 free AI refinements. Unlock 5 more to keep perfecting your design.</p>
-    <div style="text-align:left;margin-bottom:8px">
-      <div class="upgrade-feature">5 additional AI refinements</div>
-      <div class="upgrade-feature">Try bold new directions or subtle tweaks</div>
-      <div class="upgrade-feature">All changes reflected in your live preview</div>
-    </div>
-    <div class="upgrade-price">£4.99</div>
-    <div class="upgrade-price-note">One-time payment · Applied instantly</div>
-    <button class="btn" style="width:100%;justify-content:center;margin-bottom:12px" onclick="applyUpgrade()">Unlock 5 refinements — £4.99</button>
-    <button class="btn-ghost" style="width:100%;justify-content:center" onclick="document.getElementById('upgradeOverlay').classList.remove('open')">Maybe later</button>
-  </div>
-</div>
-
 <script>
 // ══════════════════════════════════════
 // COMPACT ORDER HELP CHAT
@@ -1025,8 +1234,19 @@ function closeChat() {
 }
 
 function initOrderChat() {
-  addAIMsg("Hi! I can help with any questions about your order — delivery, quality, or billing.\n\nDo you have your order number handy? It starts with **INV-** and will be in your confirmation email.");
-  showOrderLookupUI();
+  addAIMsg("Hi! How can I help you today?");
+  showQuickReplies(["I have a question", "Help with an existing order"], "init");
+}
+
+function handleInitChoice(choice) {
+  clearQuickReplies();
+  addUserMsg(choice);
+  if (choice === "I have a question") {
+    addAIMsg("Of course — what would you like to know? You can ask about our papers, printing process, delivery, design options, or anything else.");
+  } else {
+    addAIMsg("No problem. Do you have your order number handy? It starts with **INV-** and will be in your confirmation email.");
+    showOrderLookupUI();
+  }
 }
 
 // ── RENDER HELPERS ──
@@ -1053,7 +1273,7 @@ function showTypingDots() {
   el.appendChild(d); scrollChat();
 }
 function removeTypingDots() { document.getElementById('typingDots')?.remove(); }
-function showQuickReplies(opts) {
+function showQuickReplies(opts, handler) {
   document.getElementById('quickReplies').innerHTML = opts.map(o =>
     `<button class="quick-btn" onclick="handleQuick('${escA(o)}')">${esc(o)}</button>`).join('');
 }
@@ -1181,13 +1401,25 @@ function suggestChatFollowUps(text) {
 }
 
 // ══════════════════════════════════════
+// ── REFINE INFO TOOLTIP ──
+function toggleRefineInfo(e) {
+  e.stopPropagation();
+  const tip = document.getElementById('refineInfoTooltip');
+  tip.style.display = tip.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+  const tip = document.getElementById('refineInfoTooltip');
+  const btn = document.getElementById('refineInfoBtn');
+  if (tip && btn && !tip.contains(e.target) && e.target !== btn) {
+    tip.style.display = 'none';
+  }
+});
+
 // AI REFINE STEP (Studio Step 3)
 // ══════════════════════════════════════
 const MAX_FREE_CREDITS = 3;
-const UPGRADE_CREDITS = 5;
 let refineCredits = MAX_FREE_CREDITS;
 let refineHistory = [];
-let upgraded = false;
 
 function updateCreditUI() {
   const counter = document.getElementById('refineCounter');
@@ -1197,7 +1429,7 @@ function updateCreditUI() {
   const outArea = document.getElementById('refineOutOfCredits');
   const historyEl = document.getElementById('refineHistory');
 
-  const total = upgraded ? MAX_FREE_CREDITS + UPGRADE_CREDITS : MAX_FREE_CREDITS;
+  const total = MAX_FREE_CREDITS;
   const used = total - refineCredits;
 
   // Counter text + colour
@@ -1315,37 +1547,7 @@ async function runAIRefine() {
   updateCreditUI();
 }
 
-function showUpgradeModal() {
-  document.getElementById('upgradeOverlay').classList.add('open');
-}
-function applyUpgrade() {
-  // In production this triggers Stripe. For now: unlock credits immediately.
-  upgraded = true;
-  refineCredits += UPGRADE_CREDITS;
-  document.getElementById('upgradeOverlay').classList.remove('open');
-  updateCreditUI();
-  // Confirm to user
-  const note = document.getElementById('refineRationale') || document.createElement('div');
-  note.id = 'refineRationale';
-  note.style.cssText = 'margin-top:12px;padding:10px 14px;background:rgba(90,158,111,.08);border-left:2px solid var(--ok);border-radius:0 8px 8px 0;font-size:12px;color:var(--soft);line-height:1.6';
-  note.textContent = '✓ Upgrade applied — you have ' + refineCredits + ' refinements remaining.';
-  document.getElementById('refineInputArea')?.appendChild(note);
-}
 
-// Initialise credit bar when step 3 is first shown
-const _origGoStep = window.goStep;
-// patch goStep to init credits when entering step 3
-document.addEventListener('DOMContentLoaded', () => {
-  const origGoStep = window.goStep;
-  if (origGoStep) {
-    window.goStep = function(n) {
-      origGoStep(n);
-      if (n === 3) updateCreditUI();
-    };
-  }
-});
-
-// ── SHARED UTILS ──
 function fmtMsg(t){return('<p>'+t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')+'</p>')}
 function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function escA(t){return t.replace(/'/g,'&#39;').replace(/"/g,'&quot;')}
