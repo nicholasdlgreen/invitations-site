@@ -5,6 +5,32 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Allow admin tools to be served directly
+[[redirects]]
+  from = "/seo-editor.html"
+  to = "/seo-editor.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/project-board.html"
+  to = "/project-board.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/pricing-editor.html"
+  to = "/pricing-editor.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/style-guide.html"
+  to = "/style-guide.html"
+  status = 200
+  force = false
+
+# Catch-all for the main SPA
 [[redirects]]
   from = "/*"
   to = "/index.html"
