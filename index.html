@@ -492,64 +492,146 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
 <div id="page-upload" class="page">
   <div class="upload-hero"><div class="container"><span class="tag">Upload &amp; Print</span><h1 class="section-title">Your design, our expertise.</h1><div class="divider" style="margin:20px auto"></div><p style="font-size:14px;color:var(--soft);max-width:500px;margin:0 auto;line-height:1.9">Already have a design you love? Upload your artwork and we'll print it on the finest luxury papers, with a digital proof before we begin.</p></div></div>
   <div class="container" style="padding-bottom:80px">
-    <div class="upload-grid">
-      <div>
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('dragging')" ondragleave="this.classList.remove('dragging')" ondrop="handleDrop(event)">
-          <div class="upload-icon">✦</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:8px">Drop your file here</div>
-          <p style="font-size:12px;color:var(--soft);margin-bottom:20px">or click to browse</p>
-          <div style="font-size:11px;color:var(--pale);letter-spacing:.06em">PDF · AI · EPS · TIFF · JPG at 300dpi+</div>
-          <input type="file" id="fileInput" style="display:none" accept=".pdf,.ai,.eps,.tif,.tiff,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
+
+    <!-- STEP 1 — UPLOAD -->
+    <div id="upStep1">
+      <div class="upload-grid">
+        <div>
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('dragging')" ondragleave="this.classList.remove('dragging')" ondrop="handleDrop(event)">
+            <div class="upload-icon">✦</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:8px">Drop your file here</div>
+            <p style="font-size:12px;color:var(--soft);margin-bottom:20px">or click to browse</p>
+            <div style="font-size:11px;color:var(--pale);letter-spacing:.06em">PDF · AI · EPS · TIFF · JPG at 300dpi+</div>
+            <input type="file" id="fileInput" style="display:none" accept=".pdf,.ai,.eps,.tif,.tiff,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
+          </div>
         </div>
-        <div id="fileConfirm" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-top:16px"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px;color:var(--ok)">✓</span><div><div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem" id="fileName">File uploaded</div><div style="font-size:11px;color:var(--soft)">Ready for print specification</div></div></div></div>
-        <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-top:20px">
-          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)">Print Specification</h3>
-          <div class="form-row"><label class="form-label">Paper Stock</label><select class="form-select" id="upPaper" onchange="calcUploadPrice()"><option value="0">Smooth White — 300gsm (included)</option><option value="20">Cotton Rag — 400gsm (+£20)</option><option value="35">Vellum Overlay — Translucent (+£35)</option></select></div>
-          <div class="form-row" style="margin-bottom:8px">
-            <label class="form-label">Envelopes</label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;transition:border-color .2s;" id="upEnvToggleWrap">
-              <input type="checkbox" id="upEnvToggle" onchange="toggleUpEnv()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
-              <div>
-                <div style="font-size:13px;color:var(--text);font-weight:400;">Add matching envelopes</div>
-                <div style="font-size:11px;color:var(--pale);margin-top:2px;">Price per envelope · colour selection below</div>
-              </div>
-            </label>
-            <div class="env-section" id="upEnvSection" style="display:none">
-              <div class="env-picker" id="upEnvPicker"></div>
-              <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:11px;color:var(--soft)">Envelope total</span>
-                <span style="font-size:13px;color:var(--gold)" id="upEnvTotal">£0.00</span>
-              </div>
+        <div>
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:20px">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)">File Guidelines</h3>
+            <div style="font-size:13px;color:var(--soft);line-height:2">
+              <div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>PDF or vector files preferred (AI, EPS, InDesign)</span></div>
+              <div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>If using images, minimum 300dpi at print size</span></div>
+              <div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Include 3mm bleed on all sides</span></div>
+              <div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Embed all fonts or convert to outlines</span></div>
+              <div style="display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Colour mode: CMYK for best results</span></div>
             </div>
           </div>
-          <div class="form-row"><label class="form-label">Quantity</label><div id="upQtySelector"></div></div>
-          <div class="form-row"><label class="form-label">Delivery</label><select class="form-select" id="upDelivery" onchange="calcUploadPrice()"><option value="0">Standard — 5–7 working days (free)</option><option value="12">Express — 2–3 working days (+£12)</option><option value="18">Next Day — order before 12pm (+£18)</option></select></div>
-          <div class="price-display">
-            <div class="price-row"><span>Base price</span><span id="upBase">£125.00</span></div>
-            <div class="price-row"><span>Paper upgrade</span><span id="upPaperCost">—</span></div>
-            <div class="price-row"><span>Envelopes</span><span id="upEnvCost">—</span></div>
-            <div class="price-row"><span>Delivery</span><span id="upDelCost">Free</span></div>
-            <div class="price-row small"><span>VAT (20%)</span><span id="upVat">£25.00</span></div>
-            <div class="price-total serif"><span>Total</span><span id="upTotal">£150.00</span></div>
-          </div>
-          <button class="btn" style="width:100%;justify-content:center;margin-top:20px" onclick="addUploadToCart()">Add to Basket</button>
-        </div>
-      </div>
-      <div>
-        <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:20px"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)">File Guidelines</h3><div style="font-size:13px;color:var(--soft);line-height:2"><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>PDF or vector files preferred (AI, EPS, InDesign)</span></div><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>If using images, minimum 300dpi at print size</span></div><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Include 3mm bleed on all sides</span></div><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Embed all fonts or convert to outlines</span></div><div style="display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Colour mode: CMYK for best results</span></div></div></div>
-        <div style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:28px">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:8px">Professional File Check</div>
-          <p style="font-size:12px;color:var(--soft);line-height:1.8;margin-bottom:16px">Not confident your file is print-ready? Our team will thoroughly check your artwork — resolution, bleed, colour mode and fonts — and send you a detailed report before anything goes to print.</p>
-          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--white);transition:border-color .2s;" id="fileCheckWrap">
-            <input type="checkbox" id="fileCheckToggle" onchange="toggleFileCheck()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px;">
-            <div>
-              <div style="font-size:13px;color:var(--text);font-weight:400;">Add professional file check — <span style="color:var(--gold)">£9.99</span></div>
-              <div style="font-size:11px;color:var(--pale);margin-top:2px;line-height:1.6;">Detailed artwork review · report within 24 hours · peace of mind before print</div>
+          <div style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:28px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:8px">Professional File Check</div>
+            <p style="font-size:12px;color:var(--soft);line-height:1.8;margin-bottom:16px">Not confident your file is print-ready? Our team will thoroughly check your artwork — resolution, bleed, colour mode and fonts — and send you a detailed report before anything goes to print.</p>
+            <div style="padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+              <div style="font-size:13px;color:var(--text);font-weight:400;">Professional file check — <span style="color:var(--gold)">£9.99</span></div>
+              <div style="font-size:11px;color:var(--pale);margin-top:4px;line-height:1.6">Added automatically · our team reviews resolution, bleed, colour mode and fonts before print</div>
             </div>
-          </label>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- STEP 2 — PREFLIGHT RESULTS -->
+    <div id="upStep2" style="display:none;max-width:760px;margin:0 auto">
+
+      <!-- File badge -->
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:28px" id="upFileIcon">🖼</span>
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--text)" id="upFileName">file.jpg</div>
+            <div style="font-size:11px;color:var(--pale);margin-top:2px" id="upFileMeta">0 MB</div>
+          </div>
+        </div>
+        <button onclick="resetUpload()" style="background:none;border:1px solid var(--border);border-radius:60px;padding:7px 16px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);cursor:pointer">Upload different file</button>
+      </div>
+
+      <!-- Checking spinner -->
+      <div id="upPreflightChecking" style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:48px;text-align:center">
+        <div style="font-size:32px;margin-bottom:16px;animation:spin 2s linear infinite;display:inline-block">✦</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:8px">Checking your file</div>
+        <div style="font-size:12px;color:var(--soft)">Analysing resolution, dimensions, colour mode and bleed…</div>
+      </div>
+
+      <!-- Results -->
+      <div id="upPreflightResults" style="display:none">
+        <!-- Summary bar -->
+        <div id="upPreflightSummary" style="border-radius:16px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;gap:16px"></div>
+        <!-- Check items -->
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:20px">
+          <div id="upPreflightItems"></div>
+        </div>
+        <!-- Continue button -->
+        <div style="display:flex;gap:12px;justify-content:flex-end">
+          <button onclick="resetUpload()" style="background:none;border:1px solid var(--border);border-radius:60px;padding:12px 24px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);cursor:pointer">Upload different file</button>
+          <button id="upContinueBtn" class="btn" onclick="showUploadSpec()">Continue to paper &amp; quantity →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 — PRINT SPEC & ORDER -->
+    <div id="upStep3" style="display:none;max-width:760px;margin:0 auto">
+      <!-- File badge -->
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:16px;padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:22px" id="upStep3Icon">🖼</span>
+          <div>
+            <div style="font-size:13px;color:var(--text);font-weight:400" id="upStep3Name">file.jpg</div>
+            <div style="font-size:11px;color:var(--ok)">✓ File checked — ready to order</div>
+          </div>
+        </div>
+        <button onclick="resetUpload()" style="background:none;border:1px solid var(--border);border-radius:60px;padding:6px 14px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);cursor:pointer">Change file</button>
+      </div>
+
+      <div class="upload-grid">
+        <div>
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)">Print Specification</h3>
+            <div class="form-row"><label class="form-label">Paper Stock</label><select class="form-select" id="upPaper" onchange="calcUploadPrice()"><option value="0">Smooth White — 300gsm (included)</option><option value="20">Cotton Rag — 400gsm (+£20)</option><option value="35">Vellum Overlay — Translucent (+£35)</option></select></div>
+            <div class="form-row" style="margin-bottom:8px">
+              <label class="form-label">Envelopes</label>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;transition:border-color .2s;" id="upEnvToggleWrap">
+                <input type="checkbox" id="upEnvToggle" onchange="toggleUpEnv()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
+                <div>
+                  <div style="font-size:13px;color:var(--text);font-weight:400;">Add matching envelopes</div>
+                  <div style="font-size:11px;color:var(--pale);margin-top:2px;">Price per envelope · colour selection below</div>
+                </div>
+              </label>
+              <div class="env-section" id="upEnvSection" style="display:none">
+                <div class="env-picker" id="upEnvPicker"></div>
+                <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:11px;color:var(--soft)">Envelope total</span>
+                  <span style="font-size:13px;color:var(--gold)" id="upEnvTotal">£0.00</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row"><label class="form-label">Quantity</label><div id="upQtySelector"></div></div>
+            <div class="form-row"><label class="form-label">Delivery</label><select class="form-select" id="upDelivery" onchange="calcUploadPrice()"><option value="0">Standard — 5–7 working days (free)</option><option value="12">Express — 2–3 working days (+£12)</option><option value="18">Next Day — order before 12pm (+£18)</option></select></div>
+            <div class="price-display">
+              <div class="price-row"><span>Base price</span><span id="upBase">£125.00</span></div>
+              <div class="price-row"><span>Paper upgrade</span><span id="upPaperCost">—</span></div>
+              <div class="price-row"><span>Envelopes</span><span id="upEnvCost">—</span></div>
+              <div class="price-row"><span>Delivery</span><span id="upDelCost">Free</span></div>
+              <div class="price-row"><span>File check</span><span id="upFileCheckCost">£9.99</span></div>
+              <div class="price-row small"><span>VAT (20%)</span><span id="upVat">£25.00</span></div>
+              <div class="price-total serif"><span>Total</span><span id="upTotal">£150.00</span></div>
+            </div>
+            <button class="btn" style="width:100%;justify-content:center;margin-top:20px" onclick="addUploadToCart()">Add to Basket</button>
+          </div>
+        </div>
+        <div>
+          <div style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:28px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:8px">Professional File Check</div>
+            <p style="font-size:12px;color:var(--soft);line-height:1.8;margin-bottom:16px">Our team will review your file in detail — resolution, bleed, colour mode and fonts — before anything goes to print.</p>
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--white);transition:border-color .2s;" id="fileCheckWrap">
+              <input type="checkbox" id="fileCheckToggle" onchange="toggleFileCheck()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px;" checked>
+              <div>
+                <div style="font-size:13px;color:var(--text);font-weight:400;">Add professional file check — <span style="color:var(--gold)">£9.99</span></div>
+                <div style="font-size:11px;color:var(--pale);margin-top:2px;line-height:1.6;">Detailed artwork review · report within 24 hours · peace of mind before print</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
   <footer><div class="footer-inner"><div class="footer-bottom" style="border-top:none;padding-top:0"><span>© 2025 Invitations. All rights reserved.</span><span>Made with love in the UK 🇬🇧</span></div></div></footer>
 </div>
