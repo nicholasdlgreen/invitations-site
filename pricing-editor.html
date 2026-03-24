@@ -189,6 +189,90 @@ body{font-family:'Jost',sans-serif;font-weight:300;background:#F4F1EC;color:var(
     </div>
   </div>
 
+  <!-- FILE CHECK RULES -->
+  <div class="section">
+    <div class="section-head">
+      <div><h2>File Check Rules</h2><p>Thresholds used by the automated preflight check. Update these if your print partner requirements change.</p></div>
+      <span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--pale)" id="preflightLastUpdated"></span>
+    </div>
+    <div class="section-body">
+
+      <!-- THRESHOLDS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:28px">
+        <div class="base-field">
+          <label>Minimum Resolution (dpi)</label>
+          <input class="inp" type="number" id="pf_minDpi" oninput="pricing.preflight.minDpi=parseInt(this.value)||300;markChanged()">
+          <div class="hint">Below this = Error. Instantprint & Solopress both use 300dpi.</div>
+        </div>
+        <div class="base-field">
+          <label>Warning Resolution (dpi)</label>
+          <input class="inp" type="number" id="pf_warnDpi" oninput="pricing.preflight.warnDpi=parseInt(this.value)||150;markChanged()">
+          <div class="hint">Below minimum but above this = Warning rather than Error.</div>
+        </div>
+        <div class="base-field">
+          <label>Required Bleed (mm)</label>
+          <input class="inp" type="number" step="0.5" id="pf_bleedMm" oninput="pricing.preflight.bleedMm=parseFloat(this.value)||3;markChanged()">
+          <div class="hint">Industry standard is 3mm on all sides.</div>
+        </div>
+        <div class="base-field">
+          <label>Max File Size (MB)</label>
+          <input class="inp" type="number" id="pf_maxFileMb" oninput="pricing.preflight.maxFileMb=parseInt(this.value)||200;markChanged()">
+          <div class="hint">Files above this are rejected. Instantprint limit is 200MB.</div>
+        </div>
+        <div class="base-field">
+          <label>Warning File Size (MB)</label>
+          <input class="inp" type="number" id="pf_warnFileMb" oninput="pricing.preflight.warnFileMb=parseInt(this.value)||50;markChanged()">
+          <div class="hint">Above this = accepted but flagged as large.</div>
+        </div>
+        <div class="base-field">
+          <label>File Check Add-on Price (£)</label>
+          <input class="inp" type="number" step="0.01" id="pf_fileCheckPrice" oninput="pricing.preflight.fileCheckPrice=parseFloat(this.value)||9.99;markChanged()">
+          <div class="hint">Price for professional manual file review add-on.</div>
+        </div>
+      </div>
+
+      <!-- CHECK RULES TABLE -->
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;font-weight:500">Individual Checks</div>
+      <table class="price-table" id="preflightChecksTable">
+        <thead>
+          <tr>
+            <th>Check</th>
+            <th>Automated?</th>
+            <th>Rule / Threshold</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="preflightChecksBody"></tbody>
+      </table>
+
+      <!-- ACCEPTED FILE TYPES -->
+      <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;font-weight:500">Accepted File Types</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px">
+          <div>
+            <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ok);margin-bottom:8px;font-weight:500">✓ Automated Check</div>
+            <div id="pf_autoTypes" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+          </div>
+          <div style="width:1px;background:var(--border)"></div>
+          <div>
+            <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--warn);margin-bottom:8px;font-weight:500">⚑ Manual Review</div>
+            <div id="pf_manualTypes" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+          </div>
+        </div>
+        <div class="hint">Automated checks run instantly on upload. Manual review files are flagged for studio team inspection before print.</div>
+      </div>
+
+      <!-- NOTES -->
+      <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:8px;font-weight:500">Internal Notes</div>
+        <textarea class="inp" style="min-height:72px;resize:vertical;line-height:1.7" id="pf_notes"
+          oninput="pricing.preflight.notes=this.value;markChanged()"
+          placeholder="e.g. Rules reviewed against Instantprint and Solopress March 2026..."></textarea>
+      </div>
+
+    </div>
+  </div>
+
   <!-- FOOTER ACTIONS -->
   <div class="footer-actions">
     <div>
@@ -233,6 +317,29 @@ const DEFAULTS = {
     {id:'express',  name:'Express',   desc:'2–3 working days',    price:12},
     {id:'next',     name:'Next Day',  desc:'Order before 12pm',   price:18},
   ],
+  preflight: {
+    minDpi: 300,
+    warnDpi: 150,
+    maxFileMb: 200,
+    warnFileMb: 50,
+    bleedMm: 3,
+    fileCheckPrice: 9.99,
+    acceptedTypes: ['pdf','ai','eps','jpg','jpeg','png','tif','tiff'],
+    automatedTypes: ['jpg','jpeg','png','tif','tiff'],
+    manualTypes: ['pdf','ai','eps'],
+    checks: [
+      { id:'filesize',  name:'File Size',    automated:true,  threshold:'Max 200MB. Warning above 50MB.',                         notes:'' },
+      { id:'filetype',  name:'File Type',    automated:true,  threshold:'PDF, AI, EPS, JPG, PNG, TIFF accepted.',                 notes:'' },
+      { id:'resolution',name:'Resolution',   automated:true,  threshold:'Minimum 300dpi. Error below 150dpi, warning 150–299dpi.',notes:'' },
+      { id:'dimensions',name:'Dimensions',   automated:true,  threshold:'Matched against standard invitation sizes.',             notes:'' },
+      { id:'bleed',     name:'Bleed',        automated:true,  threshold:'3mm required on all sides.',                             notes:'' },
+      { id:'colourmode',name:'Colour Mode',  automated:true,  threshold:'CMYK preferred. RGB warned and converted before print.', notes:'' },
+      { id:'fonts',     name:'Fonts',        automated:false, threshold:'Manual check — fonts must be embedded or outlined.',     notes:'' },
+      { id:'pdf_pages', name:'Page Count',   automated:false, threshold:'Manual check — single page for invitations.',            notes:'' },
+    ],
+    lastUpdated: '2026-03-24',
+    notes: 'Rules based on industry standard (Instantprint / Solopress). Review after any print partner change.',
+  },
 };
 
 // ── LOAD STATE ──
@@ -369,6 +476,53 @@ function removeQtyPreset(i) {
   renderQtyPresets();
 }
 
+// ── RENDER PREFLIGHT RULES ──
+function renderPreflight() {
+  const pf = pricing.preflight || DEFAULTS.preflight;
+
+  // Thresholds
+  document.getElementById('pf_minDpi').value       = pf.minDpi ?? 300;
+  document.getElementById('pf_warnDpi').value      = pf.warnDpi ?? 150;
+  document.getElementById('pf_bleedMm').value      = pf.bleedMm ?? 3;
+  document.getElementById('pf_maxFileMb').value    = pf.maxFileMb ?? 200;
+  document.getElementById('pf_warnFileMb').value   = pf.warnFileMb ?? 50;
+  document.getElementById('pf_fileCheckPrice').value = pf.fileCheckPrice ?? 9.99;
+  document.getElementById('pf_notes').value        = pf.notes || '';
+  if (pf.lastUpdated) document.getElementById('preflightLastUpdated').textContent = 'Last updated: ' + pf.lastUpdated;
+
+  // Checks table
+  document.getElementById('preflightChecksBody').innerHTML = (pf.checks || []).map((c, i) => `
+    <tr>
+      <td style="font-weight:500;color:var(--text)">${c.name}</td>
+      <td>
+        <span style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;${c.automated
+          ? 'background:#EAF5EE;color:#3A7D52;border:1px solid #b8dfc6'
+          : 'background:#FDF4E7;color:#C97B3A;border:1px solid #f0d9b5'}">${c.automated ? 'Automated' : 'Manual'}</span>
+      </td>
+      <td>
+        <input class="inp" style="font-size:12px;padding:7px 10px" value="${esc(c.threshold)}"
+          oninput="pricing.preflight.checks[${i}].threshold=this.value;markChanged()">
+      </td>
+      <td>
+        <input class="inp" style="font-size:12px;padding:7px 10px" value="${esc(c.notes)}"
+          placeholder="Optional notes…"
+          oninput="pricing.preflight.checks[${i}].notes=this.value;markChanged()">
+      </td>
+    </tr>`).join('');
+
+  // File type pills
+  const autoTypes = pf.automatedTypes || [];
+  const manualTypes = pf.manualTypes || [];
+  document.getElementById('pf_autoTypes').innerHTML = autoTypes.map(t =>
+    `<span style="padding:4px 12px;background:#EAF5EE;color:#3A7D52;border:1px solid #b8dfc6;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase">${t}</span>`
+  ).join('');
+  document.getElementById('pf_manualTypes').innerHTML = manualTypes.map(t =>
+    `<span style="padding:4px 12px;background:#FDF4E7;color:#C97B3A;border:1px solid #f0d9b5;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase">${t}</span>`
+  ).join('');
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+
 // ── RENDER ALL ──
 function renderAll() {
   renderBase();
@@ -376,6 +530,7 @@ function renderAll() {
   renderEnvelopes();
   renderDelivery();
   renderQtyPresets();
+  renderPreflight();
 }
 
 // ── SAVE ──
