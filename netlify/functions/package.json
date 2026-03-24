@@ -1,9 +1,8 @@
+
+Copy
+
 {
   "name": "invitations-preflight",
-  "version": "1.0.0",
-  "description": "Artwork preflight check for Invitations",
-  "dependencies": {
-    "sharp": "^0.33.4",
-    "busboy": "^1.6.0"
-  }
+  "version": "2.0.0",
+  "description": "Artwork preflight check — no native dependencies"
 }
