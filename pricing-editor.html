@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Pricing Editor — Invitations Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --cream:#FAF7F2;--gold:#B8976A;--gold-lt:#D4B896;--brown:#6B4F3A;
@@ -203,6 +204,10 @@ body{font-family:'Jost',sans-serif;font-weight:300;background:#F4F1EC;color:var(
 <div class="toast" id="toast"><span class="tick">✓</span><span id="toastMsg">Pricing saved</span></div>
 
 <script>
+const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_-9PtQ9cNyzpuR3XithsFgQ_vTYQbbmt';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ── DEFAULT PRICING ──
 const DEFAULTS = {
   base: {
@@ -231,7 +236,16 @@ const DEFAULTS = {
 };
 
 // ── LOAD STATE ──
-function loadPricing() {
+async function loadPricing() {
+  // Try Supabase first
+  try {
+    const { data, error } = await db.from('pricing_config').select('config').eq('id',1).single();
+    if (!error && data?.config) {
+      localStorage.setItem('inv_pricing', JSON.stringify(data.config));
+      return data.config;
+    }
+  } catch(e){}
+  // Fall back to localStorage
   try {
     const saved = localStorage.getItem('inv_pricing');
     if (saved) return JSON.parse(saved);
@@ -365,19 +379,28 @@ function renderAll() {
 }
 
 // ── SAVE ──
-function saveAll() {
+async function saveAll() {
+  // Save to localStorage immediately
+  localStorage.setItem('inv_pricing', JSON.stringify(pricing));
+  // Save to Supabase
+  let cloudSaved = false;
   try {
-    localStorage.setItem('inv_pricing', JSON.stringify(pricing));
-    changed = false;
-    const now = new Date();
-    const ts = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ', ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    document.getElementById('lastSaved').textContent = 'Last saved: ' + ts;
-    document.getElementById('saveStatus').textContent = 'All changes saved';
-    document.getElementById('saveStatus').style.color = 'var(--ok)';
-    showToast('Pricing saved — changes are live on the site');
-  } catch(e) {
-    showToast('Could not save — please try again', true);
-  }
+    const { error } = await db.from('pricing_config').upsert({
+      id: 1,
+      config: pricing,
+      updated_at: new Date().toISOString()
+    });
+    cloudSaved = !error;
+    if (error) console.warn('Supabase save error:', error.message);
+  } catch(e) { console.warn('Supabase unreachable:', e); }
+
+  changed = false;
+  const now = new Date();
+  const ts = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ', ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  document.getElementById('lastSaved').textContent = 'Last saved: ' + ts + (cloudSaved ? ' ✦ synced to cloud' : ' (local only)');
+  document.getElementById('saveStatus').textContent = cloudSaved ? 'All changes saved' : 'Saved locally';
+  document.getElementById('saveStatus').style.color = cloudSaved ? 'var(--ok)' : 'var(--warn)';
+  showToast(cloudSaved ? 'Pricing saved & synced to cloud' : 'Saved locally — check connection');
 }
 
 // ── RESET ──
@@ -406,13 +429,15 @@ window.addEventListener('beforeunload', e => {
 
 // ── INIT ──
 renderAll();
-
-// Show if loaded from saved or defaults
-const hasSaved = !!localStorage.getItem('inv_pricing');
-if(hasSaved) {
-  document.getElementById('lastSaved').textContent = 'Loaded from saved pricing';
-  document.getElementById('saveStatus').textContent = 'No unsaved changes';
-}
+document.addEventListener('DOMContentLoaded', async () => {
+  pricing = await loadPricing();
+  renderAll();
+  const hasSaved = !!localStorage.getItem('inv_pricing');
+  if(hasSaved) {
+    document.getElementById('lastSaved').textContent = 'Loaded from saved pricing';
+    document.getElementById('saveStatus').textContent = 'No unsaved changes';
+  }
+});
 </script>
 </body>
 </html>

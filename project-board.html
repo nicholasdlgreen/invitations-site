@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Project Board — Invitations</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --cream:#FAF7F2;--gold:#B8976A;--gold-lt:#D4B896;--brown:#6B4F3A;
@@ -264,7 +265,23 @@ let tasks = [];
 let activeArea = 'all';
 let editingId = null;
 
-function loadBoard() {
+const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_-9PtQ9cNyzpuR3XithsFgQ_vTYQbbmt';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function loadBoard() {
+  try {
+    const { data, error } = await db.from('project_tasks').select('*').order('created_at', { ascending: true });
+    if (!error && data && data.length > 0) {
+      tasks = data.map(t => ({
+        id: t.id, title: t.title, desc: t.description,
+        area: t.area, status: t.status, priority: t.priority, due: t.due_date
+      }));
+      localStorage.setItem('inv_project_board', JSON.stringify(tasks));
+      return;
+    }
+  } catch(e){}
+  // Fall back to localStorage
   try {
     const s = localStorage.getItem('inv_project_board');
     if (s) { tasks = JSON.parse(s); return; }
@@ -272,11 +289,24 @@ function loadBoard() {
   tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
 }
 
-function saveBoard() {
+async function saveBoard() {
   localStorage.setItem('inv_project_board', JSON.stringify(tasks));
+  // Sync all tasks to Supabase
+  let cloudSaved = false;
+  try {
+    const rows = tasks.map(t => ({
+      id: t.id, title: t.title, description: t.desc||'',
+      area: t.area, status: t.status, priority: t.priority,
+      due_date: t.due||'', updated_at: new Date().toISOString()
+    }));
+    const { error } = await db.from('project_tasks').upsert(rows);
+    cloudSaved = !error;
+    if (error) console.warn('Board save error:', error.message);
+  } catch(e) { console.warn('Supabase unreachable:', e); }
   const now = new Date();
-  document.getElementById('lastSaved').textContent = 'Last saved: ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ', ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-  showToast('Board saved');
+  const ts = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ', ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  document.getElementById('lastSaved').textContent = 'Last saved: ' + ts + (cloudSaved ? ' ✦ synced' : ' (local only)');
+  showToast(cloudSaved ? 'Board saved & synced to cloud' : 'Saved locally — check connection');
 }
 
 function resetDefaults() {
@@ -451,11 +481,11 @@ function populateAreaSelect() {
   sel.innerHTML = AREAS.filter(a=>a.id!=='all').map(a=>`<option value="${a.id}">${a.label}</option>`).join('');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const d = new Date();
   document.getElementById('todayDate').textContent = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   populateAreaSelect();
-  loadBoard();
+  await loadBoard();
   render();
 });
 

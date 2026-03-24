@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>SEO Editor — Invitations</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --cream:#FAF7F2;--gold:#B8976A;--gold-lt:#D4B896;--brown:#6B4F3A;
@@ -301,6 +302,10 @@ body{font-family:'Jost',sans-serif;font-weight:300;background:#F4F1EC;color:var(
 <div class="toast" id="toast"><span class="tick">✓</span><span id="toastMsg">Saved</span></div>
 
 <script>
+const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_-9PtQ9cNyzpuR3XithsFgQ_vTYQbbmt';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ── DEFAULT DATA ──
 const SITE_PAGES = [
   {id:'home',    label:'Homepage',       url:'invitations.co.uk/'},
@@ -358,12 +363,20 @@ let data = {};
 let activeMeta = 'home';
 let changed = false;
 
-function loadData() {
+// ── LOAD / SAVE SEO CONFIG ──
+async function loadData() {
+  try {
+    const { data, error } = await db.from('seo_config').select('config').eq('id',1).single();
+    if (!error && data?.config) {
+      localStorage.setItem('inv_seo_data', JSON.stringify(data.config));
+      return data.config;
+    }
+  } catch(e){}
   try {
     const s = localStorage.getItem('inv_seo_data');
-    if(s) { data = JSON.parse(s); return; }
+    if(s) return JSON.parse(s);
   } catch(e){}
-  data = JSON.parse(JSON.stringify(DEFAULTS));
+  return JSON.parse(JSON.stringify(DEFAULTS));
 }
 
 function markChanged() {
@@ -372,14 +385,24 @@ function markChanged() {
   document.getElementById('saveStatus').style.color = '#C97B3A';
 }
 
-function saveAll() {
+async function saveAll() {
   localStorage.setItem('inv_seo_data', JSON.stringify(data));
+  let cloudSaved = false;
+  try {
+    const { error } = await db.from('seo_config').upsert({
+      id: 1,
+      config: data,
+      updated_at: new Date().toISOString()
+    });
+    cloudSaved = !error;
+    if (error) console.warn('Supabase save error:', error.message);
+  } catch(e) { console.warn('Supabase unreachable:', e); }
   changed = false;
   const ts = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ', ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-  document.getElementById('lastSaved').textContent = 'Last saved: ' + ts;
-  document.getElementById('saveStatus').textContent = 'All changes saved';
-  document.getElementById('saveStatus').style.color = '#5A9E6F';
-  showToast('SEO data saved — changes are live');
+  document.getElementById('lastSaved').textContent = 'Last saved: ' + ts + (cloudSaved ? ' ✦ synced' : ' (local only)');
+  document.getElementById('saveStatus').textContent = cloudSaved ? 'All changes saved' : 'Saved locally';
+  document.getElementById('saveStatus').style.color = cloudSaved ? '#5A9E6F' : '#C97B3A';
+  showToast(cloudSaved ? 'SEO data saved & synced to cloud' : 'Saved locally — check connection');
 }
 
 function resetSEO() {
@@ -935,12 +958,21 @@ Please join us — we'd love to have you there.</em></p>
 ];
 
 
-function loadBlogPosts() {
+async function loadBlogPosts() {
+  try {
+    const { data, error } = await db.from('blog_posts').select('*').order('date', { ascending: false });
+    if (!error && data && data.length > 0) {
+      // Normalise tags from Postgres array
+      const posts = data.map(p => ({ ...p, tags: p.tags || [] }));
+      localStorage.setItem('inv_blog', JSON.stringify(posts));
+      return posts;
+    }
+  } catch(e){}
   try { const s=localStorage.getItem('inv_blog'); if(s) return JSON.parse(s); } catch(e){}
   return JSON.parse(JSON.stringify(BLOG_SEED));
 }
 
-function saveBlogPosts(posts) {
+async function saveBlogPosts(posts) {
   localStorage.setItem('inv_blog', JSON.stringify(posts));
   markChanged();
 }
@@ -1001,51 +1033,64 @@ function closePostEditor() {
   document.getElementById('postEditorWrap').style.display='none';
 }
 
-function savePost() {
+async function savePost() {
   const title = document.getElementById('postTitle').value.trim();
   if(!title){ document.getElementById('postTitle').focus(); return; }
-  const posts = loadBlogPosts();
+  const posts = await loadBlogPosts();
   const id = document.getElementById('editPostId').value || 'post-'+Date.now();
   const existing = posts.find(p=>p.id===id);
   const tags = document.getElementById('postTags').value.split(',').map(t=>t.trim()).filter(Boolean);
   const body = document.getElementById('postBody').value;
   const words = body.replace(/<[^>]+>/g,' ').split(/\s+/).filter(Boolean).length;
-  const readTime = Math.max(1,Math.round(words/200))+' min read';
-  const postData = { id, title, status:document.getElementById('postStatus').value, keyword:document.getElementById('postKeyword').value.trim(), tags, excerpt:document.getElementById('postExcerpt').value.trim(), body, date:existing?.date||new Date().toISOString().slice(0,10), readTime };
+  const read_time = Math.max(1,Math.round(words/200))+' min read';
+  const postData = { id, title, status:document.getElementById('postStatus').value, keyword:document.getElementById('postKeyword').value.trim(), tags, excerpt:document.getElementById('postExcerpt').value.trim(), body, date:existing?.date||new Date().toISOString().slice(0,10), read_time, updated_at:new Date().toISOString() };
+  let cloudSaved = false;
+  try {
+    const { error } = await db.from('blog_posts').upsert(postData);
+    cloudSaved = !error;
+    if(error) console.warn('Blog save error:', error.message);
+  } catch(e){ console.warn('Supabase unreachable:', e); }
   if(existing){ Object.assign(existing,postData); } else { posts.unshift(postData); }
-  saveBlogPosts(posts);
+  localStorage.setItem('inv_blog', JSON.stringify(posts));
   closePostEditor();
   renderPostList();
-  showToast(existing?'Post updated':'Post created');
+  showToast(cloudSaved ? (existing?'Post updated & synced':'Post created & synced') : 'Saved locally — check connection');
 }
 
-function quickPublish(id) {
-  const posts = loadBlogPosts();
+async function quickPublish(id) {
+  let cloudSaved = false;
+  try { const { error } = await db.from('blog_posts').update({ status:'published', updated_at:new Date().toISOString() }).eq('id',id); cloudSaved=!error; } catch(e){}
+  const posts = await loadBlogPosts();
   const p = posts.find(p=>p.id===id);
-  if(p){ p.status='published'; saveBlogPosts(posts); renderPostList(); showToast('Post published — live on site'); }
+  if(p){ p.status='published'; localStorage.setItem('inv_blog', JSON.stringify(posts)); renderPostList(); }
+  showToast(cloudSaved ? 'Post published — live on site' : 'Published locally — check connection');
 }
 
-function quickUnpublish(id) {
-  const posts = loadBlogPosts();
+async function quickUnpublish(id) {
+  let cloudSaved = false;
+  try { const { error } = await db.from('blog_posts').update({ status:'draft', updated_at:new Date().toISOString() }).eq('id',id); cloudSaved=!error; } catch(e){}
+  const posts = await loadBlogPosts();
   const p = posts.find(p=>p.id===id);
-  if(p){ p.status='draft'; saveBlogPosts(posts); renderPostList(); showToast('Post moved back to draft'); }
+  if(p){ p.status='draft'; localStorage.setItem('inv_blog', JSON.stringify(posts)); renderPostList(); }
+  showToast('Post moved back to draft');
 }
 
-function deletePost(id) {
+async function deletePost(id) {
   if(!confirm('Delete this post? This cannot be undone.')) return;
-  const posts = loadBlogPosts().filter(p=>p.id!==id);
-  saveBlogPosts(posts);
+  try { await db.from('blog_posts').delete().eq('id',id); } catch(e){}
+  const posts = (await loadBlogPosts()).filter(p=>p.id!==id);
+  localStorage.setItem('inv_blog', JSON.stringify(posts));
   renderPostList();
   showToast('Post deleted');
 }
 
 window.addEventListener('beforeunload', e=>{if(changed){e.preventDefault();e.returnValue=''}});
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadData();
+document.addEventListener('DOMContentLoaded', async () => {
+  data = await loadData();
   renderAll();
   renderPostList();
-  if(localStorage.getItem('inv_seo_data')) document.getElementById('lastSaved').textContent='Loaded from saved data';
+  document.getElementById('lastSaved').textContent = 'Loaded — ready to edit';
 });
 </script>
 </body>

@@ -1414,8 +1414,7 @@ function getQtyValue(prefix) {
 }
 
 // ── INIT ──
-document.addEventListener('DOMContentLoaded',()=>{
-  // Build all selects from live pricing
+document.addEventListener('DOMContentLoaded', async ()=>{
   buildPaperOptions('upPaper','up');
   buildPaperOptions('stPaper','st');
   buildDeliveryOptions('upDelivery');
@@ -1426,11 +1425,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   initQtySelector('st', calcStudioPrice);
   initStudio();
   calcUploadPrice();
-  loadBlog();
+  await loadBlog();
   renderBlogTagFilter();
   renderPostGrid();
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 // ══════════════════════════════════════
 // BLOG — display only, read from localStorage written by SEO Editor
@@ -1445,7 +1445,17 @@ const SEED_POSTS = [
   {id:'post-seed-4',title:'Wedding Stationery Trends for 2026: What Couples Are Actually Choosing',status:'draft',keyword:'wedding stationery trends 2026',tags:['Trends','Inspiration','Design'],date:'2026-03-20',readTime:'6 min read',excerpt:'2026 is proving to be a genuinely interesting year for wedding stationery. After years of safe, minimal design dominating the market, couples are choosing bolder, more personal and more tactile invitations than we have seen in a decade. Here is what is actually happening.',body:`<p>Wedding stationery trends are a curious thing. Unlike fashion, where trends move in seasons, stationery aesthetics tend to shift slowly and then, suddenly, all at once. We are currently in one of those moments. After a long period of clean, minimal, white-and-gold designs dominating — tasteful, timeless, safe — something is shifting.</p><h2>The Return of Tactile Print Techniques</h2><p>There has been a quiet and growing rejection of digital printing's flatness. Couples are choosing letterpress, hot foil stamping, and embossing for the physical experience these techniques create. Letterpress creates a visible, feelable impression in the paper. Hot foil is having a particular moment — not brash, reflective gold, but subtler applications: champagne foil on ivory card, rose gold on blush stock, copper on deep charcoal, used for a single element rather than applied wholesale.</p><h2>Bold Typography as the Hero</h2><p>The dominant typographic restraint of recent years — elegant serifs at modest sizes, generous white space — has started to give way to something more expressive. Oversized script fonts that fill the card. Dramatic display typefaces where the couple's names are set enormous. Layouts where typography is the design, not decoration applied to a design.</p><h2>Personal Motifs and Custom Illustration</h2><p>The clearest trend is the move away from generic floral motifs toward something specific to the couple. Venue illustrations are enormously popular — automatically unique to every wedding. Beyond venues: pets, especially dogs. Monograms returning in more graphic, modern interpretations. The common thread is specificity — the best invitations in 2026 could not be mistaken for anyone else's.</p><h2>Colour: Bolder and More Considered</h2><p>Deep, saturated card stocks are increasing in popularity — midnight navy, forest green, rich terracotta — with gold foil or pale inks creating striking contrast. At the other end, soft pastels — dusty rose, sage green, warm lilac — are being applied as part of a cohesive palette across the full suite consistently.</p><h2>The Full Suite Comeback</h2><p>Full stationery suites — invitation, envelope liner, details card, RSVP card, map card — are back with intent. This is partly a backlash against digital fatigue. Couples are deliberately creating physical experiences for their guests. Wax seals are part of this too: almost ubiquitous now at the premium end, and for good reason.</p><h2>What This Means for Your Invitations</h2><p>The best advice, regardless of what is trending, is to design for your wedding rather than someone else's. Trends tell you what is possible — they do not tell you what is right for you. Our Design Studio lets you explore styles, templates, colours and fonts with your actual names and wedding details rendered in real time.</p>`}
 ];
 
-function loadBlog() {
+async function loadBlog() {
+  try {
+    if (window.supabase) {
+      const sb = window.supabase.createClient('https://jvcpzmumkyjdyibmwlsd.supabase.co','sb_publishable_-9PtQ9cNyzpuR3XithsFgQ_vTYQbbmt');
+      const { data, error } = await sb.from('blog_posts').select('*').order('date',{ascending:false});
+      if (!error && data && data.length > 0) {
+        blogPosts = data.map(p=>({...p, readTime:p.read_time, tags:p.tags||[]}));
+        return;
+      }
+    }
+  } catch(e){}
   try {
     const s = localStorage.getItem('inv_blog');
     if(s) { blogPosts = JSON.parse(s); return; }
