@@ -176,6 +176,18 @@ body{font-family:'Jost',sans-serif;font-weight:300;background:#F4F1EC;color:var(
     </div>
   </div>
 
+  <!-- QUANTITY PRESETS -->
+  <div class="section">
+    <div class="section-head">
+      <div><h2>Quantity Presets</h2><p>The quick-select amounts shown to customers. They can also enter any custom amount.</p></div>
+      <button class="btn btn-sm" onclick="addQtyPreset()">+ Add Amount</button>
+    </div>
+    <div class="section-body">
+      <div id="qtyPresetsWrap" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px"></div>
+      <p style="font-size:12px;color:var(--pale);line-height:1.7;margin-top:8px">Amounts are shown as clickable chips on the order form. Customers can always enter a custom quantity instead.</p>
+    </div>
+  </div>
+
   <!-- FOOTER ACTIONS -->
   <div class="footer-actions">
     <div>
@@ -195,9 +207,9 @@ body{font-family:'Jost',sans-serif;font-weight:300;background:#F4F1EC;color:var(
 const DEFAULTS = {
   base: {
     ratePerFifty: 125,
-    minQty: 25,
     qtyStep: 25,
     vatRate: 20,
+    presetQtys: [25, 50, 75, 100, 150, 200],
   },
   papers: [
     {id:'smooth', name:'Smooth White',   desc:'Crisp & classic',         gsm:300, surcharge:0},
@@ -240,7 +252,6 @@ function markChanged() {
 function renderBase() {
   const fields = [
     {key:'ratePerFifty', label:'Base rate per 50 invitations (£)', hint:'The starting price before any upgrades', prefix:'£'},
-    {key:'minQty',       label:'Minimum order quantity',           hint:'Lowest number of invitations you will print', prefix:''},
     {key:'qtyStep',      label:'Quantity step size',               hint:'Orders increase in multiples of this number', prefix:''},
     {key:'vatRate',      label:'VAT rate (%)',                     hint:'Applied to all net prices', prefix:''},
   ];
@@ -313,12 +324,44 @@ function removeRow(section, i) {
   renderAll();
 }
 
+// ── RENDER QTY PRESETS ──
+function renderQtyPresets() {
+  const wrap = document.getElementById('qtyPresetsWrap');
+  if (!wrap) return;
+  const presets = pricing.base.presetQtys || [];
+  wrap.innerHTML = presets.map((q, i) => `
+    <div style="display:flex;align-items:center;gap:6px;background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:8px 12px;">
+      <input class="inp" type="number" value="${q}" min="1" step="1"
+        oninput="pricing.base.presetQtys[${i}]=parseInt(this.value)||25;markChanged()"
+        style="width:72px;text-align:center;padding:6px 8px;font-size:13px;">
+      <span style="font-size:11px;color:var(--pale)">inv.</span>
+      <button class="btn-danger" onclick="removeQtyPreset(${i})" style="padding:4px 10px;font-size:10px">✕</button>
+    </div>`).join('') +
+    `<button class="btn-add" onclick="addQtyPreset()" style="width:auto;padding:8px 18px;margin-top:0">＋ Add</button>`;
+}
+
+function addQtyPreset() {
+  if (!pricing.base.presetQtys) pricing.base.presetQtys = [];
+  const last = pricing.base.presetQtys[pricing.base.presetQtys.length - 1] || 100;
+  pricing.base.presetQtys.push(last + 25);
+  markChanged();
+  renderQtyPresets();
+}
+
+function removeQtyPreset(i) {
+  if (pricing.base.presetQtys.length <= 2) { showToast('Keep at least 2 preset amounts', true); return; }
+  pricing.base.presetQtys.splice(i, 1);
+  markChanged();
+  renderQtyPresets();
+}
+
 // ── RENDER ALL ──
 function renderAll() {
   renderBase();
   renderPapers();
   renderEnvelopes();
   renderDelivery();
+  renderQtyPresets();
 }
 
 // ── SAVE ──

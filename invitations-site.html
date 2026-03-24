@@ -46,8 +46,17 @@ nav a:hover,nav a.active{color:var(--gold)}
 .page.active{display:block;animation:fadeUp .5s ease both}
 /* HERO */
 .hero{min-height:90vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden;background:var(--cream)}
-.hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1600&q=80&fit=crop') center/cover no-repeat}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(250,247,242,.80) 0%,rgba(250,247,242,.62) 40%,rgba(250,247,242,.85) 100%)}
+.hero-bg{position:absolute;inset:0}
+.hero-overlay{position:absolute;inset:0}
+/* COLLECTIONS GRID */
+.collections-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+.coll-card{background:var(--white);border:1px solid var(--border);border-radius:20px;overflow:hidden;cursor:pointer;transition:all .35s}
+.coll-card:hover{box-shadow:0 16px 48px rgba(61,46,36,.09);transform:translateY(-4px)}
+.coll-card-top{height:260px;display:flex;align-items:center;justify-content:center;position:relative}
+.coll-card-body{padding:24px}
+.coll-style{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:6px}
+.coll-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:4px}
+.coll-price{font-size:11px;color:var(--pale);letter-spacing:.06em}
 .hero-content{position:relative;z-index:1;animation:fadeUp .9s ease both;padding:0 24px;max-width:680px}
 .hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.8rem,5.5vw,5rem);font-weight:300;line-height:1.12;margin-bottom:22px;color:var(--text)}
 .hero h1 em{font-style:italic;color:var(--gold)}
@@ -132,7 +141,36 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
 .env-name{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin-top:5px;text-align:center;line-height:1.3}
 .env-price{font-size:9px;color:var(--gold);text-align:center}
 .env-section{border:1px solid var(--border);border-radius:16px;padding:20px 22px;background:var(--cream);margin-bottom:0}
-/* UPLOAD PAGE */
+/* BLOG */
+.blog-hero{background:var(--white);border-bottom:1px solid var(--border);padding:80px 0 60px;text-align:center}
+.post-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+.post-card{background:var(--white);border:1px solid var(--border);border-radius:20px;overflow:hidden;cursor:pointer;transition:all .35s;display:flex;flex-direction:column}
+.post-card:hover{box-shadow:0 12px 40px rgba(61,46,36,.09);transform:translateY(-3px)}
+.post-card-accent{height:4px;width:100%}
+.post-card-body{padding:28px;flex:1;display:flex;flex-direction:column}
+.post-tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.post-tag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:rgba(184,151,106,.1);color:var(--gold);font-weight:500;border:1px solid rgba(184,151,106,.2)}
+.post-title{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:400;color:var(--text);margin-bottom:10px;line-height:1.3}
+.post-excerpt{font-size:12px;color:var(--soft);line-height:1.85;margin-bottom:auto;padding-bottom:16px}
+.post-footer{display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--border);margin-top:auto}
+.post-meta{font-size:11px;color:var(--pale);letter-spacing:.04em}
+.post-read-more{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:500;display:flex;align-items:center;gap:6px;transition:gap .2s}
+.post-card:hover .post-read-more{gap:10px}
+.post-read-more::after{content:'→'}
+.post-full{display:none;max-width:740px;margin:0 auto;padding:64px 32px 100px}
+.post-full.active{display:block}
+.post-full h1{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:300;line-height:1.2;margin-bottom:16px}
+.post-full .post-body{font-size:15px;color:var(--soft);line-height:2;margin-top:32px}
+.post-full .post-body h2{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;color:var(--text);margin:36px 0 14px}
+.post-full .post-body p{margin-bottom:20px}
+.post-full .post-body ul{padding-left:20px;margin-bottom:20px}
+.post-full .post-body li{margin-bottom:8px}
+.post-full .post-body em{font-style:italic;color:var(--text)}
+.post-full .post-body strong{font-weight:500;color:var(--text)}
+.post-full .post-body a{color:var(--gold);text-decoration:none}
+.post-full .post-body a:hover{color:var(--brown)}
+@media(max-width:768px){.post-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.post-grid{grid-template-columns:1fr}}
 .upload-hero{background:var(--white);border-bottom:1px solid var(--border);padding:80px 0 60px;text-align:center}
 .upload-grid{display:grid;grid-template-columns:1fr 400px;gap:48px;align-items:start;margin-top:60px}
 .upload-zone{border:2px dashed var(--border);border-radius:20px;padding:60px 40px;text-align:center;cursor:pointer;transition:all .3s;background:var(--white)}
@@ -268,6 +306,18 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
 .upgrade-price-note{font-size:11px;color:var(--pale);margin-bottom:24px}
 
 @media(max-width:480px){.chat-panel{width:calc(100vw - 16px);right:8px}}
+/* QTY SELECTOR */
+.qty-mode-tabs{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--cream)}
+.qty-mode-tab{flex:1;padding:10px 12px;border:none;background:transparent;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);cursor:pointer;transition:all .2s;font-weight:400}
+.qty-mode-tab.active{background:var(--white);color:var(--text);font-weight:500;box-shadow:0 1px 4px rgba(61,46,36,.08)}
+.qty-chips-wrap{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 4px}
+.qty-chip{padding:10px 18px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--text);cursor:pointer;transition:all .2s;line-height:1}
+.qty-chip:hover{border-color:var(--gold-lt);color:var(--gold)}
+.qty-chip.selected{border-color:var(--gold);background:rgba(184,151,106,.06);color:var(--gold);font-weight:500}
+.qty-custom-wrap{display:flex;align-items:center;gap:14px}
+.qty-custom-input{width:110px;padding:12px 16px;border:1px solid var(--border);border-radius:12px;background:var(--cream);font-family:'Jost',sans-serif;font-size:16px;font-weight:400;color:var(--text);outline:none;transition:border-color .2s;text-align:center}
+.qty-custom-input:focus{border-color:var(--gold-lt);background:var(--white)}
+.qty-custom-note{font-size:12px;color:var(--soft);line-height:1.7}
 </style>
 </head>
 <body>
@@ -278,6 +328,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
     <nav>
       <a id="nav-upload" onclick="showPage('upload')">Upload &amp; Print</a>
       <a id="nav-studio" onclick="showPage('studio')">Design Studio</a>
+      <a id="nav-blog" onclick="showPage('blog')">Blog</a>
       <a id="nav-tracking" onclick="showPage('tracking')">Track Order</a>
     </nav>
     <div style="display:flex;align-items:center;gap:8px">
@@ -305,7 +356,23 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
 <!-- ═══ HOME ═══ -->
 <div id="page-home" class="page active">
   <section class="hero">
-    <div class="hero-bg"></div><div class="hero-overlay"></div>
+    <div class="hero-bg">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
+        <defs>
+          <pattern id="heroGrid" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+            <circle cx="40" cy="40" r="0.8" fill="#B8976A" opacity="0.18"/>
+          </pattern>
+          <pattern id="heroLines" x="0" y="0" width="160" height="160" patternUnits="userSpaceOnUse">
+            <ellipse cx="80" cy="80" rx="70" ry="70" fill="none" stroke="#B8976A" stroke-width="0.4" opacity="0.12"/>
+            <ellipse cx="80" cy="80" rx="44" ry="44" fill="none" stroke="#B8976A" stroke-width="0.4" opacity="0.08"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#heroGrid)"/>
+        <rect width="100%" height="100%" fill="url(#heroLines)"/>
+        <ellipse cx="50%" cy="50%" rx="38%" ry="44%" fill="none" stroke="#B8976A" stroke-width="0.5" opacity="0.1"/>
+        <ellipse cx="50%" cy="50%" rx="28%" ry="33%" fill="none" stroke="#B8976A" stroke-width="0.5" opacity="0.08"/>
+      </svg>
+    </div>
     <div class="hero-content">
       <div class="tag">Luxury Wedding Stationery</div>
       <h1>Every love story deserves<br><em>a beautiful beginning.</em></h1>
@@ -333,6 +400,78 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
       </div>
     </div>
   </section>
+  <!-- COLLECTIONS GRID -->
+  <section class="section" style="background:var(--cream)">
+    <div class="container">
+      <span class="tag centered">Our Collections</span>
+      <h2 class="section-title centered">Six Styles. Thirty-Six Templates.</h2>
+      <div class="divider" style="margin:20px auto"></div>
+      <p style="font-size:14px;color:var(--soft);max-width:480px;margin:0 auto;line-height:1.95;text-align:center">Each suite is available in six distinct templates — from classic to minimal, botanical to art deco. Every detail customisable in our Design Studio.</p>
+      <div class="collections-grid">
+        <div class="coll-card" onclick="showPage('studio')">
+          <div class="coll-card-top" style="background:#F5EDE6">
+            <svg width="130" height="175" viewBox="0 0 130 175" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="8" width="114" height="159" fill="#F5EDE6" rx="1"/>
+              <rect x="12" y="12" width="106" height="151" fill="none" stroke="#B8976A" stroke-width="1.2" rx="0.5"/>
+              <rect x="18" y="18" width="94" height="139" fill="none" stroke="#B8976A" stroke-width="0.4" rx="0.5"/>
+              <text x="65" y="68" text-anchor="middle" font-family="'Jost',sans-serif" font-size="5.5" fill="#B8976A" opacity="0.7" letter-spacing="2">TOGETHER WITH THEIR</text>
+              <text x="65" y="90" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="14" fill="#3D2E24" font-style="italic">Charlotte &amp; James</text>
+              <line x1="40" y1="98" x2="90" y2="98" stroke="#B8976A" stroke-width="0.5" opacity="0.5"/>
+              <text x="65" y="113" text-anchor="middle" font-family="'Jost',sans-serif" font-size="5" fill="#3D2E24" opacity="0.6" letter-spacing="1.5">14TH JUNE 2026</text>
+              <text x="65" y="126" text-anchor="middle" font-family="'Jost',sans-serif" font-size="5" fill="#3D2E24" opacity="0.5" letter-spacing="0.8">Blenheim Palace</text>
+            </svg>
+          </div>
+          <div class="coll-card-body">
+            <div class="coll-style">Classic · Foil Detail</div>
+            <div class="coll-name">The Margaux Suite</div>
+            <div class="coll-price">From £185 · 50 invitations</div>
+          </div>
+        </div>
+        <div class="coll-card" onclick="showPage('studio')">
+          <div class="coll-card-top" style="background:#EAF0EB">
+            <svg width="130" height="175" viewBox="0 0 130 175" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="8" width="114" height="159" fill="#EAF0EB" rx="1"/>
+              <path d="M28,167L28,56Q28,10 65,10Q102,10 102,56L102,167Z" fill="none" stroke="#5E7A5C" stroke-width="1.2" opacity="0.7"/>
+              <path d="M36,167L36,58Q36,20 65,20Q94,20 94,58L94,167Z" fill="none" stroke="#5E7A5C" stroke-width="0.4" opacity="0.4"/>
+              <text x="65" y="62" text-anchor="middle" font-family="'Jost',sans-serif" font-size="5.5" fill="#5E7A5C" opacity="0.7" letter-spacing="2">TOGETHER WITH</text>
+              <text x="65" y="84" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="14" fill="#2C332B" font-style="italic">Charlotte &amp; James</text>
+              <line x1="40" y1="92" x2="90" y2="92" stroke="#5E7A5C" stroke-width="0.5" opacity="0.5"/>
+              <text x="65" y="107" text-anchor="middle" font-family="'Jost',sans-serif" font-size="5" fill="#2C332B" opacity="0.6" letter-spacing="1.5">14TH JUNE 2026</text>
+              <text x="65" y="120" text-anchor="middle" font-family="'Jost',sans-serif" font-size="5" fill="#2C332B" opacity="0.5" letter-spacing="0.8">Blenheim Palace</text>
+              <text x="65" y="28" text-anchor="middle" font-size="10" fill="#5E7A5C" opacity="0.5">🌿</text>
+            </svg>
+          </div>
+          <div class="coll-card-body">
+            <div class="coll-style">Botanical · Watercolour</div>
+            <div class="coll-name">The Orchard Suite</div>
+            <div class="coll-price">From £215 · 50 invitations</div>
+          </div>
+        </div>
+        <div class="coll-card" onclick="showPage('studio')">
+          <div class="coll-card-top" style="background:#ECEAF2">
+            <svg width="130" height="175" viewBox="0 0 130 175" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="8" width="114" height="159" fill="#ECEAF2" rx="1"/>
+              <rect x="8" y="8" width="114" height="159" fill="#ECEAF2" rx="1"/>
+              <line x1="12" y1="44" x2="118" y2="44" stroke="#7B6BA0" stroke-width="2.2" opacity="0.7"/>
+              <line x1="12" y1="131" x2="118" y2="131" stroke="#7B6BA0" stroke-width="2.2" opacity="0.7"/>
+              <text x="65" y="72" text-anchor="middle" font-family="'Jost',sans-serif" font-size="5.5" fill="#7B6BA0" opacity="0.7" letter-spacing="2">TOGETHER WITH</text>
+              <text x="65" y="94" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="14" fill="#2E2840" font-style="italic">Charlotte &amp; James</text>
+              <line x1="40" y1="102" x2="90" y2="102" stroke="#7B6BA0" stroke-width="0.5" opacity="0.5"/>
+              <text x="65" y="117" text-anchor="middle" font-family="'Jost',sans-serif" font-size="5" fill="#2E2840" opacity="0.6" letter-spacing="1.5">14TH JUNE 2026</text>
+            </svg>
+          </div>
+          <div class="coll-card-body">
+            <div class="coll-style">Modern · Letterpress</div>
+            <div class="coll-name">The Arch Suite</div>
+            <div class="coll-price">From £235 · 50 invitations</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:40px">
+        <button class="btn" onclick="showPage('studio')">Explore All Collections ✦</button>
+      </div>
+    </div>
+  </section>
   <div class="quality-strip"><div class="container"><div class="quality-grid"><div class="quality-item"><div class="quality-num">300gsm+</div><div class="quality-label">Premium Papers</div></div><div class="quality-item"><div class="quality-num">✦</div><div class="quality-label">Coming Soon</div></div><div class="quality-item"><div class="quality-num">✦</div><div class="quality-label">Coming Soon</div></div><div class="quality-item"><div class="quality-num">DPD</div><div class="quality-label">Tracked Delivery</div></div></div></div></div>
   <section class="section" style="background:var(--white)">
     <div class="container">
@@ -346,7 +485,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
       </div>
     </div>
   </section>
-  <footer><div class="footer-inner"><div class="footer-top"><div><div class="footer-logo">Invita<span>tions</span></div><p class="footer-tagline">Luxury wedding stationery crafted with care for couples who believe every detail matters.</p></div><div class="footer-col"><h5>Get Started</h5><a onclick="showPage('upload')">Upload &amp; Print</a><a onclick="showPage('studio')">Design Studio</a><a>Sample Packs</a></div><div class="footer-col"><h5>Help</h5><a onclick="showPage('tracking')">Track Order</a><a>FAQs</a><a>Delivery Info</a></div><div class="footer-col"><h5>Legal</h5><a>Privacy Policy</a><a>Terms of Service</a><a>Returns Policy</a></div></div><div class="footer-bottom"><span>© 2025 Invitations. All rights reserved.</span><span>Made with love in the UK 🇬🇧</span></div></div></footer>
+  <footer><div class="footer-inner"><div class="footer-top"><div><div class="footer-logo">Invita<span>tions</span></div><p class="footer-tagline">Luxury wedding stationery crafted with care for couples who believe every detail matters.</p></div><div class="footer-col"><h5>Get Started</h5><a onclick="showPage('upload')">Upload &amp; Print</a><a onclick="showPage('studio')">Design Studio</a><a onclick="showPage('blog')">Blog</a><a>Sample Packs</a></div><div class="footer-col"><h5>Help</h5><a onclick="showPage('tracking')">Track Order</a><a>FAQs</a><a>Delivery Info</a></div><div class="footer-col"><h5>Legal</h5><a>Privacy Policy</a><a>Terms of Service</a><a>Returns Policy</a></div></div><div class="footer-bottom"><span>© 2025 Invitations. All rights reserved.</span><span>Made with love in the UK 🇬🇧</span></div></div></footer>
 </div>
 
 <!-- ═══ UPLOAD ═══ -->
@@ -383,7 +522,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
               </div>
             </div>
           </div>
-          <div class="form-row"><label class="form-label">Quantity</label><select class="form-select" id="upQty" onchange="calcUploadPrice()"><option value="25">25 invitations</option><option value="50" selected>50 invitations</option><option value="75">75 invitations</option><option value="100">100 invitations</option><option value="150">150 invitations</option><option value="200">200 invitations</option></select></div>
+          <div class="form-row"><label class="form-label">Quantity</label><div id="upQtySelector"></div></div>
           <div class="form-row"><label class="form-label">Delivery</label><select class="form-select" id="upDelivery" onchange="calcUploadPrice()"><option value="0">Standard — 5–7 working days (free)</option><option value="12">Express — 2–3 working days (+£12)</option><option value="18">Next Day — order before 12pm (+£18)</option></select></div>
           <div class="price-display">
             <div class="price-row"><span>Base price</span><span id="upBase">£125.00</span></div>
@@ -538,7 +677,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
                   </div>
                 </div>
               </div>
-              <div class="form-row"><label class="form-label">Quantity</label><select class="form-select" id="stQty" onchange="calcStudioPrice()"><option value="25">25 invitations</option><option value="50" selected>50 invitations</option><option value="75">75 invitations</option><option value="100">100 invitations</option><option value="150">150 invitations</option><option value="200">200 invitations</option></select></div>
+              <div class="form-row"><label class="form-label">Quantity</label><div id="stQtySelector"></div></div>
               <div class="form-row"><label class="form-label">Delivery</label><select class="form-select" id="stDelivery" onchange="calcStudioPrice()"><option value="0">Standard — 5–7 working days (free)</option><option value="12">Express — 2–3 working days (+£12)</option><option value="18">Next Day — order before 12pm (+£18)</option></select></div>
               <div class="price-display">
                 <div class="price-row"><span>Base price</span><span id="stBase">£125.00</span></div>
@@ -578,6 +717,39 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
   </div>
 </div>
 
+<!-- ═══ BLOG ═══ -->
+<div id="page-blog" class="page">
+
+  <!-- LIST VIEW -->
+  <div id="blogList">
+    <div class="blog-hero">
+      <div class="container">
+        <span class="tag">Blog</span>
+        <h1 class="section-title">Advice, Inspiration &amp; Ideas</h1>
+        <div class="divider" style="margin:20px auto"></div>
+        <p style="font-size:14px;color:var(--soft);max-width:480px;margin:0 auto;line-height:1.95">Guides on wording, paper, trends and everything you need to plan your wedding stationery.</p>
+      </div>
+    </div>
+    <div class="container" style="padding-top:52px;padding-bottom:80px">
+      <div id="blogTagFilter" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px"></div>
+      <div class="post-grid" id="postGrid"></div>
+      <div id="noPostsMsg" style="display:none;text-align:center;padding:80px 20px;color:var(--pale)">
+        <div style="font-size:36px;margin-bottom:14px">✦</div>
+        <p style="font-size:13px">Posts coming soon.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SINGLE POST VIEW -->
+  <div id="blogPost" style="display:none">
+    <div style="background:var(--white);border-bottom:1px solid var(--border);padding:18px 32px">
+      <button class="btn-ghost" style="padding:8px 16px;font-size:10px" onclick="closePost()">← Back to Blog</button>
+    </div>
+    <div class="post-full active" id="postFullContent"></div>
+  </div>
+
+</div>
+
 <!-- ═══ TRACKING ═══ -->
 <div id="page-tracking" class="page">
   <div style="padding:80px 0;text-align:center;background:var(--white);border-bottom:1px solid var(--border)"><div class="container"><span class="tag">Order Tracking</span><h1 class="section-title">Track Your Order</h1><div class="divider" style="margin:20px auto"></div><p style="font-size:14px;color:var(--soft);max-width:480px;margin:0 auto">Enter your order number and email address to check the status of your invitations.</p></div></div>
@@ -599,7 +771,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
 // ── PRICING ENGINE ──
 // Reads from localStorage (set by pricing-editor.html). Falls back to defaults if not set.
 const PRICING_DEFAULTS = {
-  base:{ratePerFifty:125,minQty:25,qtyStep:25,vatRate:20},
+  base:{ratePerFifty:125,qtyStep:25,vatRate:20},
   papers:[
     {id:'smooth',name:'Smooth White',  desc:'Crisp & classic',        gsm:300, surcharge:0},
     {id:'cotton',name:'Cotton Rag',    desc:'Luxury feel',            gsm:400, surcharge:20},
@@ -827,7 +999,7 @@ function renderUpEnvPicker() {
 function getUpEnvCost() {
   if (!upEnvChecked) return 0;
   const P = getPricing();
-  const q = parseInt(document.getElementById('upQty').value) || 50;
+  const q = getQtyValue('up');
   const sel = document.querySelector('input[name="upEnv"]:checked');
   const env = sel ? P.envelopes.find(e => e.id === sel.value) : P.envelopes[0];
   return (env?.perUnit || 0) * q;
@@ -847,7 +1019,7 @@ function getFileCheckCost() {
 
 function calcUploadPrice(){
   const P=getPricing();
-  const q=parseInt(document.getElementById('upQty').value);
+  const q=getQtyValue('up');
   const p=parseFloat(document.getElementById('upPaper').value);
   const d=parseFloat(document.getElementById('upDelivery').value);
   const envCost=getUpEnvCost();
@@ -864,7 +1036,7 @@ function calcUploadPrice(){
 }
 function addUploadToCart(){
   const P=getPricing();
-  const q=parseInt(document.getElementById('upQty').value);
+  const q=getQtyValue('up');
   const p=parseFloat(document.getElementById('upPaper').value);
   const env=getSelectedEnv('up');
   const pName=document.getElementById('upPaper').options[document.getElementById('upPaper').selectedIndex].text.split('—')[0].trim();
@@ -1086,7 +1258,7 @@ function renderStEnvPicker() {
 function getStEnvCost() {
   if (!stEnvChecked) return 0;
   const P = getPricing();
-  const q = parseInt(document.getElementById('stQty').value) || 50;
+  const q = getQtyValue('st');
   const sel = document.querySelector('input[name="stEnv"]:checked');
   const env = sel ? P.envelopes.find(e => e.id === sel.value) : P.envelopes[0];
   return (env?.perUnit || 0) * q;
@@ -1095,7 +1267,7 @@ function getStEnvCost() {
 function calcStudioPrice(){
   const P=getPricing();
   const p=parseFloat(document.getElementById('stPaper')?.value||0);
-  const q=parseInt(document.getElementById('stQty')?.value||50);
+  const q=getQtyValue('st');
   const d=parseFloat(document.getElementById('stDelivery')?.value||0);
   const envCost=getStEnvCost();
   const base=(q/50)*P.base.ratePerFifty,net=base+p+envCost,vat=net*(P.base.vatRate/100),total=net+vat+d;
@@ -1113,7 +1285,7 @@ function addStudioToCart(){
   const P=getPricing();
   const pEl=document.getElementById('stPaper');
   const pName=pEl.options[pEl.selectedIndex].text.split('—')[0].trim();
-  const q=parseInt(document.getElementById('stQty')?.value||50);
+  const q=getQtyValue('st');
   const p=parseFloat(document.getElementById('stPaper')?.value||0);
   const env=getSelectedEnv('st');
   const n1=document.getElementById('name1')?.value||'Charlotte';
@@ -1172,6 +1344,75 @@ function trackOrder(){
   result.style.display='block';
 }
 
+// ── QUANTITY SELECTOR ──
+const QTY_STATE = {};
+
+function initQtySelector(prefix, onChangeFn) {
+  const P = getPricing();
+  const presets = P.base.presetQtys || [25,50,75,100,150,200];
+  QTY_STATE[prefix] = { mode:'preset', value: presets[1] || 50, onChange: onChangeFn };
+  renderQtySelector(prefix);
+}
+
+function renderQtySelector(prefix) {
+  const el = document.getElementById(prefix + 'QtySelector');
+  if (!el) return;
+  const P = getPricing();
+  const presets = P.base.presetQtys || [25,50,75,100,150,200];
+  const state = QTY_STATE[prefix];
+  el.innerHTML = `
+    <div class="qty-mode-tabs">
+      <button class="qty-mode-tab${state.mode==='preset'?' active':''}" onclick="switchQtyMode('${prefix}','preset')">Choose amount</button>
+      <button class="qty-mode-tab${state.mode==='custom'?' active':''}" onclick="switchQtyMode('${prefix}','custom')">Enter exact amount</button>
+    </div>
+    <div id="${prefix}QtyPresetPanel"${state.mode==='custom'?' style="display:none"':''}>
+      <div class="qty-chips-wrap">
+        ${presets.map(q=>`<button class="qty-chip${(state.value===q&&state.mode==='preset')?' selected':''}" onclick="pickQtyPreset('${prefix}',${q})">${q} invitations</button>`).join('')}
+      </div>
+    </div>
+    <div id="${prefix}QtyCustomPanel"${state.mode==='preset'?' style="display:none"':''}>
+      <div class="qty-custom-wrap">
+        <input class="qty-custom-input" type="number" id="${prefix}QtyCustomInput"
+          value="${state.mode==='custom'?state.value:''}"
+          min="1" step="1" placeholder="e.g. 60"
+          oninput="onQtyCustomInput('${prefix}',this.value)"
+          onfocus="this.style.borderColor='var(--gold-lt)';this.style.background='var(--white)'"
+          onblur="this.style.borderColor='var(--border)';this.style.background='var(--cream)'">
+        <div class="qty-custom-note">Any whole number accepted.</div>
+      </div>
+    </div>`;
+}
+
+function switchQtyMode(prefix, mode) {
+  const P = getPricing();
+  const presets = P.base.presetQtys || [25,50,75,100,150,200];
+  const state = QTY_STATE[prefix];
+  state.mode = mode;
+  if (mode==='preset' && !presets.includes(state.value)) {
+    state.value = presets[1] || 50;
+  }
+  renderQtySelector(prefix);
+  if (state.onChange) state.onChange();
+}
+
+function pickQtyPreset(prefix, qty) {
+  QTY_STATE[prefix].value = qty;
+  renderQtySelector(prefix);
+  if (QTY_STATE[prefix].onChange) QTY_STATE[prefix].onChange();
+}
+
+function onQtyCustomInput(prefix, val) {
+  const P = getPricing();
+  const minQty = 1;
+  const n = parseInt(val) || 1;
+  QTY_STATE[prefix].value = Math.max(n, minQty);
+  if (QTY_STATE[prefix].onChange) QTY_STATE[prefix].onChange();
+}
+
+function getQtyValue(prefix) {
+  return QTY_STATE[prefix]?.value || 50;
+}
+
 // ── INIT ──
 document.addEventListener('DOMContentLoaded',()=>{
   // Build all selects from live pricing
@@ -1181,11 +1422,108 @@ document.addEventListener('DOMContentLoaded',()=>{
   buildDeliveryOptions('stDelivery');
   buildEnvPicker('up');
   buildEnvPicker('st');
+  initQtySelector('up', calcUploadPrice);
+  initQtySelector('st', calcStudioPrice);
   initStudio();
   calcUploadPrice();
+  loadBlog();
+  renderBlogTagFilter();
+  renderPostGrid();
 });
 </script>
 
+// ══════════════════════════════════════
+// BLOG — display only, read from localStorage written by SEO Editor
+// ══════════════════════════════════════
+let blogPosts = [];
+let activeBlogTag = 'all';
+
+const SEED_POSTS = [
+  {id:'post-seed-1',title:'How to Word Your Wedding Invitations',status:'published',keyword:'how to word wedding invitations UK',tags:['Wording','Planning','Etiquette'],date:'2026-03-01',readTime:'6 min read',excerpt:'Getting the wording right on your wedding invitations can feel surprisingly tricky — too formal and it feels stiff, too casual and it loses the occasion. Here is our complete guide to traditional, modern and informal styles, with real examples you can use.',body:`<p>Your wedding invitation is the first thing your guests will hold that tells them your wedding is real. More than a practical piece of information, it sets a tone. It tells people whether to expect a black tie dinner or a relaxed afternoon in a garden. It signals how much care you have put into the day before it has even begun.</p><h2>The Essential Elements of Any Wedding Invitation</h2><p>Whatever style you choose, every invitation needs to answer five questions clearly: who is hosting, who is getting married, when, where, and how to respond.</p><h2>Traditional Wording</h2><p>The traditional British wedding invitation is hosted by the bride's parents and uses formal, third-person language. <em>Mr and Mrs Edward Thornton request the pleasure of your company at the marriage of their daughter Charlotte Mary to Mr James William Hartley on Saturday the fourteenth of June, two thousand and twenty-six at three o'clock in the afternoon at St Mary's Church, Woodstock, Oxfordshire.</em></p><h2>Modern Wording</h2><p>Most couples today host their own wedding and prefer something warmer and more personal. <em>Together with their families, Charlotte Thornton and James Hartley invite you to celebrate their marriage on Saturday, 14th June 2026 at three o'clock in the afternoon, Blenheim Palace, Woodstock, Oxfordshire.</em></p><h2>Informal Wording</h2><p>If your wedding is relaxed, your invitation can say so. <em>We're getting married. Charlie & James. 14th June 2026 · 3pm. Blenheim Palace, Oxfordshire. Please join us — we'd love to have you there.</em></p><h2>Navigating Tricky Family Situations</h2><p>Divorced parents hosting jointly: list each on a separate line without "and" between them. Same-sex couples: list names in whatever order you prefer — alphabetical, by who asked, by gut feeling. There is no convention to follow and none needed.</p><h2>A Final Word</h2><p>The best invitation wording is the wording that sounds like you. Read it aloud. Does it feel stiff or natural? Does it match the tone of your wedding? If it does, it is right.</p>`},
+  {id:'post-seed-2',title:'Understanding Wedding Invitation Paper Types',status:'published',keyword:'wedding invitation paper types UK',tags:['Paper','Print','Guide'],date:'2026-03-10',readTime:'5 min read',excerpt:'The paper your invitation is printed on says as much about your day as the design itself. Here is everything you need to know about the main paper types, what they look like in practice, and how to choose between them.',body:`<p>There is a moment, when you open an invitation printed on really good paper, where you feel the quality before you read a word. The weight of it in your hand. The slight resistance as you unfold it. That moment is not an accident. It is the result of a deliberate choice about paper.</p><h2>Smooth White — 300gsm</h2><p>Our standard stock and the most popular choice. At 300gsm you have paper that feels unambiguously like something worth keeping. The smooth surface gives crisp, clean colour reproduction — fine lines stay fine, small text stays sharp, photography-based designs render beautifully. Best for contemporary designs, detailed illustration, calligraphy, and any style where sharpness matters.</p><h2>Cotton Rag — 400gsm</h2><p>Made from cotton fibres rather than wood pulp, which gives it a fundamentally different character. Softer. Warmer. More textured. At 400gsm it is extremely substantial. Cotton rag is particularly associated with letterpress printing and hot foil stamping, both of which take advantage of the paper's slight give to create a physical impression in the surface. It is also naturally acid-free and archival. Best for traditional and romantic styles, letterpress, foil stamping, botanical designs, and couples who want something genuinely luxurious.</p><h2>Vellum Overlay</h2><p>Vellum is translucent — not transparent like glass, but translucent in the way frosted glass is. We use vellum primarily as an overlay rather than a standalone card. Laid over a printed invitation, a vellum sheet creates a layered, hazy effect that is genuinely beautiful, particularly over botanical illustrations or watercolour designs. Best for botanical and floral styles, layered suite aesthetics, and couples who want something that feels truly unique.</p><h2>How to Choose</h2><p>Start with your wedding's overall aesthetic. Contemporary? Smooth White. Romantic and traditional? Cotton Rag. Botanical, layered, editorial? Vellum overlay. If you would like to feel the difference in person before ordering, we offer a sample pack.</p>`},
+  {id:'post-seed-3',title:'When Should You Send Your Wedding Invitations?',status:'published',keyword:'when to send wedding invitations UK',tags:['Planning','Timeline'],date:'2026-03-15',readTime:'5 min read',excerpt:'Timing your invitations correctly is one of the easiest things to get right — and one of the most common things couples leave too late. Here is the timeline to follow, with guidance for UK weddings, destination weddings, and everything in between.',body:`<p>Of all the questions we get asked by couples planning their wedding stationery, timing is the one that causes the most unnecessary stress. The good news is that it is also the simplest to get right — once you understand the logic, the timeline more or less writes itself.</p><h2>The Standard Rule for UK Weddings</h2><p>For a UK wedding where most guests are based in this country, send your formal invitations eight to twelve weeks before the wedding date. We recommend ten weeks as the ideal. Ten weeks gives guests enough time to arrange travel, book accommodation if they need it, request time off work, and arrange childcare. Eight weeks is the minimum. Twelve weeks is better for bank holiday weekends or peak summer months.</p><h2>Destination Weddings and International Guests</h2><p>If your wedding requires guests to book flights or make significant travel arrangements, send formal invitations four to six months before the date. For destination weddings, a save the date is not just helpful — it is essentially essential.</p><h2>Save the Dates — When and Whether to Send Them</h2><p>A save the date's only job is to tell people the date and ask them to hold it. Send them if your wedding is at a popular time of year, many guests need to travel, or your venue has limited nearby accommodation. For a UK wedding, send six to twelve months in advance. For a destination wedding, nine to eighteen months is not unreasonable.</p><h2>Working Backwards from Your Wedding Date</h2><p>Using a sample date of Saturday 20th September 2026: invitations to arrive by 20th June. Post by 13th June. Approve proof and go to print by 25th May. Place order by 18th May. Finalise wording by 11th May. Always allow more time than you think you need.</p><h2>RSVP Deadlines</h2><p>Set your RSVP deadline four to six weeks before the wedding. This gives you time to chase non-responders and confirm final numbers with your caterer. A shorter deadline creates unnecessary pressure on guests and on you.</p>`},
+  {id:'post-seed-4',title:'Wedding Stationery Trends for 2026: What Couples Are Actually Choosing',status:'draft',keyword:'wedding stationery trends 2026',tags:['Trends','Inspiration','Design'],date:'2026-03-20',readTime:'6 min read',excerpt:'2026 is proving to be a genuinely interesting year for wedding stationery. After years of safe, minimal design dominating the market, couples are choosing bolder, more personal and more tactile invitations than we have seen in a decade. Here is what is actually happening.',body:`<p>Wedding stationery trends are a curious thing. Unlike fashion, where trends move in seasons, stationery aesthetics tend to shift slowly and then, suddenly, all at once. We are currently in one of those moments. After a long period of clean, minimal, white-and-gold designs dominating — tasteful, timeless, safe — something is shifting.</p><h2>The Return of Tactile Print Techniques</h2><p>There has been a quiet and growing rejection of digital printing's flatness. Couples are choosing letterpress, hot foil stamping, and embossing for the physical experience these techniques create. Letterpress creates a visible, feelable impression in the paper. Hot foil is having a particular moment — not brash, reflective gold, but subtler applications: champagne foil on ivory card, rose gold on blush stock, copper on deep charcoal, used for a single element rather than applied wholesale.</p><h2>Bold Typography as the Hero</h2><p>The dominant typographic restraint of recent years — elegant serifs at modest sizes, generous white space — has started to give way to something more expressive. Oversized script fonts that fill the card. Dramatic display typefaces where the couple's names are set enormous. Layouts where typography is the design, not decoration applied to a design.</p><h2>Personal Motifs and Custom Illustration</h2><p>The clearest trend is the move away from generic floral motifs toward something specific to the couple. Venue illustrations are enormously popular — automatically unique to every wedding. Beyond venues: pets, especially dogs. Monograms returning in more graphic, modern interpretations. The common thread is specificity — the best invitations in 2026 could not be mistaken for anyone else's.</p><h2>Colour: Bolder and More Considered</h2><p>Deep, saturated card stocks are increasing in popularity — midnight navy, forest green, rich terracotta — with gold foil or pale inks creating striking contrast. At the other end, soft pastels — dusty rose, sage green, warm lilac — are being applied as part of a cohesive palette across the full suite consistently.</p><h2>The Full Suite Comeback</h2><p>Full stationery suites — invitation, envelope liner, details card, RSVP card, map card — are back with intent. This is partly a backlash against digital fatigue. Couples are deliberately creating physical experiences for their guests. Wax seals are part of this too: almost ubiquitous now at the premium end, and for good reason.</p><h2>What This Means for Your Invitations</h2><p>The best advice, regardless of what is trending, is to design for your wedding rather than someone else's. Trends tell you what is possible — they do not tell you what is right for you. Our Design Studio lets you explore styles, templates, colours and fonts with your actual names and wedding details rendered in real time.</p>`}
+];
+
+function loadBlog() {
+  try {
+    const s = localStorage.getItem('inv_blog');
+    if(s) { blogPosts = JSON.parse(s); return; }
+  } catch(e){}
+  blogPosts = JSON.parse(JSON.stringify(SEED_POSTS));
+}
+
+function renderBlogTagFilter() {
+  const published = blogPosts.filter(p=>p.status==='published');
+  const tags = [...new Set(published.flatMap(p=>p.tags||[]))].sort();
+  document.getElementById('blogTagFilter').innerHTML =
+    `<button class="qty-chip${activeBlogTag==='all'?' selected':''}" onclick="filterBlogTag('all')">All Posts</button>`+
+    tags.map(t=>`<button class="qty-chip${activeBlogTag===t?' selected':''}" onclick="filterBlogTag('${t}')">${t}</button>`).join('');
+}
+
+function filterBlogTag(tag) {
+  activeBlogTag = tag;
+  renderBlogTagFilter();
+  renderPostGrid();
+}
+
+function renderPostGrid() {
+  const published = blogPosts.filter(p=>{
+    if(p.status!=='published') return false;
+    return activeBlogTag==='all' || (p.tags||[]).includes(activeBlogTag);
+  });
+  const grid = document.getElementById('postGrid');
+  const noMsg = document.getElementById('noPostsMsg');
+  if(!published.length){ grid.innerHTML=''; noMsg.style.display='block'; return; }
+  noMsg.style.display='none';
+  grid.innerHTML = published.map(p=>{
+    const tagsHtml=(p.tags||[]).map(t=>`<span class="post-tag">${t}</span>`).join('');
+    const accentColour = p.tags?.includes('Trends') ? '#B5A8D0' : p.tags?.includes('Paper') ? '#C8D8C6' : p.tags?.includes('Wording') ? '#EDD5CE' : '#D4B896';
+    return `<div class="post-card" onclick="openPost('${p.id}')">
+      <div class="post-card-accent" style="background:${accentColour}"></div>
+      <div class="post-card-body">
+        <div class="post-tag-row">${tagsHtml}</div>
+        <div class="post-title">${p.title}</div>
+        <div class="post-excerpt">${p.excerpt||''}</div>
+        <div class="post-footer">
+          <div class="post-meta">${fmtPostDate(p.date)}${p.readTime?' · '+p.readTime:''}</div>
+          <span class="post-read-more">Read</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openPost(id) {
+  const p = blogPosts.find(p=>p.id===id);
+  if(!p) return;
+  document.getElementById('blogList').style.display='none';
+  document.getElementById('blogPost').style.display='block';
+  const tagsHtml=(p.tags||[]).map(t=>`<span class="post-tag">${t}</span>`).join('');
+  document.getElementById('postFullContent').innerHTML=`
+    <div class="post-tag-row" style="margin-bottom:16px">${tagsHtml}</div>
+    <h1>${p.title}</h1>
+    <div style="font-size:12px;color:var(--pale);margin-bottom:8px;letter-spacing:.04em">${fmtPostDate(p.date)}${p.readTime?' · '+p.readTime:''}</div>
+    <div style="width:48px;height:1px;background:var(--gold-lt);margin:24px 0"></div>
+    <div class="post-body">${p.body||''}</div>
+    <div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--border)">
+      <button class="btn-ghost" style="padding:8px 16px;font-size:10px" onclick="closePost()">← Back to Blog</button>
+    </div>`;
+  window.scrollTo(0,0);
+}
+
+function closePost() {
+  document.getElementById('blogList').style.display='block';
+  document.getElementById('blogPost').style.display='none';
+  window.scrollTo(0,0);
+}
+
+function fmtPostDate(d){
+  if(!d) return '';
+  return new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+}
+
+// ══════════════════════════════════════
 <!-- ═══ COMPACT HELP CHAT PANEL ═══ -->
 <div class="chat-panel" id="chatPanel">
   <div class="chat-panel-head">
