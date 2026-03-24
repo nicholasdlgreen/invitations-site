@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Invitations — Luxury Wedding Stationery</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;1,400&family=Cinzel:wght@400;500&family=Great+Vibes&family=Alex+Brush&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;1,400&family=Gilda+Display&display=swap" rel="stylesheet">
 <style>
 :root{--cream:#FAF7F2;--blush:#F0DDD8;--lav:#DDD5E8;--sage:#D1DDD0;--mist:#E8EBF0;--gold:#B8976A;--gold-lt:#D4B896;--brown:#6B4F3A;--text:#3D2E24;--soft:#7A6558;--pale:#B0A098;--white:#FFFFFF;--border:#E8DDD8;--ok:#5A9E6F}
@@ -493,64 +492,164 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px}
 <div id="page-upload" class="page">
   <div class="upload-hero"><div class="container"><span class="tag">Upload &amp; Print</span><h1 class="section-title">Your design, our expertise.</h1><div class="divider" style="margin:20px auto"></div><p style="font-size:14px;color:var(--soft);max-width:500px;margin:0 auto;line-height:1.9">Already have a design you love? Upload your artwork and we'll print it on the finest luxury papers, with a digital proof before we begin.</p></div></div>
   <div class="container" style="padding-bottom:80px">
-    <div class="upload-grid">
-      <div>
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('dragging')" ondragleave="this.classList.remove('dragging')" ondrop="handleDrop(event)">
-          <div class="upload-icon">✦</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:8px">Drop your file here</div>
-          <p style="font-size:12px;color:var(--soft);margin-bottom:20px">or click to browse</p>
-          <div style="font-size:11px;color:var(--pale);letter-spacing:.06em">PDF · AI · EPS · TIFF · JPG at 300dpi+</div>
-          <input type="file" id="fileInput" style="display:none" accept=".pdf,.ai,.eps,.tif,.tiff,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
+
+    <!-- STEP 1 — UPLOAD -->
+    <div id="upStep1">
+      <div class="upload-grid">
+        <div>
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('dragging')" ondragleave="this.classList.remove('dragging')" ondrop="handleDrop(event)">
+            <div class="upload-icon">✦</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:8px">Drop your file here</div>
+            <p style="font-size:12px;color:var(--soft);margin-bottom:20px">or click to browse</p>
+            <div style="font-size:11px;color:var(--pale);letter-spacing:.06em">PDF · AI · EPS · TIFF · JPG at 300dpi+</div>
+            <input type="file" id="fileInput" style="display:none" accept=".pdf,.ai,.eps,.tif,.tiff,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
+          </div>
         </div>
-        <div id="fileConfirm" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-top:16px"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px;color:var(--ok)">✓</span><div><div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem" id="fileName">File uploaded</div><div style="font-size:11px;color:var(--soft)">Ready for print specification</div></div></div></div>
-        <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-top:20px">
-          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)">Print Specification</h3>
-          <div class="form-row"><label class="form-label">Paper Stock</label><select class="form-select" id="upPaper" onchange="calcUploadPrice()"><option value="0">Smooth White — 300gsm (included)</option><option value="20">Cotton Rag — 400gsm (+£20)</option><option value="35">Vellum Overlay — Translucent (+£35)</option></select></div>
-          <div class="form-row" style="margin-bottom:8px">
-            <label class="form-label">Envelopes</label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;transition:border-color .2s;" id="upEnvToggleWrap">
-              <input type="checkbox" id="upEnvToggle" onchange="toggleUpEnv()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
-              <div>
-                <div style="font-size:13px;color:var(--text);font-weight:400;">Add matching envelopes</div>
-                <div style="font-size:11px;color:var(--pale);margin-top:2px;">Price per envelope · colour selection below</div>
-              </div>
-            </label>
-            <div class="env-section" id="upEnvSection" style="display:none">
-              <div class="env-picker" id="upEnvPicker"></div>
-              <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:11px;color:var(--soft)">Envelope total</span>
-                <span style="font-size:13px;color:var(--gold)" id="upEnvTotal">£0.00</span>
-              </div>
+        <div>
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:20px">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)">File Guidelines</h3>
+            <div style="font-size:13px;color:var(--soft);line-height:2">
+              <div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>PDF or vector files preferred (AI, EPS, InDesign)</span></div>
+              <div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>If using images, minimum 300dpi at print size</span></div>
+              <div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Include 3mm bleed on all sides</span></div>
+              <div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Embed all fonts or convert to outlines</span></div>
+              <div style="display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Colour mode: CMYK for best results</span></div>
             </div>
           </div>
-          <div class="form-row"><label class="form-label">Quantity</label><div id="upQtySelector"></div></div>
-          <div class="form-row"><label class="form-label">Delivery</label><select class="form-select" id="upDelivery" onchange="calcUploadPrice()"><option value="0">Standard — 5–7 working days (free)</option><option value="12">Express — 2–3 working days (+£12)</option><option value="18">Next Day — order before 12pm (+£18)</option></select></div>
-          <div class="price-display">
-            <div class="price-row"><span>Base price</span><span id="upBase">£125.00</span></div>
-            <div class="price-row"><span>Paper upgrade</span><span id="upPaperCost">—</span></div>
-            <div class="price-row"><span>Envelopes</span><span id="upEnvCost">—</span></div>
-            <div class="price-row"><span>Delivery</span><span id="upDelCost">Free</span></div>
-            <div class="price-row small"><span>VAT (20%)</span><span id="upVat">£25.00</span></div>
-            <div class="price-total serif"><span>Total</span><span id="upTotal">£150.00</span></div>
-          </div>
-          <button class="btn" style="width:100%;justify-content:center;margin-top:20px" onclick="addUploadToCart()">Add to Basket</button>
-        </div>
-      </div>
-      <div>
-        <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:20px"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)">File Guidelines</h3><div style="font-size:13px;color:var(--soft);line-height:2"><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>PDF or vector files preferred (AI, EPS, InDesign)</span></div><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>If using images, minimum 300dpi at print size</span></div><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Include 3mm bleed on all sides</span></div><div style="margin-bottom:12px;display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Embed all fonts or convert to outlines</span></div><div style="display:flex;gap:12px"><span style="color:var(--gold)">✦</span><span>Colour mode: CMYK for best results</span></div></div></div>
-        <div style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:28px">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:8px">Professional File Check</div>
-          <p style="font-size:12px;color:var(--soft);line-height:1.8;margin-bottom:16px">Not confident your file is print-ready? Our team will thoroughly check your artwork — resolution, bleed, colour mode and fonts — and send you a detailed report before anything goes to print.</p>
-          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--white);transition:border-color .2s;" id="fileCheckWrap">
-            <input type="checkbox" id="fileCheckToggle" onchange="toggleFileCheck()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px;">
-            <div>
-              <div style="font-size:13px;color:var(--text);font-weight:400;">Add professional file check — <span style="color:var(--gold)">£9.99</span></div>
-              <div style="font-size:11px;color:var(--pale);margin-top:2px;line-height:1.6;">Detailed artwork review · report within 24 hours · peace of mind before print</div>
+          <div style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:28px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:8px">Professional File Check</div>
+            <p style="font-size:12px;color:var(--soft);line-height:1.8;margin-bottom:16px">Not confident your file is print-ready? Our team will thoroughly check your artwork — resolution, bleed, colour mode and fonts — and send you a detailed report before anything goes to print.</p>
+            <div style="padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+              <div style="font-size:13px;color:var(--text);font-weight:400;">Professional file check — <span style="color:var(--gold)">£9.99</span></div>
+              <div style="font-size:11px;color:var(--pale);margin-top:4px;line-height:1.6">Added automatically · our team reviews resolution, bleed, colour mode and fonts before print</div>
             </div>
-          </label>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- STEP 2 — PREFLIGHT RESULTS -->
+    <div id="upStep2" style="display:none;max-width:760px;margin:0 auto">
+
+      <!-- File badge -->
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:28px" id="upFileIcon">🖼</span>
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--text)" id="upFileName">file.jpg</div>
+            <div style="font-size:11px;color:var(--pale);margin-top:2px" id="upFileMeta">0 MB</div>
+          </div>
+        </div>
+        <button onclick="resetUpload()" style="background:none;border:1px solid var(--border);border-radius:60px;padding:7px 16px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);cursor:pointer">Upload different file</button>
+      </div>
+
+      <!-- Checking spinner -->
+      <div id="upPreflightChecking" style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:48px;text-align:center">
+        <div style="font-size:32px;margin-bottom:16px;animation:spin 2s linear infinite;display:inline-block">✦</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:8px">Checking your file</div>
+        <div style="font-size:12px;color:var(--soft)">Analysing resolution, dimensions, colour mode and bleed…</div>
+      </div>
+
+      <!-- Results -->
+      <div id="upPreflightResults" style="display:none">
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start">
+
+          <!-- LEFT — image preview + file info -->
+          <div>
+            <div id="upImagePreview" style="background:var(--cream);border:1px solid var(--border);border-radius:16px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <span style="font-size:48px;color:var(--pale)" id="upPreviewIcon">🖼</span>
+            </div>
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+              <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;word-break:break-all" id="upPreviewName">file.jpg</div>
+              <div style="font-size:11px;color:var(--pale)" id="upPreviewMeta">0 MB</div>
+            </div>
+          </div>
+
+          <!-- RIGHT — summary + checklist -->
+          <div>
+            <!-- Summary bar -->
+            <div id="upPreflightSummary" style="border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;gap:14px"></div>
+            <!-- Checklist -->
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px">
+              <div id="upPreflightItems"></div>
+            </div>
+            <!-- Actions -->
+            <div style="display:flex;gap:10px;justify-content:flex-end">
+              <button onclick="resetUpload()" style="background:none;border:1px solid var(--border);border-radius:60px;padding:11px 20px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);cursor:pointer">Change file</button>
+              <button id="upContinueBtn" class="btn" onclick="showUploadSpec()">Continue →</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 — PRINT SPEC & ORDER -->
+    <div id="upStep3" style="display:none;max-width:760px;margin:0 auto">
+      <!-- File badge -->
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:16px;padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:22px" id="upStep3Icon">🖼</span>
+          <div>
+            <div style="font-size:13px;color:var(--text);font-weight:400" id="upStep3Name">file.jpg</div>
+            <div style="font-size:11px;color:var(--ok)">✓ File checked — ready to order</div>
+          </div>
+        </div>
+        <button onclick="resetUpload()" style="background:none;border:1px solid var(--border);border-radius:60px;padding:6px 14px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);cursor:pointer">Change file</button>
+      </div>
+
+      <div class="upload-grid">
+        <div>
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)">Print Specification</h3>
+            <div class="form-row"><label class="form-label">Paper Stock</label><select class="form-select" id="upPaper" onchange="calcUploadPrice()"><option value="0">Smooth White — 300gsm (included)</option><option value="20">Cotton Rag — 400gsm (+£20)</option><option value="35">Vellum Overlay — Translucent (+£35)</option></select></div>
+            <div class="form-row" style="margin-bottom:8px">
+              <label class="form-label">Envelopes</label>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;transition:border-color .2s;" id="upEnvToggleWrap">
+                <input type="checkbox" id="upEnvToggle" onchange="toggleUpEnv()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
+                <div>
+                  <div style="font-size:13px;color:var(--text);font-weight:400;">Add matching envelopes</div>
+                  <div style="font-size:11px;color:var(--pale);margin-top:2px;">Price per envelope · colour selection below</div>
+                </div>
+              </label>
+              <div class="env-section" id="upEnvSection" style="display:none">
+                <div class="env-picker" id="upEnvPicker"></div>
+                <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:11px;color:var(--soft)">Envelope total</span>
+                  <span style="font-size:13px;color:var(--gold)" id="upEnvTotal">£0.00</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row"><label class="form-label">Quantity</label><div id="upQtySelector"></div></div>
+            <div class="form-row"><label class="form-label">Delivery</label><select class="form-select" id="upDelivery" onchange="calcUploadPrice()"><option value="0">Standard — 5–7 working days (free)</option><option value="12">Express — 2–3 working days (+£12)</option><option value="18">Next Day — order before 12pm (+£18)</option></select></div>
+            <div class="price-display">
+              <div class="price-row"><span>Base price</span><span id="upBase">£125.00</span></div>
+              <div class="price-row"><span>Paper upgrade</span><span id="upPaperCost">—</span></div>
+              <div class="price-row"><span>Envelopes</span><span id="upEnvCost">—</span></div>
+              <div class="price-row"><span>Delivery</span><span id="upDelCost">Free</span></div>
+              <div class="price-row"><span>File check</span><span id="upFileCheckCost">£9.99</span></div>
+              <div class="price-row small"><span>VAT (20%)</span><span id="upVat">£25.00</span></div>
+              <div class="price-total serif"><span>Total</span><span id="upTotal">£150.00</span></div>
+            </div>
+            <button class="btn" style="width:100%;justify-content:center;margin-top:20px" onclick="addUploadToCart()">Add to Basket</button>
+          </div>
+        </div>
+        <div>
+          <div style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:28px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:8px">Professional File Check</div>
+            <p style="font-size:12px;color:var(--soft);line-height:1.8;margin-bottom:16px">Our team will review your file in detail — resolution, bleed, colour mode and fonts — before anything goes to print.</p>
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--white);transition:border-color .2s;" id="fileCheckWrap">
+              <input type="checkbox" id="fileCheckToggle" onchange="toggleFileCheck()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px;" checked>
+              <div>
+                <div style="font-size:13px;color:var(--text);font-weight:400;">Add professional file check — <span style="color:var(--gold)">£9.99</span></div>
+                <div style="font-size:11px;color:var(--pale);margin-top:2px;line-height:1.6;">Detailed artwork review · report within 24 hours · peace of mind before print</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
   <footer><div class="footer-inner"><div class="footer-bottom" style="border-top:none;padding-top:0"><span>© 2025 Invitations. All rights reserved.</span><span>Made with love in the UK 🇬🇧</span></div></div></footer>
 </div>
@@ -873,6 +972,7 @@ async function startPreflight(file) {
   currentUploadFile = file;
   const ext = file.name.split('.').pop().toLowerCase();
   const icon = FILE_ICONS[ext] || '✦';
+  const imageExts = ['jpg','jpeg','png','tif','tiff','webp'];
 
   // Show step 2
   document.getElementById('upStep1').style.display = 'none';
@@ -885,6 +985,26 @@ async function startPreflight(file) {
   document.getElementById('upFileName').textContent = file.name;
   document.getElementById('upFileMeta').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB · ' + ext.toUpperCase();
   document.getElementById('upFileIcon').textContent = icon;
+
+  // Generate image preview for raster images
+  const previewEl = document.getElementById('upImagePreview');
+  document.getElementById('upPreviewName').textContent = file.name;
+  document.getElementById('upPreviewMeta').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB · ' + ext.toUpperCase();
+  document.getElementById('upPreviewIcon').textContent = icon;
+
+  if (imageExts.includes(ext)) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewEl.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // Vector/PDF — show a styled placeholder with file type
+    previewEl.innerHTML = `<div style="text-align:center;padding:20px">
+      <div style="font-size:36px;margin-bottom:8px">${icon}</div>
+      <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pale)">${ext.toUpperCase()}</div>
+    </div>`;
+  }
 
   try {
     const formData = new FormData();
@@ -899,7 +1019,6 @@ async function startPreflight(file) {
     renderPreflightResults(data.checks || [], data.summary || {}, file.name, icon);
 
   } catch (err) {
-    // Network error or function not deployed — show manual review message
     renderPreflightResults([{
       status: 'info',
       label: 'File Received',
@@ -920,42 +1039,39 @@ function renderPreflightResults(checks, summary, filename, icon) {
   const continueBtn = document.getElementById('upContinueBtn');
 
   if (hasErrors) {
-    summaryEl.style.background = '#FFF0EE';
-    summaryEl.style.border = '1px solid #f0c8c4';
-    summaryEl.innerHTML = '<span style="font-size:20px">⚠️</span><div><div style="font-size:13px;font-weight:500;color:#C94A3A">Issues found — please review</div><div style="font-size:11px;color:var(--soft);margin-top:2px">' + summary.errors + ' error' + (summary.errors>1?'s':'') + (summary.warnings?' · '+summary.warnings+' warning'+(summary.warnings>1?'s':''):'') + ' · We recommend fixing these before proceeding</div></div>';
+    summaryEl.style.cssText = 'border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;gap:14px;background:#FFF0EE;border:1px solid #f0c8c4';
+    summaryEl.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#f0c8c4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">⚠</div><div><div style="font-size:13px;font-weight:500;color:#C94A3A">Issues found — please review</div><div style="font-size:11px;color:var(--soft);margin-top:2px">${summary.errors} error${summary.errors>1?'s':''}${summary.warnings?' · '+summary.warnings+' warning'+(summary.warnings>1?'s':''):''} · We recommend fixing before proceeding</div></div>`;
     continueBtn.textContent = 'Continue anyway →';
   } else if (hasWarnings) {
-    summaryEl.style.background = '#FDF4E7';
-    summaryEl.style.border = '1px solid #f0d9b5';
-    summaryEl.innerHTML = '<span style="font-size:20px">✦</span><div><div style="font-size:13px;font-weight:500;color:#C97B3A">A few things to review</div><div style="font-size:11px;color:var(--soft);margin-top:2px">' + summary.warnings + ' warning' + (summary.warnings>1?'s':'') + ' · ' + summary.passed + ' check' + (summary.passed>1?'s':'') + ' passed · You can continue or upload an improved file</div></div>';
-    continueBtn.textContent = 'Continue to paper & quantity →';
+    summaryEl.style.cssText = 'border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;gap:14px;background:#FDF4E7;border:1px solid #f0d9b5';
+    summaryEl.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#f0d9b5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">✦</div><div><div style="font-size:13px;font-weight:500;color:#C97B3A">A few things to review</div><div style="font-size:11px;color:var(--soft);margin-top:2px">${summary.warnings} warning${summary.warnings>1?'s':''} · ${summary.passed} check${summary.passed>1?'s':''} passed · You can continue or upload an improved file</div></div>`;
+    continueBtn.textContent = 'Continue to order →';
   } else {
-    summaryEl.style.background = '#EAF5EE';
-    summaryEl.style.border = '1px solid #b8dfc6';
-    summaryEl.innerHTML = '<span style="font-size:20px">✓</span><div><div style="font-size:13px;font-weight:500;color:#3A7D52">Looking good!</div><div style="font-size:11px;color:var(--soft);margin-top:2px">All ' + (summary.passed||checks.length) + ' checks passed — your file looks print-ready</div></div>';
-    continueBtn.textContent = 'Continue to paper & quantity →';
+    summaryEl.style.cssText = 'border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;gap:14px;background:#EAF5EE;border:1px solid #b8dfc6';
+    summaryEl.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#b8dfc6;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:#3A7D52">✓</div><div><div style="font-size:13px;font-weight:500;color:#3A7D52">All checks passed</div><div style="font-size:11px;color:var(--soft);margin-top:2px">Your file looks print-ready — ${summary.passed||checks.length} checks passed</div></div>`;
+    continueBtn.textContent = 'Continue to order →';
   }
 
-  // Check items
+  // Checklist items — cleaner row style with icon, label, status pill, expandable note
   const statusConfig = {
-    ok:   { bg:'#EAF5EE', border:'#b8dfc6', dot:'#3A7D52',  label:'Pass' },
-    warn: { bg:'#FDF4E7', border:'#f0d9b5', dot:'#C97B3A',  label:'Warning' },
-    err:  { bg:'#FFF0EE', border:'#f0c8c4', dot:'#C94A3A',  label:'Error' },
-    info: { bg:'#EAF0F7', border:'#b8cfe8', dot:'#4A7FAA',  label:'Info' },
+    ok:   { icon:'✓', iconBg:'#3A7D52', iconColor:'#fff', pill:'Pass',    pillBg:'#EAF5EE', pillColor:'#3A7D52', pillBorder:'#b8dfc6' },
+    warn: { icon:'!', iconBg:'#C97B3A', iconColor:'#fff', pill:'Warning', pillBg:'#FDF4E7', pillColor:'#C97B3A', pillBorder:'#f0d9b5' },
+    err:  { icon:'✕', iconBg:'#C94A3A', iconColor:'#fff', pill:'Error',   pillBg:'#FFF0EE', pillColor:'#C94A3A', pillBorder:'#f0c8c4' },
+    info: { icon:'i', iconBg:'#4A7FAA', iconColor:'#fff', pill:'Info',    pillBg:'#EAF0F7', pillColor:'#4A7FAA', pillBorder:'#b8cfe8' },
   };
 
   document.getElementById('upPreflightItems').innerHTML = checks.map((ch, i) => {
     const s = statusConfig[ch.status] || statusConfig.info;
-    return `<div style="padding:16px 20px;${i>0?'border-top:1px solid var(--border)':''}display:flex;gap:14px;align-items:flex-start">
-      <div style="width:8px;height:8px;border-radius:50%;background:${s.dot};flex-shrink:0;margin-top:5px"></div>
-      <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-          <span style="font-size:12px;font-weight:500;color:var(--text)">${ch.label}</span>
-          <span style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${s.dot};background:${s.bg};border:1px solid ${s.border};padding:2px 8px;border-radius:20px">${s.label}</span>
+    return `<div style="padding:14px 18px;${i>0?'border-top:1px solid var(--border)':''}">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:26px;height:26px;border-radius:50%;background:${s.iconBg};color:${s.iconColor};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${s.icon}</div>
+        <div style="flex:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:500;color:var(--text)">${ch.label}</span>
           ${ch.val ? `<span style="font-size:11px;color:var(--pale)">${ch.val}</span>` : ''}
         </div>
-        <div style="font-size:12px;color:var(--soft);line-height:1.7">${ch.note}</div>
+        <span style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:${s.pillBg};color:${s.pillColor};border:1px solid ${s.pillBorder};white-space:nowrap;flex-shrink:0">${s.pill}</span>
       </div>
+      ${ch.note ? `<div style="font-size:12px;color:var(--soft);line-height:1.75;margin-top:8px;margin-left:38px">${ch.note}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -1431,9 +1547,10 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   renderPostGrid();
 });
 </script>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 // ══════════════════════════════════════
-// BLOG — display only, read from Supabase / localStorage / seed
+// BLOG — display only, read from localStorage written by SEO Editor
 // ══════════════════════════════════════
 let blogPosts = [];
 let activeBlogTag = 'all';
@@ -1534,7 +1651,6 @@ function fmtPostDate(d){
 }
 
 // ══════════════════════════════════════
-</script>
 <!-- ═══ COMPACT HELP CHAT PANEL ═══ -->
 <div class="chat-panel" id="chatPanel">
   <div class="chat-panel-head">
