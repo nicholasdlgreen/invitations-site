@@ -288,7 +288,7 @@ footer { background: var(--text); color: rgba(255,255,255,.6); padding: 60px 0 3
     <div class="cart-row"><span>Subtotal (excl. VAT)</span><span id="cartNet">£0.00</span></div>
     <div class="cart-row vat"><span>VAT (20%)</span><span id="cartVat">£0.00</span></div>
     <div class="cart-row total serif"><span>Total</span><span id="cartTotal">£0.00</span></div>
-    <a class="btn" style="width:100%;justify-content:center;" href="checkout.html">Proceed to Checkout</a>
+    <button class="btn" id="checkoutBtn" style="width:100%;justify-content:center;" onclick="initiateStripeCheckout()">Proceed to Checkout</button>
   </div>
 </div>
 
