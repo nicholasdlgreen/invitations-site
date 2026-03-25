@@ -67,3 +67,39 @@ function renderCartDrawer() {
 
 // Init badge on page load
 updateCartBadge();
+// ============================================================
+//  STRIPE CHECKOUT
+// ============================================================
+async function initiateStripeCheckout() {
+  if (!cart.length) {
+    alert('Your basket is empty.');
+    return;
+  }
+
+  const items = cart.map(item => ({
+    name: item.name,
+    description: item.paper || 'Smooth White',
+    unitPrice: item.total / item.qty,
+    quantity: item.qty,
+  }));
+
+  const btn = document.getElementById('checkoutBtn');
+  if (btn) { btn.textContent = 'Redirecting…'; btn.disabled = true; }
+
+  try {
+    const response = await fetch('/.netlify/functions/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.url) throw new Error(data.error || 'Failed');
+    window.location.href = data.url;
+
+  } catch (err) {
+    console.error('Checkout error:', err);
+    alert('Something went wrong. Please try again.');
+    if (btn) { btn.textContent = 'Checkout'; btn.disabled = false; }
+  }
+}
