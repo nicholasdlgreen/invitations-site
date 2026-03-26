@@ -2,3 +2,4 @@
   from = "/*"
   to = "/invitations-site.html"
   status = 200
+  force = false
