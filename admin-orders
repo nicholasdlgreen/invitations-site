@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Order Management — Invitations Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@200;300;400;500;600&display=swap');
+
+:root {
+  --cream:#FAF7F2;--gold:#B8976A;--gold-lt:#D4B896;--brown:#6B4F3A;
+  --text:#3D2E24;--soft:#7A6558;--pale:#B0A098;--white:#FFFFFF;
+  --border:#E8DDD8;--ok:#5A9E6F;--warn:#C97B3A;--err:#C94A3A;
+  --navy:#1E2A3A;--navy-lt:#2C3E50;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Jost',sans-serif;font-weight:300;background:#F0EDE8;color:var(--text);min-height:100vh;}
+
+/* ── LAYOUT ── */
+.admin-shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+.sidebar{background:var(--navy);padding:0;display:flex;flex-direction:column;}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sidebar-logo-text{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:#fff;}
+.sidebar-logo-text span{color:var(--gold-lt);}
+.sidebar-logo-sub{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:4px;}
+.sidebar-nav{padding:16px 0;flex:1;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:12px;letter-spacing:.06em;color:rgba(255,255,255,.5);cursor:pointer;transition:all .2s;text-decoration:none;}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.05);}
+.nav-item.active{color:#fff;background:rgba(184,151,106,.15);border-right:2px solid var(--gold);}
+.nav-icon{font-size:14px;width:18px;text-align:center;}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.3);}
+
+.main{padding:0;overflow:auto;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;}
+.topbar-actions{display:flex;align-items:center;gap:12px;}
+.content{padding:28px 32px;}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px 22px;}
+.stat-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--pale);margin-bottom:8px;}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--text);}
+.stat-sub{font-size:11px;color:var(--soft);margin-top:4px;}
+
+/* ── FILTERS ── */
+.filters{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-btn{padding:7px 16px;border:1px solid var(--border);border-radius:20px;background:var(--white);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;color:var(--soft);}
+.filter-btn:hover{border-color:var(--gold);color:var(--gold);}
+.filter-btn.active{background:var(--gold);border-color:var(--gold);color:#fff;}
+.search-input{padding:8px 16px;border:1px solid var(--border);border-radius:20px;font-family:'Jost',sans-serif;font-size:12px;color:var(--text);outline:none;background:var(--white);width:220px;}
+.search-input:focus{border-color:var(--gold-lt);}
+
+/* ── ORDERS TABLE ── */
+.orders-table-wrap{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.orders-table{width:100%;border-collapse:collapse;}
+.orders-table th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--pale);font-weight:500;padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);background:var(--cream);}
+.orders-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+.orders-table tr:last-child td{border-bottom:none;}
+.orders-table tr:hover td{background:#FDFAF7;}
+.order-ref{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:400;color:var(--text);}
+.order-customer{font-size:12px;color:var(--text);font-weight:400;}
+.order-email{font-size:11px;color:var(--soft);}
+.order-items{font-size:11px;color:var(--soft);line-height:1.6;}
+.order-total{font-size:13px;font-weight:500;color:var(--text);}
+
+/* ── STATUS PILLS ── */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:500;}
+.pill-pending{background:#F5F0E8;color:#9B7D4A;}
+.pill-paid{background:#EAF4EE;color:#3D8A57;}
+.pill-proof{background:#FDF4E7;color:#C97B3A;}
+.pill-printing{background:#E8F0FA;color:#4A7FAA;}
+.pill-dispatched{background:#EAF0F7;color:#3A6FA8;}
+.pill-delivered{background:#EAEAEA;color:#888;}
+.pill-cancelled{background:#FCEAEA;color:#C94A3A;}
+.pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* ── ACTION BUTTONS ── */
+.action-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;color:var(--soft);white-space:nowrap;}
+.action-btn:hover{border-color:var(--gold);color:var(--gold);}
+.action-btn.primary{background:var(--gold);border-color:var(--gold);color:#fff;}
+.action-btn.primary:hover{background:var(--brown);}
+.action-btns{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* ── STATUS DROPDOWN ── */
+.status-select{padding:5px 10px;border:1px solid var(--border);border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;color:var(--text);background:var(--white);cursor:pointer;outline:none;}
+.status-select:focus{border-color:var(--gold-lt);}
+
+/* ── JOB TICKET MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(61,46,36,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:24px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--white);max-width:720px;width:100%;max-height:90vh;overflow-y:auto;border-radius:20px;}
+.modal-head{padding:24px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal-head h3{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;}
+.modal-close{background:none;border:none;font-size:20px;color:var(--pale);cursor:pointer;}
+.modal-body{padding:28px;}
+
+/* ── JOB TICKET PRINT STYLES ── */
+.job-ticket{border:2px solid var(--text);border-radius:4px;overflow:hidden;}
+.jt-header{background:var(--text);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;}
+.jt-header-logo{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:#fff;}
+.jt-header-logo span{color:var(--gold-lt);}
+.jt-header-ref{text-align:right;}
+.jt-header-ref-num{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:#fff;}
+.jt-header-ref-date{font-size:10px;color:rgba(255,255,255,.5);margin-top:2px;}
+.jt-body{padding:20px;}
+.jt-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.jt-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+.jt-field{padding:12px 14px;background:var(--cream);border-radius:8px;}
+.jt-field-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--pale);margin-bottom:4px;}
+.jt-field-val{font-size:13px;color:var(--text);font-weight:400;line-height:1.5;}
+.jt-field-val.large{font-family:'Cormorant Garamond',serif;font-size:1.4rem;}
+.jt-section-title{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:10px;margin-top:16px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.jt-artwork{border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;margin-top:8px;}
+.jt-artwork a{color:var(--gold);font-size:12px;word-break:break-all;}
+.jt-checklist{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.jt-check-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--soft);}
+.jt-check-box{width:14px;height:14px;border:1.5px solid var(--border);border-radius:2px;flex-shrink:0;}
+.jt-footer{background:var(--cream);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);}
+.jt-footer-text{font-size:10px;color:var(--pale);}
+
+/* ── EMPTY / LOADING ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--pale);}
+.empty-state-icon{font-size:36px;margin-bottom:16px;display:block;}
+.loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:40px;color:var(--soft);font-size:13px;}
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── PRINT ── */
+@media print {
+  .admin-shell{display:block;}
+  .sidebar,.topbar,.filters,.stats-grid,.action-btns,.modal-head button,.modal-close{display:none!important;}
+  .modal-bg{position:static;background:none;padding:0;}
+  .modal{max-height:none;border-radius:0;box-shadow:none;}
+  .modal-body{padding:0;}
+  body{background:#fff;}
+}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:60px;transition:background .2s;}
+.btn:hover{background:var(--brown);}
+.btn-out{display:inline-flex;align-items:center;gap:8px;padding:9px 22px;background:transparent;color:var(--gold);border:1px solid var(--gold);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:60px;transition:all .2s;}
+.btn-out:hover{background:var(--gold);color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">Invita<span>tions</span></div>
+      <div class="sidebar-logo-sub">Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="admin-orders.html"><span class="nav-icon">📋</span>Orders</a>
+      <a class="nav-item" href="invitations-site.html"><span class="nav-icon">🌐</span>View Site</a>
+      <a class="nav-item" href="pricing-editor.html"><span class="nav-icon">💷</span>Pricing</a>
+      <a class="nav-item" href="seo-editor.html"><span class="nav-icon">🔍</span>SEO</a>
+      <a class="nav-item" href="project-board.html"><span class="nav-icon">📌</span>Project Board</a>
+    </nav>
+    <div class="sidebar-footer"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0e666b6262614e676078677a6f7a6761607d206d61207b65">[email&#160;protected]</a></div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Order Management</div>
+      <div class="topbar-actions">
+        <span id="lastRefresh" style="font-size:11px;color:var(--pale);"></span>
+        <button class="btn-out" onclick="loadOrders()" style="padding:7px 18px;">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- STATS -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-val" id="statTotal">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card"><div class="stat-label">Awaiting Action</div><div class="stat-val" id="statPending">—</div><div class="stat-sub">Paid, needs job ticket</div></div>
+        <div class="stat-card"><div class="stat-label">In Production</div><div class="stat-val" id="statPrinting">—</div><div class="stat-sub">Currently printing</div></div>
+        <div class="stat-card"><div class="stat-label">Revenue (inc. VAT)</div><div class="stat-val" id="statRevenue">—</div><div class="stat-sub">All paid orders</div></div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
+        <button class="filter-btn" onclick="setFilter('paid',this)">Paid</button>
+        <button class="filter-btn" onclick="setFilter('proof',this)">Proof Sent</button>
+        <button class="filter-btn" onclick="setFilter('printing',this)">Printing</button>
+        <button class="filter-btn" onclick="setFilter('dispatched',this)">Dispatched</button>
+        <button class="filter-btn" onclick="setFilter('delivered',this)">Delivered</button>
+        <input class="search-input" id="searchInput" placeholder="Search by name, ref, email…" oninput="renderTable()">
+      </div>
+
+      <!-- ORDERS TABLE -->
+      <div class="orders-table-wrap">
+        <div id="tableContainer">
+          <div class="loading"><div class="spinner"></div>Loading orders…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- JOB TICKET MODAL -->
+<div class="modal-bg" id="jobTicketModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 class="serif">Job Ticket</h3>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn-out" onclick="window.print()" style="padding:7px 16px;">🖨 Print</button>
+        <button class="modal-close" onclick="closeJobTicket()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="jobTicketContent"></div>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ── CONFIG ────────────────────────────────────────────────
+const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+
+// ── STATE ────────────────────────────────────────────────
+let allOrders   = [];
+let activeFilter = 'all';
+
+// ── SUPABASE HELPERS ──────────────────────────────────────
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      ...(opts.headers || {}),
+    },
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  return res.json();
+}
+
+// ── LOAD ORDERS ──────────────────────────────────────────
+async function loadOrders() {
+  document.getElementById('tableContainer').innerHTML = `<div class="loading"><div class="spinner"></div>Loading orders…</div>`;
+  try {
+    const orders = await sbFetch('orders?select=*&order=created_at.desc');
+    allOrders = orders;
+    updateStats();
+    renderTable();
+    document.getElementById('lastRefresh').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  } catch (err) {
+    document.getElementById('tableContainer').innerHTML = `
+      <div class="empty-state">
+        <span class="empty-state-icon">⚠</span>
+        <p style="font-size:13px;color:var(--err);">Could not load orders: ${err.message}</p>
+        <p style="font-size:11px;color:var(--pale);margin-top:8px;">Check your Supabase connection and that the orders table exists.</p>
+      </div>`;
+  }
+}
+
+// ── STATS ────────────────────────────────────────────────
+function updateStats() {
+  const paid = allOrders.filter(o => o.status !== 'pending' && o.status !== 'cancelled');
+  const awaitingAction = allOrders.filter(o => o.status === 'paid');
+  const printing = allOrders.filter(o => o.status === 'printing');
+  const revenue = paid.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+
+  document.getElementById('statTotal').textContent    = allOrders.length;
+  document.getElementById('statPending').textContent  = awaitingAction.length;
+  document.getElementById('statPrinting').textContent = printing.length;
+  document.getElementById('statRevenue').textContent  = '£' + revenue.toFixed(2);
+}
+
+// ── FILTER ───────────────────────────────────────────────
+function setFilter(status, btn) {
+  activeFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+// ── RENDER TABLE ─────────────────────────────────────────
+function renderTable() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let orders = allOrders;
+
+  if (activeFilter !== 'all') {
+    orders = orders.filter(o => o.status === activeFilter);
+  }
+  if (search) {
+    orders = orders.filter(o =>
+      (o.order_number || '').toLowerCase().includes(search) ||
+      (o.customer_name || '').toLowerCase().includes(search) ||
+      (o.customer_email || '').toLowerCase().includes(search)
+    );
+  }
+
+  if (!orders.length) {
+    document.getElementById('tableContainer').innerHTML = `
+      <div class="empty-state">
+        <span class="empty-state-icon">✦</span>
+        <p style="font-size:13px;">No orders found</p>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('tableContainer').innerHTML = `
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${orders.map(o => renderRow(o)).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderRow(o) {
+  const items = Array.isArray(o.items) ? o.items : [];
+  const itemsSummary = items.map(i => `${i.qty} × ${i.name}`).join(', ') || '—';
+  const date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—';
+
+  return `
+    <tr>
+      <td><div class="order-ref">${o.order_number || '—'}</div></td>
+      <td>
+        <div class="order-customer">${o.customer_name || '—'}</div>
+        <div class="order-email">${o.customer_email || ''}</div>
+      </td>
+      <td><div class="order-items">${itemsSummary}</div></td>
+      <td><div class="order-total">£${parseFloat(o.total || 0).toFixed(2)}</div></td>
+      <td>
+        <select class="status-select" onchange="updateStatus('${o.id}', this.value)">
+          ${['pending','paid','proof','printing','dispatched','delivered','cancelled'].map(s =>
+            `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`
+          ).join('')}
+        </select>
+      </td>
+      <td style="font-size:11px;color:var(--soft);">${date}</td>
+      <td>
+        <div class="action-btns">
+          <button class="action-btn primary" onclick="openJobTicket('${o.id}')">📄 Job Ticket</button>
+          ${o.artwork_url ? `<a class="action-btn" href="${o.artwork_url}" target="_blank">🖼 Artwork</a>` : '<span style="font-size:10px;color:var(--pale);">No artwork</span>'}
+        </div>
+      </td>
+    </tr>`;
+}
+
+// ── UPDATE STATUS ────────────────────────────────────────
+async function updateStatus(id, status) {
+  try {
+    await sbFetch(`orders?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, updated_at: new Date().toISOString() }),
+    });
+    const idx = allOrders.findIndex(o => o.id === id);
+    if (idx > -1) allOrders[idx].status = status;
+    updateStats();
+  } catch (err) {
+    alert('Failed to update status: ' + err.message);
+  }
+}
+
+// ── JOB TICKET ───────────────────────────────────────────
+function openJobTicket(orderId) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return;
+
+  const items = Array.isArray(o.items) ? o.items : [];
+  const date  = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) : '—';
+  const itemRows = items.map(i => `
+    <div class="jt-field" style="grid-column:1/-1;">
+      <div class="jt-field-label">Print Item</div>
+      <div class="jt-field-val">${i.name} — ${i.qty} invitations · ${i.paper || 'Smooth White'}</div>
+    </div>`).join('');
+
+  document.getElementById('jobTicketContent').innerHTML = `
+    <div class="job-ticket">
+      <div class="jt-header">
+        <div class="jt-header-logo">Invita<span>tions</span></div>
+        <div class="jt-header-ref">
+          <div class="jt-header-ref-num">${o.order_number}</div>
+          <div class="jt-header-ref-date">Order Date: ${date}</div>
+        </div>
+      </div>
+      <div class="jt-body">
+
+        <div class="jt-section-title">Customer & Delivery</div>
+        <div class="jt-grid">
+          <div class="jt-field">
+            <div class="jt-field-label">Customer Name</div>
+            <div class="jt-field-val">${o.customer_name || '—'}</div>
+          </div>
+          <div class="jt-field">
+            <div class="jt-field-label">Email</div>
+            <div class="jt-field-val">${o.customer_email || '—'}</div>
+          </div>
+          <div class="jt-field" style="grid-column:1/-1;">
+            <div class="jt-field-label">Delivery Address</div>
+            <div class="jt-field-val">${(o.delivery_address || '—').replace(/,/g,'<br>')}</div>
+          </div>
+        </div>
+
+        <div class="jt-section-title">Print Specification</div>
+        <div class="jt-grid">
+          ${itemRows}
+        </div>
+        <div class="jt-grid-3">
+          <div class="jt-field">
+            <div class="jt-field-label">Total Quantity</div>
+            <div class="jt-field-val large">${items.reduce((s,i)=>s+(parseInt(i.qty)||0),0)}</div>
+          </div>
+          <div class="jt-field">
+            <div class="jt-field-label">Paper Stock</div>
+            <div class="jt-field-val">${items[0]?.paper || 'Smooth White 300gsm'}</div>
+          </div>
+          <div class="jt-field">
+            <div class="jt-field-label">Finish</div>
+            <div class="jt-field-val">Matt laminate</div>
+          </div>
+          <div class="jt-field">
+            <div class="jt-field-label">Size</div>
+            <div class="jt-field-val">A5 · 148 × 210mm</div>
+          </div>
+          <div class="jt-field">
+            <div class="jt-field-label">Bleed</div>
+            <div class="jt-field-val">3mm all sides</div>
+          </div>
+          <div class="jt-field">
+            <div class="jt-field-label">Colour Mode</div>
+            <div class="jt-field-val">CMYK</div>
+          </div>
+        </div>
+
+        <div class="jt-section-title">Artwork</div>
+        <div class="jt-artwork">
+          ${o.artwork_url
+            ? `<div style="font-size:11px;color:var(--soft);margin-bottom:6px;">Artwork file stored in Supabase Storage:</div><a href="${o.artwork_url}" target="_blank">📎 Download Artwork</a>`
+            : '<div style="font-size:12px;color:var(--pale);">No artwork file uploaded — check email for attachment</div>'
+          }
+        </div>
+
+        <div class="jt-section-title">Order Value</div>
+        <div class="jt-grid-3">
+          <div class="jt-field">
+            <div class="jt-field-label">Subtotal (excl. VAT)</div>
+            <div class="jt-field-val">£${parseFloat(o.subtotal || 0).toFixed(2)}</div>
+          </div>
+          <div class="jt-field">
+            <div class="jt-field-label">VAT (20%)</div>
+            <div class="jt-field-val">£${parseFloat(o.vat || 0).toFixed(2)}</div>
+          </div>
+          <div class="jt-field">
+            <div class="jt-field-label">Total Paid</div>
+            <div class="jt-field-val large" style="color:var(--gold);">£${parseFloat(o.total || 0).toFixed(2)}</div>
+          </div>
+        </div>
+
+        ${o.notes ? `
+        <div class="jt-section-title">Customer Notes</div>
+        <div class="jt-field"><div class="jt-field-label">Notes</div><div class="jt-field-val">${o.notes}</div></div>` : ''}
+
+        <div class="jt-section-title">Production Checklist</div>
+        <div class="jt-checklist">
+          <div class="jt-check-item"><div class="jt-check-box"></div>Artwork received &amp; verified</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>Resolution checked (300 DPI+)</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>Bleed confirmed (3mm)</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>Colour mode CMYK</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>Digital proof sent to customer</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>Proof approved by customer</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>Sent to print house</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>Packed &amp; quality checked</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>DPD label generated</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>Dispatched &amp; tracking sent</div>
+        </div>
+
+      </div>
+      <div class="jt-footer">
+        <div class="jt-footer-text">hello@invitations.co.uk · invitations.co.uk</div>
+        <div class="jt-footer-text">Order ref: ${o.order_number} · Generated ${new Date().toLocaleDateString('en-GB')}</div>
+      </div>
+    </div>`;
+
+  document.getElementById('jobTicketModal').classList.add('open');
+}
+
+function closeJobTicket() {
+  document.getElementById('jobTicketModal').classList.remove('open');
+}
+
+document.getElementById('jobTicketModal').addEventListener('click', function(e) {
+  if (e.target === this) closeJobTicket();
+});
+
+// \u2500\u2500 INIT \u2500\u2500
+loadOrders();
+setInterval(loadOrders, 120000);
+</script>
+</body>
+</html>
