@@ -1,5 +1,32 @@
+[build]
+  publish = "."
+
+[[redirects]]
+  from = "/admin-orders.html"
+  to = "/admin-orders.html"
+  status = 200
+
+[[redirects]]
+  from = "/pricing-editor.html"
+  to = "/pricing-editor.html"
+  status = 200
+
+[[redirects]]
+  from = "/seo-editor.html"
+  to = "/seo-editor.html"
+  status = 200
+
+[[redirects]]
+  from = "/style-guide.html"
+  to = "/style-guide.html"
+  status = 200
+
+[[redirects]]
+  from = "/project-board.html"
+  to = "/project-board.html"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/invitations-site.html"
   status = 200
-  force = false
