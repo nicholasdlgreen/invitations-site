@@ -1,13 +1,4 @@
-[build]
-  publish = "."
-functions = "functions"
-
 [[redirects]]
-  from = "/api/checkout"
-  to = "/.netlify/functions/create-checkout-session"
-  status = 200
-
-[[redirects]]
-  from = "/api/webhook"
-  to = "/.netlify/functions/stripe-webhook"
+  from = "/*"
+  to = "/invitations-site.html"
   status = 200
