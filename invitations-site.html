@@ -1792,5 +1792,155 @@ function trackOrder() {
 }
   handleStripeReturn();
 </script>
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- HELP WIDGET                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<style>
+#hw-btn{position:fixed;bottom:20px;right:20px;width:32px;height:32px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(184,151,106,.35);transition:all .25s;color:#fff;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:300;z-index:700;}
+#hw-btn:hover{background:var(--brown);transform:scale(1.06);}
+#hw-panel{position:fixed;bottom:62px;right:20px;width:200px;background:var(--white);border-radius:12px;box-shadow:0 8px 28px rgba(61,46,36,.13);display:flex;flex-direction:column;max-height:260px;transform:scale(.94) translateY(10px);opacity:0;pointer-events:none;transition:all .28s cubic-bezier(.34,1.56,.64,1);transform-origin:bottom right;border:1px solid var(--border);z-index:700;}
+#hw-panel.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
+#hw-head{padding:9px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--text);border-radius:12px 12px 0 0;flex-shrink:0;}
+.hw-head-left{display:flex;align-items:center;gap:6px;}
+.hw-avatar{width:20px;height:20px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:10px;color:#fff;flex-shrink:0;}
+.hw-head-name{font-family:'Cormorant Garamond',serif;font-size:.72rem;font-weight:400;color:#fff;letter-spacing:.03em;}
+.hw-head-status{font-size:7px;color:rgba(255,255,255,.4);margin-top:1px;}
+.hw-close-btn{background:none;border:none;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;padding:2px;line-height:1;transition:color .2s;}
+.hw-close-btn:hover{color:#fff;}
+#hw-messages{flex:1;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:6px;}
+#hw-messages::-webkit-scrollbar{width:2px;}
+#hw-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.hw-msg{max-width:94%;}
+.hw-msg.bot{align-self:flex-start;}
+.hw-msg.user{align-self:flex-end;}
+.hw-bubble{padding:6px 9px;border-radius:10px;font-size:10px;line-height:1.65;font-family:'Jost',sans-serif;font-weight:300;}
+.hw-msg.bot .hw-bubble{background:var(--cream);color:var(--text);border-radius:2px 10px 10px 10px;border:1px solid var(--border);}
+.hw-msg.user .hw-bubble{background:var(--gold);color:#fff;border-radius:10px 2px 10px 10px;}
+.hw-sender{font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);margin-bottom:2px;font-family:'Jost',sans-serif;}
+.hw-msg.user .hw-sender{text-align:right;}
+.hw-prompts{display:flex;flex-direction:column;gap:3px;margin-top:5px;}
+.hw-prompt{background:var(--white);border:1px solid var(--border);border-radius:60px;padding:4px 8px;font-size:9px;color:var(--soft);cursor:pointer;text-align:left;font-family:'Jost',sans-serif;transition:all .2s;width:100%;}
+.hw-prompt:hover{border-color:var(--gold);color:var(--gold);}
+.hw-typing{display:flex;gap:3px;padding:6px 9px;background:var(--cream);border-radius:2px 10px 10px 10px;border:1px solid var(--border);width:fit-content;}
+.hw-dot{width:3px;height:3px;border-radius:50%;background:var(--pale);animation:hwdot 1.2s infinite;}
+.hw-dot:nth-child(2){animation-delay:.2s;}
+.hw-dot:nth-child(3){animation-delay:.4s;}
+@keyframes hwdot{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-3px);}}
+.hw-contact-btn{display:inline-flex;align-items:center;gap:3px;margin-top:5px;padding:3px 8px;background:transparent;border:1px solid var(--gold);border-radius:60px;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);cursor:pointer;font-family:'Jost',sans-serif;transition:all .2s;}
+.hw-contact-btn:hover{background:var(--gold);color:#fff;}
+#hw-contact-form{padding:9px;border-top:1px solid var(--border);background:var(--cream);flex-shrink:0;display:none;}
+.hw-cf-title{font-family:'Cormorant Garamond',serif;font-size:.78rem;color:var(--text);margin-bottom:7px;}
+#hw-contact-form input,#hw-contact-form textarea{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Jost',sans-serif;font-size:9px;color:var(--text);background:var(--white);outline:none;margin-bottom:4px;transition:border-color .2s;}
+#hw-contact-form input:focus,#hw-contact-form textarea:focus{border-color:var(--gold-lt);}
+#hw-contact-form textarea{resize:none;height:40px;line-height:1.6;}
+.hw-cf-row{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.hw-cf-btns{display:flex;gap:4px;margin-top:2px;}
+.hw-cf-submit{flex:1;padding:5px;background:var(--gold);color:#fff;border:none;border-radius:60px;font-family:'Jost',sans-serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
+.hw-cf-submit:hover{background:var(--brown);}
+.hw-cf-cancel{padding:5px 9px;background:transparent;color:var(--soft);border:1px solid var(--border);border-radius:60px;font-family:'Jost',sans-serif;font-size:8px;cursor:pointer;}
+#hw-input-area{padding:7px;border-top:1px solid var(--border);display:flex;gap:5px;align-items:center;flex-shrink:0;}
+#hw-input{flex:1;padding:5px 10px;border:1px solid var(--border);border-radius:60px;font-family:'Jost',sans-serif;font-size:9px;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;}
+#hw-input:focus{border-color:var(--gold-lt);background:var(--white);}
+#hw-send{width:22px;height:22px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s;}
+#hw-send:hover{background:var(--brown);}
+</style>
+
+<button id="hw-btn" onclick="hwToggle()">?</button>
+
+<div id="hw-panel">
+  <div id="hw-head">
+    <div class="hw-head-left">
+      <div class="hw-avatar">L</div>
+      <div>
+        <div class="hw-head-name">Lily — Invitations</div>
+        <div class="hw-head-status">● Online now</div>
+      </div>
+    </div>
+    <button class="hw-close-btn" onclick="hwToggle()">✕</button>
+  </div>
+  <div id="hw-messages">
+    <div class="hw-msg bot">
+      <div class="hw-sender">Lily</div>
+      <div class="hw-bubble">Hi! I'm Lily. How can I help?
+        <div class="hw-prompts">
+          <button class="hw-prompt" onclick="hwPrompt('Track my delivery')">Track my delivery</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="hw-contact-form">
+    <div class="hw-cf-title">Get in touch</div>
+    <div class="hw-cf-row">
+      <input id="hw-cf-name" placeholder="Name" type="text">
+      <input id="hw-cf-email" placeholder="Email" type="email">
+    </div>
+    <input id="hw-cf-order" placeholder="Order number (optional)" type="text">
+    <textarea id="hw-cf-msg" placeholder="How can we help?"></textarea>
+    <div class="hw-cf-btns">
+      <button class="hw-cf-cancel" onclick="hwHideContact()">Cancel</button>
+      <button class="hw-cf-submit" onclick="hwSubmitContact()">Send</button>
+    </div>
+  </div>
+  <div id="hw-input-area">
+    <input id="hw-input" placeholder="Ask us anything..." onkeydown="if(event.key==='Enter')hwSend()">
+    <button id="hw-send" onclick="hwSend()">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+var hwHistory=[];var hwOpen=false;
+function hwToggle(){hwOpen=!hwOpen;document.getElementById('hw-panel').classList.toggle('open',hwOpen);if(hwOpen)setTimeout(function(){document.getElementById('hw-input').focus();},300);}
+function hwPrompt(t){document.getElementById('hw-input').value=t;hwSend();}
+function hwAddMsg(role,text,contact){
+  var msgs=document.getElementById('hw-messages');
+  var div=document.createElement('div');div.className='hw-msg '+role;
+  var s=role==='bot'?'Lily':'You';
+  var cb=contact&&role==='bot'?'<br><button class="hw-contact-btn" onclick="hwShowContact()">✉ Contact the team</button>':'';
+  div.innerHTML='<div class="hw-sender">'+s+'</div><div class="hw-bubble">'+text.replace(/\n/g,'<br>')+cb+'</div>';
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function hwShowTyping(){
+  var msgs=document.getElementById('hw-messages');
+  var div=document.createElement('div');div.id='hw-typing-indicator';div.className='hw-msg bot';
+  div.innerHTML='<div class="hw-sender">Lily</div><div class="hw-typing"><div class="hw-dot"></div><div class="hw-dot"></div><div class="hw-dot"></div></div>';
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function hwRemoveTyping(){var el=document.getElementById('hw-typing-indicator');if(el)el.remove();}
+async function hwSend(){
+  var input=document.getElementById('hw-input');
+  var text=input.value.trim();if(!text)return;
+  input.value='';input.disabled=true;document.getElementById('hw-send').disabled=true;
+  hwAddMsg('user',text);hwHistory.push({role:'user',content:text});hwShowTyping();
+  try{
+    var res=await fetch('/.netlify/functions/help-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hwHistory})});
+    var data=await res.json();hwRemoveTyping();
+    var reply=data.text||'Sorry, something went wrong — please email us at hello@invitations.co.uk';
+    hwHistory.push({role:'assistant',content:reply});
+    var needsContact=/contact|problem|issue|wrong|damaged|missing|refund/i.test(text+reply);
+    hwAddMsg('bot',reply,needsContact);
+  }catch(e){
+    hwRemoveTyping();
+    hwAddMsg('bot','Sorry, I\'m having trouble connecting. Please email hello@invitations.co.uk and we\'ll get back to you.',false);
+  }
+  input.disabled=false;document.getElementById('hw-send').disabled=false;input.focus();
+}
+function hwShowContact(){document.getElementById('hw-contact-form').style.display='block';document.getElementById('hw-input-area').style.display='none';}
+function hwHideContact(){document.getElementById('hw-contact-form').style.display='none';document.getElementById('hw-input-area').style.display='flex';}
+function hwSubmitContact(){
+  var name=document.getElementById('hw-cf-name').value.trim();
+  var email=document.getElementById('hw-cf-email').value.trim();
+  var order=document.getElementById('hw-cf-order').value.trim();
+  var msg=document.getElementById('hw-cf-msg').value.trim();
+  if(!name||!email||!msg){alert('Please fill in your name, email and message.');return;}
+  var subject=encodeURIComponent('Customer Enquiry'+(order?' — Order '+order:''));
+  var body=encodeURIComponent('Name: '+name+'\nEmail: '+email+(order?'\nOrder: '+order:'')+'\n\n'+msg);
+  window.location.href='mailto:hello@invitations.co.uk?subject='+subject+'&body='+body;
+  hwHideContact();
+  hwAddMsg('bot','Your email client should have opened — we\'ll get back to you within one working day.',false);
+  hwHistory.push({role:'assistant',content:'Contact form submitted.'});
+}
+</script>
 </body>
 </html>
