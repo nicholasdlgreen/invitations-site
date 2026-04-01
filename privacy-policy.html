@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Privacy Policy — Invitations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:#FAF7F2; --gold:#B8976A; --gold-lt:#D4B896; --brown:#6B4F3A;
+  --text:#3D2E24; --soft:#7A6558; --pale:#B0A098;
+  --white:#FFFFFF; --border:#E8DDD8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;font-weight:300;background:var(--cream);color:var(--text);line-height:1.7}
+
+/* HEADER */
+header{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center}
+.header-inner{max-width:1180px;margin:0 auto;padding:0 32px;width:100%;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);text-decoration:none;letter-spacing:.02em}
+.logo span{color:var(--gold);font-style:italic}
+nav{display:flex;gap:32px;align-items:center}
+nav a{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;transition:color .2s;font-weight:400}
+nav a:hover{color:var(--gold)}
+
+/* HERO BAND */
+.page-hero{background:var(--text);padding:64px 32px 56px;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:400px;height:400px;border-radius:50%;border:1px solid rgba(184,151,106,.1)}
+.page-hero::after{content:'';position:absolute;bottom:-60px;left:-60px;width:300px;height:300px;border-radius:50%;border:1px solid rgba(184,151,106,.07)}
+.page-hero-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:16px;display:block}
+.page-hero h1{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;color:var(--white);margin-bottom:12px}
+.page-hero p{font-size:13px;color:rgba(255,255,255,.4);letter-spacing:.06em}
+
+/* BREADCRUMB */
+.breadcrumb{max-width:1180px;margin:0 auto;padding:20px 32px 0;display:flex;align-items:center;gap:8px}
+.breadcrumb a{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-decoration:none}
+.breadcrumb a:hover{color:var(--brown)}
+.breadcrumb span{font-size:11px;color:var(--pale)}
+
+/* CONTENT */
+.container{max-width:800px;margin:0 auto;padding:56px 32px 120px}
+
+.legal-intro{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:48px}
+.legal-intro p{font-size:14px;color:var(--soft);line-height:2}
+.legal-intro strong{color:var(--text);font-weight:500}
+
+.legal-section{margin-bottom:48px}
+.legal-section-num{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:400;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:block}
+.legal-section h2{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--text);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.legal-section p{font-size:13px;color:var(--soft);line-height:2;margin-bottom:14px}
+.legal-section p:last-child{margin-bottom:0}
+.legal-section ul{margin:12px 0 14px 0;padding-left:0;list-style:none}
+.legal-section ul li{font-size:13px;color:var(--soft);line-height:2;padding-left:20px;position:relative}
+.legal-section ul li::before{content:'–';position:absolute;left:0;color:var(--gold-lt)}
+.legal-section strong{color:var(--text);font-weight:500}
+.legal-section a{color:var(--gold);text-decoration:none}
+.legal-section a:hover{color:var(--brown)}
+
+/* TABLE */
+.legal-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:12px}
+.legal-table th{background:var(--text);color:rgba(255,255,255,.8);font-weight:400;letter-spacing:.1em;text-transform:uppercase;font-size:10px;padding:12px 16px;text-align:left}
+.legal-table td{padding:14px 16px;border-bottom:1px solid var(--border);color:var(--soft);line-height:1.7}
+.legal-table tr:nth-child(even) td{background:rgba(250,247,242,.6)}
+.legal-table tr:last-child td{border-bottom:none}
+
+/* HIGHLIGHT BOX */
+.highlight-box{background:rgba(184,151,106,.06);border:1px solid rgba(184,151,106,.2);border-radius:16px;padding:24px 28px;margin:20px 0}
+.highlight-box p{font-size:13px;color:var(--soft);line-height:2;margin:0}
+.highlight-box strong{color:var(--text);font-weight:500}
+
+/* PLACEHOLDER */
+.placeholder{background:rgba(201,123,58,.08);border:1px dashed rgba(201,123,58,.3);border-radius:8px;padding:4px 10px;font-size:12px;color:#C97B3A;font-weight:500}
+
+/* FOOTER */
+footer{background:var(--text);padding:48px 32px}
+.footer-inner{max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
+.footer-brand{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:rgba(255,255,255,.7)}
+.footer-brand span{color:var(--gold-lt);font-style:italic}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap}
+.footer-links a{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--gold-lt)}
+.footer-copy{font-size:11px;color:rgba(255,255,255,.2);width:100%;text-align:center;padding-top:24px;border-top:1px solid rgba(255,255,255,.07);margin-top:8px}
+
+@media(max-width:640px){
+  .page-hero h1{font-size:2.2rem}
+  .container{padding:40px 20px 80px}
+  .header-inner{padding:0 20px}
+  nav{display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">Invita<span>tions</span></a>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/upload.html">Upload &amp; Print</a>
+      <a href="/studio.html">Design Studio</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page-hero">
+  <span class="page-hero-tag">Legal</span>
+  <h1>Privacy Policy</h1>
+  <p>Last updated: April 2026</p>
+</div>
+
+<div class="breadcrumb">
+  <a href="/">Home</a>
+  <span>›</span>
+  <span style="color:var(--soft);font-size:11px;letter-spacing:.1em;text-transform:uppercase">Privacy Policy</span>
+</div>
+
+<div class="container">
+
+  <div class="legal-intro">
+    <p>This Privacy Policy explains how <strong>Natch Ltd, trading as Invitations</strong> (<span class="placeholder">[ADDRESS]</span>) collects, uses and protects your personal data when you visit our website or place an order. We are committed to complying with the <strong>UK General Data Protection Regulation (UK GDPR)</strong> and the <strong>Data Protection Act 2018</strong>. For any questions, please contact us at <span class="placeholder">[EMAIL]</span>.</p>
+  </div>
+
+  <div class="legal-section">
+    <span class="legal-section-num">01</span>
+    <h2>What Data We Collect</h2>
+    <p>When you use our website or place an order, we may collect the following:</p>
+    <ul>
+      <li><strong>Identity data</strong> — your name</li>
+      <li><strong>Contact data</strong> — email address, phone number, delivery address</li>
+      <li><strong>Order data</strong> — product details, quantities, personalisation instructions and wording</li>
+      <li><strong>Artwork data</strong> — any files or images you upload to our platform</li>
+      <li><strong>Payment data</strong> — processed securely by Stripe; we do not store card details</li>
+      <li><strong>Technical data</strong> — IP address, browser type, pages visited, time and date of visits</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <span class="legal-section-num">02</span>
+    <h2>Why We Collect It</h2>
+    <table class="legal-table">
+      <tr><th>Purpose</th><th>Legal Basis</th></tr>
+      <tr><td>Processing and fulfilling your order</td><td>Performance of a contract</td></tr>
+      <tr><td>Sending order confirmation and delivery updates</td><td>Performance of a contract</td></tr>
+      <tr><td>Responding to enquiries and support requests</td><td>Legitimate interests</td></tr>
+      <tr><td>Improving our website and services</td><td>Legitimate interests</td></tr>
+      <tr><td>Complying with legal and accounting obligations</td><td>Legal obligation</td></tr>
+    </table>
+    <p>We will only use your personal data for the purposes for which we collected it.</p>
+  </div>
+
+  <div class="legal-section">
+    <span class="legal-section-num">03</span>
+    <h2>Third Parties We Work With</h2>
+    <p>To fulfil your order we share data with the following trusted service providers:</p>
+    <ul>
+      <li><strong>Stripe</strong> — secure payment processing (stripe.com/gb/privacy)</li>
+      <li><strong>Supabase</strong> — secure order and customer data storage</li>
+      <li><strong>DPD</strong> — delivery of your order</li>
+      <li><strong>Netlify</strong> — website hosting</li>
+    </ul>
+    <p>All third parties are contractually required to process your data securely and in accordance with applicable data protection law. <strong>We do not sell your personal data.</strong></p>
+  </div>
+
+  <div class="legal-section">
+    <span class="legal-section-num">04</span>
+    <h2>Data Retention</h2>
+    <p>We retain your personal data for as long as necessary to fulfil the purposes described in this policy and to comply with our legal obligations.</p>
+    <ul>
+      <li>Order records are retained for <strong>six years</strong> in line with UK tax and accounting requirements</li>
+      <li>Uploaded artwork files are retained for <strong>90 days</strong> after your order is dispatched, then permanently deleted</li>
+      <li>Marketing preferences are retained until you withdraw consent</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <span class="legal-section-num">05</span>
+    <h2>Your Rights</h2>
+    <p>Under UK GDPR you have the right to:</p>
+    <ul>
+      <li><strong>Access</strong> the personal data we hold about you</li>
+      <li><strong>Correct</strong> inaccurate personal data</li>
+      <li><strong>Erase</strong> your personal data in certain circumstances</li>
+      <li><strong>Restrict</strong> our processing of your personal data</li>
+      <li><strong>Object</strong> to our processing of your personal data</li>
+      <li><strong>Portability</strong> — receive your data in a structured, commonly used format</li>
+    </ul>
+    <p>To exercise any of these rights please contact us at <span class="placeholder">[EMAIL]</span>. We will respond within 30 days.</p>
+    <div class="highlight-box">
+      <p>If you are not satisfied with our response you have the right to lodge a complaint with the <strong>Information Commissioner's Office (ICO)</strong> at <a href="https://ico.org.uk" target="_blank">ico.org.uk</a> or by calling 0303 123 1113.</p>
+    </div>
+  </div>
+
+  <div class="legal-section">
+    <span class="legal-section-num">06</span>
+    <h2>Cookies</h2>
+    <p>Our website uses essential cookies necessary for the site to function correctly, including maintaining your session during the order process. We do not use advertising or tracking cookies.</p>
+    <p>By using our website you consent to our use of essential cookies.</p>
+  </div>
+
+  <div class="legal-section">
+    <span class="legal-section-num">07</span>
+    <h2>Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time to reflect changes in our practices or for legal reasons. The current version will always be available on this page with the date last updated noted at the top. Where changes are material we will notify you by email where we hold your contact details.</p>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">Invita<span>tions</span></div>
+    <div class="footer-links">
+      <a href="/privacy-policy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms &amp; Conditions</a>
+      <a href="/returns.html">Returns Policy</a>
+    </div>
+  </div>
+  <div class="footer-inner" style="padding-top:0">
+    <p class="footer-copy">© 2026 Natch Ltd t/a Invitations · Registered in England &amp; Wales · <span class="placeholder">[ADDRESS]</span></p>
+  </div>
+</footer>
+
+</body>
+</html>
