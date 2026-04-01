@@ -1106,7 +1106,7 @@ async function proceedToStripe() {
 }
 
 // Handle return from Stripe (success or cancelled)
-(function handleStripeReturn() {
+function handleStripeReturn() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('order') === 'success') {
     cart = [];
@@ -1756,6 +1756,7 @@ function trackOrder() {
       </div>
     </div>`;
 }
+  handleStripeReturn();
 </script>
 </body>
 </html>
