@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lighthearted-sunburst-4f0ba2.netlify.app/sitemap.xml
+
+Disallow: /admin-orders.html
+Disallow: /seo-editor.html
+Disallow: /pricing-editor.html
