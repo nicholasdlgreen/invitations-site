@@ -1402,11 +1402,15 @@ function checkFile(file) {
           clearTimeout(safetyTimer);
           const w = img.naturalWidth, h = img.naturalHeight, minDim = Math.min(w, h);
           let resStatus = 'ok', resNote = '';
-          if (minDim < 1000) { resStatus='err'; resNote='Resolution is too low for print quality. Please supply an image of at least 1748 × 2480px (A5 at 300 DPI).'; checksPassed=false; }
-          else if (minDim < 1748) { resStatus='warn'; resNote='Resolution may be marginal for larger print sizes.'; }
-          else { resNote='Resolution looks good for print.'; }
-          checks.push({ status:resStatus, label:'Dimensions', val:w+' × '+h+' px', note:resNote });
-          checks.push({ status:'info', label:'Colour Mode', val:'To be confirmed', note:'We will check your colour profile when we receive the file. CMYK is preferred.' });
+          const w = img.naturalWidth, h = img.naturalHeight, minDim = Math.min(w, h);
+          const spec = SIZE_SPECS[selectedSize]||SIZE_SPECS['A5'];
+          const shortMM = Math.min(spec.mmW,spec.mmH);
+          const actualDpi = Math.round(minDim/(shortMM/25.4));
+          const warnPx = Math.round(spec.minPx*0.67);
+          let resStatus = 'ok', resNote = '';
+          if (minDim < warnPx) { resStatus='err'; resNote='Resolution is too low for '+spec.label+'. Minimum for 300 DPI is '+spec.minPx+'px on the shorter side. Your file is approx. '+actualDpi+' DPI.'; checksPassed=false; }
+          else if (minDim < spec.minPx) { resStatus='warn'; resNote='Resolution is approx. '+actualDpi+' DPI at '+spec.label+'. Ideal is 300 DPI. May be acceptable but could appear slightly soft.'; }
+          else { resNote='Resolution is good for '+spec.label+' — approx. '+actualDpi+' DPI.'; }
           renderChecks(checks);
           URL.revokeObjectURL(url);
         };
