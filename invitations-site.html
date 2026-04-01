@@ -1413,8 +1413,7 @@ function checkFile(file) {
 
         img.onload = () => {
           clearTimeout(safetyTimer);
-          const w = img.naturalWidth, h = img.naturalHeight, minDim = Math.min(w, h);
-          let resStatus = 'ok', resNote = '';
+          
           const w = img.naturalWidth, h = img.naturalHeight, minDim = Math.min(w, h);
           const spec = SIZE_SPECS[selectedSize]||SIZE_SPECS['A5'];
           const shortMM = Math.min(spec.mmW,spec.mmH);
