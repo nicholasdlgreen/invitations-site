@@ -1251,7 +1251,7 @@ function handleStripeReturn() {
     showToast('Payment cancelled — your basket is still saved.');
     history.replaceState(null, '', window.location.pathname);
   }
-})();
+}
 
 function showToast(msg) {
   const t = document.getElementById('toast'); t.textContent = msg;
