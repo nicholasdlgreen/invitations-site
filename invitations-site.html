@@ -1402,7 +1402,7 @@ function checkFile(file) {
       };
 
       try {
-        const url = URL.createObjectURL(file);
+   const w2 = img.naturalWidth, h2 = img.naturalHeight, minDim = Math.min(w2, h2);
         const img = new Image();
 
         // Safety net — if onload never fires (sandboxed env), fall back after 3s
