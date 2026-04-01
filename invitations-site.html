@@ -1279,6 +1279,8 @@ document.getElementById('testimonialsGrid').innerHTML = CONFIG.testimonials.map(
   </div>`).join('');
 
 // ── UPLOAD FLOW ──────────────────────────────────────────────
+let selectedSize = null;
+const SIZE_SPECS = { 'A5':{label:'A5 (148×210mm)',mmW:148,mmH:210,minPx:1748}, 'A6':{label:'A6 (105×148mm)',mmW:105,mmH:148,minPx:1240}, '5x7':{label:'5"×7" (127×178mm)',mmW:127,mmH:178,minPx:1500}, 'DL':{label:'DL (99×210mm)',mmW:99,mmH:210,minPx:1169}, 'Square':{label:'Square (148×148mm)',mmW:148,mmH:148,minPx:1748} };
 let currentFile = null;
 let currentStep = 1;
 let selectedPaper = 'smooth';
