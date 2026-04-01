@@ -100,7 +100,7 @@ exports.handler = async (event) => {
         quantity: item.qty,
       })),
       mode: 'payment',
-      success_url: `${successUrl}?order=success&ref=${orderNumber}`,
+     success_url: `${successUrl}&ref=${orderNumber}`,
       cancel_url:  cancelUrl,
       customer_email:    customer?.email || undefined,
       metadata: {
