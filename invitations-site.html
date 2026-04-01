@@ -1304,7 +1304,25 @@ const ENVELOPES = [
   { id:'gold',      name:'Champagne Gold',   hex:'#D4B896', border:'#b89870', priceEach:0.60 },
 ];
 
-function goStep(n) {
+function selectSize(id) {
+  selectedSize = id;
+  ['A5','A6','5x7','DL','Square'].forEach(function(s) {
+    var el = document.getElementById('size-opt-'+s);
+    if (!el) return;
+    var isSelected = s === id;
+    el.style.borderColor = isSelected ? 'var(--gold)' : 'var(--border)';
+    el.style.background = isSelected ? 'rgba(184,151,106,.06)' : 'var(--white)';
+    var rect = document.getElementById('size-rect-'+s);
+    if (rect) { rect.style.borderColor = isSelected ? 'var(--gold)' : 'var(--border)'; rect.style.background = isSelected ? 'rgba(184,151,106,.18)' : 'var(--cream)'; }
+    var nameEl = document.getElementById('size-name-'+s);
+    if (nameEl) nameEl.style.color = isSelected ? 'var(--gold)' : 'var(--text)';
+  });
+  document.getElementById('sizeNote').style.display = 'none';
+  var dz = document.getElementById('dropZone');
+  dz.style.opacity = '1';
+  dz.style.pointerEvents = 'auto';
+}
+  function goStep(n) {
   [1,2,3,4].forEach(i => {
     document.getElementById('step'+i)?.classList.toggle('hidden', i !== n);
     document.getElementById('sn'+i).className = 'step-num' + (i < n ? ' done' : i === n ? ' active' : '');
