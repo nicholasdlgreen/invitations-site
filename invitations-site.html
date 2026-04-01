@@ -1383,7 +1383,7 @@ function checkFile(file) {
     if (isImage && isValid) {
       // Try to read dimensions via canvas; fall back gracefully if sandbox blocks createObjectURL
       const fallbackImageChecks = () => {
-        checks.push({ status:'info', label:'Dimensions', val:'Confirmed on receipt', note:'We will verify resolution and dimensions when we receive your file. Aim for 1748 × 2480px (A5 at 300 DPI) or above.' });
+        var spec3a = SIZE_SPECS[selectedSize]||SIZE_SPECS['A5']; checks.push({ status:'info', label:'Dimensions', val:'Verified on receipt', note:'We will check your file dimensions match '+spec3a.label+' at minimum 300 DPI when we receive it.' });
         checks.push({ status:'info', label:'Colour Mode', val:'Confirmed on receipt', note:'CMYK is preferred for accurate colour reproduction.' });
         renderChecks(checks);
       };
