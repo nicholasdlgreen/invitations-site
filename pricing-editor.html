@@ -1000,7 +1000,23 @@ function exportMgmtCSV(){
 function exportFullBackup(){download('natch-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({costs,generatedPrices,mgmtMonths,sales,suppliers,lists,settings,exportedAt:new Date().toISOString()},null,2),'application/json');toast('Backup exported ✓');}
 function importData(){document.getElementById('importFile').click();}
 function loadImport(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.costs)costs=d.costs;if(d.generatedPrices)generatedPrices=d.generatedPrices;if(d.mgmtMonths)mgmtMonths=d.mgmtMonths;if(d.sales)sales=d.sales;if(d.suppliers)suppliers=d.suppliers;if(d.lists)lists=d.lists;if(d.settings)settings=d.settings;saveAll();renderAllSelects();renderCostTable();renderSupplierList();updateStats();toast('Import successful ✓');}catch(err){toast('Import failed');}};r.readAsText(f);}
-function publishToSite(){if(!generatedPrices.length){toast('Generate prices first');return;}localStorage.setItem('natch_pricing_v2',JSON.stringify(generatedPrices));toast('Published to site ✓');}
+function publishToSite(){
+  if(!generatedPrices.length){toast('Generate prices first');return;}
+  const btn=event.target;btn.textContent='Publishing…';btn.disabled=true;
+  const payload={generated:new Date().toISOString(),version:2,prices:generatedPrices};
+  fetch('/.netlify/functions/publish-pricing',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.success){toast('Published to site ✓ — '+new Date().toLocaleTimeString());}
+    else{toast('Publish failed: '+data.error);}
+  })
+  .catch(err=>toast('Publish failed: '+err.message))
+  .finally(()=>{btn.textContent='🌐 Publish to Site';btn.disabled=false;});
+}
 function copyJSON(){const el=document.getElementById('jsonOutput');if(!el.value){exportJSON();return;}navigator.clipboard.writeText(el.value).then(()=>toast('Copied ✓'));}
 function saveSettings(){settings={company:document.getElementById('s_company').value,vat:document.getElementById('s_vat').value,fyStart:document.getElementById('s_fyStart').value};localStorage.setItem('natch_settings_v2',JSON.stringify(settings));toast('Settings saved ✓');}
 function clearAllData(){if(!confirm('Delete ALL data?'))return;['natch_costs_v2','natch_prices_v2','natch_mgmt_v2','natch_sales_v2','natch_suppliers_v2','natch_lists_v2','natch_margin_v2'].forEach(k=>localStorage.removeItem(k));costs=[];generatedPrices=[];mgmtMonths={};sales=[];suppliers=[];renderCostTable();renderSupplierList();toast('Cleared');}
