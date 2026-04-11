@@ -1737,7 +1737,7 @@ const ST_TB = '<rect x="23" y="27" width="24" height="1.5" fill="#C8BCB4" rx=".5
 const ST_TBL = '<rect x="23" y="27" width="24" height="1.5" fill="#9A9080" rx=".5"/><rect x="12" y="34" width="46" height="5" fill="#EEE8D8" rx="1.5"/><line x1="27" y1="44" x2="43" y2="44" stroke="#D4B896" stroke-width=".7"/><rect x="16" y="50" width="38" height="1.5" fill="#7A746A" rx=".5"/><rect x="20" y="56" width="30" height="1.5" fill="#7A746A" rx=".5"/>';
 
 function stTmb(bg, fr, lt) {
-  return '<svg viewBox="0 0 70 96" xmlns="http://www.w3.org/2000/svg"><rect width="70" height="96" fill="'+bg+'"/>'+fr+(lt?ST_TBL:ST_TB)+'</svg>';
+return '<svg viewBox="0 0 70 96" width="70" height="96" xmlns="http://www.w3.org/2000/svg"><rect width="70" height="96" fill="'+bg+'"/>'+fr+(lt?ST_TBL:ST_TB)+'</svg>';
 }
 
 const ST_STYLES = [
