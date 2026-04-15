@@ -1,6 +1,2 @@
 [build]
   publish = "."
-
-[[edge_functions]]
-  path = "/*"
-  function = "inject-partials"
