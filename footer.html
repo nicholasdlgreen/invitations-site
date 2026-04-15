@@ -1,16 +1,14 @@
 <style>
-footer { background:var(--text); color:rgba(255,255,255,.6); padding:60px 0 32px; }
-.footer-inner { max-width:1180px; margin:0 auto; padding:0 32px; }
-.footer-top { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; gap:48px; margin-bottom:48px; }
-.footer-logo { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:400; color:#fff; margin-bottom:12px; }
-.footer-logo span { color:var(--gold); }
-.footer-tagline { font-size:12px; line-height:1.8; color:rgba(255,255,255,.5); }
-.footer-col h5 { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.4); margin-bottom:16px; font-weight:500; }
-.footer-col a { display:block; font-size:12px; color:rgba(255,255,255,.5); text-decoration:none; margin-bottom:8px; transition:color .2s; }
-.footer-col a:hover { color:var(--gold-lt); }
-.footer-bottom { border-top:1px solid rgba(255,255,255,.1); padding-top:24px; display:flex; justify-content:space-between; align-items:center; font-size:11px; }
-
-/* ── LILY WIDGET ── */
+footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
+.footer-inner{max-width:1180px;margin:0 auto;padding:0 32px;}
+.footer-top{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:#fff;margin-bottom:12px;}
+.footer-logo span{color:var(--gold);}
+.footer-tagline{font-size:12px;line-height:1.8;color:rgba(255,255,255,.5);}
+.footer-col h5{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;font-weight:500;}
+.footer-col a{display:block;font-size:12px;color:rgba(255,255,255,.5);text-decoration:none;margin-bottom:8px;transition:color .2s;}
+.footer-col a:hover{color:var(--gold-lt);}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:11px;}
 #hw-btn{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--gold);border:none;color:#fff;font-family:'Cormorant Garamond',serif;font-size:1.1rem;cursor:pointer;box-shadow:0 4px 18px rgba(184,151,106,.4);z-index:300;transition:all .25s;display:flex;align-items:center;justify-content:center;}
 #hw-btn:hover{background:var(--brown);transform:scale(1.05);}
 #hw-panel{position:fixed;bottom:78px;right:24px;width:280px;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 48px rgba(61,46,36,.14);z-index:300;display:flex;flex-direction:column;max-height:420px;overflow:hidden;opacity:0;transform:translateY(10px) scale(.97);pointer-events:none;transition:all .25s;}
@@ -22,8 +20,6 @@ footer { background:var(--text); color:rgba(255,255,255,.6); padding:60px 0 32px
 .hw-head-status{font-size:9px;color:var(--ok);}
 .hw-close-btn{background:none;border:none;font-size:14px;color:var(--pale);cursor:pointer;padding:2px;line-height:1;}
 #hw-messages{flex:1;overflow-y:auto;padding:10px 10px 6px;scroll-behavior:smooth;}
-#hw-messages::-webkit-scrollbar{width:2px;}
-#hw-messages::-webkit-scrollbar-thumb{background:var(--border);}
 .hw-msg{margin-bottom:10px;}
 .hw-sender{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--pale);margin-bottom:3px;}
 .hw-msg.user .hw-sender{text-align:right;}
@@ -42,19 +38,15 @@ footer { background:var(--text); color:rgba(255,255,255,.6); padding:60px 0 32px
 .hw-contact-btn:hover{background:var(--gold);color:#fff;}
 #hw-contact-form{padding:9px;border-top:1px solid var(--border);background:var(--cream);flex-shrink:0;display:none;}
 .hw-cf-title{font-family:'Cormorant Garamond',serif;font-size:.78rem;color:var(--text);margin-bottom:7px;}
-#hw-contact-form input,#hw-contact-form textarea{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Jost',sans-serif;font-size:9px;color:var(--text);background:var(--white);outline:none;margin-bottom:4px;transition:border-color .2s;}
-#hw-contact-form input:focus,#hw-contact-form textarea:focus{border-color:var(--gold-lt);}
+#hw-contact-form input,#hw-contact-form textarea{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Jost',sans-serif;font-size:9px;color:var(--text);background:var(--white);outline:none;margin-bottom:4px;}
 #hw-contact-form textarea{resize:none;height:40px;line-height:1.6;}
 .hw-cf-row{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
 .hw-cf-btns{display:flex;gap:4px;margin-top:2px;}
-.hw-cf-submit{flex:1;padding:5px;background:var(--gold);color:#fff;border:none;border-radius:60px;font-family:'Jost',sans-serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
-.hw-cf-submit:hover{background:var(--brown);}
+.hw-cf-submit{flex:1;padding:5px;background:var(--gold);color:#fff;border:none;border-radius:60px;font-family:'Jost',sans-serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
 .hw-cf-cancel{padding:5px 9px;background:transparent;color:var(--soft);border:1px solid var(--border);border-radius:60px;font-family:'Jost',sans-serif;font-size:8px;cursor:pointer;}
 #hw-input-area{padding:7px;border-top:1px solid var(--border);display:flex;gap:5px;align-items:center;flex-shrink:0;}
-#hw-input{flex:1;padding:5px 10px;border:1px solid var(--border);border-radius:60px;font-family:'Jost',sans-serif;font-size:9px;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;}
-#hw-input:focus{border-color:var(--gold-lt);background:var(--white);}
-#hw-send{width:22px;height:22px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s;}
-#hw-send:hover{background:var(--brown);}
+#hw-input{flex:1;padding:5px 10px;border:1px solid var(--border);border-radius:60px;font-family:'Jost',sans-serif;font-size:9px;color:var(--text);background:var(--cream);outline:none;}
+#hw-send{width:22px;height:22px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 </style>
 
 <footer>
@@ -90,16 +82,12 @@ footer { background:var(--text); color:rgba(255,255,255,.6); padding:60px 0 32px
   </div>
 </footer>
 
-<!-- LILY WIDGET -->
 <button id="hw-btn" onclick="hwToggle()">?</button>
 <div id="hw-panel">
   <div id="hw-head">
     <div class="hw-head-left">
       <div class="hw-avatar">L</div>
-      <div>
-        <div class="hw-head-name">Lily — Invitations</div>
-        <div class="hw-head-status">● Online now</div>
-      </div>
+      <div><div class="hw-head-name">Lily — Invitations</div><div class="hw-head-status">● Online now</div></div>
     </div>
     <button class="hw-close-btn" onclick="hwToggle()">✕</button>
   </div>
@@ -136,49 +124,14 @@ footer { background:var(--text); color:rgba(255,255,255,.6); padding:60px 0 32px
 </div>
 
 <script>
-var hwHistory=[];var hwOpen=false;
-function hwToggle(){hwOpen=!hwOpen;document.getElementById('hw-panel').classList.toggle('open',hwOpen);if(hwOpen)setTimeout(function(){document.getElementById('hw-input').focus();},300);}
+var hwHistory=[],hwOpen=false;
+function hwToggle(){hwOpen=!hwOpen;document.getElementById('hw-panel').classList.toggle('open',hwOpen);if(hwOpen)setTimeout(()=>document.getElementById('hw-input').focus(),300);}
 function hwPrompt(t){document.getElementById('hw-input').value=t;hwSend();}
-function hwAddMsg(role,text,contact){
-  var msgs=document.getElementById('hw-messages');
-  var div=document.createElement('div');div.className='hw-msg '+role;
-  var s=role==='bot'?'Lily':'You';
-  var cb=contact&&role==='bot'?'<br><button class="hw-contact-btn" onclick="hwShowContact()">✉ Contact the team</button>':'';
-  div.innerHTML='<div class="hw-sender">'+s+'</div><div class="hw-bubble">'+text.replace(/\n/g,'<br>')+cb+'</div>';
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-}
-function hwShowTyping(){var msgs=document.getElementById('hw-messages');var div=document.createElement('div');div.id='hw-typing-indicator';div.className='hw-msg bot';div.innerHTML='<div class="hw-sender">Lily</div><div class="hw-typing"><div class="hw-dot"></div><div class="hw-dot"></div><div class="hw-dot"></div></div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
+function hwAddMsg(role,text,contact){var msgs=document.getElementById('hw-messages'),div=document.createElement('div');div.className='hw-msg '+role;var s=role==='bot'?'Lily':'You',cb=contact&&role==='bot'?'<br><button class="hw-contact-btn" onclick="hwShowContact()">✉ Contact the team</button>':'';div.innerHTML='<div class="hw-sender">'+s+'</div><div class="hw-bubble">'+text.replace(/\n/g,'<br>')+cb+'</div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
+function hwShowTyping(){var msgs=document.getElementById('hw-messages'),div=document.createElement('div');div.id='hw-typing-indicator';div.className='hw-msg bot';div.innerHTML='<div class="hw-sender">Lily</div><div class="hw-typing"><div class="hw-dot"></div><div class="hw-dot"></div><div class="hw-dot"></div></div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
 function hwRemoveTyping(){var el=document.getElementById('hw-typing-indicator');if(el)el.remove();}
-async function hwSend(){
-  var input=document.getElementById('hw-input');
-  var text=input.value.trim();if(!text)return;
-  input.value='';input.disabled=true;document.getElementById('hw-send').disabled=true;
-  hwAddMsg('user',text);hwHistory.push({role:'user',content:text});hwShowTyping();
-  try{
-    var res=await fetch('/.netlify/functions/help-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hwHistory})});
-    var data=await res.json();hwRemoveTyping();
-    var reply=data.text||'Sorry, something went wrong — please email us at hello@invitations.co.uk';
-    hwHistory.push({role:'assistant',content:reply});
-    var needsContact=/contact|problem|issue|wrong|damaged|missing|refund/i.test(text+reply);
-    hwAddMsg('bot',reply,needsContact);
-  }catch(e){
-    hwRemoveTyping();
-    hwAddMsg('bot','Sorry, I\'m having trouble connecting. Please email hello@invitations.co.uk and we\'ll get back to you.',false);
-  }
-  input.disabled=false;document.getElementById('hw-send').disabled=false;input.focus();
-}
+async function hwSend(){var input=document.getElementById('hw-input'),text=input.value.trim();if(!text)return;input.value='';input.disabled=true;document.getElementById('hw-send').disabled=true;hwAddMsg('user',text);hwHistory.push({role:'user',content:text});hwShowTyping();try{var res=await fetch('/.netlify/functions/help-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hwHistory})}),data=await res.json();hwRemoveTyping();var reply=data.text||'Sorry, something went wrong — please email hello@invitations.co.uk';hwHistory.push({role:'assistant',content:reply});hwAddMsg('bot',reply,/contact|problem|issue|wrong|damaged|missing|refund/i.test(text+reply));}catch(e){hwRemoveTyping();hwAddMsg('bot','Sorry, I\'m having trouble connecting. Please email hello@invitations.co.uk',false);}input.disabled=false;document.getElementById('hw-send').disabled=false;input.focus();}
 function hwShowContact(){document.getElementById('hw-contact-form').style.display='block';document.getElementById('hw-input-area').style.display='none';}
 function hwHideContact(){document.getElementById('hw-contact-form').style.display='none';document.getElementById('hw-input-area').style.display='flex';}
-function hwSubmitContact(){
-  var name=document.getElementById('hw-cf-name').value.trim();
-  var email=document.getElementById('hw-cf-email').value.trim();
-  var order=document.getElementById('hw-cf-order').value.trim();
-  var msg=document.getElementById('hw-cf-msg').value.trim();
-  if(!name||!email||!msg){alert('Please fill in your name, email and message.');return;}
-  var subject=encodeURIComponent('Customer Enquiry'+(order?' — Order '+order:''));
-  var body=encodeURIComponent('Name: '+name+'\nEmail: '+email+(order?'\nOrder: '+order:'')+'\n\n'+msg);
-  window.location.href='mailto:hello@invitations.co.uk?subject='+subject+'&body='+body;
-  hwHideContact();
-  hwAddMsg('bot','Your email client should have opened — we\'ll get back to you within one working day.',false);
-}
+function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.trim(),email=document.getElementById('hw-cf-email').value.trim(),order=document.getElementById('hw-cf-order').value.trim(),msg=document.getElementById('hw-cf-msg').value.trim();if(!name||!email||!msg){alert('Please fill in your name, email and message.');return;}window.location.href='mailto:hello@invitations.co.uk?subject='+encodeURIComponent('Customer Enquiry'+(order?' — Order '+order:''))+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+(order?'\nOrder: '+order:'')+'\n\n'+msg);hwHideContact();hwAddMsg('bot','Your email client should have opened — we\'ll get back to you within one working day.',false);}
 </script>
