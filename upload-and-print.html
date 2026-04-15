@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Upload & Print Wedding Invitations | Your Design, Beautifully Printed | Invitations</title>
+<meta name="description" content="Upload your wedding invitation design and we'll print it on premium UK paper stocks. PDF, AI, InDesign, PNG or JPG accepted. Digital proof included, free tracked delivery, no minimum quantities."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://YOURDOMAIN.co.uk/upload-and-print.html"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://YOURDOMAIN.co.uk/upload-and-print.html"/>
+<meta property="og:title" content="Upload & Print Wedding Invitations | Invitations"/>
+<meta property="og:description" content="Upload your wedding invitation design and we'll print it on premium UK paper stocks. Digital proof included on every order."/>
+<meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
+<meta property="og:site_name" content="Invitations"/>
+<style>
+/* ── UPLOAD FLOW ── */
+.upload-wrap{max-width:760px;margin:0 auto;padding:64px 32px 100px;}
+.step-bar{display:flex;align-items:center;gap:0;margin-bottom:56px;}
+.step-item{display:flex;align-items:center;gap:12px;flex:1;}
+.step-item:last-child{flex:0;}
+.step-num{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--pale);font-weight:500;flex-shrink:0;transition:all .3s;background:var(--white);}
+.step-num.active{border-color:var(--gold);color:var(--gold);}
+.step-num.done{background:var(--gold);border-color:var(--gold);color:#fff;}
+.step-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);transition:color .3s;}
+.step-label.active{color:var(--text);}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 16px;}
+.drop-zone{border:1.5px dashed var(--border);border-radius:24px;padding:72px 40px;text-align:center;cursor:pointer;transition:all .3s;background:var(--white);position:relative;}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold);background:rgba(184,151,106,.04);}
+#fileInput{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.check-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:16px;}
+.check-card h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:20px;color:var(--text);}
+.check-row{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
+.check-row:last-child{border-bottom:none;padding-bottom:0;}
+.check-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px;}
+.check-icon.ok{background:#EAF4EE;color:#5A9E6F;}
+.check-icon.warn{background:#FDF4E7;color:#C97B3A;}
+.check-icon.err{background:#FCEAEA;color:#C94A3A;}
+.check-icon.info{background:#EAF0F7;color:#4A7FAA;}
+.check-label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:4px;}
+.check-val{font-size:14px;color:var(--text);font-weight:400;}
+.check-note{font-size:12px;color:var(--soft);margin-top:3px;line-height:1.6;}
+.paper-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;}
+.paper-opt{border:1.5px solid var(--border);border-radius:16px;padding:20px 18px;cursor:pointer;transition:all .25s;text-align:center;background:var(--white);}
+.paper-opt:hover{border-color:var(--gold-lt);}
+.paper-opt.selected{border-color:var(--gold);background:rgba(184,151,106,.04);}
+.paper-opt .paper-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:400;margin-bottom:4px;color:var(--text);}
+.paper-opt .paper-sub{font-size:11px;color:var(--soft);line-height:1.6;margin-bottom:8px;}
+.paper-opt .paper-price{font-size:12px;color:var(--gold);}
+.qty-chip{display:inline-flex;align-items:center;justify-content:center;min-width:56px;padding:10px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--text);cursor:pointer;transition:all .2s;background:var(--white);}
+.qty-chip:hover{border-color:var(--gold-lt);}
+.qty-chip.selected{border-color:var(--gold);background:rgba(184,151,106,.06);color:var(--gold);}
+.price-strip{background:var(--cream);border-radius:16px;padding:24px 28px;margin-top:24px;}
+.price-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;color:var(--soft);}
+.price-row.total{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--text);font-weight:400;margin-bottom:0;padding-top:12px;border-top:1px solid var(--border);margin-top:8px;}
+.form-input,.form-select{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--white);font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--text);outline:none;transition:border-color .2s;appearance:none;border-radius:8px;}
+.form-input:focus,.form-select:focus{border-color:var(--gold-lt);}
+.hint{font-size:11px;color:var(--pale);margin-top:7px;line-height:1.6;}
+.success-wrap{max-width:560px;margin:0 auto;padding:100px 32px;text-align:center;}
+/* ── CHECKOUT MODAL ── */
+.co-modal-bg{position:fixed;inset:0;background:rgba(61,46,36,.55);z-index:600;display:none;align-items:center;justify-content:center;padding:24px;}
+.co-modal-bg.open{display:flex;}
+.co-modal{background:var(--white);max-width:560px;width:100%;max-height:90vh;overflow-y:auto;border-radius:20px;}
+.co-head{padding:28px 32px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.co-head h3{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;}
+.co-body{padding:28px 32px;}
+.co-section-title{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;margin-top:24px;display:block;}
+.co-section-title:first-child{margin-top:0;}
+.co-summary-item{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);color:var(--soft);}
+.co-summary-item.total{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);font-weight:400;padding-top:12px;margin-top:4px;border-top:2px solid var(--border);border-bottom:none;}
+.co-field{margin-bottom:16px;}
+.co-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:6px;font-weight:400;}
+.co-input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border-color .2s;}
+.co-input:focus{border-color:var(--gold-lt);}
+.co-input.error{border-color:var(--err);}
+.co-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.co-stripe-note{display:flex;align-items:center;gap:10px;background:var(--cream);border-radius:12px;padding:14px 16px;margin-top:8px;margin-bottom:20px;}
+.co-stripe-note p{font-size:11px;color:var(--soft);line-height:1.6;}
+.co-err{background:#FCEAEA;color:var(--err);border-radius:10px;padding:12px 16px;font-size:12px;margin-bottom:16px;display:none;}
+.modal-close{background:none;border:none;font-size:20px;color:var(--pale);cursor:pointer;line-height:1;padding:4px;}
+@media(max-width:768px){.paper-grid{grid-template-columns:1fr 1fr;}.step-label{display:none;}}
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<!-- CHECKOUT MODAL -->
+<div class="co-modal-bg" id="coModalBg">
+  <div class="co-modal" id="coModal">
+    <div class="co-head">
+      <h3 style="font-family:'Cormorant Garamond',serif;">Checkout</h3>
+      <button class="modal-close" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="co-body">
+      <span class="co-section-title">Order Summary</span>
+      <div id="coSummaryItems"></div>
+      <div class="co-summary-item total"><span>Total inc. VAT</span><span id="coSummaryTotal">£0.00</span></div>
+      <span class="co-section-title">Your Details</span>
+      <div class="co-field"><label class="co-label">Full Name *</label><input class="co-input" id="coName" placeholder="Charlotte Thornton" type="text"></div>
+      <div class="co-field"><label class="co-label">Email Address *</label><input class="co-input" id="coEmail" placeholder="charlotte@example.com" type="email"></div>
+      <div class="co-field"><label class="co-label">Phone Number</label><input class="co-input" id="coPhone" placeholder="+44 7700 000000" type="tel"></div>
+      <span class="co-section-title">Delivery Address</span>
+      <div class="co-field"><label class="co-label">Address Line 1 *</label><input class="co-input" id="coAddr1" placeholder="12 Rose Lane" type="text"></div>
+      <div class="co-field"><label class="co-label">Address Line 2</label><input class="co-input" id="coAddr2" placeholder="Apartment, suite, etc." type="text"></div>
+      <div class="co-row">
+        <div class="co-field"><label class="co-label">Town / City *</label><input class="co-input" id="coCity" placeholder="London" type="text"></div>
+        <div class="co-field"><label class="co-label">Postcode *</label><input class="co-input" id="coPostcode" placeholder="SW1A 1AA" type="text"></div>
+      </div>
+      <div class="co-field"><label class="co-label">Order Notes <span style="color:var(--pale);font-size:10px;">(optional)</span></label><textarea class="co-input" id="coNotes" rows="3" placeholder="Any special instructions…" style="resize:vertical;line-height:1.7;"></textarea></div>
+      <div class="co-err" id="coErr">Please fill in all required fields.</div>
+      <div class="co-stripe-note">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8976A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <p>You'll be taken to Stripe's secure payment page. We never store your card details.</p>
+      </div>
+      <button class="btn" style="width:100%;justify-content:center;gap:12px;" id="coPayBtn" onclick="proceedToStripe()">
+        <span id="coPayBtnText">Pay Securely with Stripe</span>
+        <div id="coPaySpinner" style="width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;flex-shrink:0;"></div>
+      </button>
+      <p style="text-align:center;font-size:11px;color:var(--pale);margin-top:12px;">You can review your order again on the Stripe payment page before paying.</p>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD FLOW -->
+<div style="background:var(--cream);min-height:calc(100vh - 64px);">
+  <div class="upload-wrap">
+
+    <div style="text-align:center;margin-bottom:52px;">
+      <span class="tag">Upload &amp; Print</span>
+      <h1 class="serif" style="font-size:clamp(2.2rem,4vw,3.2rem);font-weight:300;line-height:1.15;margin-bottom:14px;">Your design, beautifully printed.</h1>
+      <p style="font-size:14px;color:var(--soft);max-width:460px;margin:0 auto;line-height:1.9;">Upload your artwork and we handle everything from here — quality checked, printed on premium paper and delivered to your door.</p>
+    </div>
+
+    <!-- STEP BAR -->
+    <div class="step-bar">
+      <div class="step-item"><div class="step-num active" id="sn1">1</div><div class="step-label active" id="sl1">Upload</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num" id="sn2">2</div><div class="step-label" id="sl2">File Check</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num" id="sn3">3</div><div class="step-label" id="sl3">Paper &amp; Quantity</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num" id="sn4">4</div><div class="step-label" id="sl4">Checkout</div></div>
+    </div>
+
+    <!-- STEP 1: UPLOAD -->
+    <div id="step1">
+      <div id="size-selector" style="margin-bottom:32px;">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:6px;">Choose your invitation size</div>
+        <p style="font-size:13px;color:var(--soft);margin-bottom:20px;line-height:1.8;">Select a size first — this helps us check your file is set up correctly for print.</p>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+          <div id="size-opt-A5" onclick="selectSize('A5')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A5" style="width:26px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A5" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">A5</div><div style="font-size:10px;color:var(--pale);">148×210mm</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Most popular</div></div>
+          <div id="size-opt-A6" onclick="selectSize('A6')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A6" style="width:26px;height:28px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A6" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">A6</div><div style="font-size:10px;color:var(--pale);">105×148mm</div></div>
+          <div id="size-opt-5x7" onclick="selectSize('5x7')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-5x7" style="width:22px;height:36px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-5x7" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">5"×7"</div><div style="font-size:10px;color:var(--pale);">127×178mm</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Traditional</div></div>
+          <div id="size-opt-DL" onclick="selectSize('DL')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-DL" style="width:16px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-DL" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">DL</div><div style="font-size:10px;color:var(--pale);">99×210mm</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Slim</div></div>
+          <div id="size-opt-Square" onclick="selectSize('Square')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-Square" style="width:30px;height:30px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-Square" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">Square</div><div style="font-size:10px;color:var(--pale);">148×148mm</div></div>
+        </div>
+        <p id="sizeNote" style="font-size:12px;color:var(--pale);margin-top:14px;text-align:center;">↑ Select a size above to unlock the upload</p>
+      </div>
+
+      <div class="drop-zone" id="dropZone" style="opacity:.45;pointer-events:none;">
+        <input type="file" id="fileInput" accept=".pdf,.ai,.indd,.jpg,.jpeg,.png,.tif,.tiff,.eps" onchange="handleFile(this.files[0])"/>
+        <div style="width:72px;height:72px;border-radius:50%;background:rgba(184,151,106,.1);border:1.5px solid var(--gold-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B8976A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;margin-bottom:10px;color:var(--text);">Upload your artwork</div>
+        <p style="font-size:13px;color:var(--soft);line-height:1.8;margin-bottom:28px;">Drag and drop your file here, or click to browse.</p>
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:1px solid var(--gold);border-radius:60px;color:var(--gold);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;margin-bottom:24px;">Click to choose a file</div>
+        <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">PDF</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">AI</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">InDesign</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">PNG</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">JPG</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">TIFF</span>
+        </div>
+        <div style="font-size:11px;color:var(--pale);letter-spacing:.06em;">Maximum file size 100MB · Colour mode: CMYK preferred</div>
+      </div>
+
+      <div style="margin-top:40px;background:var(--white);border-radius:20px;padding:32px;border:1px solid var(--border);">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;margin-bottom:20px;color:var(--text);">What we check before printing</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Resolution &amp; Quality</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We check your file is at least 300 DPI for crisp printing.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Dimensions &amp; Bleed</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We verify your artwork is the correct size with sufficient bleed.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Colour Mode</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">CMYK is print-ready. We'll flag RGB files before converting.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">File Format</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We confirm your file is compatible with our print process.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: FILE CHECK -->
+    <div id="step2" class="hidden">
+      <div class="check-card">
+        <h3>File Quality Report</h3>
+        <div id="checkResults"></div>
+      </div>
+      <div id="checkActions" class="hidden" style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+        <button class="btn" id="proceedBtn" onclick="goStep(3)">Continue to Paper &amp; Quantity</button>
+        <button class="btn-out" onclick="goStep(1)">Upload a Different File</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: PAPER, ENVELOPES & QUANTITY -->
+    <div id="step3" class="hidden">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">✦</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);" id="fileSummaryName">your-design.pdf</div><div style="font-size:12px;color:var(--soft);margin-top:2px;" id="fileSummaryMeta">File ready for print</div></div>
+        <button onclick="goStep(1)" style="font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;">Change</button>
+      </div>
+
+      <div class="check-card">
+        <h3>Paper stock</h3>
+        <div class="paper-grid" id="paperGrid"></div>
+      </div>
+
+      <div class="check-card">
+        <h3>Envelopes</h3>
+        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:16px;border:1.5px solid var(--border);border-radius:14px;transition:border-color .25s;" id="envToggleWrap">
+          <input type="checkbox" id="envToggle" onchange="toggleEnvelopes()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
+          <div><div style="font-size:13px;color:var(--text);font-weight:400;">Add matching envelopes</div><div style="font-size:11px;color:var(--pale);margin-top:2px;">Premium gummed · Priced per envelope</div></div>
+        </label>
+        <div id="envSection" style="display:none;margin-top:16px;">
+          <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;font-weight:500;">Choose colour</div>
+          <div id="envPicker" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:var(--soft);">Envelope total</span>
+            <span style="font-size:13px;color:var(--gold);font-weight:500;" id="envLineTotal">£0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="check-card">
+        <h3>Quantity</h3>
+        <p style="font-size:13px;color:var(--soft);margin-bottom:20px;line-height:1.8;">We recommend ordering a few extras — reprinting a small batch later costs more per unit.</p>
+        <div style="display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;">
+          <button id="tabPreset" onclick="switchQtyTab('preset')" style="flex:1;padding:10px;border:none;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Choose amount</button>
+          <button id="tabCustom" onclick="switchQtyTab('custom')" style="flex:1;padding:10px;border:none;background:var(--white);color:var(--soft);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Enter exact amount</button>
+        </div>
+        <div id="qtyPresetPane" style="display:flex;flex-wrap:wrap;gap:10px;">
+          <div class="qty-chip selected" onclick="selectChip(this,25)">25</div>
+          <div class="qty-chip" onclick="selectChip(this,50)">50</div>
+          <div class="qty-chip" onclick="selectChip(this,75)">75</div>
+          <div class="qty-chip" onclick="selectChip(this,100)">100</div>
+          <div class="qty-chip" onclick="selectChip(this,150)">150</div>
+          <div class="qty-chip" onclick="selectChip(this,200)">200</div>
+          <div class="qty-chip" onclick="selectChip(this,250)">250</div>
+          <div class="qty-chip" onclick="selectChip(this,300)">300</div>
+        </div>
+        <div id="qtyCustomPane" style="display:none;">
+          <input type="number" id="qtyCustomInput" class="form-input" min="1" placeholder="e.g. 85" oninput="updatePrice()" style="max-width:200px;font-size:1.2rem;text-align:center;padding:14px;">
+          <div class="hint" style="margin-top:8px;">Enter any amount you need.</div>
+        </div>
+      </div>
+
+      <div class="check-card">
+        <h3>Delivery</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gold);border-radius:12px;background:rgba(184,151,106,.04);" onclick="selectDelivery(0,this)"><input type="radio" name="delivery" checked style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:13px;color:var(--text);">Standard</div><div style="font-size:11px;color:var(--pale);margin-top:2px;">5–7 working days</div></div><div style="font-size:13px;color:var(--gold);font-weight:500;">Free</div></label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;" onclick="selectDelivery(12,this)"><input type="radio" name="delivery" style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:13px;color:var(--text);">Express</div><div style="font-size:11px;color:var(--pale);margin-top:2px;">2–3 working days</div></div><div style="font-size:13px;color:var(--soft);">+£12.00</div></label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;" onclick="selectDelivery(18,this)"><input type="radio" name="delivery" style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:13px;color:var(--text);">Next Day</div><div style="font-size:11px;color:var(--pale);margin-top:2px;">Order before 12pm</div></div><div style="font-size:13px;color:var(--soft);">+£18.00</div></label>
+        </div>
+      </div>
+
+      <div class="price-strip" style="margin-bottom:24px;">
+        <div class="price-row"><span>Invitations</span><span id="priceBase">£0.00</span></div>
+        <div class="price-row" id="priceUpgradeRow"><span>Paper upgrade</span><span id="priceUpgrade">—</span></div>
+        <div class="price-row" id="priceEnvRow" style="display:none;"><span>Envelopes</span><span id="priceEnvCost">—</span></div>
+        <div class="price-row"><span>Delivery</span><span id="priceDelivery">Free</span></div>
+        <div class="price-row"><span>Subtotal (excl. VAT)</span><span id="priceNet">£0.00</span></div>
+        <div class="price-row"><span>VAT (20%)</span><span id="priceVat">£0.00</span></div>
+        <div class="price-row total"><span>Total inc. VAT</span><span id="priceTotal">£0.00</span></div>
+      </div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button class="btn" onclick="addToCartUpload()">Add to Basket</button>
+        <button class="btn-out" onclick="goStep(2)">Back</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: ADDED TO BASKET -->
+    <div id="step4" class="hidden">
+      <div class="success-wrap" style="margin:0 auto;">
+        <div style="width:80px;height:80px;border-radius:50%;background:rgba(184,151,106,.12);border:1.5px solid var(--gold-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;font-size:28px;">✓</div>
+        <h2 class="serif" style="font-size:2.2rem;font-weight:400;margin-bottom:16px;">Added to your basket</h2>
+        <p style="font-size:14px;color:var(--soft);line-height:1.9;margin-bottom:32px;">Your upload print order has been added. Continue browsing or head to checkout when you're ready.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn" onclick="openCheckout()">Proceed to Checkout</button>
+          <button class="btn-out" onclick="goStep(1)">Upload Another</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const CONFIG = {
+  papers: [
+    { id:'smooth', name:'Smooth White',  subtitle:'300gsm · Crisp & classic',  priceExtra:0  },
+    { id:'cotton', name:'Cotton Rag',    subtitle:'400gsm · Luxury feel',       priceExtra:20 },
+    { id:'vellum', name:'Vellum Overlay',subtitle:'Translucent · Ethereal',     priceExtra:35 },
+  ],
+  pricing: { basePerFifty:150, vatRate:0.20, minQty:25, qtyStep:25 },
+};
+const ENVELOPES = [
+  { id:'white',    name:'Brilliant White', hex:'#FFFFFF', border:'#ddd',     priceEach:0.35 },
+  { id:'ivory',    name:'Ivory',           hex:'#FAF7F2', border:'#e0dbd5',  priceEach:0.35 },
+  { id:'cream',    name:'Warm Cream',      hex:'#F5EDE0', border:'#e5d8c8',  priceEach:0.35 },
+  { id:'blush',    name:'Blush Pink',      hex:'#F0DDD8', border:'#dcc8c2',  priceEach:0.45 },
+  { id:'sage',     name:'Sage Green',      hex:'#D1DDD0', border:'#b8c8b6',  priceEach:0.45 },
+  { id:'lavender', name:'Lavender',        hex:'#DDD5E8', border:'#c8bee0',  priceEach:0.45 },
+  { id:'slate',    name:'Slate Blue',      hex:'#B0BEC8', border:'#90a0b0',  priceEach:0.50 },
+  { id:'navy',     name:'Midnight Navy',   hex:'#2C3E50', border:'#1a2a38',  priceEach:0.55 },
+  { id:'black',    name:'Matte Black',     hex:'#1C1C1C', border:'#000',     priceEach:0.55 },
+  { id:'gold',     name:'Champagne Gold',  hex:'#D4B896', border:'#b89870',  priceEach:0.60 },
+];
+const SIZE_SPECS = {
+  'A5':    {label:'A5 (148×210mm)',    mmW:148,mmH:210,minPx:1748},
+  'A6':    {label:'A6 (105×148mm)',    mmW:105,mmH:148,minPx:1240},
+  '5x7':   {label:'5"×7" (127×178mm)',mmW:127,mmH:178,minPx:1500},
+  'DL':    {label:'DL (99×210mm)',     mmW:99, mmH:210,minPx:1169},
+  'Square':{label:'Square (148×148mm)',mmW:148,mmH:148,minPx:1748}
+};
+
+// ── STATE ─────────────────────────────────────────────────
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem('inv_cart')||'[]'); } catch(e){ cart=[]; }
+let currentFile=null, currentStep=1, selectedSize=null;
+let selectedPaper='smooth', uploadQty=25, checksPassed=true;
+let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
+
+// ── CART ──────────────────────────────────────────────────
+function saveCart()       { localStorage.setItem('inv_cart',JSON.stringify(cart)); }
+function updateCartBadge(){ document.querySelectorAll('#cartCount').forEach(el=>el.textContent=cart.length); }
+function addToCart(item)  { cart.push(item); saveCart(); updateCartBadge(); }
+function removeCartItem(i){ cart.splice(i,1); saveCart(); updateCartBadge(); renderCartDrawer(); }
+function openCart()       { renderCartDrawer(); document.getElementById('cartBg').classList.add('open'); document.getElementById('cartDrawer').classList.add('open'); }
+function closeCart()      { document.getElementById('cartBg').classList.remove('open'); document.getElementById('cartDrawer').classList.remove('open'); }
+function showToast(msg)   { const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800); }
+function renderCartDrawer(){
+  const scroll=document.getElementById('cartScroll'),foot=document.getElementById('cartFoot');
+  if(!scroll)return;
+  if(!cart.length){scroll.innerHTML='<div class="cart-empty"><div style="font-size:40px;margin-bottom:16px;">✦</div><p style="font-size:13px;color:var(--pale);">Your basket is empty</p></div>';foot.style.display='none';return;}
+  scroll.innerHTML=cart.map((item,i)=>`<div class="cart-item"><div class="cart-item-img">${item.icon||'✦'}</div><div class="cart-item-info"><div class="cart-item-name serif">${item.name}</div><div class="cart-item-meta">${item.qty} invitations · ${item.paper||'Smooth White'}</div><div class="cart-item-price">£${item.total.toFixed(2)}</div></div><button class="cart-remove" onclick="removeCartItem(${i})">✕</button></div>`).join('');
+  const sub=cart.reduce((s,i)=>s+i.total,0);
+  document.getElementById('cartNet').textContent='£'+(sub/1.2).toFixed(2);
+  document.getElementById('cartVat').textContent='£'+(sub-sub/1.2).toFixed(2);
+  document.getElementById('cartTotal').textContent='£'+sub.toFixed(2);
+  foot.style.display='block';
+}
+
+// ── SIZE SELECTION ────────────────────────────────────────
+function selectSize(id){
+  selectedSize=id;
+  ['A5','A6','5x7','DL','Square'].forEach(s=>{
+    const el=document.getElementById('size-opt-'+s); if(!el)return;
+    const sel=s===id;
+    el.style.borderColor=sel?'var(--gold)':'var(--border)';
+    el.style.background=sel?'rgba(184,151,106,.06)':'var(--white)';
+    const rect=document.getElementById('size-rect-'+s);
+    if(rect){rect.style.borderColor=sel?'var(--gold)':'var(--border)';rect.style.background=sel?'rgba(184,151,106,.18)':'var(--cream)';}
+    const nm=document.getElementById('size-name-'+s);
+    if(nm)nm.style.color=sel?'var(--gold)':'var(--text)';
+  });
+  document.getElementById('sizeNote').style.display='none';
+  const dz=document.getElementById('dropZone');
+  dz.style.opacity='1'; dz.style.pointerEvents='auto';
+}
+
+// ── FILE UPLOAD ───────────────────────────────────────────
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+
+function handleFile(file){
+  if(!file)return;
+  currentFile=file;
+  goStep(2);
+  checkFile(file);
+}
+
+function checkFile(file){
+  const results=document.getElementById('checkResults');
+  results.innerHTML=`<div style="display:flex;align-items:center;gap:12px;padding:16px 0;color:var(--soft);font-size:13px;"><div style="width:16px;height:16px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div>Checking your file…</div>`;
+  document.getElementById('checkActions').classList.add('hidden');
+  checksPassed=true;
+  setTimeout(()=>{
+    const ext=file.name.split('.').pop().toLowerCase();
+    const sizeMB=(file.size/1024/1024).toFixed(1);
+    const checks=[];
+    const printFormats=['pdf','ai','indd','eps','tif','tiff'];
+    const imageFormats=['jpg','jpeg','png'];
+    const isProFormat=printFormats.includes(ext);
+    const isImage=imageFormats.includes(ext);
+    const isValid=isProFormat||isImage;
+    if(isProFormat){checks.push({status:'ok',label:'File Format',val:ext.toUpperCase()+' file',note:'Professional print format — ideal.'});}
+    else if(isImage){checks.push({status:'warn',label:'File Format',val:ext.toUpperCase()+' file',note:'Image files are accepted. For best results, supply a PDF at 300 DPI or above.'});}
+    else{checks.push({status:'err',label:'File Format',val:ext.toUpperCase()+' — not supported',note:'Please upload a PDF, AI, InDesign, TIFF, PNG or JPG file.'});checksPassed=false;}
+    if(file.size>100*1024*1024){checks.push({status:'err',label:'File Size',val:sizeMB+' MB',note:'Maximum file size is 100MB.'});checksPassed=false;}
+    else if(file.size<0.1*1024*1024){checks.push({status:'warn',label:'File Size',val:sizeMB+' MB',note:'This file is very small. It may not have enough detail for high-quality printing.'});}
+    else{checks.push({status:'ok',label:'File Size',val:sizeMB+' MB',note:'File size looks good.'});}
+    const spec=SIZE_SPECS[selectedSize]||SIZE_SPECS['A5'];
+    checks.push({status:'info',label:'Dimensions',val:'Verified on receipt',note:'We will check your dimensions match '+spec.label+' at minimum 300 DPI when we receive it.'});
+    checks.push({status:'info',label:'Colour Mode',val:'Confirmed on receipt',note:'CMYK is preferred for accurate colour. RGB will be flagged if detected.'});
+    renderChecks(checks);
+    if(isValid){
+      const btn=document.getElementById('proceedBtn');
+      if(!checksPassed){btn.textContent='Continue Anyway';btn.style.background='var(--warn)';}
+      document.getElementById('checkActions').classList.remove('hidden');
+    }
+  },1200);
+}
+
+function renderChecks(checks){
+  document.getElementById('checkResults').innerHTML=checks.map(c=>`
+    <div class="check-row">
+      <div class="check-icon ${c.status}">${c.status==='ok'?'✓':c.status==='warn'?'!':c.status==='err'?'✕':'i'}</div>
+      <div><div class="check-label">${c.label}</div><div class="check-val">${c.val}</div>${c.note?`<div class="check-note">${c.note}</div>`:''}</div>
+    </div>`).join('');
+}
+
+// ── STEP NAVIGATION ───────────────────────────────────────
+function goStep(n){
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('step'+i)?.classList.toggle('hidden',i!==n);
+    document.getElementById('sn'+i).className='step-num'+(i<n?' done':i===n?' active':'');
+    document.getElementById('sl'+i).className='step-label'+(i===n?' active':'');
+  });
+  currentStep=n;
+  if(n===3)initStep3();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function initStep3(){
+  if(currentFile){
+    document.getElementById('fileSummaryName').textContent=currentFile.name;
+    document.getElementById('fileSummaryMeta').textContent=(currentFile.size/1024/1024).toFixed(1)+' MB · Ready for print';
+  }
+  // Paper grid
+  const grid=document.getElementById('paperGrid');
+  grid.innerHTML=CONFIG.papers.map(p=>`
+    <div class="paper-opt${p.id===selectedPaper?' selected':''}" onclick="selectPaperOpt('${p.id}')">
+      <div class="paper-name">${p.name}</div>
+      <div class="paper-sub">${p.subtitle}</div>
+      <div class="paper-price">${p.priceExtra?'+£'+p.priceExtra:'Included'}</div>
+    </div>`).join('');
+  // Envelope picker
+  const picker=document.getElementById('envPicker');
+  picker.innerHTML=ENVELOPES.map(e=>`
+    <div onclick="selectEnvColour('${e.id}')" title="${e.name}" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;">
+      <div id="env-swatch-${e.id}" style="width:36px;height:36px;border-radius:50%;background:${e.hex};border:2px solid ${selectedEnvColour===e.id?'var(--text)':e.border};transition:all .2s;transform:${selectedEnvColour===e.id?'scale(1.15)':'scale(1)'};"></div>
+      <div style="font-size:9px;color:var(--soft);text-align:center;max-width:48px;line-height:1.3;">${e.name}</div>
+    </div>`).join('');
+  updatePrice();
+}
+
+function selectPaperOpt(id){
+  selectedPaper=id;
+  document.querySelectorAll('.paper-opt').forEach(el=>el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  updatePrice();
+}
+
+function toggleEnvelopes(){
+  envelopesEnabled=document.getElementById('envToggle').checked;
+  document.getElementById('envSection').style.display=envelopesEnabled?'block':'none';
+  if(envelopesEnabled&&!selectedEnvColour){selectEnvColour('white');}
+  updatePrice();
+}
+
+function selectEnvColour(id){
+  selectedEnvColour=id;
+  ENVELOPES.forEach(e=>{
+    const sw=document.getElementById('env-swatch-'+e.id);
+    if(sw){sw.style.border='2px solid '+(e.id===id?'var(--text)':e.border);sw.style.transform=e.id===id?'scale(1.15)':'scale(1)';}
+  });
+  updatePrice();
+}
+
+function switchQtyTab(tab){
+  const isPreset=tab==='preset';
+  document.getElementById('tabPreset').style.background=isPreset?'var(--gold)':'var(--white)';
+  document.getElementById('tabPreset').style.color=isPreset?'#fff':'var(--soft)';
+  document.getElementById('tabCustom').style.background=!isPreset?'var(--gold)':'var(--white)';
+  document.getElementById('tabCustom').style.color=!isPreset?'#fff':'var(--soft)';
+  document.getElementById('qtyPresetPane').style.display=isPreset?'flex':'none';
+  document.getElementById('qtyCustomPane').style.display=isPreset?'none':'block';
+  updatePrice();
+}
+
+function selectChip(el,qty){
+  document.querySelectorAll('.qty-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  uploadQty=qty;
+  updatePrice();
+}
+
+function selectDelivery(cost,labelEl){
+  deliveryCost=cost;
+  document.querySelectorAll('[name="delivery"]').closest?.('label');
+  document.querySelectorAll('label[onclick^="selectDelivery"]').forEach(l=>{
+    l.style.borderColor='var(--border)';l.style.background='transparent';
+  });
+  if(labelEl){labelEl.style.borderColor='var(--gold)';labelEl.style.background='rgba(184,151,106,.04)';}
+  updatePrice();
+}
+
+function calcBasePrice(qty){
+  const base=CONFIG.pricing.basePerFifty;
+  return Math.round((qty/50)*base);
+}
+
+function updatePrice(){
+  const customPane=document.getElementById('qtyCustomPane');
+  if(customPane&&customPane.style.display!=='none'){
+    const v=parseInt(document.getElementById('qtyCustomInput').value)||25;
+    uploadQty=Math.max(1,v);
+  }
+  const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
+  const base=calcBasePrice(uploadQty);
+  const upgrade=paper.priceExtra||0;
+  let envCost=0;
+  if(envelopesEnabled&&selectedEnvColour){
+    const env=ENVELOPES.find(e=>e.id===selectedEnvColour);
+    if(env)envCost=Math.round(env.priceEach*uploadQty*100)/100;
+  }
+  const subtotalEx=(base+upgrade+envCost+deliveryCost)/1.2;
+  const vat=subtotalEx*0.2;
+  const total=subtotalEx+vat;
+  document.getElementById('priceBase').textContent='£'+base.toFixed(2);
+  document.getElementById('priceUpgrade').textContent=upgrade?'+£'+upgrade.toFixed(2):'Included';
+  document.getElementById('priceUpgradeRow').style.display=upgrade?'flex':'none';
+  document.getElementById('priceEnvRow').style.display=envelopesEnabled?'flex':'none';
+  if(envelopesEnabled)document.getElementById('priceEnvCost').textContent='£'+envCost.toFixed(2);
+  document.getElementById('envLineTotal').textContent='£'+envCost.toFixed(2);
+  document.getElementById('priceDelivery').textContent=deliveryCost?'£'+deliveryCost.toFixed(2):'Free';
+  document.getElementById('priceNet').textContent='£'+subtotalEx.toFixed(2);
+  document.getElementById('priceVat').textContent='£'+vat.toFixed(2);
+  document.getElementById('priceTotal').textContent='£'+total.toFixed(2);
+}
+
+function addToCartUpload(){
+  const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
+  const upgrade=paper.priceExtra||0;
+  let envCost=0;
+  if(envelopesEnabled&&selectedEnvColour){
+    const env=ENVELOPES.find(e=>e.id===selectedEnvColour);
+    if(env)envCost=Math.round(env.priceEach*uploadQty*100)/100;
+  }
+  const base=calcBasePrice(uploadQty);
+  const subtotalEx=(base+upgrade+envCost+deliveryCost)/1.2;
+  const total=(subtotalEx*1.2);
+  const envLabel=envelopesEnabled&&selectedEnvColour?` + ${ENVELOPES.find(e=>e.id===selectedEnvColour)?.name} envelopes`:'';
+  addToCart({
+    name: currentFile?currentFile.name.replace(/\.[^.]+$/,''):'Custom Design',
+    qty: uploadQty,
+    paper: paper.name+envLabel,
+    total: total,
+    icon:'✦'
+  });
+  showToast('Added to your basket ✓');
+  goStep(4);
+}
+
+// ── CHECKOUT ─────────────────────────────────────────────
+function openCheckout(){
+  if(!cart.length){showToast('Your basket is empty');return;}
+  closeCart();
+  const sub=cart.reduce((s,i)=>s+i.total,0);
+  document.getElementById('coSummaryItems').innerHTML=cart.map(item=>`<div class="co-summary-item"><span>${item.name} <span style="color:var(--pale);font-size:11px;">× ${item.qty}</span></span><span>£${item.total.toFixed(2)}</span></div>`).join('');
+  document.getElementById('coSummaryTotal').textContent='£'+sub.toFixed(2);
+  document.getElementById('coErr').style.display='none';
+  document.getElementById('coModalBg').classList.add('open');
+}
+function closeCheckout(){ document.getElementById('coModalBg').classList.remove('open'); }
+document.getElementById('coModalBg').addEventListener('click',function(e){if(e.target===this)closeCheckout();});
+
+async function proceedToStripe(){
+  const name=document.getElementById('coName').value.trim();
+  const email=document.getElementById('coEmail').value.trim();
+  const addr1=document.getElementById('coAddr1').value.trim();
+  const city=document.getElementById('coCity').value.trim();
+  const postcode=document.getElementById('coPostcode').value.trim();
+  const errEl=document.getElementById('coErr');
+  ['coName','coEmail','coAddr1','coCity','coPostcode'].forEach(id=>document.getElementById(id).classList.remove('error'));
+  const missing=[];
+  if(!name)missing.push('coName');
+  if(!email||!email.includes('@'))missing.push('coEmail');
+  if(!addr1)missing.push('coAddr1');
+  if(!city)missing.push('coCity');
+  if(!postcode)missing.push('coPostcode');
+  if(missing.length){missing.forEach(id=>document.getElementById(id).classList.add('error'));errEl.textContent='Please fill in all required fields.';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  const btn=document.getElementById('coPayBtn');
+  document.getElementById('coPayBtnText').textContent='Uploading artwork…';
+  document.getElementById('coPaySpinner').style.display='block';
+  btn.disabled=true;
+  const customer={name,email,phone:document.getElementById('coPhone').value.trim(),address:[addr1,document.getElementById('coAddr2').value.trim(),city,postcode].filter(Boolean).join(', '),notes:document.getElementById('coNotes').value.trim()};
+  let artworkUrl=null;
+  if(currentFile){
+    try{
+      const fileName=Date.now()+'_'+currentFile.name.replace(/\s+/g,'_');
+      const uploadRes=await fetch(`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`,{method:'POST',headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Content-Type':currentFile.type||'application/octet-stream','x-upsert':'false'},body:currentFile});
+      if(uploadRes.ok)artworkUrl=`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`;
+    }catch(e){console.warn('Artwork upload error:',e.message);}
+  }
+  document.getElementById('coPayBtnText').textContent='Redirecting to Stripe…';
+  const orderData={cart:JSON.parse(JSON.stringify(cart)),customer,total:cart.reduce((s,i)=>s+i.total,0),date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),timestamp:Date.now()};
+  localStorage.setItem('inv_pending_order',JSON.stringify(orderData));
+  const base=window.location.origin+'/upload-and-print.html';
+  const successUrl=base+'?order=success';
+  const cancelUrl=base+'?order=cancelled';
+  try{
+    const res=await fetch('/.netlify/functions/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cart,customer,successUrl,cancelUrl,artworkUrl})});
+    const data=await res.json();
+    if(!res.ok||!data.url)throw new Error(data.error||'Could not create checkout session.');
+    if(data.orderNumber){const saved=JSON.parse(localStorage.getItem('inv_pending_order')||'{}');saved.ref=data.orderNumber;localStorage.setItem('inv_pending_order',JSON.stringify(saved));}
+    window.location.href=data.url;
+  }catch(err){
+    errEl.textContent='Payment error: '+err.message+' — please try again or contact us.';
+    errEl.style.display='block';
+    document.getElementById('coPayBtnText').textContent='Pay Securely with Stripe';
+    document.getElementById('coPaySpinner').style.display='none';
+    btn.disabled=false;
+  }
+}
+
+// ── STRIPE RETURN ─────────────────────────────────────────
+(function(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('order')==='success'){
+    cart=[];saveCart();
+    let order=null;
+    try{order=JSON.parse(localStorage.getItem('inv_pending_order'));}catch(e){}
+    localStorage.removeItem('inv_pending_order');
+    function addWorkingDays(date,days){let d=new Date(date),added=0;while(added<days){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)added++;}return d;}
+    const deliveryDate=addWorkingDays(new Date(),7);
+    const deliveryStr=deliveryDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const proofDate=addWorkingDays(new Date(),1);
+    const proofStr=proofDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    const ref=order?.ref||'INV-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*9000);
+    const name=order?.customer?.name||'Valued Customer';
+    const email=order?.customer?.email||'';
+    const addr=order?.customer?.address||'';
+    const notes=order?.customer?.notes||'';
+    const total=order?.total?'£'+order.total.toFixed(2):'—';
+    const net=order?.total?'£'+(order.total/1.2).toFixed(2):'—';
+    const vat=order?.total?'£'+(order.total-order.total/1.2).toFixed(2):'—';
+    const orderDate=order?.date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    const itemsHtml=order?.cart?.length?order.cart.map(item=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border);"><div><div style="font-size:13px;font-weight:500;color:var(--text);">${item.name}</div><div style="font-size:11px;color:var(--soft);margin-top:3px;">${item.qty} invitations · ${item.paper||'Smooth White'}</div></div><div style="font-size:13px;color:var(--gold);font-weight:500;">£${item.total.toFixed(2)}</div></div>`).join(''):'<div style="font-size:13px;color:var(--soft);padding:14px 0;">Order details confirmed</div>';
+    document.querySelector('[style*="min-height:calc(100vh - 64px)"]').innerHTML=`
+      <div style="max-width:640px;margin:0 auto;padding:60px 32px 100px;">
+        <div style="text-align:center;margin-bottom:48px;">
+          <div style="width:72px;height:72px;border-radius:50%;background:rgba(90,158,111,.1);border:1.5px solid #5A9E6F;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#5A9E6F;">✓</div>
+          <span style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;">Order Confirmed</span>
+          <h1 style="font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:400;line-height:1.15;margin-bottom:12px;color:var(--text);">Thank you, ${name.split(' ')[0]}.</h1>
+          <p style="font-size:14px;color:var(--soft);line-height:1.9;max-width:420px;margin:0 auto;">Your order has been received and payment confirmed.</p>
+        </div>
+        <div style="background:var(--text);border-radius:16px;padding:20px 28px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+          <div><div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px;">Order Reference</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;color:#fff;">${ref}</div></div>
+          <div style="text-align:right;"><div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px;">Order Date</div><div style="font-size:13px;color:rgba(255,255,255,.7);">${orderDate}</div></div>
+        </div>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:20px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">What happens next</div>
+          <div style="font-size:13px;color:var(--soft);line-height:2;">
+            <p style="margin-bottom:10px;">✓ <strong style="color:var(--text);">Payment confirmed</strong></p>
+            <p style="margin-bottom:10px;">→ <strong style="color:var(--text);">Digital proof by ${proofStr}</strong> — sent to <strong>${email}</strong></p>
+            <p style="margin-bottom:10px;">○ <strong style="color:var(--text);">Printed &amp; dispatched</strong> — 2–3 working days after proof approval</p>
+            <p>○ <strong style="color:var(--text);">Estimated delivery by ${deliveryStr}</strong></p>
+          </div>
+        </div>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:20px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">Order Summary</div>
+          ${itemsHtml}
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--soft);margin-bottom:6px;"><span>Subtotal (excl. VAT)</span><span>${net}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--soft);margin-bottom:12px;"><span>VAT (20%)</span><span>${vat}</span></div>
+            <div style="display:flex;justify-content:space-between;font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;"><span>Total paid</span><span style="color:var(--gold);">${total}</span></div>
+          </div>
+        </div>
+        <div style="background:rgba(184,151,106,.06);border:1px solid var(--gold-lt);border-radius:16px;padding:20px 24px;margin-bottom:32px;">
+          <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px;">Need to make a change?</div>
+          <div style="font-size:12px;color:var(--soft);line-height:1.7;">Contact us at <strong>hello@invitations.co.uk</strong> quoting reference <strong>${ref}</strong> before your proof is approved.</div>
+        </div>
+        <div style="text-align:center;"><a class="btn" href="/">Back to Homepage</a></div>
+      </div>`;
+    history.replaceState(null,'',window.location.pathname);
+  } else if(params.get('order')==='cancelled'){
+    setTimeout(()=>showToast('Payment cancelled — your basket is still saved.'),500);
+    history.replaceState(null,'',window.location.pathname);
+  }
+})();
+
+// ── LOAD HEADER/FOOTER ────────────────────────────────────
+fetch('/header.html').then(r=>r.text()).then(html=>{
+  document.getElementById('site-header').outerHTML=html;
+  updateCartBadge();
+});
+fetch('/footer.html').then(r=>r.text()).then(html=>{
+  document.getElementById('site-footer').outerHTML=html;
+});
+</script>
+
+</body>
+</html>
