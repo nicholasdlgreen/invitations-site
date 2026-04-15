@@ -1,3 +1,4 @@
+const fetch = require('node-fetch');
 // netlify/functions/stripe-webhook.js
 //
 // Fires when Stripe confirms a successful payment.
