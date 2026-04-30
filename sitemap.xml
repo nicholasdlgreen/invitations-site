@@ -1,26 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://lighthearted-sunburst-4f0ba2.netlify.app/invitations-site.html</loc>
-    <lastmod>2026-04-01</lastmod>
+    <loc>https://foreverprint.com/</loc>
+    <lastmod>2026-04-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://lighthearted-sunburst-4f0ba2.netlify.app/privacy-policy.html</loc>
-    <lastmod>2026-04-01</lastmod>
+    <loc>https://foreverprint.com/products.html</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://foreverprint.com/upload-and-print.html</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://foreverprint.com/how-it-works.html</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://foreverprint.com/track-order.html</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://foreverprint.com/privacy.html</loc>
+    <lastmod>2026-04-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://lighthearted-sunburst-4f0ba2.netlify.app/terms.html</loc>
-    <lastmod>2026-04-01</lastmod>
+    <loc>https://foreverprint.com/terms.html</loc>
+    <lastmod>2026-04-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://lighthearted-sunburst-4f0ba2.netlify.app/returns.html</loc>
-    <lastmod>2026-04-01</lastmod>
+    <loc>https://foreverprint.com/returns.html</loc>
+    <lastmod>2026-04-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
