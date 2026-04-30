@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Design Studio | Create Your Wedding Invitation | Foreverprint</title>
+<meta name="description" content="Two ways to create your wedding invitation. Browse our considered collection of designed templates and make one your own — or describe your wedding and let us design something just for you."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://foreverprint.com/design-studio.html"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://foreverprint.com/design-studio.html"/>
+<meta property="og:title" content="Design Studio | Foreverprint"/>
+<meta property="og:description" content="Two ways to create your wedding invitation — browse our designed templates or design from scratch."/>
+<meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
+<meta property="og:locale" content="en_GB"/>
+<meta property="og:site_name" content="Foreverprint"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Design Studio | Foreverprint"/>
+<meta name="twitter:description" content="Two ways to create your wedding invitation."/>
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
+<style>
+/* ── ENTRY SCREEN STYLES ── */
+.entry-main{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:60px 32px}
+.entry-wrap{max-width:1080px;width:100%;margin:0 auto;text-align:center}
+
+.entry-intro{margin-bottom:60px}
+.entry-intro .tag{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:18px;display:block}
+.entry-intro h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.4rem,4.5vw,3.4rem);font-weight:300;line-height:1.1;color:var(--text);margin-bottom:18px}
+.entry-intro h1 em{font-style:italic;color:var(--gold)}
+.entry-divider{width:48px;height:1px;background:var(--gold-lt);margin:24px auto}
+.entry-intro p{font-size:14px;color:var(--soft);max-width:520px;margin:0 auto;line-height:1.95}
+
+.doors{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.door{background:var(--white);border:1px solid var(--border);border-radius:24px;padding:0;text-decoration:none;color:inherit;cursor:pointer;transition:all .35s;position:relative;overflow:hidden;display:flex;flex-direction:column;text-align:left}
+.door:hover{box-shadow:0 24px 60px rgba(61,46,36,.10);transform:translateY(-4px);border-color:var(--gold-lt)}
+
+.door-visual{aspect-ratio:16/10;background:var(--ivory,#F4EFE8);overflow:hidden;border-bottom:1px solid var(--border);position:relative}
+
+/* Path A visual: template thumbnails */
+.tpl-mosaic{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px;height:100%;align-content:center;background:linear-gradient(135deg,#F4EFE8 0%,#FAF7F2 100%)}
+.tpl-mini{background:var(--white);border-radius:6px;aspect-ratio:148/210;overflow:hidden;box-shadow:0 4px 12px rgba(61,46,36,.08);transition:transform .25s}
+.door:hover .tpl-mini{transform:scale(1.02)}
+.tpl-mini svg{width:100%;height:100%;display:block}
+
+/* Path B visual: stylized brief box */
+.brief-illustration{height:100%;background:linear-gradient(135deg,#3D2E24 0%,#5A4233 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;position:relative;overflow:hidden}
+.brief-illustration::before{content:'';position:absolute;top:-50%;right:-20%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(184,151,106,.15) 0%,transparent 70%)}
+.brief-illustration::after{content:'';position:absolute;bottom:-30%;left:-15%;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(212,184,150,.12) 0%,transparent 70%)}
+.brief-prompt-box{background:rgba(255,255,255,.06);border:1px solid rgba(212,184,150,.3);border-radius:12px;padding:16px 20px;width:80%;max-width:340px;backdrop-filter:blur(10px);position:relative;z-index:1}
+.brief-prompt-line{height:5px;background:rgba(212,184,150,.4);border-radius:3px;margin-bottom:7px}
+.brief-prompt-line:nth-child(1){width:90%}
+.brief-prompt-line:nth-child(2){width:70%}
+.brief-prompt-line:nth-child(3){width:84%;background:rgba(212,184,150,.25)}
+.brief-spark{position:absolute;color:rgba(212,184,150,.4);font-family:serif;z-index:1}
+.brief-spark.s1{top:18%;left:14%;font-size:14px}
+.brief-spark.s2{top:70%;right:16%;font-size:18px}
+.brief-spark.s3{top:30%;right:20%;font-size:10px}
+.brief-spark.s4{bottom:22%;left:22%;font-size:12px}
+
+.coming-soon-badge{position:absolute;top:14px;right:14px;background:var(--gold);color:#fff;padding:5px 12px;border-radius:60px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+
+.door-body{padding:32px 32px 36px;flex:1;display:flex;flex-direction:column}
+.door-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:12px}
+.door-title{font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:400;color:var(--text);line-height:1.2;margin-bottom:14px}
+.door-title em{font-style:italic;color:var(--gold)}
+.door-desc{font-size:13px;color:var(--soft);line-height:1.95;margin-bottom:24px;flex:1}
+.door-points{margin-bottom:28px;display:flex;flex-direction:column;gap:8px}
+.door-point{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:10px}
+.door-point::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--gold-lt);flex-shrink:0}
+.door-cta{display:inline-flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:500;align-self:flex-start;transition:gap .25s}
+.door:hover .door-cta{gap:18px}
+.door-cta::after{content:'→';font-size:14px}
+
+.door.coming-soon{cursor:default}
+.door.coming-soon:hover{transform:none;box-shadow:none;border-color:var(--border)}
+.door.coming-soon .door-cta{color:var(--pale)}
+.door.coming-soon:hover .door-cta{gap:10px}
+
+/* Coming soon modal */
+.cs-modal-bg{position:fixed;inset:0;background:rgba(61,46,36,.55);z-index:600;display:none;align-items:center;justify-content:center;padding:24px}
+.cs-modal-bg.open{display:flex}
+.cs-modal{background:var(--white);max-width:480px;width:100%;border-radius:20px;padding:40px 36px;text-align:center;animation:csFade .25s ease both}
+@keyframes csFade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.cs-modal h3{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:400;color:var(--text);margin-bottom:14px}
+.cs-modal h3 em{font-style:italic;color:var(--gold)}
+.cs-modal p{font-size:13px;color:var(--soft);line-height:1.85;margin-bottom:24px}
+.cs-modal .cs-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.cs-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;border-radius:60px;cursor:pointer;text-decoration:none;transition:background .25s}
+.cs-btn:hover{background:var(--brown)}
+.cs-btn-out{background:transparent;color:var(--soft);border:1px solid var(--border)}
+.cs-btn-out:hover{background:transparent;color:var(--gold);border-color:var(--gold)}
+
+@media (max-width: 760px){
+  .doors{grid-template-columns:1fr;gap:20px}
+  .entry-main{padding:40px 24px}
+}
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="entry-main">
+  <div class="entry-wrap">
+
+    <div class="entry-intro">
+      <span class="tag">The Design Studio</span>
+      <h1>How would you like to <em>begin?</em></h1>
+      <div class="entry-divider"></div>
+      <p>Two ways to create your wedding invitation. Browse our considered collection and make one your own — or describe your wedding and let us design something just for you.</p>
+    </div>
+
+    <div class="doors">
+
+      <!-- DOOR A: Customise a template -->
+      <a class="door" href="/design-studio-templates.html">
+        <div class="door-visual">
+          <div class="tpl-mosaic">
+
+            <div class="tpl-mini">
+              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#F4EFE8">
+                <rect x="14" y="14" width="120" height="182" stroke="#B8976A" stroke-width=".5" fill="none"/>
+                <rect x="18" y="18" width="112" height="174" stroke="#B8976A" stroke-width=".3" fill="none"/>
+                <text x="74" y="92" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#3D2E24" letter-spacing="3">CHARLOTTE</text>
+                <text x="74" y="112" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" font-style="italic" fill="#B8976A">&amp;</text>
+                <text x="74" y="132" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#3D2E24" letter-spacing="3">JAMES</text>
+              </svg>
+            </div>
+
+            <div class="tpl-mini">
+              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#F0F2EC">
+                <g stroke="#7A8B6F" stroke-width=".6" fill="none" opacity=".8">
+                  <path d="M30,40 Q44,52 60,42 Q76,52 88,40"/>
+                  <ellipse cx="42" cy="44" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
+                  <ellipse cx="60" cy="46" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
+                  <ellipse cx="76" cy="44" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
+                </g>
+                <text x="74" y="100" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#2E3B2A">Charlotte</text>
+                <text x="74" y="118" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" font-style="italic" fill="#5C6B58">&amp;</text>
+                <text x="74" y="138" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#2E3B2A">James</text>
+              </svg>
+            </div>
+
+            <div class="tpl-mini">
+              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#3D2E24">
+                <line x1="20" y1="20" x2="128" y2="20" stroke="#D4B896" stroke-width=".5"/>
+                <line x1="20" y1="190" x2="128" y2="190" stroke="#D4B896" stroke-width=".5"/>
+                <text x="74" y="98" text-anchor="middle" font-family="Jost,sans-serif" font-size="11" font-weight="200" fill="#FAF7F2" letter-spacing="3">CHARLOTTE</text>
+                <text x="74" y="116" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" fill="#D4B896" font-style="italic">and</text>
+                <text x="74" y="134" text-anchor="middle" font-family="Jost,sans-serif" font-size="11" font-weight="200" fill="#FAF7F2" letter-spacing="3">JAMES</text>
+              </svg>
+            </div>
+
+            <div class="tpl-mini">
+              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#FFFFFF">
+                <text x="74" y="86" text-anchor="middle" font-family="Great Vibes,cursive" font-size="22" fill="#B8976A">Charlotte</text>
+                <text x="74" y="112" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" letter-spacing="3" fill="#3D2E24">A N D</text>
+                <text x="74" y="138" text-anchor="middle" font-family="Great Vibes,cursive" font-size="22" fill="#B8976A">James</text>
+              </svg>
+            </div>
+
+            <div class="tpl-mini">
+              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#FAF7F2">
+                <text x="74" y="100" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" font-weight="300" fill="#3D2E24" font-style="italic">Charlotte</text>
+                <text x="74" y="118" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" fill="#7A6558">&amp;</text>
+                <text x="74" y="138" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" font-weight="300" fill="#3D2E24" font-style="italic">James</text>
+              </svg>
+            </div>
+
+            <div class="tpl-mini">
+              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#F0DDD8">
+                <path d="M30 60 Q30 30 74 30 Q118 30 118 60 L118 170 L30 170 Z" fill="none" stroke="#3D2E24" stroke-width=".5"/>
+                <text x="74" y="100" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="#3D2E24" font-style="italic">Charlotte</text>
+                <text x="74" y="118" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" fill="#7A6558">&amp;</text>
+                <text x="74" y="138" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="#3D2E24" font-style="italic">James</text>
+              </svg>
+            </div>
+
+          </div>
+        </div>
+        <div class="door-body">
+          <div class="door-tag">For the customer who knows what they like</div>
+          <div class="door-title">Customise a <em>template</em></div>
+          <div class="door-desc">Browse our collection of considered designs. Pick one you love, then bring it to life with your names, date and venue.</div>
+          <div class="door-points">
+            <div class="door-point">12 designed templates from our studio</div>
+            <div class="door-point">See exactly what you'll receive before you start</div>
+            <div class="door-point">Personalise wording, palette and typography</div>
+          </div>
+          <span class="door-cta">Browse templates</span>
+        </div>
+      </a>
+
+      <!-- DOOR B: Design with our tools (coming soon) -->
+      <a class="door coming-soon" href="#" onclick="openComingSoon(event)">
+        <div class="door-visual">
+          <span class="coming-soon-badge">Coming soon</span>
+          <div class="brief-illustration">
+            <div class="brief-spark s1">✦</div>
+            <div class="brief-spark s2">✧</div>
+            <div class="brief-spark s3">✦</div>
+            <div class="brief-spark s4">✧</div>
+            <div class="brief-prompt-box">
+              <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(212,184,150,.7);margin-bottom:10px;">Describe your wedding</div>
+              <div class="brief-prompt-line"></div>
+              <div class="brief-prompt-line"></div>
+              <div class="brief-prompt-line"></div>
+              <div style="margin-top:10px;font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(250,247,242,.7);font-size:11px;">Cotswolds · sage greens · soft florals</div>
+            </div>
+          </div>
+        </div>
+        <div class="door-body">
+          <div class="door-tag">For the customer who has a vision</div>
+          <div class="door-title">Design with <em>our tools</em></div>
+          <div class="door-desc">Tell us about your day in your own words. We'll compose four unique designs from your brief — refine until it's perfect.</div>
+          <div class="door-points">
+            <div class="door-point">Describe the feeling of your wedding in plain English</div>
+            <div class="door-point">Receive four unique compositions, each with a rationale</div>
+            <div class="door-point">Refine your brief until you have what you want</div>
+          </div>
+          <span class="door-cta">Notify me when ready</span>
+        </div>
+      </a>
+
+    </div>
+
+  </div>
+</main>
+
+<!-- COMING SOON MODAL -->
+<div class="cs-modal-bg" id="csModal" onclick="closeComingSoon(event)">
+  <div class="cs-modal" onclick="event.stopPropagation()">
+    <h3>This service is launching <em>soon.</em></h3>
+    <p>We're putting the finishing touches to our bespoke design service. In the meantime, our considered collection of 12 templates is ready and waiting — each one designed to be a beautiful starting point for your wedding stationery.</p>
+    <div class="cs-actions">
+      <a class="cs-btn" href="/design-studio-templates.html">Browse templates</a>
+      <button class="cs-btn cs-btn-out" onclick="closeComingSoon(event)">Maybe later</button>
+    </div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script>
+fetch('/header.html').then(r=>r.text()).then(html=>{
+  document.getElementById('site-header').outerHTML=html;
+  if(typeof updateCartBadge==='function') updateCartBadge();
+});
+fetch('/footer.html').then(r=>r.text()).then(html=>{
+  document.getElementById('site-footer').outerHTML=html;
+});
+
+function openComingSoon(e){
+  e.preventDefault();
+  document.getElementById('csModal').classList.add('open');
+}
+function closeComingSoon(e){
+  if(e) e.preventDefault();
+  document.getElementById('csModal').classList.remove('open');
+}
+</script>
+
+</body>
+</html>
