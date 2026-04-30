@@ -53,7 +53,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   <div class="footer-inner">
     <div class="footer-top">
       <div>
-        <div class="footer-logo">Invita<span>tions</span></div>
+        <div class="footer-logo">forever<span>print</span></div>
         <p class="footer-tagline">Luxury wedding stationery crafted with care for couples who believe every detail matters.</p>
       </div>
       <div class="footer-col">
@@ -66,7 +66,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
         <h5>Help</h5>
         <a href="/how-it-works.html">How We Work</a>
         <a href="/how-it-works.html#faq">FAQs</a>
-        <a href="mailto:hello@invitations.co.uk">Contact Us</a>
+        <a href="mailto:hello@foreverprint.com">Contact Us</a>
       </div>
       <div class="footer-col">
         <h5>Legal</h5>
@@ -76,7 +76,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2025 Invitations. All rights reserved.</span>
+      <span>© 2026 Foreverprint. All rights reserved.</span>
       <span>Made with love in the UK 🇬🇧</span>
     </div>
   </div>
@@ -87,7 +87,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   <div id="hw-head">
     <div class="hw-head-left">
       <div class="hw-avatar">L</div>
-      <div><div class="hw-head-name">Lily — Invitations</div><div class="hw-head-status">● Online now</div></div>
+      <div><div class="hw-head-name">Lily — Foreverprint</div><div class="hw-head-status">● Online now</div></div>
     </div>
     <button class="hw-close-btn" onclick="hwToggle()">✕</button>
   </div>
@@ -130,8 +130,8 @@ function hwPrompt(t){document.getElementById('hw-input').value=t;hwSend();}
 function hwAddMsg(role,text,contact){var msgs=document.getElementById('hw-messages'),div=document.createElement('div');div.className='hw-msg '+role;var s=role==='bot'?'Lily':'You',cb=contact&&role==='bot'?'<br><button class="hw-contact-btn" onclick="hwShowContact()">✉ Contact the team</button>':'';div.innerHTML='<div class="hw-sender">'+s+'</div><div class="hw-bubble">'+text.replace(/\n/g,'<br>')+cb+'</div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
 function hwShowTyping(){var msgs=document.getElementById('hw-messages'),div=document.createElement('div');div.id='hw-typing-indicator';div.className='hw-msg bot';div.innerHTML='<div class="hw-sender">Lily</div><div class="hw-typing"><div class="hw-dot"></div><div class="hw-dot"></div><div class="hw-dot"></div></div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
 function hwRemoveTyping(){var el=document.getElementById('hw-typing-indicator');if(el)el.remove();}
-async function hwSend(){var input=document.getElementById('hw-input'),text=input.value.trim();if(!text)return;input.value='';input.disabled=true;document.getElementById('hw-send').disabled=true;hwAddMsg('user',text);hwHistory.push({role:'user',content:text});hwShowTyping();try{var res=await fetch('/.netlify/functions/help-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hwHistory})}),data=await res.json();hwRemoveTyping();var reply=data.text||'Sorry, something went wrong — please email hello@invitations.co.uk';hwHistory.push({role:'assistant',content:reply});hwAddMsg('bot',reply,/contact|problem|issue|wrong|damaged|missing|refund/i.test(text+reply));}catch(e){hwRemoveTyping();hwAddMsg('bot','Sorry, I\'m having trouble connecting. Please email hello@invitations.co.uk',false);}input.disabled=false;document.getElementById('hw-send').disabled=false;input.focus();}
+async function hwSend(){var input=document.getElementById('hw-input'),text=input.value.trim();if(!text)return;input.value='';input.disabled=true;document.getElementById('hw-send').disabled=true;hwAddMsg('user',text);hwHistory.push({role:'user',content:text});hwShowTyping();try{var res=await fetch('/.netlify/functions/help-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hwHistory})}),data=await res.json();hwRemoveTyping();var reply=data.text||'Sorry, something went wrong — please email hello@foreverprint.com';hwHistory.push({role:'assistant',content:reply});hwAddMsg('bot',reply,/contact|problem|issue|wrong|damaged|missing|refund/i.test(text+reply));}catch(e){hwRemoveTyping();hwAddMsg('bot','Sorry, I\'m having trouble connecting. Please email hello@foreverprint.com',false);}input.disabled=false;document.getElementById('hw-send').disabled=false;input.focus();}
 function hwShowContact(){document.getElementById('hw-contact-form').style.display='block';document.getElementById('hw-input-area').style.display='none';}
 function hwHideContact(){document.getElementById('hw-contact-form').style.display='none';document.getElementById('hw-input-area').style.display='flex';}
-function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.trim(),email=document.getElementById('hw-cf-email').value.trim(),order=document.getElementById('hw-cf-order').value.trim(),msg=document.getElementById('hw-cf-msg').value.trim();if(!name||!email||!msg){alert('Please fill in your name, email and message.');return;}window.location.href='mailto:hello@invitations.co.uk?subject='+encodeURIComponent('Customer Enquiry'+(order?' — Order '+order:''))+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+(order?'\nOrder: '+order:'')+'\n\n'+msg);hwHideContact();hwAddMsg('bot','Your email client should have opened — we\'ll get back to you within one working day.',false);}
+function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.trim(),email=document.getElementById('hw-cf-email').value.trim(),order=document.getElementById('hw-cf-order').value.trim(),msg=document.getElementById('hw-cf-msg').value.trim();if(!name||!email||!msg){alert('Please fill in your name, email and message.');return;}window.location.href='mailto:hello@foreverprint.com?subject='+encodeURIComponent('Customer Enquiry'+(order?' — Order '+order:''))+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+(order?'\nOrder: '+order:'')+'\n\n'+msg);hwHideContact();hwAddMsg('bot','Your email client should have opened — we\'ll get back to you within one working day.',false);}
 </script>
