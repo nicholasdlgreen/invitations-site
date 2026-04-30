@@ -15,7 +15,6 @@
 
 .order-wrap{max-width:1280px;margin:0 auto;padding:8px 32px 80px;display:grid;grid-template-columns:1fr 1fr;gap:64px}
 
-/* LEFT */
 .summary-col{position:sticky;top:88px;align-self:start;padding-top:8px}
 
 .summary-thumb{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:24px;display:flex;gap:18px;align-items:center;margin-bottom:14px}
@@ -41,10 +40,9 @@
 .add-btn{width:100%;margin-top:18px;padding:16px 24px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 18px rgba(184,151,106,.3);transition:all .25s}
 .add-btn:hover{background:var(--brown);box-shadow:0 6px 24px rgba(107,79,58,.35)}
 .add-btn::after{content:'→';font-size:14px}
-.add-btn.added{background:var(--ok,#5A9E6F)}
+.add-btn.added{background:#5A9E6F}
 .add-btn.added::after{content:'✓'}
 
-/* RIGHT */
 .controls-col{padding-top:8px}
 .section{margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid var(--border)}
 .section:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
@@ -120,36 +118,201 @@
 <body>
 
 <div id="site-header"></div>
-
 <div id="orderRoot"></div>
-
 <div id="site-footer"></div>
 
 <script>
-fetch('/header.html').then(r=>r.text()).then(html=>{
-  document.getElementById('site-header').outerHTML=html;
-  if(typeof updateCartBadge==='function') updateCartBadge();
-});
-fetch('/footer.html').then(r=>r.text()).then(html=>{
-  document.getElementById('site-footer').outerHTML=html;
-});
+// ─── 1. STATE — DECLARED FIRST so all functions can use it ───
+const order = {
+  qty: 50,
+  base: 150,
+  paperKey: 'smooth',
+  paperName: 'Smooth White',
+  paperUp: 0,
+  envOn: false,
+  envKey: 'white',
+  envName: 'Brilliant white',
+  envEach: 0.35,
+  delKey: 'standard',
+  delName: 'Standard delivery',
+  delCost: 0
+};
 
-// ─── LOAD DESIGN STATE ────────────────────────────────────
-const designStateRaw = sessionStorage.getItem('foreverprint_design');
 let designState = null;
-try { designState = designStateRaw ? JSON.parse(designStateRaw) : null; } catch(e) { designState = null; }
+try {
+  const raw = sessionStorage.getItem('foreverprint_design');
+  designState = raw ? JSON.parse(raw) : null;
+} catch(e) { designState = null; }
 
-if(!designState){
-  // No design in sessionStorage — show fallback message
-  document.getElementById('orderRoot').innerHTML = `
-    <div class="no-design-msg">
-      <h2>No design in progress</h2>
-      <p>It looks like you haven't personalised an invitation yet. Browse our considered collection of templates and pick the one that feels right.</p>
-      <a class="cs-btn" href="/design-studio-templates.html">Browse templates →</a>
-    </div>
-  `;
-} else {
-  renderOrderPage();
+// ─── 2. UTILITY FUNCTIONS ─────────────────────────────────
+function fmt(n){ return '£' + n.toFixed(2); }
+
+function priceForCustomQty(qty){
+  if(qty <= 0) return 0;
+  if(qty < 50)   return Math.round(qty * 3.6 * 100) / 100;
+  if(qty < 100)  return Math.round(qty * 2.6 * 100) / 100;
+  if(qty < 200)  return Math.round(qty * 2.1 * 100) / 100;
+  return Math.round(qty * 1.7 * 100) / 100;
+}
+
+function recalc(){
+  const invTotal = order.base + order.paperUp;
+  const lq = document.getElementById('lineQty');     if(lq) lq.textContent = order.qty + ' invitations';
+  const lp = document.getElementById('linePaper');   if(lp) lp.textContent = order.paperName + (order.paperUp > 0 ? ' (+£' + order.paperUp + ')' : '');
+  const pb = document.getElementById('priceBase');   if(pb) pb.textContent = fmt(invTotal);
+
+  const envLine = document.getElementById('envLine');
+  let envCost = 0;
+  if(order.envOn){
+    envCost = order.envEach * order.qty;
+    if(envLine) envLine.style.display = 'flex';
+    const le  = document.getElementById('lineEnv');    if(le)  le.textContent = order.envName + ' envelopes';
+    const les = document.getElementById('lineEnvSub'); if(les) les.textContent = order.qty + ' × £' + order.envEach.toFixed(2);
+    const pe  = document.getElementById('priceEnv');   if(pe)  pe.textContent = fmt(envCost);
+  } else {
+    if(envLine) envLine.style.display = 'none';
+  }
+
+  const ld = document.getElementById('lineDel');   if(ld) ld.textContent = order.delName;
+  const pd = document.getElementById('priceDel');  if(pd) pd.textContent = order.delCost === 0 ? 'Free' : fmt(order.delCost);
+
+  const totalIncVat = invTotal + envCost + order.delCost;
+  const exVat = totalIncVat / 1.2;
+  const vat   = totalIncVat - exVat;
+  const pn = document.getElementById('priceNet');   if(pn) pn.textContent = fmt(exVat);
+  const pv = document.getElementById('priceVat');   if(pv) pv.textContent = fmt(vat);
+  const pt = document.getElementById('priceTotal'); if(pt) pt.textContent = fmt(totalIncVat);
+}
+
+// ─── 3. CLICK HANDLERS (referenced from inline onclick=) ──
+function selectPaper(el){
+  document.querySelectorAll('.paper-card').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  order.paperKey = el.dataset.paper;
+  order.paperUp = parseInt(el.dataset.up, 10);
+  order.paperName = el.querySelector('.paper-name').textContent;
+  recalc();
+}
+
+function switchQty(mode){
+  document.querySelectorAll('.qty-tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('qtyTab' + (mode === 'preset' ? 'Preset' : 'Custom')).classList.add('on');
+  document.getElementById('qtyPreset').style.display = mode === 'preset' ? 'block' : 'none';
+  document.getElementById('qtyCustom').style.display = mode === 'custom' ? 'block' : 'none';
+}
+
+function selectQty(el){
+  document.querySelectorAll('.qty-pill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  order.qty = parseInt(el.dataset.qty, 10);
+  order.base = parseFloat(el.dataset.base);
+  recalc();
+}
+
+function toggleEnv(){
+  order.envOn = !order.envOn;
+  const t = document.getElementById('envToggle');
+  const c = document.getElementById('envColours');
+  if(t) t.classList.toggle('on', order.envOn);
+  if(c) c.style.display = order.envOn ? 'block' : 'none';
+  recalc();
+}
+
+function selectEnv(el){
+  document.querySelectorAll('.env-colour').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  order.envKey  = el.dataset.env;
+  order.envEach = parseFloat(el.dataset.each);
+  order.envName = el.dataset.name;
+  recalc();
+}
+
+function selectDel(el){
+  document.querySelectorAll('.del-card').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  order.delKey  = el.dataset.del;
+  order.delCost = parseInt(el.dataset.cost, 10);
+  order.delName = el.dataset.name;
+  recalc();
+}
+
+function addToBasket(){
+  if(!designState) return;
+  const invTotal = order.base + order.paperUp;
+  const envCost  = order.envOn ? (order.envEach * order.qty) : 0;
+  const totalIncVat = invTotal + envCost + order.delCost;
+
+  const item = {
+    type: 'template',
+    templateId: designState.templateId,
+    templateName: designState.templateName,
+    name: designState.templateName + ' (personalised)',
+    designData: designState,
+    qty: order.qty,
+    paper: order.paperKey,
+    paperName: order.paperName,
+    paperUpgrade: order.paperUp,
+    basePrice: order.base,
+    envelopes: {
+      on: order.envOn,
+      colour: order.envOn ? order.envKey : null,
+      colourName: order.envOn ? order.envName : null,
+      eachPrice: order.envOn ? order.envEach : 0,
+      totalCost: envCost
+    },
+    delivery: order.delKey,
+    deliveryName: order.delName,
+    deliveryCost: order.delCost,
+    total: totalIncVat,
+    totalIncVat: totalIncVat,
+    thumbnailSvg: designState.thumbnailSvg,
+    icon: '✦',
+    addedAt: Date.now()
+  };
+
+  let added = false;
+  try {
+    if(typeof addToCart === 'function'){
+      addToCart(item);
+      added = true;
+    } else if(typeof window.cart !== 'undefined' && Array.isArray(window.cart)){
+      window.cart.push(item);
+      if(typeof saveCart === 'function') saveCart();
+      if(typeof updateCartBadge === 'function') updateCartBadge();
+      added = true;
+    }
+  } catch(e){ console.warn('Primary cart add failed:', e); }
+
+  if(!added){
+    try {
+      const stored = localStorage.getItem('cart');
+      const cart = stored ? JSON.parse(stored) : [];
+      cart.push(item);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      added = true;
+    } catch(e){ console.error('localStorage cart fallback failed:', e); }
+  }
+
+  const btn = document.getElementById('addBtn');
+  if(btn){
+    btn.classList.add('added');
+    btn.textContent = 'Added to basket';
+  }
+
+  setTimeout(() => {
+    if(typeof openCart === 'function'){
+      try { openCart(); } catch(e){}
+    }
+    if(btn){
+      btn.classList.remove('added');
+      btn.textContent = 'Add to basket';
+    }
+  }, 1200);
+}
+
+// ─── 4. PAGE RENDER ─────────────────────────────────────────
+function renderNoDesignMessage(){
+  document.getElementById('orderRoot').innerHTML = '<div class="no-design-msg"><h2>No design in progress</h2><p>It looks like you haven\'t personalised an invitation yet. Browse our considered collection of templates and pick the one that feels right.</p><a class="cs-btn" href="/design-studio-templates.html">Browse templates →</a></div>';
 }
 
 function renderOrderPage(){
@@ -337,200 +500,41 @@ function renderOrderPage(){
     </div>
   `;
 
-  // Inject the design's SVG into the thumbnail
   const thumbImg = document.getElementById('thumbImg');
   if(thumbImg && designState.thumbnailSvg){
     thumbImg.innerHTML = designState.thumbnailSvg;
   }
 
-  // Initial calculation
   recalc();
 }
 
-// ─── ORDER STATE ─────────────────────────────────────────
-const order = {
-  qty: 50,
-  base: 150,
-  paperKey: 'smooth',
-  paperName: 'Smooth White',
-  paperUp: 0,
-  envOn: false,
-  envKey: 'white',
-  envName: 'Brilliant white',
-  envEach: 0.35,
-  delKey: 'standard',
-  delName: 'Standard delivery',
-  delCost: 0
-};
-
-function priceForCustomQty(qty){
-  if(qty <= 0) return 0;
-  if(qty < 50)   return Math.round(qty * 3.6 * 100) / 100;
-  if(qty < 100)  return Math.round(qty * 2.6 * 100) / 100;
-  if(qty < 200)  return Math.round(qty * 2.1 * 100) / 100;
-  return Math.round(qty * 1.7 * 100) / 100;
+// ─── 5. ENTRY ──────────────────────────────────────────────
+if(!designState){
+  renderNoDesignMessage();
+} else {
+  renderOrderPage();
 }
 
-function fmt(n){ return '£' + n.toFixed(2); }
-
-function recalc(){
-  if(!designState) return;
-  const invTotal = order.base + order.paperUp;
-  const lq = document.getElementById('lineQty'); if(lq) lq.textContent = order.qty + ' invitations';
-  const lp = document.getElementById('linePaper'); if(lp) lp.textContent = order.paperName + (order.paperUp > 0 ? ' (+£' + order.paperUp + ')' : '');
-  const pb = document.getElementById('priceBase'); if(pb) pb.textContent = fmt(invTotal);
-
-  const envLine = document.getElementById('envLine');
-  let envCost = 0;
-  if(order.envOn){
-    envCost = order.envEach * order.qty;
-    if(envLine) envLine.style.display = 'flex';
-    const le = document.getElementById('lineEnv'); if(le) le.textContent = order.envName + ' envelopes';
-    const les = document.getElementById('lineEnvSub'); if(les) les.textContent = order.qty + ' × £' + order.envEach.toFixed(2);
-    const pe = document.getElementById('priceEnv'); if(pe) pe.textContent = fmt(envCost);
-  } else {
-    if(envLine) envLine.style.display = 'none';
-  }
-
-  const ld = document.getElementById('lineDel'); if(ld) ld.textContent = order.delName;
-  const pd = document.getElementById('priceDel'); if(pd) pd.textContent = order.delCost === 0 ? 'Free' : fmt(order.delCost);
-
-  const totalIncVat = invTotal + envCost + order.delCost;
-  const exVat = totalIncVat / 1.2;
-  const vat = totalIncVat - exVat;
-  const pn = document.getElementById('priceNet'); if(pn) pn.textContent = fmt(exVat);
-  const pv = document.getElementById('priceVat'); if(pv) pv.textContent = fmt(vat);
-  const pt = document.getElementById('priceTotal'); if(pt) pt.textContent = fmt(totalIncVat);
-}
-
-function selectPaper(el){
-  document.querySelectorAll('.paper-card').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
-  order.paperKey = el.dataset.paper;
-  order.paperUp = parseInt(el.dataset.up, 10);
-  order.paperName = el.querySelector('.paper-name').textContent;
-  recalc();
-}
-
-function switchQty(mode){
-  document.querySelectorAll('.qty-tab').forEach(t => t.classList.remove('on'));
-  document.getElementById('qtyTab' + (mode === 'preset' ? 'Preset' : 'Custom')).classList.add('on');
-  document.getElementById('qtyPreset').style.display = mode === 'preset' ? 'block' : 'none';
-  document.getElementById('qtyCustom').style.display = mode === 'custom' ? 'block' : 'none';
-}
-
-function selectQty(el){
-  document.querySelectorAll('.qty-pill').forEach(p => p.classList.remove('on'));
-  el.classList.add('on');
-  order.qty = parseInt(el.dataset.qty, 10);
-  order.base = parseFloat(el.dataset.base);
-  recalc();
-}
-
-document.addEventListener('input', (e) => {
-  if(e.target.id !== 'qtyCustomInput') return;
-  const n = parseInt(e.target.value, 10);
-  if(!isNaN(n) && n >= 10){
-    order.qty = n;
-    order.base = priceForCustomQty(n);
-    recalc();
+// ─── 6. DELEGATED LISTENER FOR CUSTOM QUANTITY INPUT ───────
+document.addEventListener('input', function(e){
+  if(e.target && e.target.id === 'qtyCustomInput'){
+    const n = parseInt(e.target.value, 10);
+    if(!isNaN(n) && n >= 10){
+      order.qty = n;
+      order.base = priceForCustomQty(n);
+      recalc();
+    }
   }
 });
 
-function toggleEnv(){
-  order.envOn = !order.envOn;
-  const t = document.getElementById('envToggle');
-  const c = document.getElementById('envColours');
-  t.classList.toggle('on', order.envOn);
-  c.style.display = order.envOn ? 'block' : 'none';
-  recalc();
-}
-
-function selectEnv(el){
-  document.querySelectorAll('.env-colour').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
-  order.envKey = el.dataset.env;
-  order.envEach = parseFloat(el.dataset.each);
-  order.envName = el.dataset.name;
-  recalc();
-}
-
-function selectDel(el){
-  document.querySelectorAll('.del-card').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
-  order.delKey = el.dataset.del;
-  order.delCost = parseInt(el.dataset.cost, 10);
-  order.delName = el.dataset.name;
-  recalc();
-}
-
-// ─── ADD TO BASKET ────────────────────────────────────────
-function addToBasket(){
-  if(!designState) return;
-  const invTotal = order.base + order.paperUp;
-  const envCost = order.envOn ? (order.envEach * order.qty) : 0;
-  const totalIncVat = invTotal + envCost + order.delCost;
-
-  const item = {
-    type: 'template',
-    templateId: designState.templateId,
-    templateName: designState.templateName,
-    name: designState.templateName + ' (personalised)',
-    designData: designState,
-    qty: order.qty,
-    paper: order.paperKey,
-    paperName: order.paperName,
-    paperUpgrade: order.paperUp,
-    basePrice: order.base,
-    envelopes: {
-      on: order.envOn,
-      colour: order.envOn ? order.envKey : null,
-      colourName: order.envOn ? order.envName : null,
-      eachPrice: order.envOn ? order.envEach : 0,
-      totalCost: envCost
-    },
-    delivery: order.delKey,
-    deliveryName: order.delName,
-    deliveryCost: order.delCost,
-    total: totalIncVat,
-    totalIncVat: totalIncVat,
-    thumbnailSvg: designState.thumbnailSvg,
-    icon: '✦',
-    addedAt: Date.now()
-  };
-
-  // Use existing global cart system if available (loaded via header.html)
-  if(typeof addToCart === 'function'){
-    try { addToCart(item); } catch(e){ console.error('addToCart error:', e); }
-  } else if(typeof window.cart !== 'undefined' && Array.isArray(window.cart)){
-    window.cart.push(item);
-    if(typeof saveCart === 'function') saveCart();
-    if(typeof updateCartBadge === 'function') updateCartBadge();
-  } else {
-    // Fallback: localStorage-based cart
-    const stored = localStorage.getItem('cart');
-    const cart = stored ? JSON.parse(stored) : [];
-    cart.push(item);
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }
-
-  // Visual feedback
-  const btn = document.getElementById('addBtn');
-  btn.classList.add('added');
-  btn.textContent = 'Added to basket';
-
-  // Open cart drawer if function exists
-  setTimeout(() => {
-    if(typeof openCart === 'function'){
-      try { openCart(); } catch(e){}
-    }
-    btn.classList.remove('added');
-    btn.textContent = 'Add to basket';
-  }, 1200);
-
-  // Clear the design from session — they've checked out this design
-  // (don't clear immediately in case they want to add another quantity)
-}
+// ─── 7. LOAD HEADER / FOOTER ───────────────────────────────
+fetch('/header.html').then(r=>r.text()).then(html=>{
+  document.getElementById('site-header').outerHTML = html;
+  if(typeof updateCartBadge === 'function') updateCartBadge();
+});
+fetch('/footer.html').then(r=>r.text()).then(html=>{
+  document.getElementById('site-footer').outerHTML = html;
+});
 </script>
 
 </body>
