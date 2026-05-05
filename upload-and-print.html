@@ -325,6 +325,50 @@ const SIZE_SPECS = {
   'Square':{label:'Square (148×148mm)',mmW:148,mmH:148,minPx:1748}
 };
 
+// ── SUPABASE DATA LOADER ──────────────────────────────────
+const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+
+async function loadSiteData() {
+  try {
+    const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+    const [paperRes, configRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra&active=eq.true&order=display_order`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers })
+    ]);
+    if (paperRes.ok) {
+      const rows = await paperRes.json();
+      if (rows && rows.length) {
+        CONFIG.papers = rows.map(p => ({
+          id: p.id,
+          name: p.name,
+          subtitle: p.subtitle || '',
+          priceExtra: parseFloat(p.price_extra) || 0
+        }));
+      }
+    }
+    if (configRes.ok) {
+      const rows = await configRes.json();
+      if (rows && rows.length && rows[0].data) {
+        const d = rows[0].data;
+        if (d.basePerFifty != null) CONFIG.pricing.basePerFifty = parseFloat(d.basePerFifty);
+        if (d.vatRate      != null) CONFIG.pricing.vatRate      = parseFloat(d.vatRate);
+        if (d.minQty       != null) CONFIG.pricing.minQty       = parseInt(d.minQty);
+        if (d.qtyStep      != null) CONFIG.pricing.qtyStep      = parseInt(d.qtyStep);
+      }
+    }
+    // Re-render paper grid if user is already viewing Step 3
+    const step3 = document.getElementById('step3');
+    if (step3 && !step3.classList.contains('hidden')) {
+      initStep3();
+    }
+  } catch (err) {
+    console.warn('Supabase load failed, using defaults:', err.message);
+  }
+}
+
+loadSiteData();
+  
 // ── STATE ─────────────────────────────────────────────────
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('inv_cart')||'[]'); } catch(e){ cart=[]; }
