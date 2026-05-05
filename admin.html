@@ -839,7 +839,9 @@ async function sbFetch(path, opts = {}) {
     },
   });
   if (!res.ok) { const e = await res.text(); throw new Error(e); }
-  return res.json();
+  if (res.status === 204) return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 // ═══════════════════════════════════════════════════════
