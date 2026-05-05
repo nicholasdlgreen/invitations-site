@@ -1067,7 +1067,7 @@ const PZ_TITLES = { costs:'Cost Input', generator:'Margin & Price Generator', pr
 // ═══════════════════════════════════════════════════════
 
 function pricingLoad() {
-  costs          = pj('natch_costs_v2','[]');
+  loadCostsFromSupabase();
   generatedPrices= pj('natch_prices_v2','[]');
   mgmtMonths     = pj('natch_mgmt_v2','{}');
   sales          = pj('natch_sales_v2','[]');
@@ -1091,7 +1091,6 @@ function pj(k, def) {
 }
 
 function saveAll() {
-  localStorage.setItem('natch_costs_v2',     JSON.stringify(costs));
   localStorage.setItem('natch_prices_v2',    JSON.stringify(generatedPrices));
   localStorage.setItem('natch_mgmt_v2',      JSON.stringify(mgmtMonths));
   localStorage.setItem('natch_sales_v2',     JSON.stringify(sales));
@@ -1263,7 +1262,61 @@ function toggleLM() {
 // PRICING — COST FORM
 // ═══════════════════════════════════════════════════════
 
-function openCostForm(editId) {
+function specRowToCost(row) {
+  return {
+    id: row.id,
+    productType: row.product_type,
+    size: row.size,
+    supplierId: row.supplier_id || '',
+    paperType: row.paper_type || '',
+    paperWeight: row.paper_weight || '',
+    printSide: row.print_side || 'Single',
+    finish: row.finish || 'None',
+    supplierRef: row.supplier_ref || '',
+    currency: row.currency || 'GBP',
+    leadTime: row.lead_time || '',
+    setupCost: parseFloat(row.setup_cost) || 0,
+    packagingCost: parseFloat(row.packaging_cost) || 1.50,
+    designCost: parseFloat(row.design_cost) || 0,
+    qtyCosts: row.qty_costs || {},
+    notes: row.notes || '',
+    updatedAt: row.updated_at
+  };
+}
+
+function costToSpecRow(cost) {
+  return {
+    product_type:   cost.productType,
+    size:           cost.size,
+    supplier_id:    cost.supplierId || null,
+    paper_type:     cost.paperType || null,
+    paper_weight:   cost.paperWeight || null,
+    print_side:     cost.printSide || 'Single',
+    finish:         cost.finish || 'None',
+    supplier_ref:   cost.supplierRef || null,
+    currency:       cost.currency || 'GBP',
+    lead_time:      cost.leadTime || null,
+    setup_cost:     parseFloat(cost.setupCost) || 0,
+    packaging_cost: parseFloat(cost.packagingCost) || 1.50,
+    design_cost:    parseFloat(cost.designCost) || 0,
+    qty_costs:      cost.qtyCosts || {},
+    notes:          cost.notes || null
+  };
+}
+
+async function loadCostsFromSupabase() {
+  try {
+    const rows = await sbFetch('product_specs?select=*&active=eq.true&order=updated_at.desc');
+    costs = (rows || []).map(specRowToCost);
+    renderCostTable();
+  } catch (err) {
+    console.warn('Could not load product specs from Supabase:', err.message);
+    costs = [];
+    renderCostTable();
+  }
+}
+  
+  function openCostForm(editId) {
   const form=document.getElementById('costFormCard'); form.style.display='block';
   renderQtyGrid();
   if(editId){
@@ -1298,22 +1351,77 @@ function openCostForm(editId) {
 
 function closeCostForm() { document.getElementById('costFormCard').style.display='none'; }
 
-function saveCostEntry() {
-  const productType=document.getElementById('f_productType').value;
-  const size=document.getElementById('f_size').value;
-  if(!productType||!size){toast('Product Type and Size are required');return;}
-  const qtyCosts={};
-  (lists.quantities||[]).forEach(q=>{const v=parseFloat(document.getElementById('q'+q)?.value);if(!isNaN(v)&&v>0)qtyCosts[q]=v;});
-  if(!Object.keys(qtyCosts).length){toast('Enter at least one quantity price');return;}
-  const editId=document.getElementById('f_editId').value;
-  const entry={id:editId||crypto.randomUUID(),productType,size,supplierId:document.getElementById('f_supplier').value,paperType:document.getElementById('f_paperType').value,paperWeight:document.getElementById('f_paperWeight').value,printSide:document.getElementById('f_printSide').value,finish:document.getElementById('f_finish').value||'None',supplierRef:document.getElementById('f_supplierRef').value,currency:document.getElementById('f_currency').value,leadTime:document.getElementById('f_leadTime').value,setupCost:parseFloat(document.getElementById('f_setup').value)||0,packagingCost:parseFloat(document.getElementById('f_packaging').value)||1.50,designCost:parseFloat(document.getElementById('f_design').value)||0,notes:document.getElementById('f_notes').value,qtyCosts,updatedAt:new Date().toISOString()};
-  if(editId){const i=costs.findIndex(c=>c.id===editId);if(i>=0)costs[i]=entry;}else costs.push(entry);
-  saveAll(); closeCostForm(); renderCostTable(); toast(editId?'Updated ✓':'Specification added ✓');
-}
+async function saveCostEntry() {
+  const productType = document.getElementById('f_productType').value;
+  const size        = document.getElementById('f_size').value;
+  if (!productType || !size) { toast('Product Type and Size are required'); return; }
 
-function deleteCost(id) {
-  if(!confirm('Delete this specification?')) return;
-  costs=costs.filter(c=>c.id!==id); saveAll(); renderCostTable();
+  const qtyCosts = {};
+  (lists.quantities || []).forEach(q => {
+    const v = parseFloat(document.getElementById('q' + q)?.value);
+    if (!isNaN(v) && v > 0) qtyCosts[q] = v;
+  });
+  if (!Object.keys(qtyCosts).length) { toast('Enter at least one quantity price'); return; }
+
+  const editId = document.getElementById('f_editId').value;
+  const cost = {
+    productType,
+    size,
+    supplierId:    document.getElementById('f_supplier').value,
+    paperType:     document.getElementById('f_paperType').value,
+    paperWeight:   document.getElementById('f_paperWeight').value,
+    printSide:     document.getElementById('f_printSide').value,
+    finish:        document.getElementById('f_finish').value || 'None',
+    supplierRef:   document.getElementById('f_supplierRef').value,
+    currency:      document.getElementById('f_currency').value,
+    leadTime:      document.getElementById('f_leadTime').value,
+    setupCost:     parseFloat(document.getElementById('f_setup').value) || 0,
+    packagingCost: parseFloat(document.getElementById('f_packaging').value) || 1.50,
+    designCost:    parseFloat(document.getElementById('f_design').value) || 0,
+    notes:         document.getElementById('f_notes').value,
+    qtyCosts
+  };
+
+  const payload = costToSpecRow(cost);
+  payload.updated_at = new Date().toISOString();
+
+  try {
+    if (editId) {
+      const result = await sbFetch(`product_specs?id=eq.${editId}`, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const updated = Array.isArray(result) ? result[0] : result;
+      const i = costs.findIndex(c => c.id === editId);
+      if (i >= 0 && updated) costs[i] = specRowToCost(updated);
+    } else {
+      const result = await sbFetch('product_specs', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const inserted = Array.isArray(result) ? result[0] : result;
+      if (inserted) costs.push(specRowToCost(inserted));
+    }
+    closeCostForm();
+    renderCostTable();
+    toast(editId ? 'Updated ✓' : 'Specification added ✓');
+  } catch (err) {
+    toast('Save failed: ' + err.message);
+  }
+}
+async function deleteCost(id) {
+  if (!confirm('Delete this specification?')) return;
+  try {
+    await sbFetch(`product_specs?id=eq.${id}`, { method: 'DELETE' });
+    costs = costs.filter(c => c.id !== id);
+    renderCostTable();
+    toast('Deleted ✓');
+  } catch (err) {
+    toast('Delete failed: ' + err.message);
+  }
+}
 }
 
 function renderCostTable() {
