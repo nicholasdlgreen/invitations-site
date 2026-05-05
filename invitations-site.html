@@ -1097,7 +1097,68 @@ const CONFIG = {
     }
   }
 };
+// ── SUPABASE DATA LOADER ────────────────────────────────────
+const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
 
+async function sbGet(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+  });
+  if (!res.ok) throw new Error('Supabase fetch failed: ' + res.status);
+  return res.json();
+}
+
+async function loadSiteData() {
+  try {
+    const [paperRows, configRows] = await Promise.all([
+      sbGet('paper_stocks?select=id,name,subtitle,price_extra&active=eq.true&order=display_order'),
+      sbGet('site_config?id=eq.pricing&select=data')
+    ]);
+
+    // Replace CONFIG.papers with fresh data from Supabase
+    if (paperRows && paperRows.length) {
+      CONFIG.papers = paperRows.map(p => ({
+        id: p.id,
+        name: p.name,
+        subtitle: p.subtitle || '',
+        priceExtra: parseFloat(p.price_extra) || 0
+      }));
+    }
+
+    // Merge pricing config from Supabase into CONFIG.pricing
+    if (configRows && configRows.length && configRows[0].data) {
+      const d = configRows[0].data;
+      if (d.basePerFifty != null) CONFIG.pricing.basePerFifty = parseFloat(d.basePerFifty);
+      if (d.vatRate      != null) CONFIG.pricing.vatRate      = parseFloat(d.vatRate);
+      if (d.minQty       != null) CONFIG.pricing.minQty       = parseInt(d.minQty);
+      if (d.qtyStep      != null) CONFIG.pricing.qtyStep      = parseInt(d.qtyStep);
+    }
+
+    // If the user has already navigated to a page that displays this data,
+    // re-render so they see the live values without needing to refresh.
+    const uploadVisible = !document.getElementById('page-upload').classList.contains('hidden');
+    const step3Visible  = !document.getElementById('step3').classList.contains('hidden');
+    if (uploadVisible && step3Visible) initStep3();
+
+    const studioVisible = !document.getElementById('page-studio').classList.contains('hidden');
+    if (studioVisible && typeof studioInitialised !== 'undefined' && studioInitialised) {
+      document.getElementById('studioPaperGrid').innerHTML = CONFIG.papers.map(p=>`
+        <div class="paper-opt ${p.id===studioState.paper?'selected':''}" onclick="setStudioPaper('${p.id}')">
+          <div class="paper-name" style="font-size:.95rem;">${p.name}</div>
+          <div class="paper-sub">${p.subtitle}</div>
+          <div class="paper-price">${p.priceExtra>0?'+£'+p.priceExtra:'Included'}</div>
+        </div>`).join('');
+      updateStudioPrice();
+    }
+  } catch (err) {
+    console.warn('Could not load site data from Supabase, using defaults:', err.message);
+  }
+}
+
+// Kick off the data load as soon as the script is parsed.
+// The hardcoded CONFIG values above act as a safety net if the fetch fails.
+loadSiteData();
 // ── CART ────────────────────────────────────────────────────
 let cart = [];
 function saveCart() {}
