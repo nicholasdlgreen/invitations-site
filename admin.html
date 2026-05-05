@@ -1072,12 +1072,7 @@ function pricingLoad() {
   loadSuppliersFromSupabase();
   loadListsFromSupabase();
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
-  const ms = pj('natch_margin_v2','null');
-  if (ms) {
-    document.getElementById('globalMargin').value  = ms.global  || 65;
-    document.getElementById('roundingRule').value  = ms.rounding|| 'x95';
-    document.getElementById('minPrice').value      = ms.minPrice|| 12;
-  }
+loadPricingSettings();
   renderAllSelects(); renderLM(); renderCostTable(); renderSupplierList();
   renderRecon(); renderSalesLog(); buildMonthTabs(); updateMarginDisplay(); updatePricingStats();
   document.getElementById('sale_date').value = new Date().toISOString().slice(0,10);
@@ -1099,11 +1094,7 @@ function saveAll() {
   localStorage.setItem('natch_mgmt_v2',      JSON.stringify(mgmtMonths));
   localStorage.setItem('natch_sales_v2',     JSON.stringify(sales));
   localStorage.setItem('natch_settings_v2',  JSON.stringify(settings));
-  localStorage.setItem('natch_margin_v2',    JSON.stringify({
-    global:   +document.getElementById('globalMargin').value,
-    rounding:  document.getElementById('roundingRule').value,
-    minPrice: +document.getElementById('minPrice').value
-  }));
+ savePricingSettings();
   toast('Saved ✓');
 }
 
@@ -1583,6 +1574,64 @@ function exportReconCSV() {
 // PRICING — MARGIN & GENERATION
 // ═══════════════════════════════════════════════════════
 
+async function loadPricingSettings() {
+  try {
+    const rows = await sbFetch('site_config?id=eq.pricing_settings&select=data');
+    if (rows && rows.length && rows[0].data) {
+      const ps = rows[0].data;
+      const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+      set('globalMargin', ps.global_margin);
+      set('roundingRule', ps.rounding_rule);
+      set('minPrice',     ps.min_price);
+      set('stripePct',    ps.stripe_pct);
+      set('stripeFixed',  ps.stripe_fixed);
+      const container = document.getElementById('finishOverrides');
+      if (container) container.innerHTML = '';
+      if (ps.finish_overrides && ps.finish_overrides.length) {
+        ps.finish_overrides.forEach(o => {
+          addOverrideRow();
+          const finishEls = document.querySelectorAll('.ov-finish');
+          const marginEls = document.querySelectorAll('.ov-margin');
+          if (finishEls.length) finishEls[finishEls.length - 1].value = o.finish;
+          if (marginEls.length) marginEls[marginEls.length - 1].value = o.margin;
+        });
+      }
+      updateMarginDisplay();
+    }
+  } catch (err) {
+    console.warn('Could not load pricing settings from Supabase:', err.message);
+  }
+}
+
+async function savePricingSettings() {
+  const overrides = [];
+  const finishEls = document.querySelectorAll('.ov-finish');
+  const marginEls = document.querySelectorAll('.ov-margin');
+  finishEls.forEach((el, i) => {
+    if (el.value && marginEls[i] && marginEls[i].value) {
+      overrides.push({ finish: el.value, margin: parseFloat(marginEls[i].value) });
+    }
+  });
+  const data = {
+    global_margin:    parseFloat(document.getElementById('globalMargin').value) || 65,
+    rounding_rule:    document.getElementById('roundingRule').value || 'x95',
+    min_price:        parseFloat(document.getElementById('minPrice').value) || 12,
+    finish_overrides: overrides,
+    stripe_pct:       parseFloat(document.getElementById('stripePct').value) || 1.5,
+    stripe_fixed:     parseInt(document.getElementById('stripeFixed').value) || 20
+  };
+  try {
+    await sbFetch('site_config?id=eq.pricing_settings', {
+      method: 'PATCH',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ data })
+    });
+  } catch (err) {
+    console.warn('Could not save pricing settings to Supabase:', err.message);
+    toast('Settings save failed: ' + err.message);
+  }
+}
+  
 function updateMarginDisplay() { document.getElementById('globalMarginDisplay').textContent=document.getElementById('globalMargin').value+'%'; }
 
 function getMargin(finish) {
