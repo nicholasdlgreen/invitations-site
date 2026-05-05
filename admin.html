@@ -1069,7 +1069,7 @@ function pricingLoad() {
   generatedPrices= pj('natch_prices_v2','[]');
   mgmtMonths     = pj('natch_mgmt_v2','{}');
   sales          = pj('natch_sales_v2','[]');
-  suppliers      = pj('natch_suppliers_v2','[]');
+  loadSuppliersFromSupabase();
   lists          = pj('natch_lists_v2', JSON.stringify(lists));
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
   const ms = pj('natch_margin_v2','null');
@@ -1098,7 +1098,6 @@ function saveAll() {
   localStorage.setItem('natch_prices_v2',    JSON.stringify(generatedPrices));
   localStorage.setItem('natch_mgmt_v2',      JSON.stringify(mgmtMonths));
   localStorage.setItem('natch_sales_v2',     JSON.stringify(sales));
-  localStorage.setItem('natch_suppliers_v2', JSON.stringify(suppliers));
   localStorage.setItem('natch_lists_v2',     JSON.stringify(lists));
   localStorage.setItem('natch_settings_v2',  JSON.stringify(settings));
   localStorage.setItem('natch_margin_v2',    JSON.stringify({
@@ -1319,8 +1318,20 @@ function renderCostTable() {
 }
 
 // ═══════════════════════════════════════════════════════
-// PRICING — SUPPLIERS
+// PRICING — SUPPLIERS (Supabase-backed)
 // ═══════════════════════════════════════════════════════
+
+async function loadSuppliersFromSupabase() {
+  try {
+    suppliers = await sbFetch('suppliers?select=*&order=name');
+    renderSupplierList();
+    renderAllSelects();
+  } catch (err) {
+    console.warn('Could not load suppliers from Supabase:', err.message);
+    suppliers = [];
+    renderSupplierList();
+  }
+}
 
 function openSupplierModal(editId) {
   ['sup_name','sup_code','sup_terms','sup_contact','sup_website','sup_notes'].forEach(id=>document.getElementById(id).value='');
@@ -1332,17 +1343,57 @@ function openSupplierModal(editId) {
 
 function closeSupplierModal() { document.getElementById('supplierModal').classList.remove('open'); }
 
-function saveSupplier() {
-  const name=document.getElementById('sup_name').value.trim(); if(!name){toast('Supplier name required');return;}
-  const editId=document.getElementById('sup_editId').value;
-  const s={id:editId||crypto.randomUUID(),name,code:(document.getElementById('sup_code').value||name.substring(0,4)).toUpperCase(),terms:document.getElementById('sup_terms').value,contact:document.getElementById('sup_contact').value,website:document.getElementById('sup_website').value,notes:document.getElementById('sup_notes').value};
-  if(editId){const i=suppliers.findIndex(x=>x.id===editId);if(i>=0)suppliers[i]=s;}else suppliers.push(s);
-  saveAll(); renderSupplierList(); renderAllSelects(); closeSupplierModal(); toast(editId?'Updated ✓':'Supplier added ✓');
+async function saveSupplier() {
+  const name = document.getElementById('sup_name').value.trim();
+  if (!name) { toast('Supplier name required'); return; }
+  const editId = document.getElementById('sup_editId').value;
+  const payload = {
+    name,
+    code: (document.getElementById('sup_code').value || name.substring(0,4)).toUpperCase(),
+    terms: document.getElementById('sup_terms').value,
+    contact: document.getElementById('sup_contact').value,
+    website: document.getElementById('sup_website').value,
+    notes: document.getElementById('sup_notes').value,
+    updated_at: new Date().toISOString()
+  };
+  try {
+    if (editId) {
+      await sbFetch(`suppliers?id=eq.${editId}`, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const i = suppliers.findIndex(x => x.id === editId);
+      if (i >= 0) suppliers[i] = { ...suppliers[i], ...payload };
+    } else {
+      const result = await sbFetch('suppliers', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const newSupplier = Array.isArray(result) ? result[0] : result;
+      suppliers.push(newSupplier);
+    }
+    renderSupplierList();
+    renderAllSelects();
+    closeSupplierModal();
+    toast(editId ? 'Updated ✓' : 'Supplier added ✓');
+  } catch (err) {
+    toast('Save failed: ' + err.message);
+  }
 }
 
-function deleteSupplier(id) {
-  if(!confirm('Delete supplier?')) return;
-  suppliers=suppliers.filter(s=>s.id!==id); saveAll(); renderSupplierList(); renderAllSelects();
+async function deleteSupplier(id) {
+  if (!confirm('Delete supplier?')) return;
+  try {
+    await sbFetch(`suppliers?id=eq.${id}`, { method: 'DELETE' });
+    suppliers = suppliers.filter(s => s.id !== id);
+    renderSupplierList();
+    renderAllSelects();
+    toast('Deleted ✓');
+  } catch (err) {
+    toast('Delete failed: ' + err.message);
+  }
 }
 
 function renderSupplierList() {
@@ -1362,7 +1413,6 @@ function renderSupplierList() {
     </div>`;
   }).join('');
 }
-
 // ═══════════════════════════════════════════════════════
 // PRICING — SALES / RECONCILIATION
 // ═══════════════════════════════════════════════════════
