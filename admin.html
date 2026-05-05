@@ -1070,7 +1070,7 @@ function pricingLoad() {
   mgmtMonths     = pj('natch_mgmt_v2','{}');
   sales          = pj('natch_sales_v2','[]');
   loadSuppliersFromSupabase();
-  lists          = pj('natch_lists_v2', JSON.stringify(lists));
+  loadListsFromSupabase();
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
   const ms = pj('natch_margin_v2','null');
   if (ms) {
@@ -1098,7 +1098,6 @@ function saveAll() {
   localStorage.setItem('natch_prices_v2',    JSON.stringify(generatedPrices));
   localStorage.setItem('natch_mgmt_v2',      JSON.stringify(mgmtMonths));
   localStorage.setItem('natch_sales_v2',     JSON.stringify(sales));
-  localStorage.setItem('natch_lists_v2',     JSON.stringify(lists));
   localStorage.setItem('natch_settings_v2',  JSON.stringify(settings));
   localStorage.setItem('natch_margin_v2',    JSON.stringify({
     global:   +document.getElementById('globalMargin').value,
@@ -1128,6 +1127,38 @@ function showPricingPanel(el) {
 // PRICING — DYNAMIC LISTS
 // ═══════════════════════════════════════════════════════
 
+async function loadListsFromSupabase() {
+  try {
+    const rows = await sbFetch('site_config?id=eq.lists&select=data');
+    if (rows && rows.length && rows[0].data) {
+      lists = rows[0].data;
+      if (!lists.productTypes) lists.productTypes = [];
+      if (!lists.sizes)        lists.sizes        = [];
+      if (!lists.paperTypes)   lists.paperTypes   = [];
+      if (!lists.paperWeights) lists.paperWeights = [];
+      if (!lists.finishes)     lists.finishes     = [];
+      if (!lists.quantities)   lists.quantities   = [25,50,100,150,200,250,500];
+    }
+    renderAllSelects();
+    renderLM();
+  } catch (err) {
+    console.warn('Could not load lists from Supabase:', err.message);
+  }
+}
+
+async function saveListsToSupabase() {
+  try {
+    await sbFetch(`site_config?id=eq.lists`, {
+      method: 'PATCH',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ data: lists })
+    });
+  } catch (err) {
+    console.warn('Could not save lists to Supabase:', err.message);
+    toast('List save failed: ' + err.message);
+  }
+}
+  
 function supName(id) { const s=suppliers.find(x=>x.id===id); return s?s.name:'?'; }
 function supCode(id) { const s=suppliers.find(x=>x.id===id); return s?s.code:'?'; }
 
@@ -1174,7 +1205,7 @@ function addListItem(key, selectId) {
     if(!lists[key]) lists[key]=[];
     lists[key].push(v);
     if(key==='quantities') lists.quantities=lists.quantities.map(Number).sort((a,b)=>a-b);
-    localStorage.setItem('natch_lists_v2',JSON.stringify(lists));
+    saveListsToSupabase();
     renderAllSelects(); renderLM();
   }
   if(selectId){const el=document.getElementById(selectId);if(el)el.value=v;}
@@ -1182,7 +1213,7 @@ function addListItem(key, selectId) {
 
 function removeListItem(key, val) {
   lists[key]=(lists[key]||[]).filter(v=>String(v)!==String(val));
-  localStorage.setItem('natch_lists_v2',JSON.stringify(lists));
+  saveListsToSupabase();
   renderAllSelects(); renderLM();
 }
 
@@ -1198,7 +1229,7 @@ function renameListItem(key, oldVal) {
   if(key==='paperTypes')   costs.forEach(c=>{if(c.paperType===oldVal)c.paperType=nv;});
   if(key==='paperWeights') costs.forEach(c=>{if(c.paperWeight===oldVal)c.paperWeight=nv;});
   if(key==='finishes')     costs.forEach(c=>{if(c.finish===oldVal)c.finish=nv;});
-  localStorage.setItem('natch_lists_v2',JSON.stringify(lists));
+  saveListsToSupabase();
   localStorage.setItem('natch_costs_v2',JSON.stringify(costs));
   renderAllSelects(); renderLM(); renderCostTable(); toast('Renamed to "'+nv+'" ✓');
 }
@@ -1223,7 +1254,7 @@ function quickAdd(key) {
     if(!lists[key]) lists[key]=[];
     lists[key].push(v);
     if(key==='quantities') lists.quantities=lists.quantities.map(Number).sort((a,b)=>a-b);
-    localStorage.setItem('natch_lists_v2',JSON.stringify(lists));
+    saveListsToSupabase();
     renderAllSelects(); renderLM();
   }
   input.value='';
