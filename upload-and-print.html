@@ -332,9 +332,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 async function loadSiteData() {
   try {
     const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
-    const [paperRes, configRes] = await Promise.all([
+    const [paperRes, configRes, pricesRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra&active=eq.true&order=display_order`, { headers }),
-      fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers })
+      fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published.desc&limit=1`, { headers })
     ]);
     if (paperRes.ok) {
       const rows = await paperRes.json();
@@ -357,14 +358,74 @@ async function loadSiteData() {
         if (d.qtyStep      != null) CONFIG.pricing.qtyStep      = parseInt(d.qtyStep);
       }
     }
+    if (pricesRes.ok) {
+      const rows = await pricesRes.json();
+      if (rows && rows.length && rows[0].payload && Array.isArray(rows[0].payload.prices)) {
+        publishedPrices = rows[0].payload.prices;
+      }
+    }
     // Re-render paper grid if user is already viewing Step 3
     const step3 = document.getElementById('step3');
     if (step3 && !step3.classList.contains('hidden')) {
       initStep3();
     }
+    // Re-render the price if user has already made selections
+    if (typeof updatePrice === 'function' && selectedSize) {
+      updatePrice();
+    }
   } catch (err) {
     console.warn('Supabase load failed, using defaults:', err.message);
   }
+}
+
+// ── PUBLISHED PRICES (from admin's Pricing Engine) ────────
+// Loaded by loadSiteData(). Each entry has:
+//   { productType, size, paperType, paperWeight, printSide, finish,
+//     supplierId, qty, cost, sellPrice, grossProfit, margin, ... }
+// Customer-facing price = sellPrice (treated as inc-VAT, like CONFIG.pricing).
+let publishedPrices = [];
+
+// Lenient string match: lowercase, trim, strip trailing 's' for plurals.
+function _norm(s) { return (s || '').toString().toLowerCase().trim().replace(/s$/, ''); }
+
+// Look up the matching published price for a customer selection.
+// Returns the sellPrice number if matched, or null to fall back to the
+// hardcoded formula. Matching strategy:
+//   • size and qty MUST match exactly (mandatory filters)
+//   • among those, prefer specs with matching productType (lenient match)
+//   • among those, prefer specs with matching paperType (lenient; empty in admin = wildcard)
+//   • among those, prefer specs with matching finish (defaults to "None")
+//   • return the first remaining candidate's sellPrice
+function findMatchingPrice(productType, size, paperName, finish, qty) {
+  if (!Array.isArray(publishedPrices) || !publishedPrices.length) return null;
+  if (!size || !qty) return null;
+
+  // Mandatory: size + qty match
+  let candidates = publishedPrices.filter(p =>
+    p.size === size && parseInt(p.qty, 10) === parseInt(qty, 10)
+  );
+  if (!candidates.length) return null;
+
+  // Prefer matching productType (or admin spec has empty productType → wildcard)
+  const productMatches = candidates.filter(p =>
+    !p.productType || _norm(p.productType) === _norm(productType)
+  );
+  if (productMatches.length) candidates = productMatches;
+
+  // Prefer matching paperType (or admin spec has empty paperType → wildcard)
+  const paperMatches = candidates.filter(p =>
+    !p.paperType || _norm(p.paperType) === _norm(paperName)
+  );
+  if (paperMatches.length) candidates = paperMatches;
+
+  // Prefer matching finish (defaults to "None" both sides)
+  const customerFinish = finish || 'None';
+  const finishMatches = candidates.filter(p =>
+    (p.finish || 'None') === customerFinish
+  );
+  if (finishMatches.length) candidates = finishMatches;
+
+  return candidates[0] ? parseFloat(candidates[0].sellPrice) : null;
 }
 
 loadSiteData();
@@ -565,8 +626,20 @@ function updatePrice(){
     uploadQty=Math.max(1,v);
   }
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
-  const base=calcBasePrice(uploadQty);
-  const upgrade=paper.priceExtra||0;
+
+  // Try admin-published prices first; fall back to hardcoded formula if no match.
+  const matchedPrice = findMatchingPrice('Wedding Invitations', selectedSize, paper.name, 'None', uploadQty);
+  let base, upgrade;
+  if (matchedPrice != null) {
+    // Admin-driven price — paper extra is rolled into sellPrice, so no separate upgrade.
+    base = matchedPrice;
+    upgrade = 0;
+  } else {
+    // Fallback: original (qty/50)*basePerFifty + paper extra.
+    base = calcBasePrice(uploadQty);
+    upgrade = paper.priceExtra || 0;
+  }
+
   let envCost=0;
   if(envelopesEnabled&&selectedEnvColour){
     const env=ENVELOPES.find(e=>e.id===selectedEnvColour);
@@ -589,13 +662,23 @@ function updatePrice(){
 
 function addToCartUpload(){
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
-  const upgrade=paper.priceExtra||0;
+
+  // Same lookup as updatePrice() so cart total matches displayed price.
+  const matchedPrice = findMatchingPrice('Wedding Invitations', selectedSize, paper.name, 'None', uploadQty);
+  let base, upgrade;
+  if (matchedPrice != null) {
+    base = matchedPrice;
+    upgrade = 0;
+  } else {
+    base = calcBasePrice(uploadQty);
+    upgrade = paper.priceExtra || 0;
+  }
+
   let envCost=0;
   if(envelopesEnabled&&selectedEnvColour){
     const env=ENVELOPES.find(e=>e.id===selectedEnvColour);
     if(env)envCost=Math.round(env.priceEach*uploadQty*100)/100;
   }
-  const base=calcBasePrice(uploadQty);
   const subtotalEx=(base+upgrade+envCost+deliveryCost)/1.2;
   const total=(subtotalEx*1.2);
   const envLabel=envelopesEnabled&&selectedEnvColour?` + ${ENVELOPES.find(e=>e.id===selectedEnvColour)?.name} envelopes`:'';
