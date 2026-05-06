@@ -1422,8 +1422,6 @@ async function deleteCost(id) {
     toast('Delete failed: ' + err.message);
   }
 }
-}
-
 function renderCostTable() {
   const fp=document.getElementById('filterProduct')?.value||'',fs=document.getElementById('filterSupplier')?.value||'',ff=document.getElementById('filterFinish')?.value||'';
   const filtered=costs.filter(c=>(!fp||c.productType===fp)&&(!fs||c.supplierId===fs)&&(!ff||c.finish===ff));
