@@ -335,7 +335,7 @@ async function loadSiteData() {
     const [paperRes, configRes, pricesRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra&active=eq.true&order=display_order`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers }),
-      fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published.desc&limit=1`, { headers })
+      fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
     ]);
     if (paperRes.ok) {
       const rows = await paperRes.json();
