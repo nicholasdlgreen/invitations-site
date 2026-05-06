@@ -148,7 +148,7 @@
       <div id="size-selector" style="margin-bottom:32px;">
         <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:6px;">Choose your invitation size</div>
         <p style="font-size:13px;color:var(--soft);margin-bottom:20px;line-height:1.8;">Select a size first — this helps us check your file is set up correctly for print.</p>
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;">
           <div id="size-opt-A5" onclick="selectSize('A5')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A5" style="width:26px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A5" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">A5</div><div style="font-size:10px;color:var(--pale);">148×210mm</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Most popular</div></div>
           <div id="size-opt-A6" onclick="selectSize('A6')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A6" style="width:26px;height:28px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A6" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">A6</div><div style="font-size:10px;color:var(--pale);">105×148mm</div></div>
           <div id="size-opt-5x7" onclick="selectSize('5x7')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-5x7" style="width:22px;height:36px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-5x7" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">5"×7"</div><div style="font-size:10px;color:var(--pale);">127×178mm</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Traditional</div></div>
@@ -305,7 +305,10 @@ const CONFIG = {
   ],
   pricing: { basePerFifty:150, vatRate:0.20, minQty:25, qtyStep:25 },
 };
-const ENVELOPES = [
+// ENVELOPES is `let` so loadSiteData() can replace it with rows from
+// Supabase `envelopes` table. The values below are the fallback shown
+// if the table is empty or unreachable.
+let ENVELOPES = [
   { id:'white',    name:'Brilliant White', hex:'#FFFFFF', border:'#ddd',     priceEach:0.35 },
   { id:'ivory',    name:'Ivory',           hex:'#FAF7F2', border:'#e0dbd5',  priceEach:0.35 },
   { id:'cream',    name:'Warm Cream',      hex:'#F5EDE0', border:'#e5d8c8',  priceEach:0.35 },
@@ -332,10 +335,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 async function loadSiteData() {
   try {
     const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
-    const [paperRes, configRes, pricesRes] = await Promise.all([
+    const [paperRes, configRes, pricesRes, envRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra&active=eq.true&order=display_order`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers }),
-      fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
+      fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/envelopes?select=id,name,hex_color,border_color,price_each&active=eq.true&order=display_order`, { headers })
     ]);
     if (paperRes.ok) {
       const rows = await paperRes.json();
@@ -364,7 +368,22 @@ async function loadSiteData() {
         publishedPrices = rows[0].payload.prices;
       }
     }
-    // Re-render paper grid if user is already viewing Step 3
+    if (envRes.ok) {
+      const rows = await envRes.json();
+      if (rows && rows.length) {
+        // Map snake_case Supabase columns → camelCase JS shape used by the renderer.
+        ENVELOPES = rows.map(r => ({
+          id: r.id,
+          name: r.name,
+          hex: r.hex_color,
+          border: r.border_color,
+          priceEach: parseFloat(r.price_each) || 0
+        }));
+      }
+    }
+    // Filter visible sizes/papers based on what admin has published specs for.
+    applySizeFilter();
+    // Re-render paper grid if user is already viewing Step 3 (papers + envelopes both refresh).
     const step3 = document.getElementById('step3');
     if (step3 && !step3.classList.contains('hidden')) {
       initStep3();
@@ -426,6 +445,45 @@ function findMatchingPrice(productType, size, paperName, finish, qty) {
   if (finishMatches.length) candidates = finishMatches;
 
   return candidates[0] ? parseFloat(candidates[0].sellPrice) : null;
+}
+
+// ── SIZE & PAPER FILTERING (Phase 2) ──────────────────────
+// If admin has published specs in pricing_config, customer site only offers
+// the sizes/papers that have at least one spec. If no specs are published yet,
+// or pricing_config didn't load, customer sees the full default set as before.
+
+// Returns a Set of size names that appear in publishedPrices (e.g. {'A5','DL'}).
+function getPublishedSizes() {
+  const set = new Set();
+  if (Array.isArray(publishedPrices)) {
+    publishedPrices.forEach(p => { if (p.size) set.add(p.size); });
+  }
+  return set;
+}
+
+// Returns a Set of paper names (lowercased) that appear in publishedPrices.
+// Empty paperType in admin = wildcard (so we don't filter papers in that case).
+function getPublishedPapers() {
+  const set = new Set();
+  let hasWildcard = false;
+  if (Array.isArray(publishedPrices)) {
+    publishedPrices.forEach(p => {
+      if (!p.paperType || !p.paperType.trim()) hasWildcard = true;
+      else set.add(_norm(p.paperType));
+    });
+  }
+  return { set, hasWildcard };
+}
+
+// Hide size cards for sizes that have no published spec. If nothing is
+// published, leave all 5 cards visible (current behaviour).
+function applySizeFilter() {
+  const available = getPublishedSizes();
+  if (!available.size) return; // nothing published, keep all visible
+  ['A5','A6','5x7','DL','Square'].forEach(size => {
+    const card = document.getElementById('size-opt-' + size);
+    if (card) card.style.display = available.has(size) ? '' : 'none';
+  });
 }
 
 loadSiteData();
@@ -545,9 +603,21 @@ function initStep3(){
     document.getElementById('fileSummaryName').textContent=currentFile.name;
     document.getElementById('fileSummaryMeta').textContent=(currentFile.size/1024/1024).toFixed(1)+' MB · Ready for print';
   }
-  // Paper grid
+  // Paper grid — filter CONFIG.papers to those that appear in published specs
+  // (or specs that have empty paperType, which act as wildcards for any paper).
+  // If nothing is published yet, show all papers.
+  const { set: pubPapers, hasWildcard } = getPublishedPapers();
+  let papersToShow = CONFIG.papers;
+  if (publishedPrices.length && !hasWildcard && pubPapers.size) {
+    papersToShow = CONFIG.papers.filter(p => pubPapers.has(_norm(p.name)));
+    if (!papersToShow.length) papersToShow = CONFIG.papers; // safety net
+  }
+  // Make sure selectedPaper is still in the visible list; if not, switch to first.
+  if (!papersToShow.find(p => p.id === selectedPaper) && papersToShow.length) {
+    selectedPaper = papersToShow[0].id;
+  }
   const grid=document.getElementById('paperGrid');
-  grid.innerHTML=CONFIG.papers.map(p=>`
+  grid.innerHTML=papersToShow.map(p=>`
     <div class="paper-opt${p.id===selectedPaper?' selected':''}" onclick="selectPaperOpt('${p.id}')">
       <div class="paper-name">${p.name}</div>
       <div class="paper-sub">${p.subtitle}</div>
