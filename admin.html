@@ -433,6 +433,8 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="generator" onclick="showPricingPanel(this)">⚙️ Margin &amp; Pricing</button>
           <button class="pz-tab" data-pz="pricelist" onclick="showPricingPanel(this)">💷 Price List</button>
           <button class="pz-tab" data-pz="suppliers" onclick="showPricingPanel(this)">🏭 Suppliers</button>
+          <button class="pz-tab" data-pz="envelopes" onclick="showPricingPanel(this)">✉️ Envelopes</button>
+          <button class="pz-tab" data-pz="papers" onclick="showPricingPanel(this)">📃 Paper Stocks</button>
           <button class="pz-tab" data-pz="reconcile" onclick="showPricingPanel(this)">🔁 Reconciliation</button>
           <button class="pz-tab" data-pz="mgmt" onclick="showPricingPanel(this)">📊 Management Accounts</button>
           <button class="pz-tab" data-pz="settings" onclick="showPricingPanel(this)">⚙️ Settings &amp; Export</button>
@@ -578,6 +580,24 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               <button class="btn btn-gold" onclick="openSupplierModal()">＋ Add Supplier</button>
             </div>
             <div id="supplierList"><div class="empty"><span class="empty-icon">🏭</span><div class="empty-text">No suppliers yet</div></div></div>
+          </div>
+
+          <!-- PANEL: ENVELOPES -->
+          <div class="pz-panel" id="pz-envelopes">
+            <div class="section-header">
+              <div><div class="section-title">Envelope Colours</div><div class="section-sub">Manage envelope options shown on the customer site</div></div>
+              <button class="btn btn-gold" onclick="openEnvelopeModal()">＋ Add Envelope</button>
+            </div>
+            <div id="envelopeList"><div class="empty"><span class="empty-icon">✉️</span><div class="empty-text">No envelopes yet</div></div></div>
+          </div>
+
+          <!-- PANEL: PAPER STOCKS -->
+          <div class="pz-panel" id="pz-papers">
+            <div class="section-header">
+              <div><div class="section-title">Paper Stocks</div><div class="section-sub">Manage paper options shown on the customer site</div></div>
+              <button class="btn btn-gold" onclick="openPaperModal()">＋ Add Paper</button>
+            </div>
+            <div id="paperList"><div class="empty"><span class="empty-icon">📃</span><div class="empty-text">No paper stocks yet</div></div></div>
           </div>
 
           <!-- PANEL: RECONCILIATION -->
@@ -755,6 +775,43 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <button class="btn btn-gold btn-sm" onclick="saveSupplier()">Save Supplier</button>
     </div>
     <input type="hidden" id="sup_editId">
+  </div>
+</div>
+
+<div class="modal-overlay" id="envelopeModal">
+  <div class="pz-modal">
+    <div class="modal-title">Add Envelope Colour</div>
+    <div class="field"><label>Name</label><input type="text" id="env_name" placeholder="e.g. Brilliant White"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Hex Colour (fill)</label><input type="text" id="env_hex" placeholder="#FFFFFF"></div>
+      <div class="field"><label>Border Colour</label><input type="text" id="env_border" placeholder="#dddddd"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Price Each (£)</label><div class="pfx"><span class="px">£</span><input type="number" id="env_price" placeholder="0.35" step="0.01" min="0"></div></div>
+      <div class="field"><label>Display Order</label><input type="number" id="env_order" placeholder="1" step="1" min="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeEnvelopeModal()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="saveEnvelope()">Save Envelope</button>
+    </div>
+    <input type="hidden" id="env_editId">
+  </div>
+</div>
+
+<div class="modal-overlay" id="paperModal">
+  <div class="pz-modal">
+    <div class="modal-title">Add Paper Stock</div>
+    <div class="field"><label>Name</label><input type="text" id="pap_name" placeholder="e.g. Smooth White"></div>
+    <div class="field"><label>Subtitle (description shown to customer)</label><input type="text" id="pap_subtitle" placeholder="e.g. 300gsm · Crisp & classic"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Price Extra (£)</label><div class="pfx"><span class="px">£</span><input type="number" id="pap_extra" placeholder="0.00" step="0.01" min="0"></div></div>
+      <div class="field"><label>Display Order</label><input type="number" id="pap_order" placeholder="1" step="1" min="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closePaperModal()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="savePaper()">Save Paper</button>
+    </div>
+    <input type="hidden" id="pap_editId">
   </div>
 </div>
 
@@ -1073,6 +1130,8 @@ function pricingLoad() {
   sales          = pj('natch_sales_v2','[]');
   loadSuppliersFromSupabase();
   loadListsFromSupabase();
+  loadEnvelopesFromSupabase();
+  loadPapersFromSupabase();
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
 loadPricingSettings();
   renderAllSelects(); renderLM(); renderCostTable(); renderSupplierList();
@@ -1542,6 +1601,223 @@ function renderSupplierList() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// ENVELOPES — manage rows in `envelopes` Supabase table
+// ═══════════════════════════════════════════════════════
+
+let envelopes = [];
+
+async function loadEnvelopesFromSupabase() {
+  try {
+    envelopes = await sbFetch('envelopes?select=*&order=display_order');
+    renderEnvelopeList();
+  } catch (err) {
+    console.warn('Could not load envelopes from Supabase:', err.message);
+    envelopes = [];
+    renderEnvelopeList();
+  }
+}
+
+function openEnvelopeModal(editId) {
+  ['env_name','env_hex','env_border','env_price','env_order'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('env_editId').value='';
+  if (editId) {
+    const e = envelopes.find(x => x.id === editId);
+    if (e) {
+      document.getElementById('env_name').value   = e.name || '';
+      document.getElementById('env_hex').value    = e.hex_color || '';
+      document.getElementById('env_border').value = e.border_color || '';
+      document.getElementById('env_price').value  = e.price_each != null ? e.price_each : '';
+      document.getElementById('env_order').value  = e.display_order != null ? e.display_order : '';
+      document.getElementById('env_editId').value = editId;
+    }
+  }
+  document.getElementById('envelopeModal').classList.add('open');
+  setTimeout(()=>document.getElementById('env_name').focus(),100);
+}
+
+function closeEnvelopeModal() { document.getElementById('envelopeModal').classList.remove('open'); }
+
+async function saveEnvelope() {
+  const name = document.getElementById('env_name').value.trim();
+  if (!name) { toast('Envelope name required'); return; }
+  const editId = document.getElementById('env_editId').value;
+  const payload = {
+    name,
+    hex_color:     document.getElementById('env_hex').value.trim()    || '#FFFFFF',
+    border_color:  document.getElementById('env_border').value.trim() || '#dddddd',
+    price_each:    parseFloat(document.getElementById('env_price').value) || 0,
+    display_order: parseInt(document.getElementById('env_order').value, 10) || 0,
+    active:        true
+  };
+  try {
+    if (editId) {
+      await sbFetch(`envelopes?id=eq.${editId}`, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const i = envelopes.findIndex(x => x.id === editId);
+      if (i >= 0) envelopes[i] = { ...envelopes[i], ...payload };
+    } else {
+      const result = await sbFetch('envelopes', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const newRow = Array.isArray(result) ? result[0] : result;
+      envelopes.push(newRow);
+    }
+    renderEnvelopeList();
+    closeEnvelopeModal();
+    toast(editId ? 'Updated ✓' : 'Envelope added ✓');
+  } catch (err) {
+    toast('Save failed: ' + err.message);
+  }
+}
+
+async function deleteEnvelope(id) {
+  if (!confirm('Delete this envelope colour? It will be removed from the customer site.')) return;
+  try {
+    await sbFetch(`envelopes?id=eq.${id}`, { method: 'DELETE' });
+    envelopes = envelopes.filter(e => e.id !== id);
+    renderEnvelopeList();
+    toast('Deleted ✓');
+  } catch (err) {
+    toast('Delete failed: ' + err.message);
+  }
+}
+
+function renderEnvelopeList() {
+  const container = document.getElementById('envelopeList');
+  if (!envelopes.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">✉️</span><div class="empty-text">No envelopes yet</div></div>';
+    return;
+  }
+  container.innerHTML = envelopes.map(e => `
+    <div class="supplier-card">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:42px;height:30px;border-radius:4px;background:${e.hex_color||'#fff'};border:1.5px solid ${e.border_color||'#ddd'};flex-shrink:0"></div>
+        <div>
+          <div style="font-weight:500;font-size:13px">${e.name}</div>
+          <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
+            ${e.hex_color||'—'} · £${(e.price_each||0).toFixed(2)} each · order ${e.display_order||0}
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-xs" onclick="openEnvelopeModal('${e.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteEnvelope('${e.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// PAPER STOCKS — manage rows in `paper_stocks` Supabase table
+// ═══════════════════════════════════════════════════════
+
+let papers = [];
+
+async function loadPapersFromSupabase() {
+  try {
+    papers = await sbFetch('paper_stocks?select=*&order=display_order');
+    renderPaperList();
+  } catch (err) {
+    console.warn('Could not load paper stocks from Supabase:', err.message);
+    papers = [];
+    renderPaperList();
+  }
+}
+
+function openPaperModal(editId) {
+  ['pap_name','pap_subtitle','pap_extra','pap_order'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pap_editId').value='';
+  if (editId) {
+    const p = papers.find(x => x.id === editId);
+    if (p) {
+      document.getElementById('pap_name').value     = p.name || '';
+      document.getElementById('pap_subtitle').value = p.subtitle || '';
+      document.getElementById('pap_extra').value    = p.price_extra != null ? p.price_extra : '';
+      document.getElementById('pap_order').value    = p.display_order != null ? p.display_order : '';
+      document.getElementById('pap_editId').value   = editId;
+    }
+  }
+  document.getElementById('paperModal').classList.add('open');
+  setTimeout(()=>document.getElementById('pap_name').focus(),100);
+}
+
+function closePaperModal() { document.getElementById('paperModal').classList.remove('open'); }
+
+async function savePaper() {
+  const name = document.getElementById('pap_name').value.trim();
+  if (!name) { toast('Paper name required'); return; }
+  const editId = document.getElementById('pap_editId').value;
+  const payload = {
+    name,
+    subtitle:      document.getElementById('pap_subtitle').value.trim(),
+    price_extra:   parseFloat(document.getElementById('pap_extra').value) || 0,
+    display_order: parseInt(document.getElementById('pap_order').value, 10) || 0,
+    active:        true
+  };
+  try {
+    if (editId) {
+      await sbFetch(`paper_stocks?id=eq.${editId}`, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const i = papers.findIndex(x => x.id === editId);
+      if (i >= 0) papers[i] = { ...papers[i], ...payload };
+    } else {
+      const result = await sbFetch('paper_stocks', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const newRow = Array.isArray(result) ? result[0] : result;
+      papers.push(newRow);
+    }
+    renderPaperList();
+    closePaperModal();
+    toast(editId ? 'Updated ✓' : 'Paper added ✓');
+  } catch (err) {
+    toast('Save failed: ' + err.message);
+  }
+}
+
+async function deletePaper(id) {
+  if (!confirm('Delete this paper stock? It will be removed from the customer site.')) return;
+  try {
+    await sbFetch(`paper_stocks?id=eq.${id}`, { method: 'DELETE' });
+    papers = papers.filter(p => p.id !== id);
+    renderPaperList();
+    toast('Deleted ✓');
+  } catch (err) {
+    toast('Delete failed: ' + err.message);
+  }
+}
+
+function renderPaperList() {
+  const container = document.getElementById('paperList');
+  if (!papers.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">📃</span><div class="empty-text">No paper stocks yet</div></div>';
+    return;
+  }
+  container.innerHTML = papers.map(p => `
+    <div class="supplier-card">
+      <div>
+        <div style="font-weight:500;font-size:13px">${p.name}</div>
+        <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
+          ${p.subtitle||'—'} · ${p.price_extra ? '+£'+(p.price_extra||0).toFixed(2) : 'Included'} · order ${p.display_order||0}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-xs" onclick="openPaperModal('${p.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="deletePaper('${p.id}')">✕</button>
+      </div>
+    </div>`).join('');
 }
 // ═══════════════════════════════════════════════════════
 // PRICING — SALES / RECONCILIATION
