@@ -297,13 +297,30 @@
 
 <script>
 // ── PRODUCT TYPE FROM URL (Phase 3) ──────────────────────
-// Reads ?product= from URL (set by Netlify _redirects rewriting clean URLs
-// like /wedding-invitations to /upload-and-print.html?product=wedding-invitations).
-// Defaults to 'wedding-invitations' if no param is present.
+// Customers reach this page via clean URLs like /save-the-dates, which Netlify
+// rewrites to /upload-and-print.html?product=save-the-dates. Crucially, with a
+// rewrite (status 200), the browser keeps showing /save-the-dates so the
+// query param is NOT visible to JavaScript via window.location.search.
+// We must read the slug from window.location.pathname instead.
 const PRODUCT = (function() {
+  // First try query param — works when page is opened directly as /upload-and-print.html?product=...
   const params = new URLSearchParams(window.location.search);
-  const slug = (params.get('product') || 'wedding-invitations').toLowerCase().trim();
-  // Convert slug to display name: "wedding-invitations" → "Wedding Invitations"
+  let slug = params.get('product');
+
+  // If no query param, use the URL path (clean URL like /save-the-dates).
+  if (!slug) {
+    const path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
+    // Treat path as slug only if it has no slashes and no file extension
+    // (i.e. it's a single segment that doesn't look like a real file path).
+    if (path && !path.includes('.') && !path.includes('/')) {
+      slug = path;
+    }
+  }
+
+  // Final fallback
+  slug = (slug || 'wedding-invitations').toLowerCase().trim();
+
+  // Convert slug to display name: "save-the-dates" → "Save The Dates"
   const name = slug.split('-').map(w =>
     w ? w.charAt(0).toUpperCase() + w.slice(1) : ''
   ).join(' ').trim();
@@ -325,10 +342,11 @@ const PRODUCT = (function() {
   setMeta('meta[property="og:description"]', `Upload your ${productName.toLowerCase()} design and we'll print it on premium UK paper stocks. Digital proof included on every order.`);
   setMeta('meta[property="og:url"]',      `https://foreverprint.com/${PRODUCT.slug}`);
 
-  // Update visible heading for the size selector (defaults to "Choose your invitation size").
-  // The element gets an id added in the HTML so this can find it.
+  // Update visible heading for the size selector. Use the product name as-is —
+  // no singularising — so "Save the Dates" stays "Save the Dates", and the
+  // heading reads naturally: "Choose your Save The Dates size".
   const sizeTitle = document.getElementById('size-selector-title');
-  if (sizeTitle) sizeTitle.textContent = `Choose your ${productName.toLowerCase().replace(/s$/, '')} size`;
+  if (sizeTitle) sizeTitle.textContent = `Choose your ${productName} size`;
 })();
 
 // ── CONFIG ────────────────────────────────────────────────
