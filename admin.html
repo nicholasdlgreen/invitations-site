@@ -1266,18 +1266,39 @@ function fillSupplierSelect(id, blankLabel) {
   if(cur) el.value=cur;
 }
 
+// Combine product types from old "Lists" feature (lists.productTypes — array of strings)
+// with new product_types Supabase table (Phase 4) so admin Cost Input dropdown
+// shows everything in one place. Deduplicates case-insensitively.
+function getCombinedProductTypes() {
+  const fromList = (lists && Array.isArray(lists.productTypes)) ? lists.productTypes : [];
+  const fromTable = (Array.isArray(productTypes) ? productTypes : [])
+    .filter(p => p.active !== false)
+    .map(p => p.name)
+    .filter(Boolean);
+  const seen = new Set();
+  const result = [];
+  [...fromList, ...fromTable].forEach(name => {
+    const key = (name || '').toString().toLowerCase().trim();
+    if (key && !seen.has(key)) {
+      seen.add(key);
+      result.push(name);
+    }
+  });
+  return result;
+}
+
 function renderAllSelects() {
-  fillSelect('f_productType', lists.productTypes,'— select or add —');
+  fillSelect('f_productType', getCombinedProductTypes(),'— select or add —');
   fillSelect('f_size',        lists.sizes,        '— select or add —');
   fillSelect('f_paperType',   lists.paperTypes,   '— select or add —');
   fillSelect('f_paperWeight', lists.paperWeights, '— select or add —');
   const fe=document.getElementById('f_finish');
   if(fe){const cur=fe.value;fe.innerHTML='<option value="None">None</option>'+lists.finishes.map(v=>`<option value="${v}">${v}</option>`).join('');fe.value=cur||'None';}
   fillSupplierSelect('f_supplier','— select or add —');
-  fillSelect('filterProduct', lists.productTypes,'All Types');
+  fillSelect('filterProduct', getCombinedProductTypes(),'All Types');
   fillSelect('filterFinish',  lists.finishes,    'All Finishes');
   fillSupplierSelect('filterSupplier','All Suppliers');
-  fillSelect('plFilterProduct', lists.productTypes,'All Products');
+  fillSelect('plFilterProduct', getCombinedProductTypes(),'All Products');
   fillSupplierSelect('plFilterSupplier','All Suppliers');
   fillSupplierSelect('reconSupplier','All Suppliers');
   renderQtyGrid();
@@ -1869,6 +1890,7 @@ async function loadProductTypesFromSupabase() {
   try {
     productTypes = await sbFetch('product_types?select=*&order=display_order');
     renderProductTypeList();
+    renderAllSelects(); // refresh Cost Input dropdown so new product types appear
   } catch (err) {
     console.warn('Could not load product types from Supabase:', err.message);
     productTypes = [];
@@ -1963,6 +1985,7 @@ async function saveProductType() {
       productTypes.push(newRow);
     }
     renderProductTypeList();
+    renderAllSelects(); // refresh Cost Input dropdown
     closeProductTypeModal();
     toast(editId ? 'Updated ✓' : 'Product type added ✓');
   } catch (err) {
@@ -1976,6 +1999,7 @@ async function deleteProductType(id) {
     await sbFetch(`product_types?id=eq.${id}`, { method: 'DELETE' });
     productTypes = productTypes.filter(p => p.id !== id);
     renderProductTypeList();
+    renderAllSelects(); // refresh Cost Input dropdown
     toast('Deleted ✓');
   } catch (err) {
     toast('Delete failed: ' + err.message);
