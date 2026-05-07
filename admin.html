@@ -826,17 +826,48 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 </div>
 
 <div class="modal-overlay" id="productTypeModal">
-  <div class="pz-modal" style="max-width:640px;">
+  <div class="pz-modal" style="max-width:720px;max-height:90vh;overflow-y:auto;">
     <div class="modal-title">Add Product Type</div>
+
+    <!-- BASIC -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="field"><label>Name</label><input type="text" id="pt_name" placeholder="e.g. Wedding Invitations" oninput="autoSlug()"></div>
       <div class="field"><label>URL Slug</label><input type="text" id="pt_slug" placeholder="e.g. wedding-invitations"></div>
     </div>
     <div class="field"><label>Tagline (small text above title)</label><input type="text" id="pt_tagline" placeholder="e.g. Our signature product"></div>
     <div class="field"><label>Description (paragraph on products.html card)</label><input type="text" id="pt_description" placeholder="Short paragraph about this product"></div>
-    <div class="field"><label>Features (one per line, shown as bullet points)</label><textarea id="pt_features" rows="5" placeholder="Available in A5, A6, 5x7&quot;, DL and Square&#10;Choose from Smooth White, Cotton Rag or Vellum&#10;Single or double-sided printing" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;resize:vertical;"></textarea></div>
+    <div class="field"><label>Features (one per line, shown as bullet points)</label><textarea id="pt_features" rows="4" placeholder="Available in A5, A6, 5x7&quot;, DL and Square&#10;Choose from Smooth White, Cotton Rag or Vellum&#10;Single or double-sided printing" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;resize:vertical;"></textarea></div>
     <div class="field"><label>Hero Image URL (used on products.html card)</label><input type="text" id="pt_heroImage" placeholder="https://..."></div>
     <div class="field"><label>"From £…" Price Text</label><input type="text" id="pt_fromPrice" placeholder="e.g. From £150 for 50 invitations inc. VAT"></div>
+
+    <!-- PRODUCT CONFIGURATION -->
+    <div style="margin:24px 0 12px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-lt);font-weight:500;">Product Configuration</div>
+    <p style="font-size:11px;color:rgba(250,247,242,.5);margin:0 0 14px;line-height:1.6;">Tick which sizes, papers and finishes are available for this product. The customer will only see ticked options on the configurator.</p>
+
+    <div class="field">
+      <label>Available Sizes</label>
+      <div id="pt_availableSizes" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;min-height:42px;"></div>
+    </div>
+
+    <div class="field">
+      <label>Available Papers</label>
+      <div id="pt_availablePapers" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;min-height:42px;"></div>
+    </div>
+
+    <div class="field">
+      <label>Available Finishes</label>
+      <div id="pt_availableFinishes" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;min-height:42px;"></div>
+    </div>
+
+    <div class="field">
+      <label>Margin %</label>
+      <div class="pfx" style="max-width:200px;"><input type="number" id="pt_marginPct" placeholder="50" step="0.1" min="0" max="500" style="text-align:right;"><span class="px" style="left:auto;right:12px;">%</span></div>
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;">Sell price = cost × (1 + margin/100). Applied to sheet rate, paper modifier, and finish modifier for this product.</p>
+    </div>
+
+    <!-- SEO -->
+    <div style="margin:24px 0 12px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-lt);font-weight:500;">SEO &amp; Display</div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="field"><label>SEO Page Title (optional override)</label><input type="text" id="pt_metaTitle" placeholder="auto-generated if blank"></div>
       <div class="field"><label>SEO Description (optional override)</label><input type="text" id="pt_metaDescription" placeholder="auto-generated if blank"></div>
@@ -845,6 +876,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <div class="field"><label>Display Order</label><input type="number" id="pt_displayOrder" placeholder="1" step="1" min="0"></div>
       <div class="field"><label>Active</label><select id="pt_active" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"><option value="true">Yes — show on customer site</option><option value="false">No — hidden</option></select></div>
     </div>
+
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeProductTypeModal()">Cancel</button>
       <button class="btn btn-gold btn-sm" onclick="saveProductType()">Save Product Type</button>
@@ -1171,6 +1203,7 @@ function pricingLoad() {
   loadEnvelopesFromSupabase();
   loadPapersFromSupabase();
   loadProductTypesFromSupabase();
+  loadFinishOptionsFromSupabase();
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
 loadPricingSettings();
   renderAllSelects(); renderLM(); renderCostTable(); renderSupplierList();
@@ -1916,12 +1949,59 @@ function autoSlug() {
   }
 }
 
+// Render a checkbox grid for available_* fields. Each "checkbox" is a styled
+// pill button that toggles between selected/unselected via class.
+// `containerId` is the wrapping div, `options` is array of strings (size names,
+// paper names, finish names), `selected` is array of currently selected names.
+function renderProductTypeChips(containerId, options, selected) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const sel = new Set(selected || []);
+  if (!options || !options.length) {
+    container.innerHTML = '<div style="font-size:11px;color:rgba(250,247,242,.4);padding:6px;">No options available — add some in the relevant tab first.</div>';
+    return;
+  }
+  container.innerHTML = options.map(opt => {
+    const isSelected = sel.has(opt);
+    return `<button type="button" class="pt-chip ${isSelected ? 'on' : ''}" data-value="${opt.replace(/"/g,'&quot;')}" onclick="togglePtChip(this)" style="padding:6px 12px;border-radius:14px;border:1px solid ${isSelected?'var(--gold)':'rgba(255,255,255,.15)'};background:${isSelected?'rgba(207,165,84,.18)':'transparent'};color:${isSelected?'var(--gold)':'rgba(250,247,242,.7)'};font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s;">${opt}</button>`;
+  }).join('');
+}
+
+// Toggle a chip on/off. Updates inline styling so user gets immediate feedback.
+function togglePtChip(btn) {
+  const isOn = btn.classList.toggle('on');
+  if (isOn) {
+    btn.style.borderColor = 'var(--gold)';
+    btn.style.background  = 'rgba(207,165,84,.18)';
+    btn.style.color       = 'var(--gold)';
+  } else {
+    btn.style.borderColor = 'rgba(255,255,255,.15)';
+    btn.style.background  = 'transparent';
+    btn.style.color       = 'rgba(250,247,242,.7)';
+  }
+}
+
+// Read current selections from a chip container into an array of values.
+function readPtChips(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  return [...container.querySelectorAll('button.pt-chip.on')].map(b => b.dataset.value);
+}
+
 function openProductTypeModal(editId) {
-  const fields = ['pt_name','pt_slug','pt_tagline','pt_description','pt_features','pt_heroImage','pt_fromPrice','pt_metaTitle','pt_metaDescription','pt_displayOrder'];
+  const fields = ['pt_name','pt_slug','pt_tagline','pt_description','pt_features','pt_heroImage','pt_fromPrice','pt_metaTitle','pt_metaDescription','pt_displayOrder','pt_marginPct'];
   fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('pt_active').value = 'true';
   document.getElementById('pt_editId').value = '';
   document.getElementById('pt_slug').dataset.autoSet = 'false';
+
+  // Source data for the chip grids
+  const sizeOptions   = (lists && Array.isArray(lists.sizes)) ? lists.sizes : [];
+  const paperOptions  = (Array.isArray(papers) ? papers : []).filter(p => p.active !== false).map(p => p.name);
+  const finishOpts    = (Array.isArray(finishOptions) ? finishOptions : []).filter(f => f.active !== false).map(f => f.name);
+
+  let selectedSizes = [], selectedPapers = [], selectedFinishes = [], marginPct = 50;
+
   if (editId) {
     const p = productTypes.find(x => x.id === editId);
     if (p) {
@@ -1937,8 +2017,18 @@ function openProductTypeModal(editId) {
       document.getElementById('pt_displayOrder').value    = p.display_order != null ? p.display_order : '';
       document.getElementById('pt_active').value          = p.active === false ? 'false' : 'true';
       document.getElementById('pt_editId').value          = editId;
+      selectedSizes    = Array.isArray(p.available_sizes)    ? p.available_sizes    : [];
+      selectedPapers   = Array.isArray(p.available_papers)   ? p.available_papers   : [];
+      selectedFinishes = Array.isArray(p.available_finishes) ? p.available_finishes : [];
+      marginPct        = (p.margin_pct != null) ? p.margin_pct : 50;
     }
   }
+
+  document.getElementById('pt_marginPct').value = marginPct;
+  renderProductTypeChips('pt_availableSizes',    sizeOptions,   selectedSizes);
+  renderProductTypeChips('pt_availablePapers',   paperOptions,  selectedPapers);
+  renderProductTypeChips('pt_availableFinishes', finishOpts,    selectedFinishes);
+
   document.getElementById('productTypeModal').classList.add('open');
   setTimeout(() => document.getElementById('pt_name').focus(), 100);
 }
@@ -1952,19 +2042,26 @@ async function saveProductType() {
   if (!slug) { toast('URL slug required'); return; }
   if (!/^[a-z0-9-]+$/.test(slug)) { toast('Slug can only contain lowercase letters, numbers and hyphens'); return; }
   const editId = document.getElementById('pt_editId').value;
+  const marginPctRaw = document.getElementById('pt_marginPct').value;
+  const marginPct = marginPctRaw === '' ? 50 : parseFloat(marginPctRaw);
+  if (isNaN(marginPct) || marginPct < 0) { toast('Margin must be a positive number'); return; }
   const payload = {
     name,
     slug,
-    tagline:          document.getElementById('pt_tagline').value.trim() || null,
-    description:      document.getElementById('pt_description').value.trim() || null,
-    features:         document.getElementById('pt_features').value.trim() || null,
-    hero_image_url:   document.getElementById('pt_heroImage').value.trim() || null,
-    from_price_text:  document.getElementById('pt_fromPrice').value.trim() || null,
-    meta_title:       document.getElementById('pt_metaTitle').value.trim() || null,
-    meta_description: document.getElementById('pt_metaDescription').value.trim() || null,
-    display_order:    parseInt(document.getElementById('pt_displayOrder').value, 10) || 0,
-    active:           document.getElementById('pt_active').value === 'true',
-    updated_at:       new Date().toISOString()
+    tagline:            document.getElementById('pt_tagline').value.trim() || null,
+    description:        document.getElementById('pt_description').value.trim() || null,
+    features:           document.getElementById('pt_features').value.trim() || null,
+    hero_image_url:     document.getElementById('pt_heroImage').value.trim() || null,
+    from_price_text:    document.getElementById('pt_fromPrice').value.trim() || null,
+    meta_title:         document.getElementById('pt_metaTitle').value.trim() || null,
+    meta_description:   document.getElementById('pt_metaDescription').value.trim() || null,
+    display_order:      parseInt(document.getElementById('pt_displayOrder').value, 10) || 0,
+    active:             document.getElementById('pt_active').value === 'true',
+    available_sizes:    readPtChips('pt_availableSizes'),
+    available_papers:   readPtChips('pt_availablePapers'),
+    available_finishes: readPtChips('pt_availableFinishes'),
+    margin_pct:         marginPct,
+    updated_at:         new Date().toISOString()
   };
   try {
     if (editId) {
@@ -1989,7 +2086,12 @@ async function saveProductType() {
     closeProductTypeModal();
     toast(editId ? 'Updated ✓' : 'Product type added ✓');
   } catch (err) {
-    toast('Save failed: ' + err.message);
+    // 23505 is PostgreSQL's unique constraint violation code
+    if (err.message && err.message.includes('23505')) {
+      toast('Save failed: a product with that URL slug already exists. Pick a different slug.');
+    } else {
+      toast('Save failed: ' + err.message);
+    }
   }
 }
 
@@ -2013,7 +2115,11 @@ function renderProductTypeList() {
     return;
   }
   container.innerHTML = productTypes.map(p => {
-    const featureCount = (p.features || '').split('\n').filter(f => f.trim()).length;
+    const sizesCount    = (p.available_sizes    || []).length;
+    const papersCount   = (p.available_papers   || []).length;
+    const finishesCount = (p.available_finishes || []).length;
+    const margin        = (p.margin_pct != null) ? p.margin_pct + '%' : 'no margin';
+    const configSummary = `${sizesCount} size${sizesCount!==1?'s':''} · ${papersCount} paper${papersCount!==1?'s':''} · ${finishesCount} finish${finishesCount!==1?'es':''} · ${margin}`;
     const statusBadge = p.active === false
       ? '<span class="tag" style="margin-left:6px;background:rgba(200,80,80,.15);color:#d88">hidden</span>'
       : '';
@@ -2023,7 +2129,7 @@ function renderProductTypeList() {
         <div>
           <div style="font-weight:500;font-size:13px">${p.name} ${statusBadge}</div>
           <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
-            /${p.slug} · ${featureCount} feature${featureCount!==1?'s':''} · order ${p.display_order||0}
+            /${p.slug} · ${configSummary}
           </div>
           ${p.tagline ? `<div style="font-size:11px;color:var(--gold-lt);margin-top:2px;font-style:italic">${p.tagline}</div>` : ''}
         </div>
@@ -2036,6 +2142,22 @@ function renderProductTypeList() {
     </div>`;
   }).join('');
 }
+
+// ═══════════════════════════════════════════════════════
+// FINISH OPTIONS — manage rows in `finish_options` Supabase table
+// ═══════════════════════════════════════════════════════
+
+let finishOptions = [];
+
+async function loadFinishOptionsFromSupabase() {
+  try {
+    finishOptions = await sbFetch('finish_options?select=*&order=display_order');
+  } catch (err) {
+    console.warn('Could not load finish options from Supabase:', err.message);
+    finishOptions = [];
+  }
+}
+
 // ═══════════════════════════════════════════════════════
 // PRICING — SALES / RECONCILIATION
 // ═══════════════════════════════════════════════════════
