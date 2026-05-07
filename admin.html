@@ -435,6 +435,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="suppliers" onclick="showPricingPanel(this)">🏭 Suppliers</button>
           <button class="pz-tab" data-pz="envelopes" onclick="showPricingPanel(this)">✉️ Envelopes</button>
           <button class="pz-tab" data-pz="papers" onclick="showPricingPanel(this)">📃 Paper Stocks</button>
+          <button class="pz-tab" data-pz="producttypes" onclick="showPricingPanel(this)">🎴 Product Types</button>
           <button class="pz-tab" data-pz="reconcile" onclick="showPricingPanel(this)">🔁 Reconciliation</button>
           <button class="pz-tab" data-pz="mgmt" onclick="showPricingPanel(this)">📊 Management Accounts</button>
           <button class="pz-tab" data-pz="settings" onclick="showPricingPanel(this)">⚙️ Settings &amp; Export</button>
@@ -598,6 +599,15 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               <button class="btn btn-gold" onclick="openPaperModal()">＋ Add Paper</button>
             </div>
             <div id="paperList"><div class="empty"><span class="empty-icon">📃</span><div class="empty-text">No paper stocks yet</div></div></div>
+          </div>
+
+          <!-- PANEL: PRODUCT TYPES -->
+          <div class="pz-panel" id="pz-producttypes">
+            <div class="section-header">
+              <div><div class="section-title">Product Types</div><div class="section-sub">Manage product cards shown on products.html and metadata used by configurator pages</div></div>
+              <button class="btn btn-gold" onclick="openProductTypeModal()">＋ Add Product Type</button>
+            </div>
+            <div id="productTypeList"><div class="empty"><span class="empty-icon">🎴</span><div class="empty-text">No product types yet</div></div></div>
           </div>
 
           <!-- PANEL: RECONCILIATION -->
@@ -812,6 +822,34 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <button class="btn btn-gold btn-sm" onclick="savePaper()">Save Paper</button>
     </div>
     <input type="hidden" id="pap_editId">
+  </div>
+</div>
+
+<div class="modal-overlay" id="productTypeModal">
+  <div class="pz-modal" style="max-width:640px;">
+    <div class="modal-title">Add Product Type</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Name</label><input type="text" id="pt_name" placeholder="e.g. Wedding Invitations" oninput="autoSlug()"></div>
+      <div class="field"><label>URL Slug</label><input type="text" id="pt_slug" placeholder="e.g. wedding-invitations"></div>
+    </div>
+    <div class="field"><label>Tagline (small text above title)</label><input type="text" id="pt_tagline" placeholder="e.g. Our signature product"></div>
+    <div class="field"><label>Description (paragraph on products.html card)</label><input type="text" id="pt_description" placeholder="Short paragraph about this product"></div>
+    <div class="field"><label>Features (one per line, shown as bullet points)</label><textarea id="pt_features" rows="5" placeholder="Available in A5, A6, 5x7&quot;, DL and Square&#10;Choose from Smooth White, Cotton Rag or Vellum&#10;Single or double-sided printing" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;resize:vertical;"></textarea></div>
+    <div class="field"><label>Hero Image URL (used on products.html card)</label><input type="text" id="pt_heroImage" placeholder="https://..."></div>
+    <div class="field"><label>"From £…" Price Text</label><input type="text" id="pt_fromPrice" placeholder="e.g. From £150 for 50 invitations inc. VAT"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>SEO Page Title (optional override)</label><input type="text" id="pt_metaTitle" placeholder="auto-generated if blank"></div>
+      <div class="field"><label>SEO Description (optional override)</label><input type="text" id="pt_metaDescription" placeholder="auto-generated if blank"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Display Order</label><input type="number" id="pt_displayOrder" placeholder="1" step="1" min="0"></div>
+      <div class="field"><label>Active</label><select id="pt_active" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"><option value="true">Yes — show on customer site</option><option value="false">No — hidden</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeProductTypeModal()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="saveProductType()">Save Product Type</button>
+    </div>
+    <input type="hidden" id="pt_editId">
   </div>
 </div>
 
@@ -1132,6 +1170,7 @@ function pricingLoad() {
   loadListsFromSupabase();
   loadEnvelopesFromSupabase();
   loadPapersFromSupabase();
+  loadProductTypesFromSupabase();
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
 loadPricingSettings();
   renderAllSelects(); renderLM(); renderCostTable(); renderSupplierList();
@@ -1818,6 +1857,160 @@ function renderPaperList() {
         <button class="btn btn-danger btn-xs" onclick="deletePaper('${p.id}')">✕</button>
       </div>
     </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// PRODUCT TYPES — manage rows in `product_types` Supabase table
+// ═══════════════════════════════════════════════════════
+
+let productTypes = [];
+
+async function loadProductTypesFromSupabase() {
+  try {
+    productTypes = await sbFetch('product_types?select=*&order=display_order');
+    renderProductTypeList();
+  } catch (err) {
+    console.warn('Could not load product types from Supabase:', err.message);
+    productTypes = [];
+    renderProductTypeList();
+  }
+}
+
+// Auto-fill the slug field from the name field as the user types it.
+// Only applied when slug is empty or matches the previous auto-generated value,
+// so it doesn't overwrite manual edits.
+function autoSlug() {
+  const nameEl = document.getElementById('pt_name');
+  const slugEl = document.getElementById('pt_slug');
+  if (!nameEl || !slugEl) return;
+  const generated = (nameEl.value || '').toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+  // Only update if slug is empty or was last auto-set
+  if (!slugEl.value || slugEl.dataset.autoSet === 'true') {
+    slugEl.value = generated;
+    slugEl.dataset.autoSet = 'true';
+  }
+}
+
+function openProductTypeModal(editId) {
+  const fields = ['pt_name','pt_slug','pt_tagline','pt_description','pt_features','pt_heroImage','pt_fromPrice','pt_metaTitle','pt_metaDescription','pt_displayOrder'];
+  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('pt_active').value = 'true';
+  document.getElementById('pt_editId').value = '';
+  document.getElementById('pt_slug').dataset.autoSet = 'false';
+  if (editId) {
+    const p = productTypes.find(x => x.id === editId);
+    if (p) {
+      document.getElementById('pt_name').value            = p.name || '';
+      document.getElementById('pt_slug').value            = p.slug || '';
+      document.getElementById('pt_tagline').value         = p.tagline || '';
+      document.getElementById('pt_description').value     = p.description || '';
+      document.getElementById('pt_features').value        = p.features || '';
+      document.getElementById('pt_heroImage').value       = p.hero_image_url || '';
+      document.getElementById('pt_fromPrice').value       = p.from_price_text || '';
+      document.getElementById('pt_metaTitle').value       = p.meta_title || '';
+      document.getElementById('pt_metaDescription').value = p.meta_description || '';
+      document.getElementById('pt_displayOrder').value    = p.display_order != null ? p.display_order : '';
+      document.getElementById('pt_active').value          = p.active === false ? 'false' : 'true';
+      document.getElementById('pt_editId').value          = editId;
+    }
+  }
+  document.getElementById('productTypeModal').classList.add('open');
+  setTimeout(() => document.getElementById('pt_name').focus(), 100);
+}
+
+function closeProductTypeModal() { document.getElementById('productTypeModal').classList.remove('open'); }
+
+async function saveProductType() {
+  const name = document.getElementById('pt_name').value.trim();
+  const slug = document.getElementById('pt_slug').value.trim().toLowerCase();
+  if (!name) { toast('Product name required'); return; }
+  if (!slug) { toast('URL slug required'); return; }
+  if (!/^[a-z0-9-]+$/.test(slug)) { toast('Slug can only contain lowercase letters, numbers and hyphens'); return; }
+  const editId = document.getElementById('pt_editId').value;
+  const payload = {
+    name,
+    slug,
+    tagline:          document.getElementById('pt_tagline').value.trim() || null,
+    description:      document.getElementById('pt_description').value.trim() || null,
+    features:         document.getElementById('pt_features').value.trim() || null,
+    hero_image_url:   document.getElementById('pt_heroImage').value.trim() || null,
+    from_price_text:  document.getElementById('pt_fromPrice').value.trim() || null,
+    meta_title:       document.getElementById('pt_metaTitle').value.trim() || null,
+    meta_description: document.getElementById('pt_metaDescription').value.trim() || null,
+    display_order:    parseInt(document.getElementById('pt_displayOrder').value, 10) || 0,
+    active:           document.getElementById('pt_active').value === 'true',
+    updated_at:       new Date().toISOString()
+  };
+  try {
+    if (editId) {
+      await sbFetch(`product_types?id=eq.${editId}`, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const i = productTypes.findIndex(x => x.id === editId);
+      if (i >= 0) productTypes[i] = { ...productTypes[i], ...payload };
+    } else {
+      const result = await sbFetch('product_types', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const newRow = Array.isArray(result) ? result[0] : result;
+      productTypes.push(newRow);
+    }
+    renderProductTypeList();
+    closeProductTypeModal();
+    toast(editId ? 'Updated ✓' : 'Product type added ✓');
+  } catch (err) {
+    toast('Save failed: ' + err.message);
+  }
+}
+
+async function deleteProductType(id) {
+  if (!confirm('Delete this product type? This will hide it from the customer site.')) return;
+  try {
+    await sbFetch(`product_types?id=eq.${id}`, { method: 'DELETE' });
+    productTypes = productTypes.filter(p => p.id !== id);
+    renderProductTypeList();
+    toast('Deleted ✓');
+  } catch (err) {
+    toast('Delete failed: ' + err.message);
+  }
+}
+
+function renderProductTypeList() {
+  const container = document.getElementById('productTypeList');
+  if (!productTypes.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">🎴</span><div class="empty-text">No product types yet</div></div>';
+    return;
+  }
+  container.innerHTML = productTypes.map(p => {
+    const featureCount = (p.features || '').split('\n').filter(f => f.trim()).length;
+    const statusBadge = p.active === false
+      ? '<span class="tag" style="margin-left:6px;background:rgba(200,80,80,.15);color:#d88">hidden</span>'
+      : '';
+    return `<div class="supplier-card">
+      <div style="display:flex;align-items:center;gap:14px">
+        ${p.hero_image_url ? `<img src="${p.hero_image_url}" style="width:54px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.08)" alt="">` : ''}
+        <div>
+          <div style="font-weight:500;font-size:13px">${p.name} ${statusBadge}</div>
+          <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
+            /${p.slug} · ${featureCount} feature${featureCount!==1?'s':''} · order ${p.display_order||0}
+          </div>
+          ${p.tagline ? `<div style="font-size:11px;color:var(--gold-lt);margin-top:2px;font-style:italic">${p.tagline}</div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-xs" onclick="window.open('/${p.slug}','_blank')">View ↗</button>
+        <button class="btn btn-outline btn-xs" onclick="openProductTypeModal('${p.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteProductType('${p.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 // ═══════════════════════════════════════════════════════
 // PRICING — SALES / RECONCILIATION
