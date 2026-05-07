@@ -1,0 +1,20 @@
+# Netlify URL rewriting for clean product URLs
+#
+# Format: /<clean-url>  /<actual-file>?<params>  <status>
+#   Status 200 = rewrite (browser keeps showing the clean URL)
+#   Status 301 = permanent redirect (browser shows new URL — don't use here)
+#
+# This lets customers visit /wedding-invitations and see "/wedding-invitations"
+# in their address bar, while the server quietly serves upload-and-print.html
+# with ?product=wedding-invitations.
+#
+# To add a new product type:
+#   1. Add a cost spec for it in admin (e.g., productType "Save the Dates"), publish
+#   2. Add a line below mapping the slug to the configurator
+#      Example:  /save-the-dates  /upload-and-print.html?product=save-the-dates  200
+#   3. Optionally add a card to products.html linking to the clean URL
+#
+# Slug rule: lowercase the product name, replace spaces with hyphens.
+# "Save the Dates" → save-the-dates, "Order of Service" → order-of-service.
+
+/wedding-invitations  /upload-and-print.html?product=wedding-invitations  200
