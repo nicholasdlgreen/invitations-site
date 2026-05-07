@@ -388,11 +388,12 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 async function loadSiteData() {
   try {
     const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
-    const [paperRes, configRes, pricesRes, envRes] = await Promise.all([
+    const [paperRes, configRes, pricesRes, envRes, ptRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra&active=eq.true&order=display_order`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers }),
-      fetch(`${SUPABASE_URL}/rest/v1/envelopes?select=id,name,hex_color,border_color,price_each&active=eq.true&order=display_order`, { headers })
+      fetch(`${SUPABASE_URL}/rest/v1/envelopes?select=id,name,hex_color,border_color,price_each&active=eq.true&order=display_order`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers })
     ]);
     if (paperRes.ok) {
       const rows = await paperRes.json();
@@ -432,6 +433,29 @@ async function loadSiteData() {
           border: r.border_color,
           priceEach: parseFloat(r.price_each) || 0
         }));
+      }
+    }
+    // Apply rich product metadata from product_types if a matching row exists.
+    // Falls back gracefully to slug-derived defaults from PRODUCT (already set).
+    if (ptRes.ok) {
+      const rows = await ptRes.json();
+      if (rows && rows.length) {
+        const pt = rows[0];
+        // Override slug-derived display name with the curated name from admin
+        // (e.g. "Save the Dates" with proper lowercase 't' instead of "Save The Dates")
+        if (pt.name) PRODUCT.name = pt.name;
+        // Override page title and meta tags if admin has set them
+        const titleText = pt.meta_title || `Upload & Print ${PRODUCT.name} | Foreverprint`;
+        document.title = titleText;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc && pt.meta_description) metaDesc.setAttribute('content', pt.meta_description);
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.setAttribute('content', pt.meta_title || `Upload & Print ${PRODUCT.name} | Foreverprint`);
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc && pt.meta_description) ogDesc.setAttribute('content', pt.meta_description);
+        // Refresh visible heading to use curated name
+        const sizeTitle = document.getElementById('size-selector-title');
+        if (sizeTitle) sizeTitle.textContent = `Choose your ${PRODUCT.name} size`;
       }
     }
     // Filter visible sizes/papers based on what admin has published specs for.
