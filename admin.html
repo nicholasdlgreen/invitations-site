@@ -436,6 +436,8 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="envelopes" onclick="showPricingPanel(this)">✉️ Envelopes</button>
           <button class="pz-tab" data-pz="papers" onclick="showPricingPanel(this)">📃 Paper Stocks</button>
           <button class="pz-tab" data-pz="producttypes" onclick="showPricingPanel(this)">🎴 Product Types</button>
+          <button class="pz-tab" data-pz="sheetrates" onclick="showPricingPanel(this)">📊 Sheet Rates</button>
+          <button class="pz-tab" data-pz="finishes" onclick="showPricingPanel(this)">✨ Finish Options</button>
           <button class="pz-tab" data-pz="reconcile" onclick="showPricingPanel(this)">🔁 Reconciliation</button>
           <button class="pz-tab" data-pz="mgmt" onclick="showPricingPanel(this)">📊 Management Accounts</button>
           <button class="pz-tab" data-pz="settings" onclick="showPricingPanel(this)">⚙️ Settings &amp; Export</button>
@@ -608,6 +610,30 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               <button class="btn btn-gold" onclick="openProductTypeModal()">＋ Add Product Type</button>
             </div>
             <div id="productTypeList"><div class="empty"><span class="empty-icon">🎴</span><div class="empty-text">No product types yet</div></div></div>
+          </div>
+
+          <!-- PANEL: SHEET RATES -->
+          <div class="pz-panel" id="pz-sheetrates">
+            <div class="section-header">
+              <div><div class="section-title">Sheet Rates</div><div class="section-sub">Pick a product, then enter your printer cost per (size × quantity). Sell prices auto-compute from the product's margin.</div></div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;margin-bottom:16px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+              <div class="field" style="flex:1;min-width:280px;margin:0;">
+                <label>Choose Product</label>
+                <select id="sr_productSelect" onchange="renderSheetRatesGrid()" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"><option value="">— select a product —</option></select>
+              </div>
+              <button class="btn btn-gold" onclick="saveSheetRates()" id="sr_saveBtn" disabled>Save Sheet Rates</button>
+            </div>
+            <div id="sheetRatesGrid"><div class="empty"><span class="empty-icon">📊</span><div class="empty-text">Pick a product above to start entering rates</div></div></div>
+          </div>
+
+          <!-- PANEL: FINISH OPTIONS -->
+          <div class="pz-panel" id="pz-finishes">
+            <div class="section-header">
+              <div><div class="section-title">Finish Options</div><div class="section-sub">Manage finishing options (foil, spot UV, embossed, etc.) and their cost modifiers</div></div>
+              <button class="btn btn-gold" onclick="openFinishModal()">＋ Add Finish</button>
+            </div>
+            <div id="finishOptionList"><div class="empty"><span class="empty-icon">✨</span><div class="empty-text">No finish options yet</div></div></div>
           </div>
 
           <!-- PANEL: RECONCILIATION -->
@@ -814,9 +840,11 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     <div class="field"><label>Name</label><input type="text" id="pap_name" placeholder="e.g. Smooth White"></div>
     <div class="field"><label>Subtitle (description shown to customer)</label><input type="text" id="pap_subtitle" placeholder="e.g. 300gsm · Crisp & classic"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="field"><label>Price Extra (£)</label><div class="pfx"><span class="px">£</span><input type="number" id="pap_extra" placeholder="0.00" step="0.01" min="0"></div></div>
+      <div class="field"><label>Cost Modifier (£ per order, your printer cost)</label><div class="pfx"><span class="px">£</span><input type="number" id="pap_costMod" placeholder="0.00" step="0.01" min="0"></div></div>
       <div class="field"><label>Display Order</label><input type="number" id="pap_order" placeholder="1" step="1" min="0"></div>
     </div>
+    <p style="font-size:11px;color:rgba(250,247,242,.5);margin:0 0 14px;line-height:1.6;">Sell modifier is computed at publish time using each product's margin (so Cotton on a 60% margin product sells at +£32, on a 40% margin product at +£28, both from the same £20 cost).</p>
+    <input type="hidden" id="pap_extra">
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closePaperModal()">Cancel</button>
       <button class="btn btn-gold btn-sm" onclick="savePaper()">Save Paper</button>
@@ -882,6 +910,22 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <button class="btn btn-gold btn-sm" onclick="saveProductType()">Save Product Type</button>
     </div>
     <input type="hidden" id="pt_editId">
+  </div>
+</div>
+
+<div class="modal-overlay" id="finishModal">
+  <div class="pz-modal">
+    <div class="modal-title">Add Finish Option</div>
+    <div class="field"><label>Name</label><input type="text" id="fin_name" placeholder="e.g. Foil, Spot UV, Embossed"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Cost Modifier (£ per order, your printer cost)</label><div class="pfx"><span class="px">£</span><input type="number" id="fin_cost" placeholder="0.00" step="0.01" min="0"></div></div>
+      <div class="field"><label>Display Order</label><input type="number" id="fin_order" placeholder="1" step="1" min="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeFinishModal()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="saveFinish()">Save Finish</button>
+    </div>
+    <input type="hidden" id="fin_editId">
   </div>
 </div>
 
@@ -1204,6 +1248,7 @@ function pricingLoad() {
   loadPapersFromSupabase();
   loadProductTypesFromSupabase();
   loadFinishOptionsFromSupabase();
+  loadSheetRatesFromSupabase();
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
 loadPricingSettings();
   renderAllSelects(); renderLM(); renderCostTable(); renderSupplierList();
@@ -1825,14 +1870,14 @@ async function loadPapersFromSupabase() {
 }
 
 function openPaperModal(editId) {
-  ['pap_name','pap_subtitle','pap_extra','pap_order'].forEach(id=>document.getElementById(id).value='');
+  ['pap_name','pap_subtitle','pap_costMod','pap_order'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pap_editId').value='';
   if (editId) {
     const p = papers.find(x => x.id === editId);
     if (p) {
       document.getElementById('pap_name').value     = p.name || '';
       document.getElementById('pap_subtitle').value = p.subtitle || '';
-      document.getElementById('pap_extra').value    = p.price_extra != null ? p.price_extra : '';
+      document.getElementById('pap_costMod').value  = p.cost_modifier != null ? p.cost_modifier : '';
       document.getElementById('pap_order').value    = p.display_order != null ? p.display_order : '';
       document.getElementById('pap_editId').value   = editId;
     }
@@ -1850,7 +1895,7 @@ async function savePaper() {
   const payload = {
     name,
     subtitle:      document.getElementById('pap_subtitle').value.trim(),
-    price_extra:   parseFloat(document.getElementById('pap_extra').value) || 0,
+    cost_modifier: parseFloat(document.getElementById('pap_costMod').value) || 0,
     display_order: parseInt(document.getElementById('pap_order').value, 10) || 0,
     active:        true
   };
@@ -1903,7 +1948,7 @@ function renderPaperList() {
       <div>
         <div style="font-weight:500;font-size:13px">${p.name}</div>
         <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
-          ${p.subtitle||'—'} · ${p.price_extra ? '+£'+(p.price_extra||0).toFixed(2) : 'Included'} · order ${p.display_order||0}
+          ${p.subtitle||'—'} · cost +£${(p.cost_modifier||0).toFixed(2)} · order ${p.display_order||0}
         </div>
       </div>
       <div style="display:flex;gap:6px">
@@ -1924,6 +1969,8 @@ async function loadProductTypesFromSupabase() {
     productTypes = await sbFetch('product_types?select=*&order=display_order');
     renderProductTypeList();
     renderAllSelects(); // refresh Cost Input dropdown so new product types appear
+    // Also refresh the Sheet Rates product picker if that function is loaded.
+    if (typeof populateSheetRatesProductSelect === 'function') populateSheetRatesProductSelect();
   } catch (err) {
     console.warn('Could not load product types from Supabase:', err.message);
     productTypes = [];
@@ -2152,9 +2199,224 @@ let finishOptions = [];
 async function loadFinishOptionsFromSupabase() {
   try {
     finishOptions = await sbFetch('finish_options?select=*&order=display_order');
+    renderFinishOptionList();
   } catch (err) {
     console.warn('Could not load finish options from Supabase:', err.message);
     finishOptions = [];
+    renderFinishOptionList();
+  }
+}
+
+function openFinishModal(editId) {
+  ['fin_name','fin_cost','fin_order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('fin_editId').value = '';
+  if (editId) {
+    const f = finishOptions.find(x => x.id === editId);
+    if (f) {
+      document.getElementById('fin_name').value  = f.name || '';
+      document.getElementById('fin_cost').value  = f.cost_modifier != null ? f.cost_modifier : '';
+      document.getElementById('fin_order').value = f.display_order != null ? f.display_order : '';
+      document.getElementById('fin_editId').value = editId;
+    }
+  }
+  document.getElementById('finishModal').classList.add('open');
+  setTimeout(() => document.getElementById('fin_name').focus(), 100);
+}
+
+function closeFinishModal() { document.getElementById('finishModal').classList.remove('open'); }
+
+async function saveFinish() {
+  const name = document.getElementById('fin_name').value.trim();
+  if (!name) { toast('Finish name required'); return; }
+  const editId = document.getElementById('fin_editId').value;
+  const payload = {
+    name,
+    cost_modifier: parseFloat(document.getElementById('fin_cost').value) || 0,
+    display_order: parseInt(document.getElementById('fin_order').value, 10) || 0,
+    active:        true,
+    updated_at:    new Date().toISOString()
+  };
+  try {
+    if (editId) {
+      await sbFetch(`finish_options?id=eq.${editId}`, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const i = finishOptions.findIndex(x => x.id === editId);
+      if (i >= 0) finishOptions[i] = { ...finishOptions[i], ...payload };
+    } else {
+      const result = await sbFetch('finish_options', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      const newRow = Array.isArray(result) ? result[0] : result;
+      finishOptions.push(newRow);
+    }
+    renderFinishOptionList();
+    closeFinishModal();
+    toast(editId ? 'Updated ✓' : 'Finish added ✓');
+  } catch (err) {
+    if (err.message && err.message.includes('23505')) {
+      toast('Save failed: a finish with that name already exists.');
+    } else {
+      toast('Save failed: ' + err.message);
+    }
+  }
+}
+
+async function deleteFinish(id) {
+  if (!confirm('Delete this finish option? Products that have it ticked will lose it.')) return;
+  try {
+    await sbFetch(`finish_options?id=eq.${id}`, { method: 'DELETE' });
+    finishOptions = finishOptions.filter(f => f.id !== id);
+    renderFinishOptionList();
+    toast('Deleted ✓');
+  } catch (err) {
+    toast('Delete failed: ' + err.message);
+  }
+}
+
+function renderFinishOptionList() {
+  const container = document.getElementById('finishOptionList');
+  if (!container) return;
+  if (!finishOptions.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">✨</span><div class="empty-text">No finish options yet</div></div>';
+    return;
+  }
+  container.innerHTML = finishOptions.map(f => `
+    <div class="supplier-card">
+      <div>
+        <div style="font-weight:500;font-size:13px">${f.name}</div>
+        <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
+          cost +£${(f.cost_modifier||0).toFixed(2)} · order ${f.display_order||0}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-xs" onclick="openFinishModal('${f.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteFinish('${f.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// SHEET RATES — manage rows in `sheet_rates` Supabase table
+// Pick a product, render a (size × qty) grid of cost inputs.
+// ═══════════════════════════════════════════════════════
+
+let sheetRates = [];
+
+async function loadSheetRatesFromSupabase() {
+  try {
+    sheetRates = await sbFetch('sheet_rates?select=*');
+    populateSheetRatesProductSelect();
+  } catch (err) {
+    console.warn('Could not load sheet rates from Supabase:', err.message);
+    sheetRates = [];
+  }
+}
+
+function populateSheetRatesProductSelect() {
+  const sel = document.getElementById('sr_productSelect');
+  if (!sel) return;
+  const current = sel.value;
+  // Order by display_order
+  const sorted = [...productTypes].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+  sel.innerHTML = '<option value="">— select a product —</option>' + sorted.map(p =>
+    `<option value="${p.id}">${p.name} (${(p.available_sizes||[]).length} sizes)</option>`
+  ).join('');
+  if (current) sel.value = current;
+}
+
+function renderSheetRatesGrid() {
+  const productId = document.getElementById('sr_productSelect').value;
+  const container = document.getElementById('sheetRatesGrid');
+  const saveBtn = document.getElementById('sr_saveBtn');
+  if (!productId) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">📊</span><div class="empty-text">Pick a product above to start entering rates</div></div>';
+    saveBtn.disabled = true;
+    return;
+  }
+  const product = productTypes.find(p => p.id === productId);
+  if (!product) return;
+  const sizes = Array.isArray(product.available_sizes) ? product.available_sizes : [];
+  const quantities = (lists && Array.isArray(lists.quantities)) ? lists.quantities : [];
+  if (!sizes.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span><div class="empty-text">This product has no sizes ticked. Edit it in Product Types tab first.</div></div>';
+    saveBtn.disabled = true;
+    return;
+  }
+  if (!quantities.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span><div class="empty-text">No quantity tiers in your Lists. Add some via the Lists feature first.</div></div>';
+    saveBtn.disabled = true;
+    return;
+  }
+  saveBtn.disabled = false;
+  // Build a lookup of existing rates for this product: key = "size|qty" → cost
+  const existing = {};
+  sheetRates.filter(r => r.product_type_id === productId).forEach(r => {
+    existing[`${r.size}|${r.quantity}`] = r.cost;
+  });
+  const margin = (product.margin_pct != null) ? parseFloat(product.margin_pct) : 50;
+  const marginNote = `<p style="font-size:11px;color:rgba(250,247,242,.5);margin:0 0 12px;">Showing cost grid for <strong style="color:var(--gold);">${product.name}</strong>. Margin: <strong style="color:var(--gold);">${margin}%</strong>. Sell price = cost × ${(1 + margin/100).toFixed(2)}.</p>`;
+  // Render the grid as a table
+  let table = '<div style="overflow-x:auto;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;">';
+  table += marginNote;
+  table += '<table style="width:100%;border-collapse:separate;border-spacing:8px 6px;font-size:12px;">';
+  // Header: Size | qty1 | qty2 | ...
+  table += '<thead><tr><th style="text-align:left;color:rgba(250,247,242,.5);font-weight:500;padding:6px 4px;">Size</th>';
+  quantities.forEach(q => {
+    table += `<th style="color:rgba(250,247,242,.5);font-weight:500;padding:6px 4px;text-align:center;">qty ${q}</th>`;
+  });
+  table += '</tr></thead><tbody>';
+  sizes.forEach(size => {
+    table += `<tr><td style="font-weight:500;color:#faf7f2;padding:6px 4px;">${size}</td>`;
+    quantities.forEach(q => {
+      const key = `${size}|${q}`;
+      const val = existing[key] != null ? existing[key] : '';
+      table += `<td style="padding:0;"><div class="pfx" style="margin:0;"><span class="px" style="font-size:10px;left:8px;">£</span><input type="number" class="sr-cell" data-size="${size}" data-qty="${q}" value="${val}" placeholder="0.00" step="0.01" min="0" style="padding-left:18px;width:90px;text-align:right;font-size:12px;"></div></td>`;
+    });
+    table += '</tr>';
+  });
+  table += '</tbody></table></div>';
+  container.innerHTML = table;
+}
+
+async function saveSheetRates() {
+  const productId = document.getElementById('sr_productSelect').value;
+  if (!productId) return;
+  const cells = [...document.querySelectorAll('#sheetRatesGrid input.sr-cell')];
+  const newRates = [];
+  cells.forEach(cell => {
+    const v = cell.value.trim();
+    if (v === '') return; // skip empty
+    const cost = parseFloat(v);
+    if (isNaN(cost) || cost < 0) return;
+    newRates.push({
+      product_type_id: productId,
+      size:            cell.dataset.size,
+      quantity:        parseInt(cell.dataset.qty, 10),
+      cost:            cost
+    });
+  });
+  try {
+    // Replace strategy: delete all sheet_rates for this product, then insert new ones.
+    // Single-admin tool, so race conditions aren't a real concern.
+    await sbFetch(`sheet_rates?product_type_id=eq.${productId}`, { method: 'DELETE' });
+    if (newRates.length) {
+      await sbFetch('sheet_rates', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(newRates)
+      });
+    }
+    // Reload from server to get fresh ids
+    await loadSheetRatesFromSupabase();
+    renderSheetRatesGrid();
+    toast(`Saved ${newRates.length} sheet rate${newRates.length!==1?'s':''} ✓`);
+  } catch (err) {
+    toast('Save failed: ' + err.message);
   }
 }
 
