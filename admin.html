@@ -615,16 +615,16 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <!-- PANEL: SHEET RATES -->
           <div class="pz-panel" id="pz-sheetrates">
             <div class="section-header">
-              <div><div class="section-title">Sheet Rates</div><div class="section-sub">Pick a product, then enter your printer cost per (size × quantity). Sell prices auto-compute from the product's margin.</div></div>
+              <div><div class="section-title">Sheet Rates</div><div class="section-sub">Pick a paper stock, then enter your printer cost per (size × quantity). These rates apply to all products that use this paper. Margin is applied per-product at publish time.</div></div>
             </div>
             <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;margin-bottom:16px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
               <div class="field" style="flex:1;min-width:280px;margin:0;">
-                <label>Choose Product</label>
-                <select id="sr_productSelect" onchange="renderSheetRatesGrid()" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"><option value="">— select a product —</option></select>
+                <label>Choose Paper Stock</label>
+                <select id="sr_paperSelect" onchange="renderSheetRatesGrid()" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"><option value="">— select a paper —</option></select>
               </div>
               <button class="btn btn-gold" onclick="saveSheetRates()" id="sr_saveBtn" disabled>Save Sheet Rates</button>
             </div>
-            <div id="sheetRatesGrid"><div class="empty"><span class="empty-icon">📊</span><div class="empty-text">Pick a product above to start entering rates</div></div></div>
+            <div id="sheetRatesGrid"><div class="empty"><span class="empty-icon">📊</span><div class="empty-text">Pick a paper above to start entering rates</div></div></div>
           </div>
 
           <!-- PANEL: FINISH OPTIONS -->
@@ -1862,6 +1862,8 @@ async function loadPapersFromSupabase() {
   try {
     papers = await sbFetch('paper_stocks?select=*&order=display_order');
     renderPaperList();
+    // Refresh Sheet Rates paper picker if that function is loaded
+    if (typeof populateSheetRatesPaperSelect === 'function') populateSheetRatesPaperSelect();
   } catch (err) {
     console.warn('Could not load paper stocks from Supabase:', err.message);
     papers = [];
@@ -1919,6 +1921,7 @@ async function savePaper() {
       papers.push(newRow);
     }
     renderPaperList();
+    if (typeof populateSheetRatesPaperSelect === 'function') populateSheetRatesPaperSelect();
     closePaperModal();
     toast(editId ? 'Updated ✓' : 'Paper added ✓');
   } catch (err) {
@@ -1932,6 +1935,7 @@ async function deletePaper(id) {
     await sbFetch(`paper_stocks?id=eq.${id}`, { method: 'DELETE' });
     papers = papers.filter(p => p.id !== id);
     renderPaperList();
+    if (typeof populateSheetRatesPaperSelect === 'function') populateSheetRatesPaperSelect();
     toast('Deleted ✓');
   } catch (err) {
     toast('Delete failed: ' + err.message);
@@ -1970,8 +1974,6 @@ async function loadProductTypesFromSupabase() {
     productTypes = await sbFetch('product_types?select=*&order=display_order');
     renderProductTypeList();
     renderAllSelects(); // refresh Cost Input dropdown so new product types appear
-    // Also refresh the Sheet Rates product picker if that function is loaded.
-    if (typeof populateSheetRatesProductSelect === 'function') populateSheetRatesProductSelect();
   } catch (err) {
     console.warn('Could not load product types from Supabase:', err.message);
     productTypes = [];
@@ -2302,8 +2304,10 @@ function renderFinishOptionList() {
 }
 
 // ═══════════════════════════════════════════════════════
-// SHEET RATES — manage rows in `sheet_rates` Supabase table
-// Pick a product, render a (size × qty) grid of cost inputs.
+// SHEET RATES — manage rows in `sheet_rates` Supabase table.
+// Indexed by (paper_name, size, quantity) — sheet rates are determined
+// by your printer's cost structure (paper + size + qty), not by product.
+// Each product just declares which papers/sizes/finishes it offers.
 // ═══════════════════════════════════════════════════════
 
 let sheetRates = [];
@@ -2311,40 +2315,37 @@ let sheetRates = [];
 async function loadSheetRatesFromSupabase() {
   try {
     sheetRates = await sbFetch('sheet_rates?select=*');
-    populateSheetRatesProductSelect();
+    populateSheetRatesPaperSelect();
   } catch (err) {
     console.warn('Could not load sheet rates from Supabase:', err.message);
     sheetRates = [];
   }
 }
 
-function populateSheetRatesProductSelect() {
-  const sel = document.getElementById('sr_productSelect');
+function populateSheetRatesPaperSelect() {
+  const sel = document.getElementById('sr_paperSelect');
   if (!sel) return;
   const current = sel.value;
-  // Order by display_order
-  const sorted = [...productTypes].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-  sel.innerHTML = '<option value="">— select a product —</option>' + sorted.map(p =>
-    `<option value="${p.id}">${p.name} (${(p.available_sizes||[]).length} sizes)</option>`
+  const sorted = [...papers].filter(p => p.active !== false).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+  sel.innerHTML = '<option value="">— select a paper —</option>' + sorted.map(p =>
+    `<option value="${(p.name || '').replace(/"/g,'&quot;')}">${p.name}</option>`
   ).join('');
   if (current) sel.value = current;
 }
 
 function renderSheetRatesGrid() {
-  const productId = document.getElementById('sr_productSelect').value;
+  const paperName = document.getElementById('sr_paperSelect').value;
   const container = document.getElementById('sheetRatesGrid');
   const saveBtn = document.getElementById('sr_saveBtn');
-  if (!productId) {
-    container.innerHTML = '<div class="empty"><span class="empty-icon">📊</span><div class="empty-text">Pick a product above to start entering rates</div></div>';
+  if (!paperName) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">📊</span><div class="empty-text">Pick a paper above to start entering rates</div></div>';
     saveBtn.disabled = true;
     return;
   }
-  const product = productTypes.find(p => p.id === productId);
-  if (!product) return;
-  const sizes = Array.isArray(product.available_sizes) ? product.available_sizes : [];
+  const sizes = (lists && Array.isArray(lists.sizes)) ? lists.sizes : [];
   const quantities = (lists && Array.isArray(lists.quantities)) ? lists.quantities : [];
   if (!sizes.length) {
-    container.innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span><div class="empty-text">This product has no sizes ticked. Edit it in Product Types tab first.</div></div>';
+    container.innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span><div class="empty-text">No sizes in your Lists. Add some via the Lists feature first.</div></div>';
     saveBtn.disabled = true;
     return;
   }
@@ -2354,18 +2355,15 @@ function renderSheetRatesGrid() {
     return;
   }
   saveBtn.disabled = false;
-  // Build a lookup of existing rates for this product: key = "size|qty" → cost
+  // Build lookup of existing rates for this paper: key = "size|qty" → cost
   const existing = {};
-  sheetRates.filter(r => r.product_type_id === productId).forEach(r => {
+  sheetRates.filter(r => r.paper_name === paperName).forEach(r => {
     existing[`${r.size}|${r.quantity}`] = r.cost;
   });
-  const margin = (product.margin_pct != null) ? parseFloat(product.margin_pct) : 50;
-  const marginNote = `<p style="font-size:11px;color:rgba(250,247,242,.5);margin:0 0 12px;">Showing cost grid for <strong style="color:var(--gold);">${product.name}</strong>. Margin: <strong style="color:var(--gold);">${margin}%</strong>. Sell price = cost × ${(1 + margin/100).toFixed(2)}.</p>`;
-  // Render the grid as a table
+  const note = `<p style="font-size:11px;color:rgba(250,247,242,.5);margin:0 0 12px;">Showing cost grid for <strong style="color:var(--gold);">${paperName}</strong>. Enter your raw printer cost (£) per (size × quantity). Leave blank for combinations you don't offer. Margin is applied per-product at publish time, so the same cost cell sells at different prices depending on which product the customer is buying.</p>`;
   let table = '<div style="overflow-x:auto;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;">';
-  table += marginNote;
+  table += note;
   table += '<table style="width:100%;border-collapse:separate;border-spacing:8px 6px;font-size:12px;">';
-  // Header: Size | qty1 | qty2 | ...
   table += '<thead><tr><th style="text-align:left;color:rgba(250,247,242,.5);font-weight:500;padding:6px 4px;">Size</th>';
   quantities.forEach(q => {
     table += `<th style="color:rgba(250,247,242,.5);font-weight:500;padding:6px 4px;text-align:center;">qty ${q}</th>`;
@@ -2385,8 +2383,8 @@ function renderSheetRatesGrid() {
 }
 
 async function saveSheetRates() {
-  const productId = document.getElementById('sr_productSelect').value;
-  if (!productId) return;
+  const paperName = document.getElementById('sr_paperSelect').value;
+  if (!paperName) return;
   const cells = [...document.querySelectorAll('#sheetRatesGrid input.sr-cell')];
   const newRates = [];
   cells.forEach(cell => {
@@ -2395,16 +2393,16 @@ async function saveSheetRates() {
     const cost = parseFloat(v);
     if (isNaN(cost) || cost < 0) return;
     newRates.push({
-      product_type_id: productId,
-      size:            cell.dataset.size,
-      quantity:        parseInt(cell.dataset.qty, 10),
-      cost:            cost
+      paper_name: paperName,
+      size:       cell.dataset.size,
+      quantity:   parseInt(cell.dataset.qty, 10),
+      cost:       cost
     });
   });
   try {
-    // Replace strategy: delete all sheet_rates for this product, then insert new ones.
-    // Single-admin tool, so race conditions aren't a real concern.
-    await sbFetch(`sheet_rates?product_type_id=eq.${productId}`, { method: 'DELETE' });
+    // Replace strategy: delete all sheet_rates for this paper, then insert new ones.
+    // PostgREST URL-encoding: paper_name might contain spaces, which need encoding.
+    await sbFetch(`sheet_rates?paper_name=eq.${encodeURIComponent(paperName)}`, { method: 'DELETE' });
     if (newRates.length) {
       await sbFetch('sheet_rates', {
         method: 'POST',
@@ -2412,10 +2410,10 @@ async function saveSheetRates() {
         body: JSON.stringify(newRates)
       });
     }
-    // Reload from server to get fresh ids
+    // Reload from server
     await loadSheetRatesFromSupabase();
     renderSheetRatesGrid();
-    toast(`Saved ${newRates.length} sheet rate${newRates.length!==1?'s':''} ✓`);
+    toast(`Saved ${newRates.length} sheet rate${newRates.length!==1?'s':''} for ${paperName} ✓`);
   } catch (err) {
     toast('Save failed: ' + err.message);
   }
