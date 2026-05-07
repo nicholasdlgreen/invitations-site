@@ -1896,6 +1896,7 @@ async function savePaper() {
     name,
     subtitle:      document.getElementById('pap_subtitle').value.trim(),
     cost_modifier: parseFloat(document.getElementById('pap_costMod').value) || 0,
+    price_extra:   0, // legacy field — kept at 0 to satisfy NOT NULL until column is removed
     display_order: parseInt(document.getElementById('pap_order').value, 10) || 0,
     active:        true
   };
