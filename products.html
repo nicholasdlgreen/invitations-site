@@ -6,46 +6,14 @@
 <title>Wedding Stationery Products | Invitations, Envelopes & More | Invitations</title>
 <meta name="description" content="Luxury wedding stationery printed in the UK. Wedding invitations, matching envelopes and more — uploaded your own design or create from scratch. Premium papers, digital proof included, no minimum quantities."/>
 <meta name="robots" content="index, follow"/>
-<link rel="canonical" href="https://YOURDOMAIN.co.uk/products.html"/>
+<link rel="canonical" href="https://YOURDOMAIN.co.uk/products"/>
 <meta property="og:type" content="website"/>
-<meta property="og:url" content="https://YOURDOMAIN.co.uk/products.html"/>
+<meta property="og:url" content="https://YOURDOMAIN.co.uk/products"/>
 <meta property="og:title" content="Wedding Stationery Products | Invitations"/>
 <meta property="og:description" content="Luxury wedding stationery printed in the UK. Wedding invitations, matching envelopes and more."/>
 <meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
 <meta property="og:site_name" content="Invitations"/>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  "name": "Wedding Stationery Products",
-  "description": "Luxury wedding stationery products printed in the UK",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "item": {
-        "@type": "Product",
-        "name": "Wedding Invitations",
-        "description": "Luxury personalised wedding invitations printed on premium paper stocks in the UK. Upload your own design or create from scratch.",
-        "url": "https://YOURDOMAIN.co.uk/wedding-invitations",
-        "brand": {"@type": "Brand", "name": "Invitations"},
-        "offers": {"@type": "Offer", "priceCurrency": "GBP", "price": "150.00", "priceValidUntil": "2026-12-31", "availability": "https://schema.org/InStock"}
-      }
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "item": {
-        "@type": "Product",
-        "name": "Wedding Envelopes",
-        "description": "Premium matching envelopes in a range of colours including brilliant white, ivory, blush, sage, navy and black.",
-        "url": "https://YOURDOMAIN.co.uk/products.html#envelopes",
-        "brand": {"@type": "Brand", "name": "Invitations"}
-      }
-    }
-  ]
-}
-</script>
+<!-- JSON-LD is rendered dynamically by JS once products load (see bottom of <body>). -->
 <style>
 .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:52px;}
 .product-card{background:var(--white);border:1px solid var(--border);border-radius:24px;overflow:hidden;text-decoration:none;display:block;transition:all .35s;}
@@ -68,6 +36,7 @@
 .paper-spec{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
 .paper-desc{font-size:13px;color:var(--soft);line-height:1.8;}
 .env-swatch{width:40px;height:40px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;}
+.product-grid-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--soft);font-size:13px;}
 @media(max-width:768px){.product-grid{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -90,73 +59,17 @@
   </div>
 </section>
 
-<!-- PRODUCTS -->
+<!-- PRODUCTS — populated dynamically from product_types Supabase table -->
 <section style="background:var(--white);padding:80px 0 96px;">
   <div class="container">
-    <div class="product-grid">
-
-      <!-- Wedding Invitations -->
-      <a class="product-card" href="/wedding-invitations">
-        <img class="product-img" src="https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80&fit=crop" alt="Luxury wedding invitations on premium paper"/>
-        <div class="product-body">
-          <span class="product-tag">Our signature product</span>
-          <div class="product-title">Wedding Invitations</div>
-          <p class="product-desc">The centrepiece of your wedding stationery. Printed on premium papers with crisp, vivid colour — whether you upload your own design or create one from scratch in our studio.</p>
-          <div class="product-features">
-            <div class="product-feature">Available in A5, A6, 5×7", DL and Square</div>
-            <div class="product-feature">Choose from Smooth White, Cotton Rag or Vellum</div>
-            <div class="product-feature">Single or double-sided printing</div>
-            <div class="product-feature">Digital proof included on every order</div>
-            <div class="product-feature">No minimum order quantity</div>
-          </div>
-          <div class="product-price">From <strong>£150</strong> for 50 invitations inc. VAT</div>
-          <div class="product-cta">View Wedding Invitations</div>
-        </div>
-      </a>
-<!-- Save the Dates -->
-      <a class="product-card" href="/save-the-dates">
-        <img class="product-img" src="https://images.unsplash.com/photo-1607004468138-e7e23ea26947?w=800&q=80&fit=crop" alt="Save the date cards on textured paper"/>
-        <div class="product-body">
-          <span class="product-tag">New addition</span>
-          <div class="product-title">Save the Dates</div>
-          <p class="product-desc">Give your guests advance notice with beautifully printed save the dates. Smaller and lighter than full invitations — perfect for early announcements months ahead of the big day.</p>
-          <div class="product-features">
-            <div class="product-feature">A6 size — postcard-friendly</div>
-            <div class="product-feature">Premium paper stocks available</div>
-            <div class="product-feature">Single or double-sided printing</div>
-            <div class="product-feature">Digital proof included</div>
-          </div>
-          <div class="product-price">From <strong>£X.XX</strong> per card inc. VAT</div>
-          <div class="product-cta">View Save the Dates</div>
-        </div>
-      </a>
-      <!-- Envelopes -->
-      <a class="product-card" href="/wedding-invitations#envelopes" id="envelopes">
-        <img class="product-img" src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80&fit=crop" alt="Premium wedding envelopes in multiple colours"/>
-        <div class="product-body">
-          <span class="product-tag">Add to any order</span>
-          <div class="product-title">Matching Envelopes</div>
-          <p class="product-desc">Complete the look with premium envelopes in a range of carefully chosen colours. From crisp brilliant white to deep midnight navy — every shade chosen to complement your invitations perfectly.</p>
-          <div class="product-features">
-            <div class="product-feature">10 colours available including navy, black and blush</div>
-            <div class="product-feature">Sized to fit your chosen invitation format exactly</div>
-            <div class="product-feature">Premium paper with a smooth, luxurious feel</div>
-            <div class="product-feature">Added at checkout alongside your invitations</div>
-          </div>
-          <div class="product-price">From <strong>£0.35</strong> per envelope inc. VAT</div>
-          <div class="product-cta">Add Envelopes to Your Order</div>
-        </div>
-      </a>
-
+    <div id="product-grid" class="product-grid">
+      <div class="product-grid-empty">Loading products…</div>
     </div>
 
-    <!-- Coming soon strip -->
-    <div style="margin-top:32px;background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:32px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
-      <div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:6px;">More products coming soon</div>
-        <p style="font-size:13px;color:var(--soft);line-height:1.8;margin:0;">Save the Dates, Order of Service, Table Plans, Menus and more — all coming to the collection. <a href="mailto:hello@invitations.co.uk" style="color:var(--gold);text-decoration:none;">Get in touch</a> if you need something specific.</p>
-      </div>
-      <div style="font-size:28px;opacity:.3;">✦</div>
+    <!-- Coming soon strip — only shown if there are zero products -->
+    <div id="coming-soon-strip" style="display:none;margin-top:32px;background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:32px 40px;text-align:center;">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:6px;">Products coming soon</div>
+      <p style="font-size:13px;color:var(--soft);line-height:1.8;margin:0;"><a href="mailto:hello@invitations.co.uk" style="color:var(--gold);text-decoration:none;">Get in touch</a> if you need something specific while we build out the catalogue.</p>
     </div>
   </div>
 </section>
@@ -189,7 +102,7 @@
 </section>
 
 <!-- ENVELOPE COLOURS -->
-<section style="background:var(--white);padding:80px 0;">
+<section id="envelopes" style="background:var(--white);padding:80px 0;">
   <div class="container" style="max-width:860px;">
     <span class="tag centered">Envelopes</span>
     <h2 class="section-title centered">Available envelope colours</h2>
@@ -236,6 +149,95 @@
 <div id="site-footer"></div>
 
 <script>
+// ── PRODUCT TYPES — fetched from Supabase, rendered into #product-grid ──
+const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+async function loadProductTypes() {
+  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/product_types?select=*&active=eq.true&order=display_order`, { headers });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const products = await res.json();
+    renderProductTypes(products || []);
+    renderJsonLd(products || []);
+  } catch (err) {
+    console.warn('Could not load product types:', err.message);
+    renderProductTypes([]);
+  }
+}
+
+function renderProductTypes(products) {
+  const grid = document.getElementById('product-grid');
+  const comingSoon = document.getElementById('coming-soon-strip');
+  if (!products.length) {
+    grid.innerHTML = '<div class="product-grid-empty">No products available right now — please check back soon.</div>';
+    if (comingSoon) comingSoon.style.display = 'block';
+    return;
+  }
+  if (comingSoon) comingSoon.style.display = 'none';
+  grid.innerHTML = products.map(p => {
+    const featuresList = (p.features || '').split('\n').map(f => f.trim()).filter(Boolean);
+    const featuresHtml = featuresList.map(f => `<div class="product-feature">${escapeHtml(f)}</div>`).join('');
+    const img = p.hero_image_url
+      ? `<img class="product-img" src="${escapeHtml(p.hero_image_url)}" alt="${escapeHtml(p.name)}" loading="lazy"/>`
+      : `<div class="product-img" style="display:flex;align-items:center;justify-content:center;color:var(--pale);font-size:60px;">✦</div>`;
+    return `
+      <a class="product-card" href="/${escapeHtml(p.slug)}">
+        ${img}
+        <div class="product-body">
+          ${p.tagline ? `<span class="product-tag">${escapeHtml(p.tagline)}</span>` : ''}
+          <div class="product-title">${escapeHtml(p.name)}</div>
+          ${p.description ? `<p class="product-desc">${escapeHtml(p.description)}</p>` : ''}
+          ${featuresHtml ? `<div class="product-features">${featuresHtml}</div>` : ''}
+          ${p.from_price_text ? `<div class="product-price">${escapeHtml(p.from_price_text)}</div>` : ''}
+          <div class="product-cta">View ${escapeHtml(p.name)}</div>
+        </div>
+      </a>`;
+  }).join('');
+}
+
+// Generate ItemList JSON-LD schema for SEO. Crawlers like Google index this.
+function renderJsonLd(products) {
+  if (!products.length) return;
+  const items = products.map((p, i) => ({
+    "@type": "ListItem",
+    "position": i + 1,
+    "item": {
+      "@type": "Product",
+      "name": p.name,
+      "description": p.description || '',
+      "url": `https://foreverprint.com/${p.slug}`,
+      "brand": { "@type": "Brand", "name": "Invitations" },
+      ...(p.hero_image_url ? { "image": p.hero_image_url } : {})
+    }
+  }));
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Wedding Stationery Products",
+    "description": "Luxury wedding stationery products printed in the UK",
+    "itemListElement": items
+  };
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(ld);
+  document.head.appendChild(script);
+}
+
+loadProductTypes();
+
+// Header / footer
 fetch('/header.html').then(r=>r.text()).then(html=>{document.getElementById('site-header').outerHTML=html;updateCartBadge();});
 fetch('/footer.html').then(r=>r.text()).then(html=>{document.getElementById('site-footer').outerHTML=html;});
 </script>
