@@ -146,7 +146,7 @@
     <!-- STEP 1: UPLOAD -->
     <div id="step1">
       <div id="size-selector" style="margin-bottom:32px;">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:6px;">Choose your invitation size</div>
+        <div id="size-selector-title" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:6px;">Choose your invitation size</div>
         <p style="font-size:13px;color:var(--soft);margin-bottom:20px;line-height:1.8;">Select a size first — this helps us check your file is set up correctly for print.</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;">
           <div id="size-opt-A5" onclick="selectSize('A5')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A5" style="width:26px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A5" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">A5</div><div style="font-size:10px;color:var(--pale);">148×210mm</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Most popular</div></div>
@@ -296,6 +296,41 @@
 <div id="site-footer"></div>
 
 <script>
+// ── PRODUCT TYPE FROM URL (Phase 3) ──────────────────────
+// Reads ?product= from URL (set by Netlify _redirects rewriting clean URLs
+// like /wedding-invitations to /upload-and-print.html?product=wedding-invitations).
+// Defaults to 'wedding-invitations' if no param is present.
+const PRODUCT = (function() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = (params.get('product') || 'wedding-invitations').toLowerCase().trim();
+  // Convert slug to display name: "wedding-invitations" → "Wedding Invitations"
+  const name = slug.split('-').map(w =>
+    w ? w.charAt(0).toUpperCase() + w.slice(1) : ''
+  ).join(' ').trim();
+  return { slug, name };
+})();
+
+// Update page title, meta tags, and visible product-specific copy from PRODUCT.
+// This runs early so search engine crawlers see product-specific content.
+(function updatePageMeta() {
+  const productName = PRODUCT.name;
+  document.title = `Upload & Print ${productName} | Your Design, Beautifully Printed | Foreverprint`;
+
+  function setMeta(selector, content) {
+    const el = document.querySelector(selector);
+    if (el) el.setAttribute('content', content);
+  }
+  setMeta('meta[name="description"]',     `Upload your ${productName.toLowerCase()} design and we'll print it on premium UK paper stocks. PDF, AI, InDesign, PNG or JPG accepted. Digital proof included, free tracked delivery, no minimum quantities.`);
+  setMeta('meta[property="og:title"]',    `Upload & Print ${productName} | Foreverprint`);
+  setMeta('meta[property="og:description"]', `Upload your ${productName.toLowerCase()} design and we'll print it on premium UK paper stocks. Digital proof included on every order.`);
+  setMeta('meta[property="og:url"]',      `https://foreverprint.com/${PRODUCT.slug}`);
+
+  // Update visible heading for the size selector (defaults to "Choose your invitation size").
+  // The element gets an id added in the HTML so this can find it.
+  const sizeTitle = document.getElementById('size-selector-title');
+  if (sizeTitle) sizeTitle.textContent = `Choose your ${productName.toLowerCase().replace(/s$/, '')} size`;
+})();
+
 // ── CONFIG ────────────────────────────────────────────────
 const CONFIG = {
   papers: [
@@ -698,7 +733,7 @@ function updatePrice(){
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
 
   // Try admin-published prices first; fall back to hardcoded formula if no match.
-  const matchedPrice = findMatchingPrice('Wedding Invitations', selectedSize, paper.name, 'None', uploadQty);
+  const matchedPrice = findMatchingPrice(PRODUCT.name, selectedSize, paper.name, 'None', uploadQty);
   let base, upgrade;
   if (matchedPrice != null) {
     // Admin-driven price — paper extra is rolled into sellPrice, so no separate upgrade.
@@ -734,7 +769,7 @@ function addToCartUpload(){
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
 
   // Same lookup as updatePrice() so cart total matches displayed price.
-  const matchedPrice = findMatchingPrice('Wedding Invitations', selectedSize, paper.name, 'None', uploadQty);
+  const matchedPrice = findMatchingPrice(PRODUCT.name, selectedSize, paper.name, 'None', uploadQty);
   let base, upgrade;
   if (matchedPrice != null) {
     base = matchedPrice;
