@@ -3,41 +3,115 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Wedding Stationery Products | Invitations, Envelopes & More | Invitations</title>
-<meta name="description" content="Luxury wedding stationery printed in the UK. Wedding invitations, matching envelopes and more — uploaded your own design or create from scratch. Premium papers, digital proof included, no minimum quantities."/>
+<title>Wedding Stationery | Foreverprint</title>
+<meta name="description" content="Premium wedding stationery printed in the UK. Free digital proof on every order. No minimum quantities."/>
 <meta name="robots" content="index, follow"/>
-<link rel="canonical" href="https://YOURDOMAIN.co.uk/products"/>
-<meta property="og:type" content="website"/>
-<meta property="og:url" content="https://YOURDOMAIN.co.uk/products"/>
-<meta property="og:title" content="Wedding Stationery Products | Invitations"/>
-<meta property="og:description" content="Luxury wedding stationery printed in the UK. Wedding invitations, matching envelopes and more."/>
-<meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
-<meta property="og:site_name" content="Invitations"/>
-<!-- JSON-LD is rendered dynamically by JS once products load (see bottom of <body>). -->
+<link rel="canonical" href="https://foreverprint.com/"/>
+<meta property="og:type" content="product"/>
+<meta property="og:site_name" content="Foreverprint"/>
 <style>
-.product-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:52px;}
-.product-card{background:var(--white);border:1px solid var(--border);border-radius:24px;overflow:hidden;text-decoration:none;display:block;transition:all .35s;}
-.product-card:hover{box-shadow:0 20px 56px rgba(61,46,36,.09);transform:translateY(-3px);}
-.product-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--cream);}
-.product-body{padding:36px 40px 44px;}
-.product-tag{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:12px;display:block;}
-.product-title{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--text);margin-bottom:14px;line-height:1.2;}
-.product-desc{font-size:13px;color:var(--soft);line-height:1.95;margin-bottom:24px;}
-.product-features{margin-bottom:28px;}
-.product-feature{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:9px;margin-bottom:8px;}
-.product-feature::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--gold-lt);flex-shrink:0;}
-.product-price{font-size:11px;color:var(--pale);margin-bottom:16px;}
-.product-price strong{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold);font-weight:400;}
-.product-cta{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:500;display:inline-flex;align-items:center;gap:10px;transition:gap .2s;}
-.product-card:hover .product-cta{gap:16px;}
-.product-cta::after{content:'→';}
-.paper-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:28px 32px;}
-.paper-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:6px;}
-.paper-spec{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
-.paper-desc{font-size:13px;color:var(--soft);line-height:1.8;}
-.env-swatch{width:40px;height:40px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;}
-.product-grid-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--soft);font-size:13px;}
-@media(max-width:768px){.product-grid{grid-template-columns:1fr;}}
+.hero{background:var(--cream);padding:96px 0 80px;position:relative;}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.hero-img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:24px;background:var(--white);}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.6rem,4.8vw,4.2rem);font-weight:300;line-height:1.08;color:var(--text);margin-bottom:18px;}
+.hero h1 em{color:var(--gold);font-style:italic;}
+.hero-sub{font-size:15px;color:var(--soft);line-height:2;margin-bottom:32px;max-width:480px;}
+.hero-trust{display:flex;gap:32px;margin-top:36px;flex-wrap:wrap;}
+.hero-trust-item{font-size:11px;color:var(--soft);display:flex;align-items:center;gap:8px;}
+.hero-trust-item::before{content:'✓';color:var(--gold);font-weight:600;}
+.btn-cta{display:inline-flex;align-items:center;gap:14px;padding:18px 32px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:6px;text-decoration:none;transition:all .2s;border:1px solid var(--gold);cursor:pointer;}
+.btn-cta:hover{background:transparent;color:var(--gold);}
+.btn-cta::after{content:'→';transition:transform .2s;}
+.btn-cta:hover::after{transform:translateX(4px);}
+
+.trust-bar{background:var(--white);padding:48px 0;border-bottom:1px solid var(--border);}
+.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:center;}
+.trust-item{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.trust-item-icon{font-size:24px;color:var(--gold);}
+.trust-item-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;color:var(--text);}
+.trust-item-sub{font-size:12px;color:var(--soft);line-height:1.6;}
+
+.section{padding:88px 0;}
+.section-cream{background:var(--cream);}
+.section-white{background:var(--white);}
+.section-tag{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:14px;text-align:center;}
+.section-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,2.8rem);font-weight:300;line-height:1.15;color:var(--text);text-align:center;margin-bottom:14px;}
+.section-h2 em{color:var(--gold);font-style:italic;}
+.section-divider{width:48px;height:1px;background:var(--gold);margin:24px auto 24px;}
+.section-intro{font-size:14px;color:var(--soft);line-height:2;text-align:center;max-width:560px;margin:0 auto 56px;}
+
+.anchor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:980px;margin:0 auto;}
+.anchor-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px 32px;position:relative;text-align:left;}
+.anchor-card.popular{border:2px solid var(--gold);}
+.anchor-card-badge{position:absolute;top:-12px;left:24px;background:var(--gold);color:#fff;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:5px 14px;border-radius:14px;font-weight:500;}
+.anchor-card-tag{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);margin-bottom:14px;}
+.anchor-card-price{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;line-height:1;color:var(--text);margin-bottom:8px;}
+.anchor-card-qty{font-size:13px;color:var(--soft);margin-bottom:20px;}
+.anchor-card-spec{font-size:11px;color:var(--pale);padding-top:18px;border-top:1px solid var(--border);}
+
+.upgrade-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px 40px;max-width:680px;margin:24px auto 0;}
+.upgrade-title{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:8px;}
+.upgrade-sub{font-size:12px;color:var(--soft);margin-bottom:22px;}
+.upgrade-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+.upgrade-row:last-child{border-bottom:none;}
+.upgrade-row-label{color:var(--soft);}
+.upgrade-row-value{color:var(--text);font-weight:400;font-family:'Cormorant Garamond',serif;font-size:1.05rem;}
+.upgrade-footnote{font-size:11px;color:var(--pale);line-height:1.7;margin-top:18px;text-align:center;}
+
+.papers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1080px;margin:0 auto;}
+.paper-showcase{background:var(--white);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+.paper-showcase-img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--cream);}
+.paper-showcase-body{padding:28px 30px;}
+.paper-showcase-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:6px;}
+.paper-showcase-spec{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.paper-showcase-desc{font-size:13px;color:var(--soft);line-height:1.85;}
+
+.sizes-grid{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;}
+.size-block{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px 28px;min-width:120px;text-align:center;}
+.size-block-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:4px;}
+.size-block-mm{font-size:11px;color:var(--soft);letter-spacing:.06em;}
+
+.finishes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:980px;margin:0 auto;}
+.finish-card{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:30px 32px;text-align:left;}
+.finish-card-icon{font-size:28px;margin-bottom:14px;}
+.finish-card-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:8px;}
+.finish-card-desc{font-size:12px;color:var(--soft);line-height:1.85;margin-bottom:14px;}
+.finish-card-price{font-size:11px;color:var(--gold);font-weight:500;letter-spacing:.06em;}
+
+.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:1080px;margin:0 auto;}
+.why-card{padding:24px 28px;}
+.why-icon{font-size:24px;color:var(--gold);margin-bottom:14px;}
+.why-title{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--text);margin-bottom:10px;}
+.why-text{font-size:13px;color:var(--soft);line-height:1.9;}
+
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1080px;margin:0 auto;position:relative;}
+.step{text-align:center;position:relative;padding:0 16px;}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--white);border:1px solid var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:16px;}
+.step-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;color:var(--text);margin-bottom:8px;}
+.step-text{font-size:12px;color:var(--soft);line-height:1.85;}
+
+.faq-wrap{max-width:780px;margin:0 auto;}
+.faq-item{border-bottom:1px solid var(--border);}
+.faq-q{padding:24px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:24px;list-style:none;}
+.faq-q::-webkit-details-marker{display:none;}
+.faq-q-text{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;color:var(--text);}
+.faq-toggle{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--gold);transition:transform .25s;}
+.faq-item[open] .faq-toggle{transform:rotate(45deg);}
+.faq-a{font-size:13px;color:var(--soft);line-height:1.95;padding:0 0 24px 0;max-width:680px;}
+
+.final-cta{background:var(--cream);padding:96px 0;text-align:center;}
+.final-cta h2{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,2.8rem);font-weight:300;line-height:1.15;margin-bottom:16px;}
+.final-cta-sub{font-size:14px;color:var(--soft);line-height:2;max-width:480px;margin:0 auto 32px;}
+.final-cta-trust{display:flex;justify-content:center;gap:32px;margin-top:32px;font-size:11px;color:var(--soft);flex-wrap:wrap;}
+.final-cta-trust span::before{content:'✓ ';color:var(--gold);font-weight:600;}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--soft);font-size:13px;}
+
+@media(max-width:768px){
+  .hero-grid{grid-template-columns:1fr;gap:48px;}
+  .trust-grid,.anchor-grid,.papers-grid,.why-grid,.steps{grid-template-columns:1fr;gap:24px;}
+  .anchor-card{padding:28px 24px;}
+}
 </style>
 </head>
 <body>
@@ -45,200 +119,609 @@
 <div id="site-header"></div>
 
 <!-- HERO -->
-<section style="background:var(--cream);padding:96px 0 72px;text-align:center;">
-  <div class="container" style="max-width:680px;">
-    <span class="tag">Our Products</span>
-    <h1 class="serif" style="font-size:clamp(2.4rem,4.5vw,3.8rem);font-weight:300;line-height:1.12;margin-bottom:20px;">
-      Everything your wedding day deserves,<br>
-      <em style="font-style:italic;color:var(--gold);">beautifully printed.</em>
-    </h1>
-    <div class="divider" style="margin:24px auto;"></div>
-    <p style="font-size:15px;color:var(--soft);line-height:2;max-width:520px;margin:0 auto;">
-      Premium wedding stationery printed in the UK on the finest paper stocks. Upload your own design or create something new in our Design Studio — we handle everything from there.
-    </p>
-  </div>
-</section>
-
-<!-- PRODUCTS — populated dynamically from product_types Supabase table -->
-<section style="background:var(--white);padding:80px 0 96px;">
+<section class="hero">
   <div class="container">
-    <div id="product-grid" class="product-grid">
-      <div class="product-grid-empty">Loading products…</div>
-    </div>
-
-    <!-- Coming soon strip — only shown if there are zero products -->
-    <div id="coming-soon-strip" style="display:none;margin-top:32px;background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:32px 40px;text-align:center;">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:6px;">Products coming soon</div>
-      <p style="font-size:13px;color:var(--soft);line-height:1.8;margin:0;"><a href="mailto:hello@invitations.co.uk" style="color:var(--gold);text-decoration:none;">Get in touch</a> if you need something specific while we build out the catalogue.</p>
+    <div class="hero-grid">
+      <div>
+        <span class="tag">Wedding Stationery · UK Printed</span>
+        <h1 id="hero-h1">Beautiful wedding invitations,<br><em>printed beautifully.</em></h1>
+        <p class="hero-sub" id="hero-sub">[REPLACE: Premium wedding invitations printed on the finest UK paper stocks. Free digital proof on every order. No minimum quantities.]</p>
+        <a class="btn-cta" id="hero-cta" href="#">Configure &amp; Order</a>
+        <div class="hero-trust">
+          <span class="hero-trust-item">Free digital proof</span>
+          <span class="hero-trust-item">Free UK delivery over £50</span>
+          <span class="hero-trust-item">No minimum order</span>
+        </div>
+      </div>
+      <div>
+        <img class="hero-img" id="hero-img" src="" alt=""/>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- PAPER STOCKS -->
-<section style="background:var(--cream);padding:80px 0;">
+<!-- TRUST BAR -->
+<section class="trust-bar">
   <div class="container">
-    <span class="tag centered">Materials</span>
-    <h2 class="section-title centered">Our paper stocks</h2>
-    <div class="divider" style="margin:22px auto 48px;"></div>
-    <p style="text-align:center;font-size:14px;color:var(--soft);max-width:580px;margin:0 auto 48px;line-height:2;">We use a carefully chosen selection of premium papers. Each one is selected for how it feels in the hand as much as how it looks on the eye.</p>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
-      <div class="paper-card">
-        <div class="paper-name">Smooth White</div>
-        <div class="paper-spec">300gsm · Uncoated · Included as standard</div>
-        <p class="paper-desc">Our default paper — crisp, bright white with a smooth matte finish. Prints with exceptional clarity and colour vibrancy. The choice for clean, contemporary designs.</p>
+    <div class="trust-grid">
+      <div class="trust-item">
+        <div class="trust-item-icon">✦</div>
+        <div class="trust-item-title">Premium UK paper</div>
+        <div class="trust-item-sub">Sourced from British paper mills</div>
       </div>
-      <div class="paper-card">
-        <div class="paper-name">Cotton Rag</div>
-        <div class="paper-spec">400gsm · Textured · +£20 per order</div>
-        <p class="paper-desc">Made from cotton fibres rather than wood pulp, this paper has a distinctive texture and substantial weight. Feels unmistakably luxurious — ideal for classic or heritage-inspired designs.</p>
+      <div class="trust-item">
+        <div class="trust-item-icon">✧</div>
+        <div class="trust-item-title">Free digital proof</div>
+        <div class="trust-item-sub">Approve before we print</div>
       </div>
-      <div class="paper-card">
-        <div class="paper-name">Vellum Overlay</div>
-        <div class="paper-spec">Translucent · Ethereal · +£35 per order</div>
-        <p class="paper-desc">Semi-transparent and delicate, vellum adds a romantic, otherworldly quality to any design. Most effective layered over a printed card — a stunning finishing touch for botanical or soft floral designs.</p>
+      <div class="trust-item">
+        <div class="trust-item-icon">✸</div>
+        <div class="trust-item-title">No minimum order</div>
+        <div class="trust-item-sub">Order what you actually need</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-item-icon">✶</div>
+        <div class="trust-item-title">Tracked UK delivery</div>
+        <div class="trust-item-sub">Free over £50, fully insured</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ENVELOPE COLOURS -->
-<section id="envelopes" style="background:var(--white);padding:80px 0;">
-  <div class="container" style="max-width:860px;">
-    <span class="tag centered">Envelopes</span>
-    <h2 class="section-title centered">Available envelope colours</h2>
-    <div class="divider" style="margin:22px auto 48px;"></div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:20px;text-align:center;">
-      <div><div class="env-swatch" style="background:#FFFFFF;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Brilliant White</div><div style="font-size:11px;color:var(--pale);">£0.35 each</div></div>
-      <div><div class="env-swatch" style="background:#FAF7F2;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Ivory</div><div style="font-size:11px;color:var(--pale);">£0.35 each</div></div>
-      <div><div class="env-swatch" style="background:#F5EDE0;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Warm Cream</div><div style="font-size:11px;color:var(--pale);">£0.35 each</div></div>
-      <div><div class="env-swatch" style="background:#F0DDD8;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Blush Pink</div><div style="font-size:11px;color:var(--pale);">£0.45 each</div></div>
-      <div><div class="env-swatch" style="background:#D1DDD0;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Sage Green</div><div style="font-size:11px;color:var(--pale);">£0.45 each</div></div>
-      <div><div class="env-swatch" style="background:#DDD5E8;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Lavender</div><div style="font-size:11px;color:var(--pale);">£0.45 each</div></div>
-      <div><div class="env-swatch" style="background:#B0BEC8;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Slate Blue</div><div style="font-size:11px;color:var(--pale);">£0.50 each</div></div>
-      <div><div class="env-swatch" style="background:#2C3E50;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Midnight Navy</div><div style="font-size:11px;color:var(--pale);">£0.55 each</div></div>
-      <div><div class="env-swatch" style="background:#1C1C1C;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Matte Black</div><div style="font-size:11px;color:var(--pale);">£0.55 each</div></div>
-      <div><div class="env-swatch" style="background:#D4B896;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Champagne Gold</div><div style="font-size:11px;color:var(--pale);">£0.60 each</div></div>
+<!-- PRICING -->
+<section class="section section-cream" id="pricing">
+  <div class="container">
+    <span class="section-tag">Pricing</span>
+    <h2 class="section-h2" id="pricing-h2">Honest pricing, <em>no surprises.</em></h2>
+    <div class="section-divider"></div>
+    <p class="section-intro">All prices include VAT. Final price calculated when you configure your specific size, paper, finish and quantity.</p>
+
+    <div id="anchor-grid" class="anchor-grid">
+      <div class="empty-state">Loading prices…</div>
     </div>
-    <p style="text-align:center;font-size:12px;color:var(--pale);margin-top:32px;">Envelopes are added at checkout and sized to fit your chosen invitation format exactly.</p>
+
+    <div id="upgrade-card" class="upgrade-card" style="display:none;">
+      <div class="upgrade-title">Upgrade options</div>
+      <div class="upgrade-sub">Adjustments to the prices above:</div>
+      <div id="upgrade-rows"></div>
+      <div class="upgrade-footnote">Final price calculated based on your exact configuration. All prices include VAT.</div>
+    </div>
+
+    <div style="text-align:center;margin-top:40px;">
+      <a class="btn-cta" id="pricing-cta" href="#">See exact pricing for your order</a>
+    </div>
   </div>
 </section>
 
-<!-- HOW TO ORDER -->
-<section style="background:var(--cream);padding:80px 0;">
-  <div class="container" style="max-width:860px;">
-    <span class="tag centered">Getting started</span>
-    <h2 class="section-title centered">Two ways to order</h2>
-    <div class="divider" style="margin:22px auto 48px;"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:40px;">
-        <div style="font-size:28px;margin-bottom:20px;">✦</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;margin-bottom:12px;">Upload &amp; Print</div>
-        <p style="font-size:13px;color:var(--soft);line-height:1.95;margin-bottom:24px;">Already have a design? Upload your artwork file — PDF, AI, InDesign or high-resolution image — and we'll handle everything from artwork check to delivery.</p>
-        <a class="btn" href="/wedding-invitations">Upload My Design</a>
+<!-- PAPERS -->
+<section class="section section-white" id="papers-section" style="display:none;">
+  <div class="container">
+    <span class="section-tag">Paper stocks</span>
+    <h2 class="section-h2">Choose your <em>paper.</em></h2>
+    <div class="section-divider"></div>
+    <p class="section-intro">Each paper has its own character. Order a free sample pack to feel them before you decide.</p>
+    <div id="papers-grid" class="papers-grid"></div>
+  </div>
+</section>
+
+<!-- SIZES -->
+<section class="section section-cream" id="sizes-section" style="display:none;">
+  <div class="container">
+    <span class="section-tag">Sizes available</span>
+    <h2 class="section-h2">Pick the <em>perfect size.</em></h2>
+    <div class="section-divider"></div>
+    <div id="sizes-grid" class="sizes-grid"></div>
+  </div>
+</section>
+
+<!-- FINISHES -->
+<section class="section section-white" id="finishes-section" style="display:none;">
+  <div class="container">
+    <span class="section-tag">Finishing touches</span>
+    <h2 class="section-h2">Make it <em>truly special.</em></h2>
+    <div class="section-divider"></div>
+    <p class="section-intro">Optional finishing touches that elevate the final piece. Add at the configure step.</p>
+    <div id="finishes-grid" class="finishes-grid"></div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="section section-cream">
+  <div class="container">
+    <span class="section-tag">Why Foreverprint</span>
+    <h2 class="section-h2">More than just <em>printing.</em></h2>
+    <div class="section-divider"></div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">✦</div>
+        <div class="why-title">Real samples</div>
+        <div class="why-text">Order a free sample pack and feel the papers before you commit. We'd rather you choose with confidence.</div>
       </div>
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:40px;">
-        <div style="font-size:28px;margin-bottom:20px;">✧</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;margin-bottom:12px;">Design Studio</div>
-        <p style="font-size:13px;color:var(--soft);line-height:1.95;margin-bottom:24px;">Starting from scratch? Our guided studio walks you through style, colour and wording with a live preview. No design experience needed.</p>
-        <a class="btn-out" href="/design-studio.html">Open the Studio</a>
+      <div class="why-card">
+        <div class="why-icon">✧</div>
+        <div class="why-title">UK printed, UK shipped</div>
+        <div class="why-text">[REPLACE: Every order printed in our UK facility. Tracked delivery, fast turnaround, no customs surprises.]</div>
       </div>
+      <div class="why-card">
+        <div class="why-icon">✸</div>
+        <div class="why-title">Designer eye</div>
+        <div class="why-text">[REPLACE: Our team checks every file before it's printed. We catch artwork issues so you don't end up with surprises.]</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">✶</div>
+        <div class="why-title">Order what you need</div>
+        <div class="why-text">No minimum quantity. Order 25 invitations or 250 — same care, same paper, same finish.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">✦</div>
+        <div class="why-title">Digital proof included</div>
+        <div class="why-text">Approve a digital proof before we print. Spot a typo? We'll fix it. Want a tweak? Just ask.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">✧</div>
+        <div class="why-title">Eco-conscious paper</div>
+        <div class="why-text">[REPLACE: Our paper stocks are FSC-certified or recycled where possible. Beautiful invitations shouldn't cost the earth.]</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section section-white">
+  <div class="container">
+    <span class="section-tag">How it works</span>
+    <h2 class="section-h2">From design to <em>doorstep.</em></h2>
+    <div class="section-divider"></div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Upload</div>
+        <div class="step-text">Upload your finished design — PDF, AI, InDesign or high-resolution image.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">We check</div>
+        <div class="step-text">Our team reviews your file. We send a digital proof for your approval.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">We print</div>
+        <div class="step-text">[REPLACE: Once approved, your order goes to print. Typical turnaround 5-7 working days.]</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-title">Delivered</div>
+        <div class="step-text">Tracked UK delivery. Carefully packed to arrive in perfect condition.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQs -->
+<section class="section section-cream">
+  <div class="container">
+    <span class="section-tag">FAQs</span>
+    <h2 class="section-h2">Common <em>questions.</em></h2>
+    <div class="section-divider"></div>
+    <div class="faq-wrap">
+      <details class="faq-item">
+        <summary class="faq-q"><span class="faq-q-text">What's your turnaround time?</span><span class="faq-toggle">+</span></summary>
+        <div class="faq-a">[REPLACE: Standard turnaround is 5-7 working days from approval of your digital proof. Rush orders can be quoted on request.]</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q"><span class="faq-q-text">Can I order samples first?</span><span class="faq-toggle">+</span></summary>
+        <div class="faq-a">Yes — free sample packs are available for all paper stocks. We post them out for free so you can feel the paper before placing your order.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q"><span class="faq-q-text">What file formats do you accept?</span><span class="faq-toggle">+</span></summary>
+        <div class="faq-a">We accept PDF, AI (Adobe Illustrator), InDesign (.indd), and high-resolution PNG or JPG (300dpi minimum). PDF is preferred for best results.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q"><span class="faq-q-text">Do I get a proof before printing?</span><span class="faq-toggle">+</span></summary>
+        <div class="faq-a">Yes. Every order includes a free digital proof. We won't print until you've approved the proof — so you can spot any errors before they're set in print.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q"><span class="faq-q-text">What if my artwork has issues?</span><span class="faq-toggle">+</span></summary>
+        <div class="faq-a">Our team reviews every file. If we spot anything (low resolution, wrong colour mode, missing bleed), we'll flag it before printing and help you fix it.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q"><span class="faq-q-text">Do you offer design services?</span><span class="faq-toggle">+</span></summary>
+        <div class="faq-a">Yes. If you don't have artwork ready, our Design Studio walks you through creating an invitation from scratch. <a href="/design-studio.html" style="color:var(--gold);text-decoration:none;">Try it here →</a></div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q"><span class="faq-q-text">Do you ship outside the UK?</span><span class="faq-toggle">+</span></summary>
+        <div class="faq-a">[REPLACE: Yes, we ship internationally. International shipping is calculated at checkout based on your destination and order weight.]</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q"><span class="faq-q-text">Can I change my order after placing it?</span><span class="faq-toggle">+</span></summary>
+        <div class="faq-a">Once you've approved the digital proof, your order goes to print. Before that, you can adjust quantities, papers or details — just contact us. After approval, changes may incur a reprint fee.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="container">
+    <h2 id="final-h2">Ready to make it <em>real?</em></h2>
+    <p class="final-cta-sub">Configure your order, see your exact price, and approve a digital proof before we print a single sheet.</p>
+    <a class="btn-cta" id="final-cta" href="#">Configure your order</a>
+    <div class="final-cta-trust">
+      <span>Free digital proof</span>
+      <span>No minimum order</span>
+      <span>UK printed</span>
     </div>
   </div>
 </section>
 
 <div id="site-footer"></div>
 
+<!-- JSON-LD SCHEMA — populated by JS once product loads -->
+<script type="application/ld+json" id="ld-product">{}</script>
+<script type="application/ld+json" id="ld-faq">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What's your turnaround time?","acceptedAnswer":{"@type":"Answer","text":"Standard turnaround is 5-7 working days from approval of your digital proof. Rush orders can be quoted on request."}},
+    {"@type":"Question","name":"Can I order samples first?","acceptedAnswer":{"@type":"Answer","text":"Yes — free sample packs are available for all paper stocks. We post them out for free so you can feel the paper before placing your order."}},
+    {"@type":"Question","name":"What file formats do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept PDF, AI, InDesign, and high-resolution PNG or JPG (300dpi minimum). PDF is preferred."}},
+    {"@type":"Question","name":"Do I get a proof before printing?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every order includes a free digital proof. We won't print until you've approved it."}},
+    {"@type":"Question","name":"What if my artwork has issues?","acceptedAnswer":{"@type":"Answer","text":"Our team reviews every file and flags any issues like low resolution or wrong colour mode before printing."}},
+    {"@type":"Question","name":"Do you offer design services?","acceptedAnswer":{"@type":"Answer","text":"Yes. Our Design Studio walks you through creating an invitation from scratch."}},
+    {"@type":"Question","name":"Do you ship outside the UK?","acceptedAnswer":{"@type":"Answer","text":"Yes, we ship internationally. Shipping calculated at checkout."}},
+    {"@type":"Question","name":"Can I change my order after placing it?","acceptedAnswer":{"@type":"Answer","text":"Yes, before approving the digital proof. After approval, changes may incur a reprint fee."}}
+  ]
+}</script>
+
 <script>
-// ── PRODUCT TYPES — fetched from Supabase, rendered into #product-grid ──
+// ── PRODUCT IDENTIFIER FROM URL ──────────────────────────
+// Reads the product slug from URL path (Netlify rewrite preserves the URL bar).
+// Falls back to ?product= query param if accessed via /product.html directly.
+const PRODUCT = (function() {
+  const params = new URLSearchParams(window.location.search);
+  let slug = params.get('product');
+  if (!slug) {
+    const path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
+    if (path && !path.includes('.') && !path.includes('/')) slug = path;
+  }
+  slug = (slug || '').toLowerCase().trim();
+  return { slug };
+})();
+
 const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
 
+// Approximate physical dimensions in mm for size labels (used in size showcase).
+const SIZE_DIMS = {
+  'A4':'210 × 297 mm', 'A5':'148 × 210 mm', 'A6':'105 × 148 mm',
+  '5x7':'127 × 178 mm', 'DL':'99 × 210 mm', 'Square':'148 × 148 mm'
+};
+
+// Suggested copy for known papers (overridable by paper_stocks.subtitle).
+const PAPER_DESCRIPTIONS = {
+  'Smooth White': 'Crisp matte finish with bright white tone. Prints with exceptional clarity. The choice for clean, contemporary designs.',
+  'Cotton Rag':   'Made from cotton fibres rather than wood pulp — distinctive texture and substantial weight. Ideal for classic, heritage-inspired designs.',
+  'Vellum':       'Semi-transparent and delicate. Adds a romantic, otherworldly quality — most effective layered over a printed card.',
+  'Recycled':     '[REPLACE: Made from 100% post-consumer recycled fibres. Beautiful muted tone with a soft tactile feel.]'
+};
+
+const FINISH_DESCRIPTIONS = {
+  'Foil':     'Metallic foil pressed into the paper. Catches the light, makes the design glow. Choose gold, silver or rose gold.',
+  'Spot UV':  'Glossy clear coating applied to specific elements. Adds depth and tactile contrast against the matte paper.',
+  'Embossed': 'Three-dimensional raised detailing. The most tactile finish — runs your fingers over real depth in the paper.',
+  'Letterpress': 'Traditional press-into-paper technique. Each sheet pressed individually for a deep, classic impression.'
+};
+
+const FINISH_ICONS = { 'Foil':'✦', 'Spot UV':'✧', 'Embossed':'✶', 'Letterpress':'✸' };
+
+let productData = null;       // product_types row from Supabase
+let pricingPayload = null;    // pricing_config payload (latest)
+let productPricing = null;    // this product's entry within pricingPayload.products
+
 function escapeHtml(s) {
   if (s == null) return '';
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-async function loadProductTypes() {
+async function loadData() {
   const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/product_types?select=*&active=eq.true&order=display_order`, { headers });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const products = await res.json();
-    renderProductTypes(products || []);
-    renderJsonLd(products || []);
-  } catch (err) {
-    console.warn('Could not load product types:', err.message);
-    renderProductTypes([]);
-  }
-}
+  // Fetch product_types row and latest pricing_config in parallel
+  const [ptRes, pricesRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
+    fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
+  ]);
 
-function renderProductTypes(products) {
-  const grid = document.getElementById('product-grid');
-  const comingSoon = document.getElementById('coming-soon-strip');
-  if (!products.length) {
-    grid.innerHTML = '<div class="product-grid-empty">No products available right now — please check back soon.</div>';
-    if (comingSoon) comingSoon.style.display = 'block';
+  if (ptRes.ok) {
+    const rows = await ptRes.json();
+    if (rows && rows.length) productData = rows[0];
+  }
+  if (pricesRes.ok) {
+    const rows = await pricesRes.json();
+    if (rows && rows.length && rows[0].payload) {
+      pricingPayload = rows[0].payload;
+      if (pricingPayload.schema_version === 2 && Array.isArray(pricingPayload.products)) {
+        productPricing = pricingPayload.products.find(p => p.slug === PRODUCT.slug) || null;
+      }
+    }
+  }
+
+  if (!productData) {
+    showNotFound();
     return;
   }
-  if (comingSoon) comingSoon.style.display = 'none';
-  grid.innerHTML = products.map(p => {
-    const featuresList = (p.features || '').split('\n').map(f => f.trim()).filter(Boolean);
-    const featuresHtml = featuresList.map(f => `<div class="product-feature">${escapeHtml(f)}</div>`).join('');
-    const img = p.hero_image_url
-      ? `<img class="product-img" src="${escapeHtml(p.hero_image_url)}" alt="${escapeHtml(p.name)}" loading="lazy"/>`
-      : `<div class="product-img" style="display:flex;align-items:center;justify-content:center;color:var(--pale);font-size:60px;">✦</div>`;
-    return `
-      <a class="product-card" href="/${escapeHtml(p.slug)}">
-        ${img}
-        <div class="product-body">
-          ${p.tagline ? `<span class="product-tag">${escapeHtml(p.tagline)}</span>` : ''}
-          <div class="product-title">${escapeHtml(p.name)}</div>
-          ${p.description ? `<p class="product-desc">${escapeHtml(p.description)}</p>` : ''}
-          ${featuresHtml ? `<div class="product-features">${featuresHtml}</div>` : ''}
-          ${p.from_price_text ? `<div class="product-price">${escapeHtml(p.from_price_text)}</div>` : ''}
-          <div class="product-cta">View ${escapeHtml(p.name)}</div>
-        </div>
-      </a>`;
-  }).join('');
+
+  renderHero();
+  renderPricing();
+  renderPapers();
+  renderSizes();
+  renderFinishes();
+  renderJsonLd();
+  renderCtaLinks();
 }
 
-// Generate ItemList JSON-LD schema for SEO. Crawlers like Google index this.
-function renderJsonLd(products) {
-  if (!products.length) return;
-  const items = products.map((p, i) => ({
-    "@type": "ListItem",
-    "position": i + 1,
-    "item": {
-      "@type": "Product",
-      "name": p.name,
-      "description": p.description || '',
-      "url": `https://foreverprint.com/${p.slug}`,
-      "brand": { "@type": "Brand", "name": "Invitations" },
-      ...(p.hero_image_url ? { "image": p.hero_image_url } : {})
-    }
-  }));
+function showNotFound() {
+  document.body.innerHTML = `
+    <div style="max-width:560px;margin:120px auto;text-align:center;font-family:'Cormorant Garamond',serif;color:var(--text);padding:0 20px;">
+      <div style="font-size:2.4rem;font-weight:300;margin-bottom:14px;">Product not found</div>
+      <p style="font-family:'Jost',sans-serif;font-size:14px;color:var(--soft);line-height:1.9;margin-bottom:32px;">We couldn't find a product matching this URL. It may have been moved or removed.</p>
+      <a href="/products" style="font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:4px;">Browse all products →</a>
+    </div>`;
+}
+
+function renderHero() {
+  const name = productData.name || PRODUCT.slug;
+  const tagline = productData.tagline || '';
+  const description = productData.description || '';
+  // Page title and meta
+  document.title = productData.meta_title || `${name} | Premium UK printing | Foreverprint`;
+  const setMeta = (sel, content) => {
+    const el = document.querySelector(sel);
+    if (el && content) el.setAttribute('content', content);
+  };
+  setMeta('meta[name="description"]', productData.meta_description || description);
+  setMeta('meta[property="og:title"]', productData.meta_title || `${name} | Foreverprint`);
+  setMeta('meta[property="og:description"]', productData.meta_description || description);
+  setMeta('meta[property="og:url"]', `https://foreverprint.com/${PRODUCT.slug}`);
+  if (productData.hero_image_url) setMeta('meta[property="og:image"]', productData.hero_image_url);
+  const canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical) canonical.setAttribute('href', `https://foreverprint.com/${PRODUCT.slug}`);
+
+  // Headline
+  const h1 = document.getElementById('hero-h1');
+  // Try to format name nicely with a comma break + italic descriptor
+  // e.g. "Wedding Invitations" → "Wedding Invitations,<br>printed beautifully."
+  h1.innerHTML = `${escapeHtml(name)},<br><em>printed beautifully.</em>`;
+
+  // Subhead
+  const sub = document.getElementById('hero-sub');
+  if (description) sub.textContent = description;
+
+  // Hero image
+  const img = document.getElementById('hero-img');
+  if (productData.hero_image_url) {
+    img.src = productData.hero_image_url;
+    img.alt = name;
+  } else {
+    img.style.display = 'none';
+  }
+}
+
+function renderCtaLinks() {
+  const orderUrl = `/${PRODUCT.slug}/order`;
+  ['hero-cta', 'pricing-cta', 'final-cta'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.href = orderUrl;
+  });
+}
+
+// Pick three anchor quantity tiers from a sorted list.
+// For 1 tier → just that one. For 2 → both. For 3+ → first, middle, last.
+function pickAnchorQtys(qtys) {
+  const sorted = [...qtys].sort((a,b) => a - b);
+  if (sorted.length <= 3) return sorted;
+  return [sorted[0], sorted[Math.floor(sorted.length/2)], sorted[sorted.length-1]];
+}
+
+function renderPricing() {
+  const grid = document.getElementById('anchor-grid');
+  if (!productPricing || !Array.isArray(productPricing.sheet_sells) || !productPricing.sheet_sells.length) {
+    grid.innerHTML = '<div class="empty-state">Pricing will appear here once published in admin.</div>';
+    return;
+  }
+
+  // Pick default paper (first in available_papers) and default size (A5 if present, else first)
+  const papers = productPricing.available_papers || [];
+  const sizes  = productPricing.available_sizes || [];
+  if (!papers.length || !sizes.length) {
+    grid.innerHTML = '<div class="empty-state">Add available papers and sizes for this product in admin.</div>';
+    return;
+  }
+  const defaultPaper = papers[0];
+  const defaultSize  = sizes.includes('A5') ? 'A5' : sizes[0];
+
+  // Find all sheet_sells matching default paper × default size
+  const matches = productPricing.sheet_sells
+    .filter(s => s.paper === defaultPaper && s.size === defaultSize);
+  if (!matches.length) {
+    grid.innerHTML = '<div class="empty-state">No pricing yet for ' + escapeHtml(defaultPaper) + ' × ' + escapeHtml(defaultSize) + '.</div>';
+    return;
+  }
+  const qtys = matches.map(m => parseInt(m.qty, 10));
+  const anchorQtys = pickAnchorQtys(qtys);
+  const anchors = anchorQtys.map(q => matches.find(m => parseInt(m.qty,10) === q)).filter(Boolean);
+
+  const labels = ['For smaller weddings', 'Typical wedding', 'Larger weddings'];
+  // Mark middle card as "popular" — only if there are 3 anchors
+  const popularIdx = anchors.length === 3 ? 1 : -1;
+
+  grid.innerHTML = anchors.map((a, i) => {
+    const isPopular = i === popularIdx;
+    return `
+      <div class="anchor-card${isPopular ? ' popular' : ''}">
+        ${isPopular ? '<div class="anchor-card-badge">Most popular</div>' : ''}
+        <div class="anchor-card-tag">${escapeHtml(labels[i] || 'Order')}</div>
+        <div class="anchor-card-price">£${Math.round(parseFloat(a.sell))}</div>
+        <div class="anchor-card-qty">${a.qty} ${escapeHtml((productData.name || 'invitations').toLowerCase())}</div>
+        <div class="anchor-card-spec">${escapeHtml(defaultSize)} · ${escapeHtml(defaultPaper)} · Inc. VAT</div>
+      </div>`;
+  }).join('');
+
+  renderUpgradeRows(productPricing, defaultPaper, defaultSize, anchors);
+}
+
+function renderUpgradeRows(pp, defaultPaper, defaultSize, anchors) {
+  if (!anchors.length) return;
+  // Use the middle anchor as the comparison baseline
+  const baseline = anchors[Math.floor(anchors.length / 2)];
+  const baselineQty = parseInt(baseline.qty, 10);
+  const baselineSell = parseFloat(baseline.sell);
+  const rows = [];
+
+  // Other sizes (vs default size at same paper × baseline qty)
+  (pp.available_sizes || []).forEach(size => {
+    if (size === defaultSize) return;
+    const m = pp.sheet_sells.find(s => s.paper === defaultPaper && s.size === size && parseInt(s.qty,10) === baselineQty);
+    if (!m) return;
+    const delta = parseFloat(m.sell) - baselineSell;
+    if (Math.abs(delta) < 0.5) return; // skip negligible
+    const sign = delta > 0 ? '+' : '−';
+    const dimText = SIZE_DIMS[size] ? ` (${SIZE_DIMS[size]})` : '';
+    rows.push(`<div class="upgrade-row">
+      <span class="upgrade-row-label">${escapeHtml(size)}${dimText}</span>
+      <span class="upgrade-row-value">${sign}£${Math.round(Math.abs(delta))}</span>
+    </div>`);
+  });
+
+  // Other papers (vs default paper at default size × baseline qty)
+  (pp.available_papers || []).forEach(paper => {
+    if (paper === defaultPaper) return;
+    const m = pp.sheet_sells.find(s => s.paper === paper && s.size === defaultSize && parseInt(s.qty,10) === baselineQty);
+    if (!m) return;
+    const delta = parseFloat(m.sell) - baselineSell;
+    if (Math.abs(delta) < 0.5) return;
+    const sign = delta > 0 ? '+' : '−';
+    rows.push(`<div class="upgrade-row">
+      <span class="upgrade-row-label">${escapeHtml(paper)}</span>
+      <span class="upgrade-row-value">${sign}£${Math.round(Math.abs(delta))}</span>
+    </div>`);
+  });
+
+  // Finishes (each finish_sell value is already a delta from None/baseline)
+  (pp.finish_sells || []).forEach(f => {
+    const sell = parseFloat(f.sell) || 0;
+    if (sell <= 0) return; // skip None / £0 finishes
+    rows.push(`<div class="upgrade-row">
+      <span class="upgrade-row-label">${escapeHtml(f.name)} finish</span>
+      <span class="upgrade-row-value">+£${Math.round(sell)}</span>
+    </div>`);
+  });
+
+  if (!rows.length) return;
+  document.getElementById('upgrade-rows').innerHTML = rows.join('');
+  document.getElementById('upgrade-card').style.display = '';
+}
+
+function renderPapers() {
+  const papers = (productPricing && productPricing.available_papers) || (productData.available_papers) || [];
+  if (papers.length < 2) return; // Only show section if 2+ papers offered
+  const section = document.getElementById('papers-section');
+  const grid = document.getElementById('papers-grid');
+  // We need paper details (subtitle) — fetch from paper_stocks table
+  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+  fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=name,subtitle&active=eq.true`, { headers })
+    .then(r => r.ok ? r.json() : [])
+    .then(stocks => {
+      const lookup = {};
+      stocks.forEach(s => { lookup[s.name] = s.subtitle || ''; });
+      grid.innerHTML = papers.map(name => {
+        const subtitle = lookup[name] || '';
+        const desc = PAPER_DESCRIPTIONS[name] || '[REPLACE: Add a description for this paper in the suggested-copy table.]';
+        return `<div class="paper-showcase">
+          <img class="paper-showcase-img" src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&q=80" alt="${escapeHtml(name)} paper" loading="lazy"/>
+          <div class="paper-showcase-body">
+            <div class="paper-showcase-name">${escapeHtml(name)}</div>
+            ${subtitle ? `<div class="paper-showcase-spec">${escapeHtml(subtitle)}</div>` : ''}
+            <div class="paper-showcase-desc">${escapeHtml(desc)}</div>
+          </div>
+        </div>`;
+      }).join('');
+      section.style.display = '';
+    });
+}
+
+function renderSizes() {
+  const sizes = (productPricing && productPricing.available_sizes) || (productData.available_sizes) || [];
+  if (sizes.length < 2) return; // Only show section if 2+ sizes offered
+  const section = document.getElementById('sizes-section');
+  const grid = document.getElementById('sizes-grid');
+  grid.innerHTML = sizes.map(size => `
+    <div class="size-block">
+      <div class="size-block-name">${escapeHtml(size)}</div>
+      <div class="size-block-mm">${escapeHtml(SIZE_DIMS[size] || '')}</div>
+    </div>`).join('');
+  section.style.display = '';
+}
+
+function renderFinishes() {
+  const finishes = ((productPricing && productPricing.available_finishes) || (productData.available_finishes) || [])
+    .filter(f => f && f !== 'None');
+  if (!finishes.length) return;
+  const section = document.getElementById('finishes-section');
+  const grid = document.getElementById('finishes-grid');
+  // Use finish_sells to get prices
+  const sellMap = {};
+  if (productPricing && Array.isArray(productPricing.finish_sells)) {
+    productPricing.finish_sells.forEach(f => { sellMap[f.name] = parseFloat(f.sell) || 0; });
+  }
+  grid.innerHTML = finishes.map(name => {
+    const sell = sellMap[name] || 0;
+    const desc = FINISH_DESCRIPTIONS[name] || '[REPLACE: Add a description for this finishing option.]';
+    const icon = FINISH_ICONS[name] || '✦';
+    return `<div class="finish-card">
+      <div class="finish-card-icon">${icon}</div>
+      <div class="finish-card-name">${escapeHtml(name)}</div>
+      <div class="finish-card-desc">${escapeHtml(desc)}</div>
+      ${sell > 0 ? `<div class="finish-card-price">From +£${Math.round(sell)} per order</div>` : ''}
+    </div>`;
+  }).join('');
+  section.style.display = '';
+}
+
+function renderJsonLd() {
+  // Determine starting price for Offer schema
+  let startingPrice = null;
+  if (productPricing && Array.isArray(productPricing.sheet_sells) && productPricing.sheet_sells.length) {
+    startingPrice = productPricing.sheet_sells.reduce((min, s) => {
+      const v = parseFloat(s.sell);
+      return (min === null || v < min) ? v : min;
+    }, null);
+  }
   const ld = {
     "@context": "https://schema.org",
-    "@type": "ItemList",
-    "name": "Wedding Stationery Products",
-    "description": "Luxury wedding stationery products printed in the UK",
-    "itemListElement": items
+    "@type": "Product",
+    "name": productData.name || PRODUCT.slug,
+    "description": productData.meta_description || productData.description || '',
+    "brand": { "@type": "Brand", "name": "Foreverprint" },
+    "url": `https://foreverprint.com/${PRODUCT.slug}`,
+    ...(productData.hero_image_url ? { "image": productData.hero_image_url } : {}),
+    ...(startingPrice !== null ? {
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "GBP",
+        "price": startingPrice.toFixed(2),
+        "availability": "https://schema.org/InStock",
+        "priceValidUntil": new Date(Date.now() + 365*24*60*60*1000).toISOString().slice(0,10)
+      }
+    } : {})
   };
-  const script = document.createElement('script');
-  script.type = 'application/ld+json';
-  script.textContent = JSON.stringify(ld);
-  document.head.appendChild(script);
+  const el = document.getElementById('ld-product');
+  if (el) el.textContent = JSON.stringify(ld);
 }
 
-loadProductTypes();
+loadData();
 
 // Header / footer
-fetch('/header.html').then(r=>r.text()).then(html=>{document.getElementById('site-header').outerHTML=html;updateCartBadge();});
+fetch('/header.html').then(r=>r.text()).then(html=>{document.getElementById('site-header').outerHTML=html;if(typeof updateCartBadge==='function')updateCartBadge();});
 fetch('/footer.html').then(r=>r.text()).then(html=>{document.getElementById('site-footer').outerHTML=html;});
 </script>
 
