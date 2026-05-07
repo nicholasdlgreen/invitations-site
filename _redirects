@@ -1,4 +1,4 @@
-# Netlify URL rewriting (Phase 4)
+# Netlify URL rewriting (Phase 5 — landing pages + configurator)
 #
 # Format: /<from>  /<to>  <status>
 #   Status 200 = rewrite (URL stays clean in browser)
@@ -7,10 +7,16 @@
 # IMPORTANT: Netlify only applies these rules when no real file exists at the
 # requested path. So /header.html, /footer.html etc. are still served from disk.
 # Rules are processed top-to-bottom; the first match wins.
-#
+
+# ─── ORDER PATHS (must come BEFORE the slug catch-all) ──────
+# /<slug>/order → configurator. The :slug placeholder captures the slug part
+# and passes it to upload-and-print.html as a query param.
+# E.g. /wedding-invitations/order → /upload-and-print.html?product=wedding-invitations
+
+/:slug/order  /upload-and-print.html?product=:slug  200
+
 # ─── KNOWN SITE PAGES (give them clean URLs) ────────────────
-# Each line: clean URL → actual file. These come first so they're matched
-# before the product catch-all below.
+# Each line: clean URL → actual file. These come before the product catch-all.
 
 /products       /products.html         200
 /admin          /admin.html            200
@@ -18,14 +24,18 @@
 /how-it-works   /how-it-works.html     200
 /track-order    /track-order.html      200
 
-# ─── PRODUCT CATCH-ALL ──────────────────────────────────────
-# Any URL not matched above and with no real file → configurator with the
-# slug as the product type. The configurator looks up the slug in the
-# product_types Supabase table:
-#   • Match found → renders that product's page
-#   • No match → falls back to default behaviour (still functional)
+# ─── PRODUCT LANDING CATCH-ALL ──────────────────────────────
+# Any URL not matched above and with no real file → product landing page
+# (NEW behaviour — was the configurator before). The landing page reads the
+# slug from the URL and looks it up in product_types Supabase table:
+#   • Match found → renders that product's landing page (hero, pricing, etc.)
+#   • No match → renders 404 state with link back to /products
+#
+# Customers click "Configure & Order" on the landing page → /:slug/order →
+# configurator (handled by the rule at the top of this file).
 #
 # This rule means you NEVER need to edit _redirects when adding a new product.
-# Adding "Order of Service" in admin → publishing → /order-of-service just works.
+# Adding "Order of Service" in admin → publishing → /order-of-service just works
+# AND so does /order-of-service/order automatically.
 
-/*  /upload-and-print.html?product=:splat  200
+/*  /product.html?product=:splat  200
