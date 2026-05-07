@@ -438,6 +438,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="producttypes" onclick="showPricingPanel(this)">🎴 Product Types</button>
           <button class="pz-tab" data-pz="sheetrates" onclick="showPricingPanel(this)">📊 Sheet Rates</button>
           <button class="pz-tab" data-pz="finishes" onclick="showPricingPanel(this)">✨ Finish Options</button>
+          <button class="pz-tab" data-pz="publish" onclick="showPricingPanel(this)">🚀 Publish</button>
           <button class="pz-tab" data-pz="reconcile" onclick="showPricingPanel(this)">🔁 Reconciliation</button>
           <button class="pz-tab" data-pz="mgmt" onclick="showPricingPanel(this)">📊 Management Accounts</button>
           <button class="pz-tab" data-pz="settings" onclick="showPricingPanel(this)">⚙️ Settings &amp; Export</button>
@@ -634,6 +635,16 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               <button class="btn btn-gold" onclick="openFinishModal()">＋ Add Finish</button>
             </div>
             <div id="finishOptionList"><div class="empty"><span class="empty-icon">✨</span><div class="empty-text">No finish options yet</div></div></div>
+          </div>
+
+          <!-- PANEL: PUBLISH -->
+          <div class="pz-panel" id="pz-publish">
+            <div class="section-header">
+              <div><div class="section-title">Publish to Site</div><div class="section-sub">Compute customer-facing sell prices from your sheet rates, finish modifiers, and per-product margins, then push to the customer site.</div></div>
+              <button class="btn btn-gold" onclick="publishHierarchical()" id="pub_btn">🚀 Publish Now</button>
+            </div>
+            <div id="pub_validation" style="margin-bottom:18px;"></div>
+            <div id="pub_status" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;font-size:12px;line-height:1.8;color:rgba(250,247,242,.7);">Loading status…</div>
           </div>
 
           <!-- PANEL: RECONCILIATION -->
@@ -1231,7 +1242,7 @@ let lists = { productTypes:[], sizes:[], paperTypes:[], paperWeights:[], finishe
 let settings = { company:'Natch Ltd', vat:'', fyStart:'June' };
 let activeMonth = null;
 const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const PZ_TITLES = { costs:'Cost Input', generator:'Margin & Price Generator', pricelist:'Price List', suppliers:'Supplier Directory', reconcile:'Supplier Reconciliation', mgmt:'Management Accounts', settings:'Settings & Export' };
+const PZ_TITLES = { costs:'Cost Input', generator:'Margin & Price Generator', pricelist:'Price List', suppliers:'Supplier Directory', reconcile:'Supplier Reconciliation', mgmt:'Management Accounts', settings:'Settings & Export', envelopes:'Envelopes', papers:'Paper Stocks', producttypes:'Product Types', sheetrates:'Sheet Rates', finishes:'Finish Options', publish:'Publish to Site' };
 
 // ═══════════════════════════════════════════════════════
 // PRICING — BOOT
@@ -1289,6 +1300,7 @@ function showPricingPanel(el) {
   if (id === 'pricelist')  { renderPriceList(); updatePricingStats(); }
   if (id === 'reconcile')  { renderRecon(); renderSalesLog(); }
   if (id === 'mgmt')       { renderMgmtHistory(); }
+  if (id === 'publish')    { renderPublishStatus(); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2416,6 +2428,142 @@ async function saveSheetRates() {
     toast(`Saved ${newRates.length} sheet rate${newRates.length!==1?'s':''} for ${paperName} ✓`);
   } catch (err) {
     toast('Save failed: ' + err.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// PUBLISH — flatten hierarchical pricing into pricing_config snapshot
+// Customer site reads this to compute total prices on demand.
+// ═══════════════════════════════════════════════════════
+
+// Run validation against current admin state. Returns array of issue objects:
+//   { level: 'error'|'warning', product: '...', message: '...' }
+function validateForPublish() {
+  const issues = [];
+  if (!productTypes || !productTypes.length) {
+    issues.push({ level: 'error', product: '—', message: 'No product types defined.' });
+    return issues;
+  }
+  productTypes.filter(p => p.active !== false).forEach(p => {
+    const sizes    = Array.isArray(p.available_sizes)    ? p.available_sizes    : [];
+    const papersOk = Array.isArray(p.available_papers)   ? p.available_papers   : [];
+    const finishes = Array.isArray(p.available_finishes) ? p.available_finishes : [];
+    if (!sizes.length)    issues.push({ level: 'warning', product: p.name, message: 'no available sizes ticked — customers can\'t configure this product' });
+    if (!papersOk.length) issues.push({ level: 'warning', product: p.name, message: 'no available papers ticked' });
+    if (p.margin_pct == null || isNaN(p.margin_pct)) issues.push({ level: 'warning', product: p.name, message: 'no margin set; will use 0% (sell = cost)' });
+    // Check if every paper × size ticked has at least one sheet rate
+    papersOk.forEach(paperName => {
+      sizes.forEach(size => {
+        const anyRate = sheetRates.some(r => r.paper_name === paperName && r.size === size);
+        if (!anyRate) issues.push({ level: 'warning', product: p.name, message: `no sheet rates for ${paperName} × ${size}` });
+      });
+    });
+  });
+  return issues;
+}
+
+function renderPublishStatus() {
+  const status = document.getElementById('pub_status');
+  if (!status) return;
+  const productCount  = (productTypes || []).filter(p => p.active !== false).length;
+  const paperCount    = (papers || []).filter(p => p.active !== false).length;
+  const finishCount   = (finishOptions || []).filter(f => f.active !== false).length;
+  const rateCount     = (sheetRates || []).length;
+  status.innerHTML = `
+    <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-lt);font-weight:500;margin-bottom:10px;">Current State</div>
+    <div>📦 <strong style="color:#faf7f2">${productCount}</strong> active product type${productCount!==1?'s':''}</div>
+    <div>📃 <strong style="color:#faf7f2">${paperCount}</strong> active paper stock${paperCount!==1?'s':''}</div>
+    <div>✨ <strong style="color:#faf7f2">${finishCount}</strong> active finish option${finishCount!==1?'s':''}</div>
+    <div>📊 <strong style="color:#faf7f2">${rateCount}</strong> sheet rate${rateCount!==1?'s':''} entered (across all papers)</div>
+  `;
+  // Render validation
+  const valDiv = document.getElementById('pub_validation');
+  if (!valDiv) return;
+  const issues = validateForPublish();
+  if (!issues.length) {
+    valDiv.innerHTML = '<div style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);border-radius:8px;padding:14px;font-size:12px;color:#8fc89c;">✓ No issues — ready to publish.</div>';
+    return;
+  }
+  const errors   = issues.filter(i => i.level === 'error');
+  const warnings = issues.filter(i => i.level === 'warning');
+  let html = '';
+  if (errors.length) {
+    html += `<div style="background:rgba(220,80,80,.1);border:1px solid rgba(220,80,80,.3);border-radius:8px;padding:14px;font-size:12px;color:#f4a4a4;margin-bottom:10px;">
+      <strong>${errors.length} error${errors.length!==1?'s':''}:</strong><ul style="margin:6px 0 0 18px;padding:0;">${errors.map(e => `<li><strong>${e.product}:</strong> ${e.message}</li>`).join('')}</ul>
+    </div>`;
+  }
+  if (warnings.length) {
+    html += `<div style="background:rgba(255,165,80,.08);border:1px solid rgba(255,165,80,.25);border-radius:8px;padding:14px;font-size:12px;color:rgba(255,200,150,.85);">
+      <strong>${warnings.length} warning${warnings.length!==1?'s':''} (publish will still work but customers won't see these):</strong>
+      <ul style="margin:6px 0 0 18px;padding:0;max-height:240px;overflow-y:auto;">${warnings.map(w => `<li><strong>${w.product}:</strong> ${w.message}</li>`).join('')}</ul>
+    </div>`;
+  }
+  valDiv.innerHTML = html;
+}
+
+async function publishHierarchical() {
+  const btn = document.getElementById('pub_btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+  try {
+    // Build snapshot
+    const products = (productTypes || [])
+      .filter(p => p.active !== false)
+      .map(p => {
+        const margin = (p.margin_pct != null) ? parseFloat(p.margin_pct) : 0;
+        const multiplier = 1 + (margin / 100);
+        const sizes    = Array.isArray(p.available_sizes)    ? p.available_sizes    : [];
+        const papersOk = Array.isArray(p.available_papers)   ? p.available_papers   : [];
+        const finishes = Array.isArray(p.available_finishes) ? p.available_finishes : [];
+        // Sheet sells: only for combos that exist in sheet_rates AND are in product's available_*
+        const sheetSells = [];
+        sheetRates.forEach(r => {
+          if (papersOk.includes(r.paper_name) && sizes.includes(r.size)) {
+            sheetSells.push({
+              paper: r.paper_name,
+              size:  r.size,
+              qty:   r.quantity,
+              sell:  parseFloat((r.cost * multiplier).toFixed(2))
+            });
+          }
+        });
+        // Finish sells: for each finish ticked on this product
+        const finishSells = finishes.map(name => {
+          const fo = (finishOptions || []).find(f => f.name === name);
+          const cost = (fo && fo.cost_modifier != null) ? parseFloat(fo.cost_modifier) : 0;
+          return {
+            name,
+            sell: parseFloat((cost * multiplier).toFixed(2))
+          };
+        });
+        return {
+          slug:               p.slug,
+          name:               p.name,
+          margin_pct:         margin,
+          available_sizes:    sizes,
+          available_papers:   papersOk,
+          available_finishes: finishes,
+          sheet_sells:        sheetSells,
+          finish_sells:       finishSells
+        };
+      });
+    const payload = {
+      schema_version: 2,
+      published_at:   new Date().toISOString(),
+      products
+    };
+    // Insert new pricing_config row
+    await sbFetch('pricing_config', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({ payload, published_at: new Date().toISOString() })
+    });
+    const totalSells = products.reduce((sum, p) => sum + p.sheet_sells.length, 0);
+    toast(`Published ✓ — ${products.length} product${products.length!==1?'s':''}, ${totalSells} sell price${totalSells!==1?'s':''}`);
+    renderPublishStatus();
+  } catch (err) {
+    toast('Publish failed: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🚀 Publish Now'; }
   }
 }
 
