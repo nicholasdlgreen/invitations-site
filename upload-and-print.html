@@ -213,6 +213,12 @@
         <div class="paper-grid" id="paperGrid"></div>
       </div>
 
+      <div class="check-card" id="finishCard" style="display:none;">
+        <h3>Finishing</h3>
+        <p style="font-size:13px;color:var(--soft);margin-bottom:16px;line-height:1.8;">Optional finishing touches that elevate the final piece.</p>
+        <div id="finishGrid" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+      </div>
+
       <div class="check-card">
         <h3>Envelopes</h3>
         <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:16px;border:1.5px solid var(--border);border-radius:14px;transition:border-color .25s;" id="envToggleWrap">
@@ -418,8 +424,16 @@ async function loadSiteData() {
     }
     if (pricesRes.ok) {
       const rows = await pricesRes.json();
-      if (rows && rows.length && rows[0].payload && Array.isArray(rows[0].payload.prices)) {
-        publishedPrices = rows[0].payload.prices;
+      if (rows && rows.length && rows[0].payload) {
+        const payload = rows[0].payload;
+        // New hierarchical schema (Phase 5): payload.products[] keyed by slug
+        if (payload.schema_version === 2 && Array.isArray(payload.products)) {
+          currentProduct = payload.products.find(p => p.slug === PRODUCT.slug) || null;
+        }
+        // Old per-combination schema: payload.prices[] (kept as fallback)
+        else if (Array.isArray(payload.prices)) {
+          publishedPrices = payload.prices;
+        }
       }
     }
     if (envRes.ok) {
@@ -481,6 +495,30 @@ async function loadSiteData() {
 // Customer-facing price = sellPrice (treated as inc-VAT, like CONFIG.pricing).
 let publishedPrices = [];
 
+// Phase 5 (new schema): currentProduct holds this product's entry from the new
+// pricing_config payload (schema_version=2). Has shape:
+//   { slug, name, margin_pct, available_sizes, available_papers, available_finishes,
+//     sheet_sells:  [{paper, size, qty, sell}, ...],
+//     finish_sells: [{name, sell}, ...] }
+// Null if no new-schema publish has happened yet → code falls back to old logic.
+let currentProduct = null;
+
+// Phase 5 lookups: read pre-computed sell prices from currentProduct.
+// Return null if not found, so caller can fall back to old logic or formula.
+function lookupSheetSell(paper, size, qty) {
+  if (!currentProduct || !Array.isArray(currentProduct.sheet_sells)) return null;
+  const match = currentProduct.sheet_sells.find(s =>
+    s.paper === paper && s.size === size && parseInt(s.qty, 10) === parseInt(qty, 10)
+  );
+  return match ? parseFloat(match.sell) : null;
+}
+
+function lookupFinishSell(name) {
+  if (!currentProduct || !Array.isArray(currentProduct.finish_sells)) return 0;
+  const match = currentProduct.finish_sells.find(f => f.name === (name || 'None'));
+  return match ? parseFloat(match.sell) : 0;
+}
+
 // Lenient string match: lowercase, trim, strip trailing 's' for plurals.
 function _norm(s) { return (s || '').toString().toLowerCase().trim().replace(/s$/, ''); }
 
@@ -524,13 +562,16 @@ function findMatchingPrice(productType, size, paperName, finish, qty) {
   return candidates[0] ? parseFloat(candidates[0].sellPrice) : null;
 }
 
-// ── SIZE & PAPER FILTERING (Phase 2) ──────────────────────
-// If admin has published specs in pricing_config, customer site only offers
-// the sizes/papers that have at least one spec. If no specs are published yet,
-// or pricing_config didn't load, customer sees the full default set as before.
+// ── SIZE & PAPER FILTERING ──────────────────────────────
+// Phase 5: prefer currentProduct.available_sizes (explicit declaration in admin).
+// Fallback: use sizes that appear in old publishedPrices.
+// If neither available, leave all 5 sizes visible (default).
 
-// Returns a Set of size names that appear in publishedPrices (e.g. {'A5','DL'}).
-function getPublishedSizes() {
+function getAvailableSizes() {
+  if (currentProduct && Array.isArray(currentProduct.available_sizes) && currentProduct.available_sizes.length) {
+    return new Set(currentProduct.available_sizes);
+  }
+  // Fallback to old behaviour
   const set = new Set();
   if (Array.isArray(publishedPrices)) {
     publishedPrices.forEach(p => { if (p.size) set.add(p.size); });
@@ -538,9 +579,14 @@ function getPublishedSizes() {
   return set;
 }
 
-// Returns a Set of paper names (lowercased) that appear in publishedPrices.
-// Empty paperType in admin = wildcard (so we don't filter papers in that case).
-function getPublishedPapers() {
+// Returns set of allowed paper names (in original casing) plus a flag indicating
+// whether the customer should see all papers (empty available_papers in new schema
+// or wildcard in old schema → show all).
+function getAvailablePapers() {
+  if (currentProduct && Array.isArray(currentProduct.available_papers) && currentProduct.available_papers.length) {
+    return { set: new Set(currentProduct.available_papers.map(p => p.toLowerCase().trim())), hasWildcard: false };
+  }
+  // Fallback: old logic
   const set = new Set();
   let hasWildcard = false;
   if (Array.isArray(publishedPrices)) {
@@ -552,10 +598,9 @@ function getPublishedPapers() {
   return { set, hasWildcard };
 }
 
-// Hide size cards for sizes that have no published spec. If nothing is
-// published, leave all 5 cards visible (current behaviour).
+// Hide size cards that aren't available for this product.
 function applySizeFilter() {
-  const available = getPublishedSizes();
+  const available = getAvailableSizes();
   if (!available.size) return; // nothing published, keep all visible
   ['A5','A6','5x7','DL','Square'].forEach(size => {
     const card = document.getElementById('size-opt-' + size);
@@ -569,7 +614,7 @@ loadSiteData();
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('inv_cart')||'[]'); } catch(e){ cart=[]; }
 let currentFile=null, currentStep=1, selectedSize=null;
-let selectedPaper='smooth', uploadQty=25, checksPassed=true;
+let selectedPaper='smooth', selectedFinish='None', uploadQty=25, checksPassed=true;
 let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
 
 // ── CART ──────────────────────────────────────────────────
@@ -680,13 +725,12 @@ function initStep3(){
     document.getElementById('fileSummaryName').textContent=currentFile.name;
     document.getElementById('fileSummaryMeta').textContent=(currentFile.size/1024/1024).toFixed(1)+' MB · Ready for print';
   }
-  // Paper grid — filter CONFIG.papers to those that appear in published specs
-  // (or specs that have empty paperType, which act as wildcards for any paper).
-  // If nothing is published yet, show all papers.
-  const { set: pubPapers, hasWildcard } = getPublishedPapers();
+  // Paper grid — filter CONFIG.papers to only those available for this product.
+  // Uses new schema (currentProduct.available_papers) first, falls back to old.
+  const { set: pubPapers, hasWildcard } = getAvailablePapers();
   let papersToShow = CONFIG.papers;
-  if (publishedPrices.length && !hasWildcard && pubPapers.size) {
-    papersToShow = CONFIG.papers.filter(p => pubPapers.has(_norm(p.name)));
+  if (!hasWildcard && pubPapers.size) {
+    papersToShow = CONFIG.papers.filter(p => pubPapers.has((p.name || '').toLowerCase().trim()));
     if (!papersToShow.length) papersToShow = CONFIG.papers; // safety net
   }
   // Make sure selectedPaper is still in the visible list; if not, switch to first.
@@ -700,6 +744,8 @@ function initStep3(){
       <div class="paper-sub">${p.subtitle}</div>
       <div class="paper-price">${p.priceExtra?'+£'+p.priceExtra:'Included'}</div>
     </div>`).join('');
+  // Finish grid — show only if product has more than one finish (i.e. options beyond just "None")
+  renderFinishGrid();
   // Envelope picker
   const picker=document.getElementById('envPicker');
   picker.innerHTML=ENVELOPES.map(e=>`
@@ -707,6 +753,44 @@ function initStep3(){
       <div id="env-swatch-${e.id}" style="width:36px;height:36px;border-radius:50%;background:${e.hex};border:2px solid ${selectedEnvColour===e.id?'var(--text)':e.border};transition:all .2s;transform:${selectedEnvColour===e.id?'scale(1.15)':'scale(1)'};"></div>
       <div style="font-size:9px;color:var(--soft);text-align:center;max-width:48px;line-height:1.3;">${e.name}</div>
     </div>`).join('');
+  updatePrice();
+}
+
+// Render the finishing options card. Only shown if this product has finish
+// options other than "None" available (admin's available_finishes for this product).
+function renderFinishGrid() {
+  const card = document.getElementById('finishCard');
+  const grid = document.getElementById('finishGrid');
+  if (!card || !grid) return;
+  const finishes = (currentProduct && Array.isArray(currentProduct.available_finishes))
+    ? currentProduct.available_finishes
+    : [];
+  // Hide the whole card if there are 0 or 1 finishes (just "None" is meaningless to show)
+  const hasRealOptions = finishes.filter(f => f && f !== 'None').length > 0;
+  if (!hasRealOptions) {
+    card.style.display = 'none';
+    selectedFinish = 'None';
+    return;
+  }
+  card.style.display = '';
+  // Make sure selectedFinish is valid for this product
+  if (!finishes.includes(selectedFinish)) {
+    selectedFinish = finishes.includes('None') ? 'None' : finishes[0];
+  }
+  grid.innerHTML = finishes.map(name => {
+    const sell = lookupFinishSell(name);
+    const label = (sell > 0) ? `+£${sell.toFixed(2)}` : 'Included';
+    return `<div class="paper-opt${name === selectedFinish ? ' selected' : ''}" onclick="selectFinish('${(name||'').replace(/'/g,'&#39;')}')" style="flex:1;min-width:140px;">
+      <div class="paper-name">${name}</div>
+      <div class="paper-price">${label}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectFinish(name) {
+  selectedFinish = name;
+  document.querySelectorAll('#finishGrid .paper-opt').forEach(el => el.classList.remove('selected'));
+  if (event && event.currentTarget) event.currentTarget.classList.add('selected');
   updatePrice();
 }
 
@@ -774,17 +858,25 @@ function updatePrice(){
   }
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
 
-  // Try admin-published prices first; fall back to hardcoded formula if no match.
-  const matchedPrice = findMatchingPrice(PRODUCT.name, selectedSize, paper.name, 'None', uploadQty);
+  // Phase 5 path: try new schema (currentProduct.sheet_sells + finish_sells).
+  // Falls back to old findMatchingPrice, then to default formula.
   let base, upgrade;
-  if (matchedPrice != null) {
-    // Admin-driven price — paper extra is rolled into sellPrice, so no separate upgrade.
-    base = matchedPrice;
+  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty);
+  if (newSheetSell != null) {
+    const finishSell = lookupFinishSell(selectedFinish);
+    base = newSheetSell + finishSell; // Both are sell prices already with margin applied
     upgrade = 0;
   } else {
-    // Fallback: original (qty/50)*basePerFifty + paper extra.
-    base = calcBasePrice(uploadQty);
-    upgrade = paper.priceExtra || 0;
+    // Old per-combination match (legacy)
+    const matchedPrice = findMatchingPrice(PRODUCT.name, selectedSize, paper.name, selectedFinish, uploadQty);
+    if (matchedPrice != null) {
+      base = matchedPrice;
+      upgrade = 0;
+    } else {
+      // Final fallback: default formula
+      base = calcBasePrice(uploadQty);
+      upgrade = paper.priceExtra || 0;
+    }
   }
 
   let envCost=0;
@@ -810,15 +902,22 @@ function updatePrice(){
 function addToCartUpload(){
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
 
-  // Same lookup as updatePrice() so cart total matches displayed price.
-  const matchedPrice = findMatchingPrice(PRODUCT.name, selectedSize, paper.name, 'None', uploadQty);
+  // Same lookup chain as updatePrice() so cart total matches displayed price.
   let base, upgrade;
-  if (matchedPrice != null) {
-    base = matchedPrice;
+  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty);
+  if (newSheetSell != null) {
+    const finishSell = lookupFinishSell(selectedFinish);
+    base = newSheetSell + finishSell;
     upgrade = 0;
   } else {
-    base = calcBasePrice(uploadQty);
-    upgrade = paper.priceExtra || 0;
+    const matchedPrice = findMatchingPrice(PRODUCT.name, selectedSize, paper.name, selectedFinish, uploadQty);
+    if (matchedPrice != null) {
+      base = matchedPrice;
+      upgrade = 0;
+    } else {
+      base = calcBasePrice(uploadQty);
+      upgrade = paper.priceExtra || 0;
+    }
   }
 
   let envCost=0;
@@ -829,10 +928,14 @@ function addToCartUpload(){
   const subtotalEx=(base+upgrade+envCost+deliveryCost)/1.2;
   const total=(subtotalEx*1.2);
   const envLabel=envelopesEnabled&&selectedEnvColour?` + ${ENVELOPES.find(e=>e.id===selectedEnvColour)?.name} envelopes`:'';
+  // Build paper label including finish if it's not "None"
+  let paperLabel = paper.name;
+  if (selectedFinish && selectedFinish !== 'None') paperLabel += ' · ' + selectedFinish;
+  paperLabel += envLabel;
   addToCart({
     name: currentFile?currentFile.name.replace(/\.[^.]+$/,''):'Custom Design',
     qty: uploadQty,
-    paper: paper.name+envLabel,
+    paper: paperLabel,
     total: total,
     icon:'✦'
   });
