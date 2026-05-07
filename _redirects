@@ -1,21 +1,31 @@
-# Netlify URL rewriting for clean product URLs
+# Netlify URL rewriting (Phase 4)
 #
-# Format: /<clean-url>  /<actual-file>?<params>  <status>
-#   Status 200 = rewrite (browser keeps showing the clean URL)
-#   Status 301 = permanent redirect (browser shows new URL — don't use here)
+# Format: /<from>  /<to>  <status>
+#   Status 200 = rewrite (URL stays clean in browser)
+#   Status 301 = permanent redirect (browser navigates to new URL)
 #
-# This lets customers visit /wedding-invitations and see "/wedding-invitations"
-# in their address bar, while the server quietly serves upload-and-print.html
-# with ?product=wedding-invitations.
+# IMPORTANT: Netlify only applies these rules when no real file exists at the
+# requested path. So /header.html, /footer.html etc. are still served from disk.
+# Rules are processed top-to-bottom; the first match wins.
 #
-# To add a new product type:
-#   1. Add a cost spec for it in admin (e.g., productType "Save the Dates"), publish
-#   2. Add a line below mapping the slug to the configurator
-#      Example:  /save-the-dates  /upload-and-print.html?product=save-the-dates  200
-#   3. Optionally add a card to products.html linking to the clean URL
-#
-# Slug rule: lowercase the product name, replace spaces with hyphens.
-# "Save the Dates" → save-the-dates, "Order of Service" → order-of-service.
+# ─── KNOWN SITE PAGES (give them clean URLs) ────────────────
+# Each line: clean URL → actual file. These come first so they're matched
+# before the product catch-all below.
 
-/wedding-invitations  /upload-and-print.html?product=wedding-invitations  200
-/save-the-dates       /upload-and-print.html?product=save-the-dates       200
+/products       /products.html         200
+/admin          /admin.html            200
+/design-studio  /design-studio.html    200
+/how-it-works   /how-it-works.html     200
+/track-order    /track-order.html      200
+
+# ─── PRODUCT CATCH-ALL ──────────────────────────────────────
+# Any URL not matched above and with no real file → configurator with the
+# slug as the product type. The configurator looks up the slug in the
+# product_types Supabase table:
+#   • Match found → renders that product's page
+#   • No match → falls back to default behaviour (still functional)
+#
+# This rule means you NEVER need to edit _redirects when adding a new product.
+# Adding "Order of Service" in admin → publishing → /order-of-service just works.
+
+/*  /upload-and-print.html?product=:splat  200
