@@ -429,13 +429,10 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 
         <!-- Sub-nav tabs -->
         <div class="pz-subnav">
-          <button class="pz-tab active" data-pz="costs" onclick="showPricingPanel(this)">📋 Cost Input</button>
-          <button class="pz-tab" data-pz="generator" onclick="showPricingPanel(this)">⚙️ Margin &amp; Pricing</button>
-          <button class="pz-tab" data-pz="pricelist" onclick="showPricingPanel(this)">💷 Price List</button>
           <button class="pz-tab" data-pz="suppliers" onclick="showPricingPanel(this)">🏭 Suppliers</button>
           <button class="pz-tab" data-pz="envelopes" onclick="showPricingPanel(this)">✉️ Envelopes</button>
           <button class="pz-tab" data-pz="papers" onclick="showPricingPanel(this)">📃 Paper Stocks</button>
-          <button class="pz-tab" data-pz="producttypes" onclick="showPricingPanel(this)">🎴 Product Types</button>
+          <button class="pz-tab active" data-pz="producttypes" onclick="showPricingPanel(this)">🎴 Product Types</button>
           <button class="pz-tab" data-pz="sheetrates" onclick="showPricingPanel(this)">📊 Sheet Rates</button>
           <button class="pz-tab" data-pz="finishes" onclick="showPricingPanel(this)">✨ Finish Options</button>
           <button class="pz-tab" data-pz="publish" onclick="showPricingPanel(this)">🚀 Publish</button>
@@ -452,130 +449,6 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 
         <!-- Pricing content -->
         <div class="pz-content">
-
-          <!-- PANEL: COST INPUT -->
-          <div class="pz-panel active" id="pz-costs">
-            <div class="section-header">
-              <div><div class="section-title">Product Cost Input</div><div class="section-sub">Build your lists using ＋ as suppliers come on board — nothing is pre-set</div></div>
-              <button class="btn btn-gold" onclick="openCostForm()">＋ Add Specification</button>
-            </div>
-            <div class="card" id="costFormCard" style="display:none">
-              <div class="card-title" id="costFormTitle">New Product Specification</div>
-              <div class="grid-3">
-                <div class="field"><label>Product Type</label><div class="dyn-wrap"><select id="f_productType"><option value="">— select or add —</option></select><button class="dyn-btn" onclick="addListItem('productTypes','f_productType')" title="Add new">＋</button></div></div>
-                <div class="field"><label>Size</label><div class="dyn-wrap"><select id="f_size"><option value="">— select or add —</option></select><button class="dyn-btn" onclick="addListItem('sizes','f_size')" title="Add new">＋</button></div></div>
-                <div class="field"><label>Supplier</label><div class="dyn-wrap"><select id="f_supplier"><option value="">— select or add —</option></select><button class="dyn-btn" onclick="openSupplierModal()" title="Add supplier">＋</button></div></div>
-              </div>
-              <div class="grid-4">
-                <div class="field"><label>Paper Type / Stock</label><div class="dyn-wrap"><select id="f_paperType"><option value="">— select or add —</option></select><button class="dyn-btn" onclick="addListItem('paperTypes','f_paperType')" title="Add new">＋</button></div></div>
-                <div class="field"><label>Paper Weight</label><div class="dyn-wrap"><select id="f_paperWeight"><option value="">— select or add —</option></select><button class="dyn-btn" onclick="addListItem('paperWeights','f_paperWeight')" title="Add new">＋</button></div></div>
-                <div class="field"><label>Print Side</label><select id="f_printSide"><option value="Single">Single Sided</option><option value="Double">Double Sided</option></select></div>
-                <div class="field"><label>Finish / Enhancement</label><div class="dyn-wrap"><select id="f_finish"><option value="None">None</option></select><button class="dyn-btn" onclick="addListItem('finishes','f_finish')" title="Add new">＋</button></div></div>
-              </div>
-              <div class="grid-3">
-                <div class="field"><label>Supplier SKU / Reference</label><input type="text" id="f_supplierRef" placeholder="e.g. PRNT-A5-SILK-300"></div>
-                <div class="field"><label>Currency</label><select id="f_currency"><option>GBP</option><option>EUR</option><option>USD</option></select></div>
-                <div class="field"><label>Lead Time</label><input type="text" id="f_leadTime" placeholder="e.g. 3–5 working days"></div>
-              </div>
-              <div class="sep"></div>
-              <div style="margin-bottom:10px"><span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-lt);font-weight:500">Buying Price (£) — Your total supplier cost at each quantity tier</span></div>
-              <div class="qty-grid" id="qtyCostGrid"></div>
-              <div class="sep"></div>
-              <div class="grid-3">
-                <div class="field"><label>Setup / Plate Fee (£ one-off)</label><div class="pfx"><span class="px">£</span><input type="number" id="f_setup" placeholder="0.00" step="0.01" min="0"></div></div>
-                <div class="field"><label>Packaging (£ per order)</label><div class="pfx"><span class="px">£</span><input type="number" id="f_packaging" placeholder="1.50" step="0.01" min="0"></div></div>
-                <div class="field"><label>Design Allowance (£)</label><div class="pfx"><span class="px">£</span><input type="number" id="f_design" placeholder="0.00" step="0.01" min="0"></div></div>
-              </div>
-              <div class="field"><label>Notes</label><input type="text" id="f_notes" placeholder="Supplier notes, minimum orders, seasonal changes…"></div>
-              <div style="display:flex;gap:10px;margin-top:4px">
-                <button class="btn btn-gold" onclick="saveCostEntry()">Save Specification</button>
-                <button class="btn btn-outline" onclick="closeCostForm()">Cancel</button>
-              </div>
-              <input type="hidden" id="f_editId">
-            </div>
-            <div class="card">
-              <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleLM()">
-                <div class="card-title" style="margin:0;border:none;padding:0">Manage Lists <span style="font-size:12px;font-weight:400;opacity:.5">— product types, sizes, papers, finishes, quantities</span></div>
-                <span id="lmToggle" style="color:var(--gold-lt);font-size:18px">▾</span>
-              </div>
-              <div id="lmBody" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border-lt)">
-                <div class="grid-3" id="lmGrid"></div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-title">Saved Specifications (<span id="costCount">0</span>)</div>
-              <div class="filter-row">
-                <select id="filterProduct" onchange="renderCostTable()"><option value="">All Types</option></select>
-                <select id="filterSupplier" onchange="renderCostTable()"><option value="">All Suppliers</option></select>
-                <select id="filterFinish" onchange="renderCostTable()"><option value="">All Finishes</option></select>
-              </div>
-              <div class="table-wrap"><table>
-                <thead><tr><th>Product</th><th>Size</th><th>Paper</th><th>Weight</th><th>Side</th><th>Finish</th><th>Supplier</th><th>Ref</th><th>50 units</th><th>100 units</th><th>200 units</th><th>Setup</th><th>Pkg</th><th>Lead Time</th><th></th></tr></thead>
-                <tbody id="costTableBody"><tr><td colspan="15"><div class="empty"><span class="empty-icon">📋</span><div class="empty-text">No specifications yet — click Add Specification to begin</div></div></td></tr></tbody>
-              </table></div>
-            </div>
-          </div>
-
-          <!-- PANEL: MARGIN & PRICING -->
-          <div class="pz-panel" id="pz-generator">
-            <div class="grid-2">
-              <div class="card">
-                <div class="card-title">Global Margin</div>
-                <div class="margin-display" id="globalMarginDisplay">65%</div>
-                <input type="range" id="globalMargin" min="20" max="85" value="65" oninput="updateMarginDisplay()">
-                <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(250,247,242,.3);margin-top:4px"><span>20%</span><span>85%</span></div>
-                <div style="margin-top:12px;padding:12px;background:var(--navy-mid);border-radius:6px;font-size:12px;color:rgba(250,247,242,.6)"><strong style="color:var(--gold-lt)">Formula:</strong> Sell Price = Cost ÷ (1 − Margin%)<br>At 65%: £10.00 cost → <strong style="color:var(--cream)">£28.57</strong></div>
-              </div>
-              <div class="card">
-                <div class="card-title">Finish Margin Overrides</div>
-                <div style="font-size:12px;color:rgba(250,247,242,.5);margin-bottom:12px">Override global margin for specific finishes</div>
-                <div id="finishOverrides"></div>
-                <button class="btn btn-outline btn-sm" onclick="addOverrideRow()" style="margin-top:4px">＋ Add Override</button>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-title">Rounding &amp; Fees</div>
-              <div class="grid-4">
-                <div class="field"><label>Price Rounding</label><select id="roundingRule"><option value="x95" selected>Round to .95</option><option value="x99">Round to .99</option><option value="nearest_pound">Nearest £1</option><option value="none">No rounding</option></select></div>
-                <div class="field"><label>Min Selling Price (£)</label><div class="pfx"><span class="px">£</span><input type="number" id="minPrice" value="12.00" step="0.01"></div></div>
-                <div class="field"><label>Stripe Fee %</label><input type="number" id="stripePct" value="1.5" step="0.1" min="0"></div>
-                <div class="field"><label>Stripe Fixed (pence)</label><input type="number" id="stripeFixed" value="20" step="1" min="0"></div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-title">Generated Price Preview</div>
-              <div style="display:flex;gap:10px;margin-bottom:16px">
-                <button class="btn btn-gold" onclick="generatePrices()">⚡ Generate Prices</button>
-                <button class="btn btn-outline" onclick="exportJSON()">⬇ JSON</button>
-                <button class="btn btn-outline" onclick="exportCSV()">⬇ CSV</button>
-              </div>
-              <div class="table-wrap"><table>
-                <thead><tr><th>Product</th><th>Size</th><th>Paper</th><th>Finish</th><th>Supplier</th><th>Qty</th><th>Cost (£)</th><th>Sell Price (£)</th><th>Gross Profit</th><th>Margin %</th></tr></thead>
-                <tbody id="pricePreviewBody"><tr><td colspan="10"><div class="empty"><span class="empty-icon">⚡</span><div class="empty-text">Click "Generate Prices" to preview</div></div></td></tr></tbody>
-              </table></div>
-            </div>
-          </div>
-
-          <!-- PANEL: PRICE LIST -->
-          <div class="pz-panel" id="pz-pricelist">
-            <div class="section-header">
-              <div><div class="section-title">Published Price List</div><div class="section-sub">Selling prices that flow to the website</div></div>
-              <div style="display:flex;gap:8px"><button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇ CSV</button><button class="btn btn-gold btn-sm" onclick="publishToSite()">🌐 Publish to Site</button></div>
-            </div>
-            <div class="stats-row">
-              <div class="stat-card"><div class="stat-label">SKUs</div><div class="stat-value" id="statSkus">0</div><div class="stat-sub">specifications</div></div>
-              <div class="stat-card"><div class="stat-label">Avg Margin</div><div class="stat-value" id="statMargin">—</div><div class="stat-sub">all specs</div></div>
-              <div class="stat-card"><div class="stat-label">Entry Price</div><div class="stat-value" id="statLow">—</div><div class="stat-sub">lowest</div></div>
-              <div class="stat-card"><div class="stat-label">Top Price</div><div class="stat-value" id="statHigh">—</div><div class="stat-sub">premium</div></div>
-            </div>
-            <div class="card">
-              <div class="filter-row">
-                <select id="plFilterProduct" onchange="renderPriceList()"><option value="">All Products</option></select>
-                <select id="plFilterSupplier" onchange="renderPriceList()"><option value="">All Suppliers</option></select>
-              </div>
-              <div id="priceListWrap"><div class="empty"><span class="empty-icon">💷</span><div class="empty-text">Generate prices first in the Margin &amp; Pricing tab</div></div></div>
-            </div>
-          </div>
 
           <!-- PANEL: SUPPLIERS -->
           <div class="pz-panel" id="pz-suppliers">
@@ -1242,14 +1115,14 @@ let lists = { productTypes:[], sizes:[], paperTypes:[], paperWeights:[], finishe
 let settings = { company:'Natch Ltd', vat:'', fyStart:'June' };
 let activeMonth = null;
 const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const PZ_TITLES = { costs:'Cost Input', generator:'Margin & Price Generator', pricelist:'Price List', suppliers:'Supplier Directory', reconcile:'Supplier Reconciliation', mgmt:'Management Accounts', settings:'Settings & Export', envelopes:'Envelopes', papers:'Paper Stocks', producttypes:'Product Types', sheetrates:'Sheet Rates', finishes:'Finish Options', publish:'Publish to Site' };
+const PZ_TITLES = { suppliers:'Supplier Directory', reconcile:'Supplier Reconciliation', mgmt:'Management Accounts', settings:'Settings & Export', envelopes:'Envelopes', papers:'Paper Stocks', producttypes:'Product Types', sheetrates:'Sheet Rates', finishes:'Finish Options', publish:'Publish to Site' };
 
 // ═══════════════════════════════════════════════════════
 // PRICING — BOOT
 // ═══════════════════════════════════════════════════════
 
 function pricingLoad() {
-  loadCostsFromSupabase();
+  // Removed: loadCostsFromSupabase() — old per-combination cost specs no longer used
   generatedPrices= pj('natch_prices_v2','[]');
   mgmtMonths     = pj('natch_mgmt_v2','{}');
   sales          = pj('natch_sales_v2','[]');
@@ -1297,7 +1170,6 @@ function showPricingPanel(el) {
   document.getElementById('pz-' + id).classList.add('active');
   el.classList.add('active');
   document.getElementById('pzPanelTitle').textContent = PZ_TITLES[id] || id;
-  if (id === 'pricelist')  { renderPriceList(); updatePricingStats(); }
   if (id === 'reconcile')  { renderRecon(); renderSalesLog(); }
   if (id === 'mgmt')       { renderMgmtHistory(); }
   if (id === 'publish')    { renderPublishStatus(); }
