@@ -2551,11 +2551,15 @@ async function publishHierarchical() {
       published_at:   new Date().toISOString(),
       products
     };
-    // Insert new pricing_config row
+    // Insert/update the singleton pricing_config row.
+    // PostgREST UPSERT: include id='singleton' and Prefer: resolution=merge-duplicates
+    // so an existing row is overwritten rather than triggering a duplicate-key error.
     await sbFetch('pricing_config', {
       method: 'POST',
-      headers: { 'Prefer': 'return=representation' },
-      body: JSON.stringify({ payload, published_at: new Date().toISOString() })
+      headers: {
+        'Prefer': 'return=representation,resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ id: 'singleton', payload, published_at: new Date().toISOString() })
     });
     const totalSells = products.reduce((sum, p) => sum + p.sheet_sells.length, 0);
     toast(`Published ✓ — ${products.length} product${products.length!==1?'s':''}, ${totalSells} sell price${totalSells!==1?'s':''}`);
