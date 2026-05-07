@@ -302,22 +302,25 @@
 <div id="site-footer"></div>
 
 <script>
-// ── PRODUCT TYPE FROM URL (Phase 3) ──────────────────────
-// Customers reach this page via clean URLs like /save-the-dates, which Netlify
-// rewrites to /upload-and-print.html?product=save-the-dates. Crucially, with a
-// rewrite (status 200), the browser keeps showing /save-the-dates so the
-// query param is NOT visible to JavaScript via window.location.search.
-// We must read the slug from window.location.pathname instead.
+// ── PRODUCT TYPE FROM URL (Phase 5 — supports both /slug and /slug/order) ──
+// Customers reach this page via clean URLs:
+//   • /wedding-invitations/order  (from landing page CTA)
+//   • /upload-and-print.html?product=wedding-invitations  (direct/legacy)
+//
+// With Netlify rewrite (status 200), the browser keeps showing the original
+// URL — query param is NOT visible to JS via window.location.search.
+// We read slug from window.location.pathname, stripping a trailing /order.
 const PRODUCT = (function() {
   // First try query param — works when page is opened directly as /upload-and-print.html?product=...
   const params = new URLSearchParams(window.location.search);
   let slug = params.get('product');
 
-  // If no query param, use the URL path (clean URL like /save-the-dates).
+  // If no query param, parse from URL path
   if (!slug) {
-    const path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
+    let path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
+    // Strip trailing /order if present (so /wedding-invitations/order → wedding-invitations)
+    path = path.replace(/\/order$/, '');
     // Treat path as slug only if it has no slashes and no file extension
-    // (i.e. it's a single segment that doesn't look like a real file path).
     if (path && !path.includes('.') && !path.includes('/')) {
       slug = path;
     }
