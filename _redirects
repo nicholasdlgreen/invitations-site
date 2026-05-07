@@ -18,3 +18,4 @@
 # "Save the Dates" → save-the-dates, "Order of Service" → order-of-service.
 
 /wedding-invitations  /upload-and-print.html?product=wedding-invitations  200
+/save-the-dates       /upload-and-print.html?product=save-the-dates       200
