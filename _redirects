@@ -1,4 +1,4 @@
-# Netlify URL rewriting (Phase 5 — landing pages + configurator)
+p# Netlify URL rewriting (Phase 5 — landing pages + configurator)
 #
 # Format: /<from>  /<to>  <status>
 #   Status 200 = rewrite (URL stays clean in browser)
