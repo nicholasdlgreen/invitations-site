@@ -3,144 +3,160 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Wedding Stationery Products | Invitations, Envelopes & More | Invitations</title>
-<meta name="description" content="Luxury wedding stationery printed in the UK. Wedding invitations, matching envelopes and more — uploaded your own design or create from scratch. Premium papers, digital proof included, no minimum quantities."/>
+<title>All Products | Foreverprint</title>
+<meta name="description" content="Premium printing for life's important moments. UK printed stationery with next-day delivery available."/>
 <meta name="robots" content="index, follow"/>
-<link rel="canonical" href="https://YOURDOMAIN.co.uk/products"/>
+<link rel="canonical" href="https://foreverprint.com/products"/>
 <meta property="og:type" content="website"/>
-<meta property="og:url" content="https://YOURDOMAIN.co.uk/products"/>
-<meta property="og:title" content="Wedding Stationery Products | Invitations"/>
-<meta property="og:description" content="Luxury wedding stationery printed in the UK. Wedding invitations, matching envelopes and more."/>
-<meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
-<meta property="og:site_name" content="Invitations"/>
-<!-- JSON-LD is rendered dynamically by JS once products load (see bottom of <body>). -->
+<meta property="og:url" content="https://foreverprint.com/products"/>
+<meta property="og:title" content="All Products | Foreverprint"/>
+<meta property="og:description" content="Premium UK printing for life's important moments."/>
+<meta property="og:site_name" content="Foreverprint"/>
 <style>
-.product-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:52px;}
-.product-card{background:var(--white);border:1px solid var(--border);border-radius:24px;overflow:hidden;text-decoration:none;display:block;transition:all .35s;}
-.product-card:hover{box-shadow:0 20px 56px rgba(61,46,36,.09);transform:translateY(-3px);}
-.product-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--cream);}
-.product-body{padding:36px 40px 44px;}
-.product-tag{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:12px;display:block;}
-.product-title{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--text);margin-bottom:14px;line-height:1.2;}
-.product-desc{font-size:13px;color:var(--soft);line-height:1.95;margin-bottom:24px;}
-.product-features{margin-bottom:28px;}
-.product-feature{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:9px;margin-bottom:8px;}
-.product-feature::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--gold-lt);flex-shrink:0;}
-.product-price{font-size:11px;color:var(--pale);margin-bottom:16px;}
-.product-price strong{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold);font-weight:400;}
-.product-cta{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:500;display:inline-flex;align-items:center;gap:10px;transition:gap .2s;}
-.product-card:hover .product-cta{gap:16px;}
-.product-cta::after{content:'→';}
-.paper-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:28px 32px;}
-.paper-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:6px;}
-.paper-spec{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
-.paper-desc{font-size:13px;color:var(--soft);line-height:1.8;}
-.env-swatch{width:40px;height:40px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;}
+/* Page-specific styles. Site-wide CSS variables (--cream, --gold, --soft, etc.)
+   are inherited from header.html / shared site styles. */
+
+/* Slim header — replaces previous large hero. ~140px tall instead of ~500px. */
+.products-header{background:var(--cream);padding:48px 0 32px;text-align:center;border-bottom:1px solid var(--border);}
+.products-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:10px;}
+.products-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:300;line-height:1.15;margin:0 0 8px;color:var(--text);}
+.products-h1 em{color:var(--gold);font-style:italic;}
+.products-strap{font-size:12px;color:var(--soft);}
+
+/* Filter bar — sits above the grid */
+.filter-bar{background:var(--white);border-bottom:1px solid var(--border);padding:18px 0;}
+.filter-bar-inner{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;}
+.filter-count{font-size:11px;color:var(--soft);letter-spacing:.06em;}
+.sort-pills{display:flex;gap:6px;align-items:center;}
+.sort-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--pale);margin-right:8px;}
+.sort-pill{background:none;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.06em;padding:7px 14px;border-radius:18px;cursor:pointer;transition:all .2s;}
+.sort-pill:hover{border-color:var(--gold-lt);color:var(--text);}
+.sort-pill.active{background:var(--text);color:var(--white);border-color:var(--text);}
+
+/* Product grid — 3 columns desktop, 2 mobile, smaller cards than v1 */
+.products-section{background:var(--white);padding:36px 0 72px;}
+.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.product-card{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:all .25s;}
+.product-card:hover{box-shadow:0 12px 32px rgba(61,46,36,.08);transform:translateY(-2px);border-color:var(--gold-lt);}
+.product-img{width:100%;aspect-ratio:5/4;object-fit:cover;background:var(--cream);}
+.product-img-placeholder{width:100%;aspect-ratio:5/4;background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;align-items:center;justify-content:center;color:var(--gold-lt);font-size:24px;font-family:'Cormorant Garamond',serif;}
+.product-body{padding:20px 22px 22px;flex:1;display:flex;flex-direction:column;}
+.product-name{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--text);margin:0 0 6px;line-height:1.2;}
+.product-desc{font-size:11.5px;color:var(--soft);line-height:1.65;margin:0 0 14px;flex:1;}
+.product-price{font-size:11px;color:var(--gold);font-weight:500;letter-spacing:.04em;}
+.product-price strong{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);font-weight:400;margin-left:4px;}
 .product-grid-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--soft);font-size:13px;}
-@media(max-width:768px){.product-grid{grid-template-columns:1fr;}}
+
+/* Trust strip — moved to BELOW the grid per Baymard guidance */
+.trust-strip{background:var(--cream);padding:64px 0;border-top:1px solid var(--border);}
+.trust-tag{display:block;text-align:center;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:10px;}
+.trust-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,2.5vw,2rem);font-weight:300;text-align:center;color:var(--text);margin:0 0 8px;line-height:1.15;}
+.trust-h2 em{color:var(--gold);font-style:italic;}
+.trust-divider{width:36px;height:1px;background:var(--gold);margin:18px auto 36px;}
+.trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:880px;margin:0 auto;}
+.trust-item{text-align:center;padding:0 16px;}
+.trust-icon{font-size:22px;color:var(--gold);margin-bottom:12px;}
+.trust-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;color:var(--text);margin-bottom:8px;}
+.trust-text{font-size:12px;color:var(--soft);line-height:1.85;}
+
+/* Two ways to order — compact bottom strip */
+.ways-strip{background:var(--white);padding:64px 0;border-top:1px solid var(--border);}
+.ways-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:880px;margin:0 auto;}
+.way-card{padding:32px 36px;background:var(--cream);border-radius:16px;}
+.way-tag{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:8px;}
+.way-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin:0 0 8px;}
+.way-text{font-size:12.5px;color:var(--soft);line-height:1.85;margin:0 0 18px;}
+.way-link{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none;font-weight:500;border-bottom:1px solid var(--gold);padding-bottom:3px;}
+
+@media(max-width:1024px){
+  .product-grid{grid-template-columns:repeat(2,1fr);gap:16px;}
+}
+@media(max-width:640px){
+  .product-grid{grid-template-columns:1fr;gap:14px;}
+  .trust-grid{grid-template-columns:1fr;gap:20px;}
+  .ways-grid{grid-template-columns:1fr;gap:14px;}
+  .filter-bar-inner{flex-direction:column;align-items:flex-start;}
+}
 </style>
 </head>
 <body>
 
 <div id="site-header"></div>
 
-<!-- HERO -->
-<section style="background:var(--cream);padding:96px 0 72px;text-align:center;">
-  <div class="container" style="max-width:680px;">
-    <span class="tag">Our Products</span>
-    <h1 class="serif" style="font-size:clamp(2.4rem,4.5vw,3.8rem);font-weight:300;line-height:1.12;margin-bottom:20px;">
-      Everything your wedding day deserves,<br>
-      <em style="font-style:italic;color:var(--gold);">beautifully printed.</em>
-    </h1>
-    <div class="divider" style="margin:24px auto;"></div>
-    <p style="font-size:15px;color:var(--soft);line-height:2;max-width:520px;margin:0 auto;">
-      Premium wedding stationery printed in the UK on the finest paper stocks. Upload your own design or create something new in our Design Studio — we handle everything from there.
-    </p>
+<!-- SLIM HEADER (was a 500px hero, now ~140px) -->
+<section class="products-header">
+  <div class="container">
+    <span class="products-tag">All Products</span>
+    <h1 class="products-h1">Premium printing for <em>life's important moments.</em></h1>
+    <div class="products-strap">UK printed · Next-day delivery available</div>
   </div>
 </section>
 
-<!-- PRODUCTS — populated dynamically from product_types Supabase table -->
-<section style="background:var(--white);padding:80px 0 96px;">
+<!-- FILTER / SORT BAR -->
+<section class="filter-bar">
+  <div class="container">
+    <div class="filter-bar-inner">
+      <div class="filter-count" id="product-count">Loading…</div>
+      <div class="sort-pills">
+        <span class="sort-label">Sort</span>
+        <button class="sort-pill active" data-sort="featured" onclick="setSort('featured')">Featured</button>
+        <button class="sort-pill" data-sort="alpha" onclick="setSort('alpha')">A–Z</button>
+        <button class="sort-pill" data-sort="newest" onclick="setSort('newest')">Newest</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCT GRID -->
+<section class="products-section">
   <div class="container">
     <div id="product-grid" class="product-grid">
       <div class="product-grid-empty">Loading products…</div>
     </div>
-
-    <!-- Coming soon strip — only shown if there are zero products -->
-    <div id="coming-soon-strip" style="display:none;margin-top:32px;background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:32px 40px;text-align:center;">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:6px;">Products coming soon</div>
-      <p style="font-size:13px;color:var(--soft);line-height:1.8;margin:0;"><a href="mailto:hello@invitations.co.uk" style="color:var(--gold);text-decoration:none;">Get in touch</a> if you need something specific while we build out the catalogue.</p>
-    </div>
   </div>
 </section>
 
-<!-- PAPER STOCKS -->
-<section style="background:var(--cream);padding:80px 0;">
+<!-- TRUST STRIP (moved to below the grid per Baymard research) -->
+<section class="trust-strip">
   <div class="container">
-    <span class="tag centered">Materials</span>
-    <h2 class="section-title centered">Our paper stocks</h2>
-    <div class="divider" style="margin:22px auto 48px;"></div>
-    <p style="text-align:center;font-size:14px;color:var(--soft);max-width:580px;margin:0 auto 48px;line-height:2;">We use a carefully chosen selection of premium papers. Each one is selected for how it feels in the hand as much as how it looks on the eye.</p>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
-      <div class="paper-card">
-        <div class="paper-name">Smooth White</div>
-        <div class="paper-spec">300gsm · Uncoated · Included as standard</div>
-        <p class="paper-desc">Our default paper — crisp, bright white with a smooth matte finish. Prints with exceptional clarity and colour vibrancy. The choice for clean, contemporary designs.</p>
+    <span class="trust-tag">Why Foreverprint</span>
+    <h2 class="trust-h2">More than just <em>printing.</em></h2>
+    <div class="trust-divider"></div>
+    <div class="trust-grid">
+      <div class="trust-item">
+        <div class="trust-icon">✦</div>
+        <div class="trust-title">UK printed</div>
+        <div class="trust-text">[REPLACE: Every order printed in the UK to the highest standards.]</div>
       </div>
-      <div class="paper-card">
-        <div class="paper-name">Cotton Rag</div>
-        <div class="paper-spec">400gsm · Textured · +£20 per order</div>
-        <p class="paper-desc">Made from cotton fibres rather than wood pulp, this paper has a distinctive texture and substantial weight. Feels unmistakably luxurious — ideal for classic or heritage-inspired designs.</p>
+      <div class="trust-item">
+        <div class="trust-icon">✧</div>
+        <div class="trust-title">Next-day delivery</div>
+        <div class="trust-text">[REPLACE: Next-day delivery available across the UK on eligible orders.]</div>
       </div>
-      <div class="paper-card">
-        <div class="paper-name">Vellum Overlay</div>
-        <div class="paper-spec">Translucent · Ethereal · +£35 per order</div>
-        <p class="paper-desc">Semi-transparent and delicate, vellum adds a romantic, otherworldly quality to any design. Most effective layered over a printed card — a stunning finishing touch for botanical or soft floral designs.</p>
+      <div class="trust-item">
+        <div class="trust-icon">✸</div>
+        <div class="trust-title">Premium paper stocks</div>
+        <div class="trust-text">[REPLACE: Curated selection of premium British paper stocks for every order.]</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ENVELOPE COLOURS -->
-<section id="envelopes" style="background:var(--white);padding:80px 0;">
-  <div class="container" style="max-width:860px;">
-    <span class="tag centered">Envelopes</span>
-    <h2 class="section-title centered">Available envelope colours</h2>
-    <div class="divider" style="margin:22px auto 48px;"></div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:20px;text-align:center;">
-      <div><div class="env-swatch" style="background:#FFFFFF;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Brilliant White</div><div style="font-size:11px;color:var(--pale);">£0.35 each</div></div>
-      <div><div class="env-swatch" style="background:#FAF7F2;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Ivory</div><div style="font-size:11px;color:var(--pale);">£0.35 each</div></div>
-      <div><div class="env-swatch" style="background:#F5EDE0;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Warm Cream</div><div style="font-size:11px;color:var(--pale);">£0.35 each</div></div>
-      <div><div class="env-swatch" style="background:#F0DDD8;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Blush Pink</div><div style="font-size:11px;color:var(--pale);">£0.45 each</div></div>
-      <div><div class="env-swatch" style="background:#D1DDD0;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Sage Green</div><div style="font-size:11px;color:var(--pale);">£0.45 each</div></div>
-      <div><div class="env-swatch" style="background:#DDD5E8;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Lavender</div><div style="font-size:11px;color:var(--pale);">£0.45 each</div></div>
-      <div><div class="env-swatch" style="background:#B0BEC8;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Slate Blue</div><div style="font-size:11px;color:var(--pale);">£0.50 each</div></div>
-      <div><div class="env-swatch" style="background:#2C3E50;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Midnight Navy</div><div style="font-size:11px;color:var(--pale);">£0.55 each</div></div>
-      <div><div class="env-swatch" style="background:#1C1C1C;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Matte Black</div><div style="font-size:11px;color:var(--pale);">£0.55 each</div></div>
-      <div><div class="env-swatch" style="background:#D4B896;margin:0 auto 10px;"></div><div style="font-size:11px;color:var(--soft);">Champagne Gold</div><div style="font-size:11px;color:var(--pale);">£0.60 each</div></div>
-    </div>
-    <p style="text-align:center;font-size:12px;color:var(--pale);margin-top:32px;">Envelopes are added at checkout and sized to fit your chosen invitation format exactly.</p>
-  </div>
-</section>
-
-<!-- HOW TO ORDER -->
-<section style="background:var(--cream);padding:80px 0;">
-  <div class="container" style="max-width:860px;">
-    <span class="tag centered">Getting started</span>
-    <h2 class="section-title centered">Two ways to order</h2>
-    <div class="divider" style="margin:22px auto 48px;"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:40px;">
-        <div style="font-size:28px;margin-bottom:20px;">✦</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;margin-bottom:12px;">Upload &amp; Print</div>
-        <p style="font-size:13px;color:var(--soft);line-height:1.95;margin-bottom:24px;">Already have a design? Upload your artwork file — PDF, AI, InDesign or high-resolution image — and we'll handle everything from artwork check to delivery.</p>
-        <a class="btn" href="/wedding-invitations">Upload My Design</a>
+<!-- TWO WAYS TO ORDER -->
+<section class="ways-strip">
+  <div class="container">
+    <div class="ways-grid">
+      <div class="way-card">
+        <div class="way-tag">Option 1</div>
+        <h3 class="way-title">Upload your design</h3>
+        <p class="way-text">Already have artwork ready? Upload your file, choose your specs and we'll handle the rest.</p>
+        <a class="way-link" href="/products">Browse products →</a>
       </div>
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:40px;">
-        <div style="font-size:28px;margin-bottom:20px;">✧</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;margin-bottom:12px;">Design Studio</div>
-        <p style="font-size:13px;color:var(--soft);line-height:1.95;margin-bottom:24px;">Starting from scratch? Our guided studio walks you through style, colour and wording with a live preview. No design experience needed.</p>
-        <a class="btn-out" href="/design-studio.html">Open the Studio</a>
+      <div class="way-card">
+        <div class="way-tag">Option 2</div>
+        <h3 class="way-title">Use our Design Studio</h3>
+        <p class="way-text">Don't have artwork yet? Our Design Studio walks you through creating your invitation from scratch.</p>
+        <a class="way-link" href="/design-studio">Open Design Studio →</a>
       </div>
     </div>
   </div>
@@ -148,97 +164,148 @@
 
 <div id="site-footer"></div>
 
+<!-- JSON-LD: ItemList schema for SEO. Listing page contains references to
+     products; individual prices live on landing pages (per Google guidance:
+     prices in structured data must match what's shown on page, and we render
+     prices via JS rather than baking them in HTML). When we move to Google
+     Shopping pre-rendering, this can be enriched with full Product offers. -->
+<script type="application/ld+json" id="ld-itemlist">{}</script>
+
 <script>
-// ── PRODUCT TYPES — fetched from Supabase, rendered into #product-grid ──
 const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
 
+let allProducts = [];      // unsorted master list from Supabase
+let pricingPayload = null; // latest pricing_config for "from £X" prices
+let currentSort = 'featured';
+
 function escapeHtml(s) {
   if (s == null) return '';
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-async function loadProductTypes() {
-  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/product_types?select=*&active=eq.true&order=display_order`, { headers });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const products = await res.json();
-    renderProductTypes(products || []);
-    renderJsonLd(products || []);
-  } catch (err) {
-    console.warn('Could not load product types:', err.message);
-    renderProductTypes([]);
+// Look up the lowest sell price for a product from published pricing.
+// Returns null if no pricing data published yet (page falls back to "From £—").
+function getStartingPrice(slug) {
+  if (!pricingPayload || !Array.isArray(pricingPayload.products)) return null;
+  const pp = pricingPayload.products.find(p => p.slug === slug);
+  if (!pp || !Array.isArray(pp.sheet_sells) || !pp.sheet_sells.length) return null;
+  return pp.sheet_sells.reduce((min, s) => {
+    const v = parseFloat(s.sell);
+    return (min === null || v < min) ? v : min;
+  }, null);
+}
+
+// Sort comparators. All return arrays sorted in place; treat undefined as "latest".
+function applySort(products, mode) {
+  const arr = [...products];
+  if (mode === 'alpha') {
+    arr.sort((a,b) => (a.name || '').localeCompare(b.name || ''));
+  } else if (mode === 'newest') {
+    arr.sort((a,b) => {
+      const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const db = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return db - da; // newest first
+    });
+  } else {
+    // featured = display_order ascending (admin-controlled). Fallback: alpha.
+    arr.sort((a,b) => {
+      const oa = (a.display_order != null) ? a.display_order : 999;
+      const ob = (b.display_order != null) ? b.display_order : 999;
+      if (oa !== ob) return oa - ob;
+      return (a.name || '').localeCompare(b.name || '');
+    });
   }
+  return arr;
 }
 
-function renderProductTypes(products) {
+function setSort(mode) {
+  currentSort = mode;
+  document.querySelectorAll('.sort-pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.sort === mode);
+  });
+  renderProducts();
+}
+
+function renderProducts() {
   const grid = document.getElementById('product-grid');
-  const comingSoon = document.getElementById('coming-soon-strip');
-  if (!products.length) {
-    grid.innerHTML = '<div class="product-grid-empty">No products available right now — please check back soon.</div>';
-    if (comingSoon) comingSoon.style.display = 'block';
+  const sorted = applySort(allProducts, currentSort);
+  if (!sorted.length) {
+    grid.innerHTML = '<div class="product-grid-empty">No products available right now.</div>';
     return;
   }
-  if (comingSoon) comingSoon.style.display = 'none';
-  grid.innerHTML = products.map(p => {
-    const featuresList = (p.features || '').split('\n').map(f => f.trim()).filter(Boolean);
-    const featuresHtml = featuresList.map(f => `<div class="product-feature">${escapeHtml(f)}</div>`).join('');
+  grid.innerHTML = sorted.map(p => {
     const img = p.hero_image_url
-      ? `<img class="product-img" src="${escapeHtml(p.hero_image_url)}" alt="${escapeHtml(p.name)}" loading="lazy"/>`
-      : `<div class="product-img" style="display:flex;align-items:center;justify-content:center;color:var(--pale);font-size:60px;">✦</div>`;
+      ? `<img class="product-img" src="${escapeHtml(p.hero_image_url)}" alt="${escapeHtml(p.name || '')}" loading="lazy"/>`
+      : `<div class="product-img-placeholder">✦</div>`;
+    const tagline = p.tagline || '';
+    const price = getStartingPrice(p.slug);
+    const priceLabel = price !== null
+      ? `From <strong>£${Math.round(price)}</strong>`
+      : `<span style="color:var(--pale);">Pricing on product page</span>`;
     return `
       <a class="product-card" href="/${escapeHtml(p.slug)}">
         ${img}
         <div class="product-body">
-          ${p.tagline ? `<span class="product-tag">${escapeHtml(p.tagline)}</span>` : ''}
-          <div class="product-title">${escapeHtml(p.name)}</div>
-          ${p.description ? `<p class="product-desc">${escapeHtml(p.description)}</p>` : ''}
-          ${featuresHtml ? `<div class="product-features">${featuresHtml}</div>` : ''}
-          ${p.from_price_text ? `<div class="product-price">${escapeHtml(p.from_price_text)}</div>` : ''}
-          <div class="product-cta">View ${escapeHtml(p.name)}</div>
+          <h3 class="product-name">${escapeHtml(p.name || '')}</h3>
+          ${tagline ? `<p class="product-desc">${escapeHtml(tagline)}</p>` : '<p class="product-desc">[REPLACE: short product tagline]</p>'}
+          <div class="product-price">${priceLabel}</div>
         </div>
       </a>`;
   }).join('');
 }
 
-// Generate ItemList JSON-LD schema for SEO. Crawlers like Google index this.
-function renderJsonLd(products) {
-  if (!products.length) return;
-  const items = products.map((p, i) => ({
-    "@type": "ListItem",
-    "position": i + 1,
-    "item": {
-      "@type": "Product",
-      "name": p.name,
-      "description": p.description || '',
-      "url": `https://foreverprint.com/${p.slug}`,
-      "brand": { "@type": "Brand", "name": "Invitations" },
-      ...(p.hero_image_url ? { "image": p.hero_image_url } : {})
-    }
-  }));
+function renderItemListSchema(products) {
   const ld = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": "Wedding Stationery Products",
-    "description": "Luxury wedding stationery products printed in the UK",
-    "itemListElement": items
+    "name": "All Products",
+    "url": "https://foreverprint.com/products",
+    "numberOfItems": products.length,
+    "itemListElement": products.map((p, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "url": `https://foreverprint.com/${p.slug}`,
+      "name": p.name || ''
+    }))
   };
-  const script = document.createElement('script');
-  script.type = 'application/ld+json';
-  script.textContent = JSON.stringify(ld);
-  document.head.appendChild(script);
+  const el = document.getElementById('ld-itemlist');
+  if (el) el.textContent = JSON.stringify(ld);
 }
 
-loadProductTypes();
+async function loadData() {
+  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+  const [ptRes, pricesRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/product_types?active=eq.true&select=slug,name,tagline,hero_image_url,display_order,created_at`, { headers }),
+    fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
+  ]);
+
+  if (ptRes.ok) {
+    allProducts = await ptRes.json();
+  } else {
+    allProducts = [];
+  }
+  if (pricesRes.ok) {
+    const rows = await pricesRes.json();
+    if (rows && rows.length && rows[0].payload && rows[0].payload.schema_version === 2) {
+      pricingPayload = rows[0].payload;
+    }
+  }
+
+  // Update count
+  const countEl = document.getElementById('product-count');
+  if (countEl) {
+    countEl.textContent = `${allProducts.length} ${allProducts.length === 1 ? 'product' : 'products'}`;
+  }
+
+  renderProducts();
+  renderItemListSchema(applySort(allProducts, 'featured'));
+}
+
+loadData();
 
 // Header / footer
-fetch('/header.html').then(r=>r.text()).then(html=>{document.getElementById('site-header').outerHTML=html;updateCartBadge();});
+fetch('/header.html').then(r=>r.text()).then(html=>{document.getElementById('site-header').outerHTML=html;if(typeof updateCartBadge==='function')updateCartBadge();});
 fetch('/footer.html').then(r=>r.text()).then(html=>{document.getElementById('site-footer').outerHTML=html;});
 </script>
 
