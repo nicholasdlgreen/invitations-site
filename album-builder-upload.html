@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Photos | Album Builder | Invitations</title>
+  <meta name="description" content="Upload your wedding photos and we'll design a beautiful album draft for you in minutes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --cream: #FAF7F2;
+      --cream-warm: #F4EFE6;
+      --gold: #B8976A;
+      --gold-lt: #D4B896;
+      --gold-dk: #9B7F56;
+      --brown: #6B4F3A;
+      --text: #3D2E24;
+      --text-soft: #6B5A4D;
+      --text-pale: #B0A098;
+      --line: rgba(184, 151, 106, 0.25);
+      --line-strong: rgba(184, 151, 106, 0.5);
+      --ok: #5A9E6F;
+      --warn: #C97B3A;
+      --err: #C94A3A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      color: var(--text);
+      background: var(--cream);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: -0.005em;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ===== STEP INDICATOR ===== */
+
+    .stepper {
+      background: var(--cream-warm);
+      border-bottom: 1px solid var(--line);
+      padding: 24px 0;
+    }
+
+    .stepper-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .step-list {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .step-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-pale);
+      transition: color 0.2s ease;
+    }
+
+    .step-pill .step-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 14px;
+      width: 22px;
+      height: 22px;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0;
+    }
+
+    .step-pill.active { color: var(--gold-dk); }
+    .step-pill.complete { color: var(--brown); }
+    .step-pill.complete .step-num { background: var(--brown); color: var(--cream); border-color: var(--brown); }
+    .step-pill.complete .step-num::before { content: '✓'; font-size: 11px; font-style: normal; }
+    .step-pill.complete .step-num span { display: none; }
+
+    .step-divider {
+      width: 24px;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .step-back {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      transition: color 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .step-back:hover { color: var(--gold-dk); }
+
+    /* ===== HERO ===== */
+
+    .builder-hero {
+      padding: 64px 0 48px;
+      text-align: center;
+    }
+
+    .builder-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold-dk);
+      margin-bottom: 20px;
+    }
+
+    .builder-hero h1 {
+      font-size: clamp(40px, 5vw, 60px);
+      line-height: 1.1;
+      margin-bottom: 20px;
+      font-weight: 300;
+    }
+
+    .builder-hero h1 em {
+      font-style: italic;
+      color: var(--gold-dk);
+    }
+
+    .builder-hero p {
+      font-size: 17px;
+      color: var(--text-soft);
+      max-width: 580px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ===== ORDER SUMMARY (top) ===== */
+
+    .order-summary {
+      max-width: 720px;
+      margin: 0 auto 60px;
+      padding: 20px 32px;
+      background: var(--cream-warm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .order-summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      text-align: center;
+    }
+
+    .order-summary-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .order-summary-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-style: italic;
+      color: var(--gold-dk);
+    }
+
+    .order-summary-edit {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 2px;
+      transition: color 0.2s ease;
+    }
+
+    .order-summary-edit:hover { color: var(--gold-dk); }
+
+    /* ===== UPLOAD ZONE ===== */
+
+    .upload-section {
+      padding: 0 0 60px;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--gold-lt);
+      background: var(--cream-warm);
+      padding: 80px 40px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--gold);
+      background: var(--cream);
+    }
+
+    .upload-zone.dragover {
+      border-color: var(--gold-dk);
+      background: var(--cream);
+      transform: scale(1.005);
+    }
+
+    .upload-zone.compact {
+      padding: 36px 32px;
+    }
+
+    .upload-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 24px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-dk);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-style: italic;
+      transition: transform 0.3s ease;
+    }
+
+    .upload-zone:hover .upload-icon {
+      transform: translateY(-2px);
+    }
+
+    .upload-zone.compact .upload-icon {
+      width: 48px;
+      height: 48px;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .upload-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 400;
+      margin-bottom: 12px;
+    }
+
+    .upload-zone.compact .upload-headline {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .upload-headline em {
+      font-style: italic;
+      color: var(--gold-dk);
+    }
+
+    .upload-help {
+      font-size: 14px;
+      color: var(--text-soft);
+      margin-bottom: 28px;
+    }
+
+    .upload-zone.compact .upload-help {
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    .upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 36px;
+      background: var(--text);
+      color: var(--cream);
+      font-family: 'Jost', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      border: 1px solid var(--text);
+      cursor: pointer;
+    }
+
+    .upload-btn:hover {
+      background: var(--gold-dk);
+      border-color: var(--gold-dk);
+    }
+
+    .upload-formats {
+      font-size: 11px;
+      color: var(--text-pale);
+      margin-top: 16px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ===== PROGRESS BAR ===== */
+
+    .progress-section {
+      margin-top: 40px;
+      display: none;
+    }
+
+    .progress-section.visible { display: block; }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .progress-count {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-style: italic;
+    }
+
+    .progress-count em {
+      color: var(--gold-dk);
+      font-weight: 400;
+    }
+
+    .progress-status {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .progress-status.uploading::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 1.4s infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--cream-warm);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--gold);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* ===== PHOTO GRID ===== */
+
+    .photos-section {
+      margin-top: 48px;
+      display: none;
+    }
+
+    .photos-section.visible { display: block; }
+
+    .photos-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .photos-section-header h3 {
+      font-size: 20px;
+    }
+
+    .photos-actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    .photos-action {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 2px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      font-family: inherit;
+      transition: color 0.2s ease;
+    }
+
+    .photos-action:hover { color: var(--gold-dk); }
+    .photos-action.danger:hover { color: var(--err); }
+
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .photo-tile {
+      aspect-ratio: 1;
+      background: var(--cream-warm);
+      position: relative;
+      overflow: hidden;
+      border-radius: 2px;
+    }
+
+    .photo-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.3s ease;
+    }
+
+    .photo-tile.uploading img { opacity: 0.5; }
+    .photo-tile.failed img { opacity: 0.3; filter: grayscale(1); }
+
+    .photo-status {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--cream);
+      backdrop-filter: blur(4px);
+    }
+
+    .photo-tile.uploading .photo-status {
+      background: rgba(184, 151, 106, 0.85);
+    }
+
+    .photo-tile.uploading .photo-status::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border: 2px solid var(--cream);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .photo-tile.done .photo-status {
+      background: rgba(90, 158, 111, 0.95);
+    }
+
+    .photo-tile.done .photo-status::before { content: '✓'; }
+
+    .photo-tile.failed .photo-status {
+      background: rgba(201, 74, 58, 0.95);
+    }
+
+    .photo-tile.failed .photo-status::before { content: '✕'; }
+
+    .photo-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      color: var(--cream);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: none;
+      font-size: 12px;
+    }
+
+    .photo-tile:hover .photo-remove { display: flex; }
+    .photo-remove:hover { background: var(--err); }
+
+    /* ===== ALERT ===== */
+
+    .alert {
+      padding: 14px 18px;
+      background: rgba(201, 123, 58, 0.1);
+      border-left: 3px solid var(--warn);
+      color: var(--text);
+      font-size: 13px;
+      margin-bottom: 24px;
+      display: none;
+    }
+
+    .alert.visible { display: block; }
+    .alert.error {
+      background: rgba(201, 74, 58, 0.08);
+      border-left-color: var(--err);
+    }
+
+    /* ===== CONTINUE BAR ===== */
+
+    .continue-bar {
+      position: sticky;
+      bottom: 0;
+      background: var(--text);
+      color: var(--cream);
+      padding: 20px 0;
+      transform: translateY(100%);
+      transition: transform 0.4s ease;
+      z-index: 50;
+      box-shadow: 0 -10px 30px -10px rgba(0,0,0,0.15);
+      margin-top: 60px;
+    }
+
+    .continue-bar.visible { transform: translateY(0); }
+
+    .continue-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .continue-context {
+      font-size: 13px;
+      color: var(--gold-lt);
+    }
+
+    .continue-context strong {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--cream);
+      font-size: 17px;
+    }
+
+    .continue-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 36px;
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      border: 1px solid var(--cream);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .continue-btn:hover {
+      background: var(--gold-lt);
+      border-color: var(--gold-lt);
+    }
+
+    .continue-btn[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ===== RESPONSIVE ===== */
+
+    @media (max-width: 880px) {
+      .step-list { display: none; }
+      .stepper-inner { justify-content: space-between; }
+      .step-list-mobile {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--gold-dk);
+      }
+    }
+
+    @media (min-width: 881px) {
+      .step-list-mobile { display: none; }
+    }
+
+    @media (max-width: 560px) {
+      .container { padding: 0 24px; }
+      .builder-hero { padding: 48px 0 32px; }
+      .upload-zone { padding: 56px 24px; }
+      .continue-inner { flex-direction: column; align-items: stretch; gap: 16px; }
+      .continue-btn { justify-content: center; }
+      .order-summary { flex-direction: column; gap: 12px; padding: 16px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Shared header -->
+  <div id="site-header"></div>
+
+  <!-- Step indicator -->
+  <div class="stepper">
+    <div class="stepper-inner">
+      <div class="step-list">
+        <div class="step-pill complete"><span class="step-num"><span>i</span></span> Your Album</div>
+        <div class="step-divider"></div>
+        <div class="step-pill active"><span class="step-num">ii</span> Upload Photos</div>
+        <div class="step-divider"></div>
+        <div class="step-pill"><span class="step-num">iii</span> Design</div>
+        <div class="step-divider"></div>
+        <div class="step-pill"><span class="step-num">iv</span> Cover</div>
+        <div class="step-divider"></div>
+        <div class="step-pill"><span class="step-num">v</span> Order</div>
+      </div>
+      <div class="step-list-mobile">
+        <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;width:22px;height:22px;border:1px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;">ii</span>
+        Step 2 of 5
+      </div>
+      <a href="/album-builder.html" class="step-back">← Back</a>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="builder-hero">
+    <div class="container">
+      <p class="builder-eyebrow">Step Two</p>
+      <h1>Upload <em>your photos</em></h1>
+      <p>Drop in your wedding photos — hundreds at a time is fine. We'll select the strongest images and design your album.</p>
+    </div>
+  </section>
+
+  <!-- Order summary -->
+  <div class="order-summary" id="orderSummary">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Setup alert (shown if Supabase not configured) -->
+  <div class="container">
+    <div class="alert" id="setupAlert">
+      <strong>Setup needed:</strong> Add your Supabase URL and anon key to this page (see the <code>SUPABASE_CONFIG</code> section in the page source) and create a storage bucket called <code>album-photos</code> in your Supabase dashboard.
+    </div>
+  </div>
+
+  <!-- Upload zone + photos -->
+  <section class="upload-section">
+    <div class="container">
+
+      <div class="upload-zone" id="uploadZone">
+        <div class="upload-icon">+</div>
+        <h2 class="upload-headline">Drop photos here, <em>or browse</em></h2>
+        <p class="upload-help">Upload as many photos as you'd like. We recommend uploading your full edited gallery from your photographer.</p>
+        <button class="upload-btn" id="browseBtn">Choose Photos</button>
+        <p class="upload-formats">JPEG, PNG, HEIC · Up to 50MB per file</p>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section" id="progressSection">
+        <div class="progress-header">
+          <div class="progress-count">
+            <em id="uploadedCount">0</em> of <span id="totalCount">0</span> photos uploaded
+          </div>
+          <div class="progress-status" id="progressStatus">Ready</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- Photos grid -->
+      <div class="photos-section" id="photosSection">
+        <div class="photos-section-header">
+          <h3 id="photosTitle">Your photos</h3>
+          <div class="photos-actions">
+            <button class="photos-action" id="addMoreBtn">+ Add more</button>
+            <button class="photos-action danger" id="clearBtn">Clear all</button>
+          </div>
+        </div>
+        <div class="photos-grid" id="photosGrid"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Continue bar -->
+  <div class="continue-bar" id="continueBar">
+    <div class="continue-inner">
+      <div class="continue-context">
+        <strong id="continueCount">0</strong> photos uploaded · We'll select the best for your album
+      </div>
+      <button class="continue-btn" id="continueBtn" onclick="continueToDesign()" disabled>
+        Continue → Design
+      </button>
+    </div>
+  </div>
+
+  <!-- Shared footer -->
+  <div id="site-footer"></div>
+
+  <script>
+    // ===== Shared header / footer =====
+    fetch('/header.html').then(r => r.text()).then(h => document.getElementById('site-header').innerHTML = h).catch(() => {});
+    fetch('/footer.html').then(r => r.text()).then(h => document.getElementById('site-footer').innerHTML = h).catch(() => {});
+
+    // ===== SUPABASE_CONFIG =====
+    // Replace these with your actual Supabase project URL and anon key.
+    // The anon key is safe to expose client-side as long as you set up
+    // proper Row Level Security policies on your storage bucket.
+    const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+    const STORAGE_BUCKET = 'album-photos';
+
+    // ===== Constants =====
+    const MIN_PHOTOS_TO_CONTINUE = 30;
+    const MAX_CONCURRENT_UPLOADS = 3;
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+    // ===== State =====
+    const STATE_KEY = 'album_builder_state';
+    let state = loadState() || {};
+
+    function loadState() {
+      try { return JSON.parse(localStorage.getItem(STATE_KEY)); }
+      catch (e) { return null; }
+    }
+
+    function saveState() {
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    }
+
+    // Redirect back to step 1 if no tier/size/pages set
+    if (!state.tier || !state.sizeId || !state.pages) {
+      window.location.href = '/album-builder.html';
+    }
+
+    // Initialize photos array and album_id if first visit
+    if (!state.album_id) {
+      state.album_id = 'alb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+    }
+    if (!state.photos) state.photos = [];
+    saveState();
+
+    // ===== Tier display data (mirror of step 1, kept here for summary) =====
+    const TIERS = {
+      'photo-book': { name: 'The Photo Book', pagesUnit: 'pages',
+        sizes: { '210sq': '210 × 210 mm', 'a4-land': 'A4 Landscape', 'a4-port': 'A4 Portrait' } },
+      'album': { name: 'The Album', pagesUnit: 'spreads',
+        sizes: { '250sq': '250 × 250 mm', '300sq': '300 × 300 mm', '300land': '300 × 230 mm' } },
+      'heirloom': { name: 'The Heirloom', pagesUnit: 'spreads',
+        sizes: { '300sq': '300 × 300 mm', '350sq': '350 × 350 mm', '400land': '400 × 300 mm' } }
+    };
+
+    function renderOrderSummary() {
+      const tier = TIERS[state.tier];
+      if (!tier) return;
+      document.getElementById('orderSummary').innerHTML = `
+        <div class="order-summary-item">
+          <span class="order-summary-label">Collection</span>
+          <span class="order-summary-value">${tier.name}</span>
+        </div>
+        <div class="order-summary-item">
+          <span class="order-summary-label">Size</span>
+          <span class="order-summary-value">${tier.sizes[state.sizeId] || state.sizeId}</span>
+        </div>
+        <div class="order-summary-item">
+          <span class="order-summary-label">Pages</span>
+          <span class="order-summary-value">${state.pages} ${tier.pagesUnit}</span>
+        </div>
+        <div class="order-summary-item">
+          <a href="/album-builder.html" class="order-summary-edit">Edit</a>
+        </div>
+      `;
+    }
+    renderOrderSummary();
+
+    // ===== Supabase setup check =====
+    let supabase = null;
+    if (SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY_HERE' || !SUPABASE_ANON_KEY) {
+      document.getElementById('setupAlert').classList.add('visible');
+    } else {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // ===== Upload queue =====
+    const uploadQueue = [];
+    let activeUploads = 0;
+    let totalQueued = 0;
+    let totalCompleted = 0;
+    let totalFailed = 0;
+
+    function processQueue() {
+      while (activeUploads < MAX_CONCURRENT_UPLOADS && uploadQueue.length > 0) {
+        const photo = uploadQueue.shift();
+        uploadPhoto(photo);
+      }
+      updateProgress();
+    }
+
+    async function uploadPhoto(photo) {
+      activeUploads++;
+      const tile = document.getElementById('tile-' + photo.localId);
+
+      try {
+        if (!supabase) throw new Error('Supabase not configured');
+
+        const path = `${state.album_id}/${photo.localId}_${photo.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const { data, error } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(path, photo.file, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: photo.file.type
+          });
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+
+        // Save photo metadata
+        const photoRecord = {
+          localId: photo.localId,
+          filename: photo.file.name,
+          path: path,
+          url: urlData.publicUrl,
+          size: photo.file.size,
+          uploadedAt: Date.now()
+        };
+        state.photos.push(photoRecord);
+        saveState();
+
+        if (tile) {
+          tile.classList.remove('uploading');
+          tile.classList.add('done');
+        }
+
+        totalCompleted++;
+      } catch (err) {
+        console.error('Upload failed:', err);
+        if (tile) {
+          tile.classList.remove('uploading');
+          tile.classList.add('failed');
+          tile.title = 'Upload failed: ' + (err.message || 'Unknown error');
+        }
+        totalFailed++;
+      } finally {
+        activeUploads--;
+        updateProgress();
+        processQueue();
+      }
+    }
+
+    function updateProgress() {
+      const total = totalQueued;
+      const done = totalCompleted + totalFailed;
+
+      document.getElementById('uploadedCount').textContent = totalCompleted;
+      document.getElementById('totalCount').textContent = total;
+
+      const fillPct = total > 0 ? (done / total) * 100 : 0;
+      document.getElementById('progressFill').style.width = fillPct + '%';
+
+      const status = document.getElementById('progressStatus');
+      if (activeUploads > 0 || uploadQueue.length > 0) {
+        status.textContent = 'Uploading';
+        status.className = 'progress-status uploading';
+      } else if (done === total && total > 0) {
+        status.textContent = totalFailed > 0 ? `${totalFailed} failed` : 'Complete';
+        status.className = 'progress-status';
+      } else {
+        status.textContent = 'Ready';
+        status.className = 'progress-status';
+      }
+
+      updateContinue();
+    }
+
+    function updateContinue() {
+      const bar = document.getElementById('continueBar');
+      const btn = document.getElementById('continueBtn');
+      const count = document.getElementById('continueCount');
+
+      const uploaded = state.photos.length;
+      count.textContent = uploaded;
+
+      if (uploaded > 0) {
+        bar.classList.add('visible');
+      }
+
+      btn.disabled = uploaded < MIN_PHOTOS_TO_CONTINUE || activeUploads > 0;
+
+      if (uploaded < MIN_PHOTOS_TO_CONTINUE) {
+        document.querySelector('.continue-context').innerHTML =
+          `<strong>${uploaded}</strong> photos uploaded · Add ${MIN_PHOTOS_TO_CONTINUE - uploaded} more to continue`;
+      } else {
+        document.querySelector('.continue-context').innerHTML =
+          `<strong>${uploaded}</strong> photos uploaded · We'll select the best for your album`;
+      }
+    }
+
+    // ===== File handling =====
+    function handleFiles(fileList) {
+      const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+      if (files.length === 0) return;
+
+      // Compact upload zone after first batch
+      document.getElementById('uploadZone').classList.add('compact');
+      document.getElementById('uploadZone').querySelector('.upload-headline').innerHTML = 'Add <em>more photos</em>';
+      document.getElementById('uploadZone').querySelector('.upload-help').textContent = 'Drop more here or click to browse';
+      document.getElementById('progressSection').classList.add('visible');
+      document.getElementById('photosSection').classList.add('visible');
+
+      const grid = document.getElementById('photosGrid');
+
+      files.forEach(file => {
+        if (file.size > MAX_FILE_SIZE) {
+          console.warn('Skipping oversized file:', file.name);
+          return;
+        }
+
+        const localId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        const photo = { localId, file };
+
+        // Create tile with local thumbnail
+        const url = URL.createObjectURL(file);
+        const tile = document.createElement('div');
+        tile.className = 'photo-tile uploading';
+        tile.id = 'tile-' + localId;
+        tile.innerHTML = `
+          <img src="${url}" alt="">
+          <div class="photo-status"></div>
+          <button class="photo-remove" onclick="removePhoto('${localId}')" title="Remove">✕</button>
+        `;
+        grid.appendChild(tile);
+
+        uploadQueue.push(photo);
+        totalQueued++;
+      });
+
+      document.getElementById('photosTitle').textContent = `Your photos (${state.photos.length + uploadQueue.length})`;
+
+      processQueue();
+    }
+
+    function removePhoto(localId) {
+      // Remove from state if uploaded
+      const idx = state.photos.findIndex(p => p.localId === localId);
+      if (idx >= 0) {
+        const photo = state.photos[idx];
+        // Remove from Supabase storage (fire and forget)
+        if (supabase && photo.path) {
+          supabase.storage.from(STORAGE_BUCKET).remove([photo.path]).catch(e => console.warn('Storage removal failed:', e));
+        }
+        state.photos.splice(idx, 1);
+        saveState();
+      }
+      // Remove tile
+      const tile = document.getElementById('tile-' + localId);
+      if (tile) tile.remove();
+
+      totalCompleted = state.photos.length;
+      document.getElementById('photosTitle').textContent = `Your photos (${state.photos.length})`;
+      updateContinue();
+    }
+
+    function clearAllPhotos() {
+      if (!confirm('Remove all uploaded photos? This cannot be undone.')) return;
+
+      // Delete from Supabase
+      if (supabase && state.photos.length) {
+        const paths = state.photos.map(p => p.path);
+        supabase.storage.from(STORAGE_BUCKET).remove(paths).catch(e => console.warn('Bulk removal failed:', e));
+      }
+
+      state.photos = [];
+      saveState();
+
+      document.getElementById('photosGrid').innerHTML = '';
+      totalQueued = 0;
+      totalCompleted = 0;
+      totalFailed = 0;
+      uploadQueue.length = 0;
+
+      document.getElementById('photosTitle').textContent = 'Your photos';
+      updateProgress();
+      updateContinue();
+    }
+
+    function continueToDesign() {
+      if (state.photos.length < MIN_PHOTOS_TO_CONTINUE) return;
+      if (activeUploads > 0) return;
+      window.location.href = '/album-builder-design.html';
+    }
+
+    // ===== Event listeners =====
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+
+    uploadZone.addEventListener('click', (e) => {
+      if (e.target === browseBtn || browseBtn.contains(e.target)) return;
+      fileInput.click();
+    });
+
+    browseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFiles(e.target.files);
+        e.target.value = '';
+      }
+    });
+
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', (e) => {
+      uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    document.getElementById('addMoreBtn').addEventListener('click', () => fileInput.click());
+    document.getElementById('clearBtn').addEventListener('click', clearAllPhotos);
+
+    // ===== Restore previously uploaded photos on page reload =====
+    if (state.photos && state.photos.length > 0) {
+      document.getElementById('uploadZone').classList.add('compact');
+      document.getElementById('uploadZone').querySelector('.upload-headline').innerHTML = 'Add <em>more photos</em>';
+      document.getElementById('uploadZone').querySelector('.upload-help').textContent = 'Drop more here or click to browse';
+      document.getElementById('photosSection').classList.add('visible');
+
+      const grid = document.getElementById('photosGrid');
+      state.photos.forEach(photo => {
+        const tile = document.createElement('div');
+        tile.className = 'photo-tile done';
+        tile.id = 'tile-' + photo.localId;
+        tile.innerHTML = `
+          <img src="${photo.url}" alt="" loading="lazy">
+          <div class="photo-status"></div>
+          <button class="photo-remove" onclick="removePhoto('${photo.localId}')" title="Remove">✕</button>
+        `;
+        grid.appendChild(tile);
+      });
+
+      document.getElementById('photosTitle').textContent = `Your photos (${state.photos.length})`;
+      totalCompleted = state.photos.length;
+      totalQueued = state.photos.length;
+      updateContinue();
+    }
+  </script>
+
+</body>
+</html>
