@@ -790,7 +790,14 @@
       localStorage.setItem(STATE_KEY, JSON.stringify(state));
     }
 
-    // (Prereq checks and album_id initialisation moved to async init at bottom of script)
+    // Synchronously initialise album_id and photos array so uploads work
+    // immediately. The full prereq check (tier/size/pages) and any URL-loaded
+    // design state are handled in the async init at bottom of script.
+    if (!state.album_id) {
+      state.album_id = 'alb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+    }
+    if (!state.photos) state.photos = [];
+    saveState();
 
     // ===== Tier display data (mirror of step 1, kept here for summary) =====
     const TIERS = {
