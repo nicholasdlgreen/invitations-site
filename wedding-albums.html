@@ -154,6 +154,17 @@
       overflow: hidden;
     }
 
+    .hero-image img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .hero-image:has(img)::before { display: none; }
+
     .hero-image::before {
       content: 'Hero photograph: open layflat album showing a candid wedding spread';
       position: absolute;
@@ -175,6 +186,7 @@
       inset: 12px;
       border: 1px solid rgba(255, 255, 255, 0.4);
       pointer-events: none;
+      z-index: 2;
     }
 
     /* ===== SECTION HEADER ===== */
@@ -273,6 +285,17 @@
       position: relative;
       overflow: hidden;
     }
+
+    .tier-image img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .tier-image:has(img)::after { display: none; }
 
     .tier-image::after {
       content: attr(data-label);
@@ -669,7 +692,9 @@
             <a href="#how" class="hero-cta-secondary">How it Works</a>
           </div>
         </div>
-        <div class="hero-image fade-up delay-2"></div>
+        <div class="hero-image fade-up delay-2">
+          <img src="/img/albums/hero.jpg" alt="Premium wedding album in oat-coloured linen with gold foil-stamped names, photographed in soft window light">
+        </div>
       </div>
     </div>
   </section>
@@ -687,7 +712,9 @@
 
         <!-- Tier 1: Photo Book -->
         <article class="tier-card">
-          <div class="tier-image" data-label="Photograph: hardback photo book with foiled cover and clean modern design"></div>
+          <div class="tier-image" data-label="Photograph: hardback photo book with foiled cover and clean modern design">
+            <img src="/img/albums/photo-book.jpg" alt="The Photo Book — modern hardback wedding photo book with grey linen cover and gold foil-stamped names">
+          </div>
           <h3 class="tier-name">The Photo Book</h3>
           <p class="tier-tagline">Modern · Hardback</p>
           <p class="tier-description">A beautifully designed hardback photo book — perfect for couples who want a contemporary keepsake without compromise.</p>
@@ -704,7 +731,9 @@
         <!-- Tier 2: The Album (FEATURED) -->
         <article class="tier-card featured">
           <span class="tier-badge">Most Popular</span>
-          <div class="tier-image" data-label="Photograph: open layflat wedding album with linen cover, panoramic spread"></div>
+          <div class="tier-image" data-label="Photograph: open layflat wedding album with linen cover, panoramic spread">
+            <img src="/img/albums/album.jpg" alt="The Album — open layflat wedding album showing a panoramic golden-hour photograph spread across both pages">
+          </div>
           <h3 class="tier-name">The Album</h3>
           <p class="tier-tagline">Layflat · Premium</p>
           <p class="tier-description">The proper wedding album — layflat pages that open completely, real fabric or eco-leather cover, premium photographic paper.</p>
@@ -720,7 +749,9 @@
 
         <!-- Tier 3: The Heirloom -->
         <article class="tier-card">
-          <div class="tier-image" data-label="Photograph: leather-bound heirloom album in presentation gift box"></div>
+          <div class="tier-image" data-label="Photograph: leather-bound heirloom album in presentation gift box">
+            <img src="/img/albums/heirloom.jpg" alt="The Heirloom — cognac Italian leather wedding album with gold monogram and corner details, presented in a velvet-lined gift box">
+          </div>
           <h3 class="tier-name">The Heirloom</h3>
           <p class="tier-tagline">Layflat · Italian Leather</p>
           <p class="tier-description">Our finest album, made to last generations. Italian leather, archival paper, presentation gift box — every detail considered.</p>
