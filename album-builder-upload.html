@@ -9,7 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/supabase-config.js"></script>
   <script src="/auth.js"></script>
+  <script src="/cart.js"></script>
   <script src="/album-save.js"></script>
   <style>
     :root {
@@ -769,11 +771,11 @@
     // The anon key is safe to expose client-side as long as you set up
     // proper Row Level Security policies on your storage bucket.
     const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_-9PtQ9cNyzpuR3XithsFgQ_vTYQbbmt';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     const STORAGE_BUCKET = 'album-photos';
 
     // ===== Constants =====
-    const MIN_PHOTOS_TO_CONTINUE = 1;
+    const MIN_PHOTOS_TO_CONTINUE = 30;
     const MAX_CONCURRENT_UPLOADS = 3;
     const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
