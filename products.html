@@ -68,22 +68,12 @@
 .trust-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;color:var(--text);margin-bottom:8px;}
 .trust-text{font-size:12px;color:var(--soft);line-height:1.85;}
 
-/* Two ways to order — compact bottom strip */
-.ways-strip{background:var(--white);padding:64px 0;border-top:1px solid var(--border);}
-.ways-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:880px;margin:0 auto;}
-.way-card{padding:32px 36px;background:var(--cream);border-radius:16px;}
-.way-tag{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:8px;}
-.way-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin:0 0 8px;}
-.way-text{font-size:12.5px;color:var(--soft);line-height:1.85;margin:0 0 18px;}
-.way-link{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none;font-weight:500;border-bottom:1px solid var(--gold);padding-bottom:3px;}
-
 @media(max-width:1024px){
   .product-grid{grid-template-columns:repeat(2,1fr);gap:16px;}
 }
 @media(max-width:640px){
   .product-grid{grid-template-columns:1fr;gap:14px;}
   .trust-grid{grid-template-columns:1fr;gap:20px;}
-  .ways-grid{grid-template-columns:1fr;gap:14px;}
   .filter-bar-inner{flex-direction:column;align-items:flex-start;}
 }
 </style>
@@ -158,26 +148,6 @@
         <div class="trust-icon">✸</div>
         <div class="trust-title">Premium paper stocks</div>
         <div class="trust-text">[REPLACE: Curated selection of premium British paper stocks for every order.]</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- TWO WAYS TO ORDER -->
-<section class="ways-strip">
-  <div class="container">
-    <div class="ways-grid">
-      <div class="way-card">
-        <div class="way-tag">Option 1</div>
-        <h3 class="way-title">Upload your design</h3>
-        <p class="way-text">Already have artwork ready? Upload your file, choose your specs and we'll handle the rest.</p>
-        <a class="way-link" href="/products">Browse products →</a>
-      </div>
-      <div class="way-card">
-        <div class="way-tag">Option 2</div>
-        <h3 class="way-title">Use our Design Studio</h3>
-        <p class="way-text">Don't have artwork yet? Our Design Studio walks you through creating your invitation from scratch.</p>
-        <a class="way-link" href="/design-studio">Open Design Studio →</a>
       </div>
     </div>
   </div>
