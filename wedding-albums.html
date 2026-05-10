@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wedding Albums | Invitations</title>
+  <meta name="description" content="Beautifully designed wedding albums, hand-finished in the UK. Upload your photos and receive a keepsake album you'll treasure for a lifetime.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FAF7F2;
+      --cream-warm: #F4EFE6;
+      --gold: #B8976A;
+      --gold-lt: #D4B896;
+      --gold-dk: #9B7F56;
+      --brown: #6B4F3A;
+      --text: #3D2E24;
+      --text-soft: #6B5A4D;
+      --line: rgba(184, 151, 106, 0.25);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      color: var(--text);
+      background: var(--cream);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: -0.005em;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    img { max-width: 100%; display: block; }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ===== HERO ===== */
+
+    .hero {
+      padding: 100px 0 120px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold-dk);
+      margin-bottom: 28px;
+      font-weight: 400;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 32px;
+      height: 1px;
+      background: var(--gold);
+      vertical-align: middle;
+      margin-right: 14px;
+      transform: translateY(-2px);
+    }
+
+    .hero h1 {
+      font-size: clamp(48px, 6.2vw, 84px);
+      line-height: 1.04;
+      font-weight: 300;
+      margin-bottom: 32px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--gold-dk);
+      font-weight: 400;
+    }
+
+    .hero-lede {
+      font-size: 18px;
+      color: var(--text-soft);
+      max-width: 480px;
+      margin-bottom: 40px;
+      line-height: 1.7;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 36px;
+      background: var(--text);
+      color: var(--cream);
+      font-family: 'Jost', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      border: 1px solid var(--text);
+    }
+
+    .hero-cta:hover {
+      background: var(--gold-dk);
+      border-color: var(--gold-dk);
+      transform: translateY(-1px);
+    }
+
+    .hero-cta-secondary {
+      margin-left: 24px;
+      padding: 18px 0;
+      font-family: 'Jost', sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text);
+      border-bottom: 1px solid var(--gold);
+      transition: color 0.3s ease;
+    }
+
+    .hero-cta-secondary:hover { color: var(--gold-dk); }
+
+    .hero-image {
+      position: relative;
+      aspect-ratio: 4 / 5;
+      background: linear-gradient(135deg, var(--cream-warm) 0%, var(--gold-lt) 100%);
+      border-radius: 2px;
+      box-shadow: 0 24px 60px -20px rgba(61, 46, 36, 0.25);
+      overflow: hidden;
+    }
+
+    .hero-image::before {
+      content: 'Hero photograph: open layflat album showing a candid wedding spread';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      font-style: italic;
+      color: var(--brown);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+    }
+
+    .hero-image::after {
+      content: '';
+      position: absolute;
+      inset: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      pointer-events: none;
+    }
+
+    /* ===== SECTION HEADER ===== */
+
+    .section-header {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 80px;
+    }
+
+    .section-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold-dk);
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+      font-size: clamp(36px, 4.5vw, 56px);
+      line-height: 1.1;
+      margin-bottom: 24px;
+      font-weight: 300;
+    }
+
+    .section-header h2 em {
+      font-style: italic;
+      color: var(--gold-dk);
+    }
+
+    .section-header p {
+      font-size: 17px;
+      color: var(--text-soft);
+      line-height: 1.7;
+    }
+
+    /* ===== TIERS ===== */
+
+    .tiers {
+      padding: 120px 0;
+      background: var(--cream-warm);
+      position: relative;
+    }
+
+    .tiers-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+    }
+
+    .tier-card {
+      background: var(--cream);
+      padding: 56px 44px;
+      position: relative;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tier-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 30px 60px -25px rgba(61, 46, 36, 0.2);
+    }
+
+    .tier-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gold);
+    }
+
+    .tier-card.featured::before {
+      background: var(--brown);
+      height: 3px;
+    }
+
+    .tier-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--brown);
+      color: var(--cream);
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      padding: 7px 18px;
+      font-weight: 400;
+    }
+
+    .tier-image {
+      aspect-ratio: 1 / 1;
+      background: linear-gradient(135deg, var(--cream-warm) 0%, var(--gold-lt) 100%);
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tier-image::after {
+      content: attr(data-label);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 15px;
+      color: var(--brown);
+    }
+
+    .tier-name {
+      font-size: 32px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+
+    .tier-tagline {
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold-dk);
+      margin-bottom: 28px;
+    }
+
+    .tier-description {
+      color: var(--text-soft);
+      font-size: 15px;
+      line-height: 1.75;
+      margin-bottom: 32px;
+    }
+
+    .tier-features {
+      list-style: none;
+      margin-bottom: 40px;
+      flex-grow: 1;
+    }
+
+    .tier-features li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      color: var(--text);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .tier-features li::before {
+      content: '—';
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    .tier-features li:last-child { border-bottom: none; }
+
+    .tier-cta {
+      display: block;
+      text-align: center;
+      padding: 16px 32px;
+      border: 1px solid var(--text);
+      color: var(--text);
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+
+    .tier-cta:hover {
+      background: var(--text);
+      color: var(--cream);
+    }
+
+    .tier-card.featured .tier-cta {
+      background: var(--text);
+      color: var(--cream);
+    }
+
+    .tier-card.featured .tier-cta:hover {
+      background: var(--gold-dk);
+      border-color: var(--gold-dk);
+    }
+
+    /* ===== HOW IT WORKS ===== */
+
+    .how {
+      padding: 140px 0;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 48px;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 36px;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      background: var(--line);
+      z-index: 0;
+    }
+
+    .step {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .step-number {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--cream);
+      border: 1px solid var(--gold);
+      color: var(--gold-dk);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      font-style: italic;
+    }
+
+    .step h3 {
+      font-size: 22px;
+      margin-bottom: 14px;
+      font-weight: 400;
+    }
+
+    .step p {
+      font-size: 14px;
+      color: var(--text-soft);
+      line-height: 1.7;
+    }
+
+    /* ===== CRAFT SECTION ===== */
+
+    .craft {
+      padding: 120px 0;
+      background: var(--cream-warm);
+    }
+
+    .craft-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .craft-image {
+      aspect-ratio: 5 / 6;
+      background: linear-gradient(160deg, var(--gold-lt) 0%, var(--brown) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .craft-image::before {
+      content: 'Detail photograph: hand-binding, foil cover, or premium paper texture';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      font-style: italic;
+      color: var(--cream);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 17px;
+    }
+
+    .craft-content h2 {
+      font-size: clamp(36px, 4.2vw, 52px);
+      line-height: 1.12;
+      margin-bottom: 32px;
+      font-weight: 300;
+    }
+
+    .craft-content h2 em {
+      font-style: italic;
+      color: var(--gold-dk);
+    }
+
+    .craft-content p {
+      font-size: 16px;
+      color: var(--text-soft);
+      line-height: 1.8;
+      margin-bottom: 24px;
+    }
+
+    .craft-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 48px;
+      padding-top: 40px;
+      border-top: 1px solid var(--line);
+    }
+
+    .craft-stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px;
+      color: var(--gold-dk);
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+
+    .craft-stat-label {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    /* ===== FAQ ===== */
+
+    .faq {
+      padding: 140px 0;
+    }
+
+    .faq-list {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .faq-question {
+      width: 100%;
+      padding: 28px 0;
+      background: none;
+      border: none;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      transition: color 0.2s ease;
+    }
+
+    .faq-question:hover { color: var(--gold-dk); }
+
+    .faq-toggle {
+      font-size: 20px;
+      color: var(--gold);
+      transition: transform 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-toggle { transform: rotate(45deg); }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.4s ease;
+      color: var(--text-soft);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 400px;
+      padding-bottom: 28px;
+    }
+
+    /* ===== FINAL CTA ===== */
+
+    .final-cta {
+      padding: 140px 0;
+      background: var(--text);
+      color: var(--cream);
+      text-align: center;
+    }
+
+    .final-cta h2 {
+      font-size: clamp(40px, 5vw, 64px);
+      color: var(--cream);
+      font-weight: 300;
+      line-height: 1.1;
+      margin-bottom: 28px;
+    }
+
+    .final-cta h2 em {
+      font-style: italic;
+      color: var(--gold-lt);
+    }
+
+    .final-cta p {
+      font-size: 17px;
+      color: rgba(250, 247, 242, 0.75);
+      max-width: 540px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+
+    .final-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 44px;
+      background: var(--cream);
+      color: var(--text);
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      border: 1px solid var(--cream);
+    }
+
+    .final-cta-btn:hover {
+      background: var(--gold-lt);
+      border-color: var(--gold-lt);
+      transform: translateY(-2px);
+    }
+
+    /* ===== HEADER/FOOTER PLACEHOLDERS ===== */
+    /* Matches existing site pattern - JS injects shared header/footer */
+
+    #site-header, #site-footer {
+      width: 100%;
+    }
+
+    /* ===== RESPONSIVE ===== */
+
+    @media (max-width: 980px) {
+      .hero { padding: 60px 0 80px; }
+      .hero-grid { grid-template-columns: 1fr; gap: 56px; }
+      .hero-image { max-width: 480px; margin: 0 auto; }
+      .tiers-grid { grid-template-columns: 1fr; gap: 32px; max-width: 460px; margin: 0 auto; }
+      .steps { grid-template-columns: 1fr 1fr; gap: 48px 32px; }
+      .steps::before { display: none; }
+      .craft-grid { grid-template-columns: 1fr; gap: 56px; }
+      .craft-image { max-width: 480px; }
+    }
+
+    @media (max-width: 560px) {
+      .container { padding: 0 24px; }
+      .hero-cta-secondary { display: block; margin: 16px 0 0; }
+      .steps { grid-template-columns: 1fr; }
+      .craft-stats { grid-template-columns: 1fr; gap: 24px; }
+      .tiers, .how, .craft, .faq, .final-cta { padding: 80px 0; }
+    }
+
+    /* ===== SUBTLE LOAD ANIMATION ===== */
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.9s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .delay-1 { animation-delay: 0.15s; }
+    .delay-2 { animation-delay: 0.3s; }
+    .delay-3 { animation-delay: 0.45s; }
+    .delay-4 { animation-delay: 0.6s; }
+  </style>
+</head>
+<body>
+
+  <!-- Shared header injected via JS, matches existing site pattern -->
+  <div id="site-header"></div>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <p class="hero-eyebrow fade-up">Wedding Albums</p>
+          <h1 class="fade-up delay-1">Your wedding day,<br><em>beautifully bound.</em></h1>
+          <p class="hero-lede fade-up delay-2">Upload your photos and we'll design a complete wedding album for you to refine — printed on premium paper, hand-finished in the UK, and delivered as a keepsake to treasure.</p>
+          <div class="fade-up delay-3">
+            <a href="#start" class="hero-cta">Start Your Album <span>→</span></a>
+            <a href="#how" class="hero-cta-secondary">How it Works</a>
+          </div>
+        </div>
+        <div class="hero-image fade-up delay-2"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TIERS ===== -->
+  <section class="tiers" id="tiers">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-eyebrow">Three Collections</p>
+        <h2>Find the album that <em>tells your story</em></h2>
+        <p>From the modern photo book to the heirloom album, every collection is designed by you, with our help, and finished by hand in the UK.</p>
+      </div>
+
+      <div class="tiers-grid">
+
+        <!-- Tier 1: Photo Book -->
+        <article class="tier-card">
+          <div class="tier-image" data-label="Photograph: hardback photo book with foiled cover and clean modern design"></div>
+          <h3 class="tier-name">The Photo Book</h3>
+          <p class="tier-tagline">Modern · Hardback</p>
+          <p class="tier-description">A beautifully designed hardback photo book — perfect for couples who want a contemporary keepsake without compromise.</p>
+          <ul class="tier-features">
+            <li>Hardback case-bound, premium silk paper</li>
+            <li>Square or landscape, 40 to 80 pages</li>
+            <li>Soft-touch, linen, or leather-effect cover</li>
+            <li>Foil-stamped names &amp; date included</li>
+            <li>Designed in minutes, refined in your time</li>
+          </ul>
+          <a href="#start" class="tier-cta">Build Yours</a>
+        </article>
+
+        <!-- Tier 2: The Album (FEATURED) -->
+        <article class="tier-card featured">
+          <span class="tier-badge">Most Popular</span>
+          <div class="tier-image" data-label="Photograph: open layflat wedding album with linen cover, panoramic spread"></div>
+          <h3 class="tier-name">The Album</h3>
+          <p class="tier-tagline">Layflat · Premium</p>
+          <p class="tier-description">The proper wedding album — layflat pages that open completely, real fabric or eco-leather cover, premium photographic paper.</p>
+          <ul class="tier-features">
+            <li>Layflat binding, panoramic spreads</li>
+            <li>Square or landscape, 20 to 40 spreads</li>
+            <li>Real linen or eco-leather cover</li>
+            <li>Foil &amp; optional Spot UV personalisation</li>
+            <li>Optional printed endpapers &amp; dust jacket</li>
+          </ul>
+          <a href="#start" class="tier-cta">Build Yours</a>
+        </article>
+
+        <!-- Tier 3: The Heirloom -->
+        <article class="tier-card">
+          <div class="tier-image" data-label="Photograph: leather-bound heirloom album in presentation gift box"></div>
+          <h3 class="tier-name">The Heirloom</h3>
+          <p class="tier-tagline">Layflat · Italian Leather</p>
+          <p class="tier-description">Our finest album, made to last generations. Italian leather, archival paper, presentation gift box — every detail considered.</p>
+          <ul class="tier-features">
+            <li>Layflat with thick board pages</li>
+            <li>Up to 50 spreads, larger formats available</li>
+            <li>Full-grain Italian leather or premium linen</li>
+            <li>Deep foil, Spot UV &amp; optional debossing</li>
+            <li>Presentation gift box with magnetic closure</li>
+          </ul>
+          <a href="#start" class="tier-cta">Build Yours</a>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section class="how" id="how">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-eyebrow">How it Works</p>
+        <h2>From hundreds of photos to a <em>beautiful album,</em> in four steps</h2>
+        <p>Designing a wedding album is usually the part couples put off forever. We've made it the part you'll enjoy.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">i</div>
+          <h3>Upload</h3>
+          <p>Drag and drop your wedding photos — hundreds at a time. We handle the rest in the background while you continue.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">ii</div>
+          <h3>Design</h3>
+          <p>We curate the strongest images and lay out a complete album for you in minutes — sequenced as your day unfolded.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">iii</div>
+          <h3>Refine</h3>
+          <p>Reorder spreads, swap photos, and personalise your cover until your album feels exactly right.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">iv</div>
+          <h3>Receive</h3>
+          <p>Your album is printed on premium paper, hand-finished in the UK, and delivered to your door as a keepsake.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CRAFT SECTION ===== -->
+  <section class="craft">
+    <div class="container">
+      <div class="craft-grid">
+        <div class="craft-image"></div>
+        <div class="craft-content">
+          <p class="section-eyebrow">Made in the UK</p>
+          <h2>Every album is <em>hand-finished</em> by craftspeople</h2>
+          <p>We work with one of Britain's finest print and binding houses, where every album passes through skilled hands. Premium paper, foil stamping, real fabric covers — finished with the kind of care your wedding deserves.</p>
+          <p>The result is an album you'll want on your shelf, not in a drawer. Made to be opened, shared, and passed down.</p>
+
+          <div class="craft-stats">
+            <div>
+              <div class="craft-stat-value">UK</div>
+              <div class="craft-stat-label">Hand-finished</div>
+            </div>
+            <div>
+              <div class="craft-stat-value">100yr</div>
+              <div class="craft-stat-label">Archival paper</div>
+            </div>
+            <div>
+              <div class="craft-stat-value">14d</div>
+              <div class="craft-stat-label">Typical delivery</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQ ===== -->
+  <section class="faq">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-eyebrow">Questions</p>
+        <h2>Things <em>couples often ask</em></h2>
+      </div>
+
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How many photos should I upload?</span>
+            <span class="faq-toggle">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>As many as you'd like — we recommend uploading your full edited gallery from your photographer. Most weddings produce 400 to 800 photos, and we'll curate the strongest images that tell your story. There's no penalty for uploading more.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How long does the album take to design?</span>
+            <span class="faq-toggle">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>Your first draft is ready in minutes. Most couples spend 30 to 60 minutes refining their album, but you can take as long as you'd like — your design is saved and you can return to it whenever you want.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Can I change my mind about the cover or size?</span>
+            <span class="faq-toggle">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>Yes. You can change cover materials, foil colours, sizes and page counts at any time during the design process. The preview updates instantly so you can see exactly what you're ordering.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>What's the difference between the three collections?</span>
+            <span class="faq-toggle">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>The Photo Book is a beautifully designed modern hardback — ideal for a contemporary keepsake. The Album is a true wedding album with layflat pages and real fabric or eco-leather covers. The Heirloom is our finest, made with Italian leather, thick board pages and a presentation gift box — built to last generations.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How long until my album arrives?</span>
+            <span class="faq-toggle">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>Once you've approved your final design, your album is typically printed and delivered within 14 days. We'll send a final proof for approval before anything goes to print, so you have full peace of mind.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Can I order matching parent albums?</span>
+            <span class="faq-toggle">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>Yes. Heirloom collection orders include the option to add matching parent albums — designed identically to your main album but in a slightly smaller format. A beautiful gift for both sets of parents.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FINAL CTA ===== -->
+  <section class="final-cta" id="start">
+    <div class="container">
+      <h2>Ready to <em>begin?</em></h2>
+      <p>Upload your photos and we'll design your album in minutes. No commitment until you order.</p>
+      <a href="/album-builder" class="final-cta-btn">Start Your Album <span>→</span></a>
+    </div>
+  </section>
+
+  <!-- Shared footer injected via JS, matches existing site pattern -->
+  <div id="site-footer"></div>
+
+  <script>
+    // ===== SHARED HEADER / FOOTER (matches existing site pattern) =====
+    fetch('/header.html')
+      .then(r => r.text())
+      .then(html => { document.getElementById('site-header').innerHTML = html; })
+      .catch(() => {});
+
+    fetch('/footer.html')
+      .then(r => r.text())
+      .then(html => { document.getElementById('site-footer').innerHTML = html; })
+      .catch(() => {});
+
+    // ===== FAQ ACCORDION =====
+    document.querySelectorAll('.faq-question').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement;
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
+    });
+  </script>
+
+</body>
+</html>
