@@ -49,7 +49,7 @@
         console.warn('[invAuth] Supabase SDK not loaded — auth disabled');
         return;
       }
-      if (SUPABASE_ANON_KEY === 'sb_publishable_-9PtQ9cNyzpuR3XithsFgQ_vTYQbbmt' || !SUPABASE_ANON_KEY) {
+      if (SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY_HERE' || !SUPABASE_ANON_KEY) {
         console.warn('[invAuth] Supabase publishable key not configured — auth disabled');
         return;
       }
@@ -259,15 +259,18 @@
 
     onChange(refresh);
 
-    // Outside-click handler to close dropdown
+    // Outside-click handler to close any open dropdown
     if (!dropdownClickHandler) {
       dropdownClickHandler = (e) => {
-        const dropdown = document.getElementById('authDropdown');
-        const trigger = document.getElementById('authTrigger');
-        if (!dropdown || !trigger) return;
-        if (dropdown.contains(e.target) || trigger.contains(e.target)) return;
-        dropdown.classList.remove('open');
-        trigger.classList.remove('open');
+        const triggers = document.querySelectorAll('.acct-trigger');
+        const dropdowns = document.querySelectorAll('.acct-dropdown');
+        let inside = false;
+        triggers.forEach((t) => { if (t.contains(e.target)) inside = true; });
+        dropdowns.forEach((d) => { if (d.contains(e.target)) inside = true; });
+        if (!inside) {
+          dropdowns.forEach((d) => d.classList.remove('open'));
+          triggers.forEach((t) => t.classList.remove('open'));
+        }
       };
       document.addEventListener('click', dropdownClickHandler);
     }
@@ -277,12 +280,34 @@
 
   function toggleAuthDropdown(event) {
     if (event) event.stopPropagation();
+
+    // New structure: each auth-state has its own .acct-trigger + .acct-dropdown
+    const trigger = event && event.currentTarget;
+    if (trigger && trigger.classList && trigger.classList.contains('acct-trigger')) {
+      const wrap = trigger.closest('.auth-state');
+      const dropdown = wrap && wrap.querySelector('.acct-dropdown');
+      if (dropdown) {
+        const willOpen = !dropdown.classList.contains('open');
+        // Close any other dropdowns first
+        document.querySelectorAll('.acct-dropdown.open').forEach((d) => {
+          if (d !== dropdown) d.classList.remove('open');
+        });
+        document.querySelectorAll('.acct-trigger.open').forEach((t) => {
+          if (t !== trigger) t.classList.remove('open');
+        });
+        dropdown.classList.toggle('open', willOpen);
+        trigger.classList.toggle('open', willOpen);
+        return;
+      }
+    }
+
+    // Fallback: legacy single-dropdown structure (id="authDropdown")
     const dropdown = document.getElementById('authDropdown');
-    const trigger = document.getElementById('authTrigger');
-    if (!dropdown || !trigger) return;
+    const oldTrigger = document.getElementById('authTrigger');
+    if (!dropdown || !oldTrigger) return;
     const isOpen = dropdown.classList.contains('open');
     dropdown.classList.toggle('open', !isOpen);
-    trigger.classList.toggle('open', !isOpen);
+    oldTrigger.classList.toggle('open', !isOpen);
   }
 
   // Watch for the header to be injected into the page
