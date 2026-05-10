@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/auth.js"></script>
+  <script src="/album-save.js"></script>
   <style>
     :root {
       --cream: #FAF7F2;
@@ -128,6 +129,15 @@
     }
 
     .step-back:hover { color: var(--gold-dk); }
+
+    .stepper-inner > a.step-back,
+    .stepper-inner > .invsave-btn {
+      flex-shrink: 0;
+    }
+    .step-back + .invsave-btn,
+    .invsave-btn + .step-back {
+      margin-left: 16px;
+    }
 
     /* ===== HERO ===== */
 
@@ -641,6 +651,7 @@
         Step 3 of 5
       </div>
       <a href="/album-builder-upload.html" class="step-back">← Back</a>
+      <button class="invsave-btn" id="saveBtn" title="Save your design"><span class="invsave-btn-icon">✦</span> Save</button>
     </div>
   </div>
 
@@ -758,13 +769,7 @@
       localStorage.setItem(STATE_KEY, JSON.stringify(state));
     }
 
-    // Redirect to step 1 if missing essentials, or step 2 if no photos
-    if (!state.tier || !state.sizeId || !state.pages) {
-      window.location.href = '/album-builder.html';
-    }
-    if (!state.photos || state.photos.length === 0) {
-      window.location.href = '/album-builder-upload.html';
-    }
+    // (Prereq checks and initial render moved to async init at bottom of script)
 
     // ===== Tier & spread config =====
     const TIERS = {
@@ -794,10 +799,7 @@
       return SPREAD_ASPECTS[state.tier][state.sizeId] || 2;
     }
 
-    // ===== Init intro stats =====
-    document.getElementById('introPhotoCount').textContent = state.photos.length;
-    document.getElementById('introTargetCount').textContent = Math.min(getTargetPhotoCount(), state.photos.length);
-    document.getElementById('introSpreadCount').textContent = getSpreadCount();
+    // ===== Init intro stats — moved to async init below =====
 
     // ===== Begin button =====
     document.getElementById('beginBtn').addEventListener('click', startCuration);
@@ -1072,32 +1074,76 @@
       window.location.href = '/album-builder-cover.html';
     }
 
-    // ===== If we already have spreads in state, jump straight to result =====
-    if (state.spreads && state.selectedPhotoIds && state.scores) {
-      document.getElementById('introSection').style.display = 'none';
+    // ===== Async init: load from URL, check prereqs, then render =====
+    (async () => {
+      // 1. Try loading from URL ?design=xxx
+      if (window.invAlbumSave) {
+        const loaded = await window.invAlbumSave.init({
+          productType: 'wedding-album',
+          getDesignId: () => {
+            if (!state.album_id) {
+              state.album_id = 'alb_' + Date.now() + '_' + Math.random().toString(36).slice(2,9);
+              saveState();
+            }
+            return state.album_id;
+          },
+          getDesignData: () => state,
+          getMetadata: () => {
+            const tierName = state.tier === 'photo-book' ? 'The Photo Book'
+              : state.tier === 'album' ? 'The Album'
+              : state.tier === 'heirloom' ? 'The Heirloom' : '';
+            const subtitle = state.spreads ? 'Album draft created'
+              : state.photos ? state.photos.length + ' photos uploaded'
+              : 'Started';
+            return {
+              title: tierName || 'Wedding Album',
+              subtitle: subtitle,
+              thumbnail_url: (state.photos && state.photos[0] && state.photos[0].url) || null
+            };
+          }
+        });
+        if (loaded) state = loadState() || {};
+      }
 
-      // Reconstruct selected scores
-      const scoreMap = new Map(state.scores.map(s => [s.id, s]));
-      const selectedScores = state.selectedPhotoIds.map(id => scoreMap.get(id)).filter(Boolean);
+      // 2. Prereq checks
+      if (!state.tier || !state.sizeId || !state.pages) {
+        window.location.href = '/album-builder.html';
+        return;
+      }
+      if (!state.photos || state.photos.length === 0) {
+        window.location.href = '/album-builder-upload.html';
+        return;
+      }
 
-      // Reconstruct spreads
-      const photoMap = new Map(state.photos.map(p => [p.localId, p]));
-      const spreads = state.spreads.map(s => ({
-        index: s.index,
-        template: s.template,
-        slots: TEMPLATES[s.template],
-        photos: s.photoIds.map(id => photoMap.get(id)).filter(Boolean)
-      }));
+      // 3. Render intro stats
+      document.getElementById('introPhotoCount').textContent = state.photos.length;
+      document.getElementById('introTargetCount').textContent = Math.min(getTargetPhotoCount(), state.photos.length);
+      document.getElementById('introSpreadCount').textContent = getSpreadCount();
 
-      // Show result directly
-      document.getElementById('resultSection').classList.add('visible');
-      document.getElementById('resultPhotosUsed').textContent = selectedScores.length;
-      document.getElementById('resultSpreads').textContent = getSpreadCount();
-      const avgScore = selectedScores.reduce((s, p) => s + (p.score || 0), 0) / selectedScores.length;
-      document.getElementById('resultAvgScore').textContent = avgScore.toFixed(1);
-      renderAlbumPreview(spreads);
-      document.getElementById('actionBar').classList.add('visible');
-    }
+      // 4. If we already have spreads, jump straight to the result view
+      if (state.spreads && state.selectedPhotoIds && state.scores) {
+        document.getElementById('introSection').style.display = 'none';
+
+        const scoreMap = new Map(state.scores.map(s => [s.id, s]));
+        const selectedScores = state.selectedPhotoIds.map(id => scoreMap.get(id)).filter(Boolean);
+
+        const photoMap = new Map(state.photos.map(p => [p.localId, p]));
+        const spreads = state.spreads.map(s => ({
+          index: s.index,
+          template: s.template,
+          slots: TEMPLATES[s.template],
+          photos: s.photoIds.map(id => photoMap.get(id)).filter(Boolean)
+        }));
+
+        document.getElementById('resultSection').classList.add('visible');
+        document.getElementById('resultPhotosUsed').textContent = selectedScores.length;
+        document.getElementById('resultSpreads').textContent = getSpreadCount();
+        const avgScore = selectedScores.reduce((s, p) => s + (p.score || 0), 0) / selectedScores.length;
+        document.getElementById('resultAvgScore').textContent = avgScore.toFixed(1);
+        renderAlbumPreview(spreads);
+        document.getElementById('actionBar').classList.add('visible');
+      }
+    })();
   </script>
 
 </body>
