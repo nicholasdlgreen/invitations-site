@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/auth.js"></script>
+  <script src="/album-save.js"></script>
   <style>
     :root {
       --cream: #FAF7F2;
@@ -129,6 +130,15 @@
     }
 
     .step-back:hover { color: var(--gold-dk); }
+
+    .stepper-inner > a.step-back,
+    .stepper-inner > .invsave-btn {
+      flex-shrink: 0;
+    }
+    .step-back + .invsave-btn,
+    .invsave-btn + .step-back {
+      margin-left: 16px;
+    }
 
     /* ===== HERO ===== */
 
@@ -668,6 +678,7 @@
         Step 2 of 5
       </div>
       <a href="/album-builder.html" class="step-back">← Back</a>
+      <button class="invsave-btn" id="saveBtn" title="Save your design"><span class="invsave-btn-icon">✦</span> Save</button>
     </div>
   </div>
 
@@ -779,17 +790,7 @@
       localStorage.setItem(STATE_KEY, JSON.stringify(state));
     }
 
-    // Redirect back to step 1 if no tier/size/pages set
-    if (!state.tier || !state.sizeId || !state.pages) {
-      window.location.href = '/album-builder.html';
-    }
-
-    // Initialize photos array and album_id if first visit
-    if (!state.album_id) {
-      state.album_id = 'alb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
-    }
-    if (!state.photos) state.photos = [];
-    saveState();
+    // (Prereq checks and album_id initialisation moved to async init at bottom of script)
 
     // ===== Tier display data (mirror of step 1, kept here for summary) =====
     const TIERS = {
@@ -822,7 +823,7 @@
         </div>
       `;
     }
-    renderOrderSummary();
+    // (renderOrderSummary called from async init below)
 
     // ===== Supabase setup check =====
     // Note: variable named 'sb' to avoid conflict with the global 'supabase'
@@ -1085,31 +1086,77 @@
     document.getElementById('addMoreBtn').addEventListener('click', () => fileInput.click());
     document.getElementById('clearBtn').addEventListener('click', clearAllPhotos);
 
-    // ===== Restore previously uploaded photos on page reload =====
-    if (state.photos && state.photos.length > 0) {
-      document.getElementById('uploadZone').classList.add('compact');
-      document.getElementById('uploadZone').querySelector('.upload-headline').innerHTML = 'Add <em>more photos</em>';
-      document.getElementById('uploadZone').querySelector('.upload-help').textContent = 'Drop more here or click to browse';
-      document.getElementById('photosSection').classList.add('visible');
+    // ===== Async init: load from URL if present, then check prereqs, then render =====
+    (async () => {
+      // 1. Try loading from URL ?design=xxx (replaces state if found)
+      if (window.invAlbumSave) {
+        const loaded = await window.invAlbumSave.init({
+          productType: 'wedding-album',
+          getDesignId: () => {
+            if (!state.album_id) {
+              state.album_id = 'alb_' + Date.now() + '_' + Math.random().toString(36).slice(2,9);
+              saveState();
+            }
+            return state.album_id;
+          },
+          getDesignData: () => state,
+          getMetadata: () => {
+            const tierName = state.tier === 'photo-book' ? 'The Photo Book'
+              : state.tier === 'album' ? 'The Album'
+              : state.tier === 'heirloom' ? 'The Heirloom' : '';
+            const photoCount = (state.photos || []).length;
+            return {
+              title: tierName || 'Wedding Album',
+              subtitle: photoCount ? photoCount + ' photos uploaded' : 'Photo upload',
+              thumbnail_url: (state.photos && state.photos[0] && state.photos[0].url) || null
+            };
+          }
+        });
+        if (loaded) state = loadState() || {};
+      }
 
-      const grid = document.getElementById('photosGrid');
-      state.photos.forEach(photo => {
-        const tile = document.createElement('div');
-        tile.className = 'photo-tile done';
-        tile.id = 'tile-' + photo.localId;
-        tile.innerHTML = `
-          <img src="${photo.url}" alt="" loading="lazy">
-          <div class="photo-status"></div>
-          <button class="photo-remove" onclick="removePhoto('${photo.localId}')" title="Remove">✕</button>
-        `;
-        grid.appendChild(tile);
-      });
+      // 2. Prereq check — go back to step 1 if missing essentials
+      if (!state.tier || !state.sizeId || !state.pages) {
+        window.location.href = '/album-builder.html';
+        return;
+      }
 
-      document.getElementById('photosTitle').textContent = `Your photos (${state.photos.length})`;
-      totalCompleted = state.photos.length;
-      totalQueued = state.photos.length;
-      updateContinue();
-    }
+      // 3. Init album_id and photos array
+      if (!state.album_id) {
+        state.album_id = 'alb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+      }
+      if (!state.photos) state.photos = [];
+      saveState();
+
+      // 4. Render order summary
+      renderOrderSummary();
+
+      // 5. Restore previously uploaded photos
+      if (state.photos && state.photos.length > 0) {
+        document.getElementById('uploadZone').classList.add('compact');
+        document.getElementById('uploadZone').querySelector('.upload-headline').innerHTML = 'Add <em>more photos</em>';
+        document.getElementById('uploadZone').querySelector('.upload-help').textContent = 'Drop more here or click to browse';
+        document.getElementById('photosSection').classList.add('visible');
+
+        const grid = document.getElementById('photosGrid');
+        state.photos.forEach(photo => {
+          const tile = document.createElement('div');
+          tile.className = 'photo-tile done';
+          tile.id = 'tile-' + photo.localId;
+          tile.innerHTML = `
+            <img src="${photo.url}" alt="" loading="lazy">
+            <div class="photo-status"></div>
+            <button class="photo-remove" onclick="removePhoto('${photo.localId}')" title="Remove">✕</button>
+          `;
+          grid.appendChild(tile);
+        });
+
+        document.getElementById('photosTitle').textContent = `Your photos (${state.photos.length})`;
+        totalCompleted = state.photos.length;
+        totalQueued = state.photos.length;
+        updateContinue();
+      }
+    })();
   </script>
 
 </body>
