@@ -161,24 +161,10 @@ nav a:hover,nav a.active{color:var(--gold);}
 
 <div class="toast" id="toast"></div>
 
-<script>
-let cart=[];
-try{cart=JSON.parse(localStorage.getItem('inv_cart')||'[]');}catch(e){cart=[];}
-function saveCart(){localStorage.setItem('inv_cart',JSON.stringify(cart));}
-function updateCartBadge(){document.querySelectorAll('#cartCount').forEach(el=>el.textContent=cart.length);}
-function removeCartItem(i){cart.splice(i,1);saveCart();updateCartBadge();renderCartDrawer();}
-function openCart(){renderCartDrawer();document.getElementById('cartBg').classList.add('open');document.getElementById('cartDrawer').classList.add('open');}
-function closeCart(){document.getElementById('cartBg').classList.remove('open');document.getElementById('cartDrawer').classList.remove('open');}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
-function renderCartDrawer(){
-  const scroll=document.getElementById('cartScroll'),foot=document.getElementById('cartFoot');
-  if(!cart.length){scroll.innerHTML='<div class="cart-empty"><div style="font-size:40px;margin-bottom:16px;">✦</div><p style="font-size:13px;color:var(--pale);">Your basket is empty</p></div>';foot.style.display='none';return;}
-  scroll.innerHTML=cart.map((item,i)=>`<div class="cart-item"><div class="cart-item-img">${item.icon||'✦'}</div><div class="cart-item-info"><div class="cart-item-name serif">${item.name}</div><div class="cart-item-meta">${item.qty} invitations · ${item.paper||'Smooth White'}</div><div class="cart-item-price">£${item.total.toFixed(2)}</div></div><button class="cart-remove" onclick="removeCartItem(${i})">✕</button></div>`).join('');
-  const sub=cart.reduce((s,i)=>s+i.total,0);
-  document.getElementById('cartNet').textContent='£'+(sub/1.2).toFixed(2);
-  document.getElementById('cartVat').textContent='£'+(sub-sub/1.2).toFixed(2);
-  document.getElementById('cartTotal').textContent='£'+sub.toFixed(2);
-  foot.style.display='block';
-}
-updateCartBadge();
-</script>
+<!--
+  Cart logic lives in /cart.js (loaded by each page).
+  The inline <script> that used to be here never executed when this header
+  was fetched and injected via innerHTML — that was the bug behind the
+  "updateCartBadge is not defined" error.
+-->
+
