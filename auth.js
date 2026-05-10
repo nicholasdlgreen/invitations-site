@@ -49,7 +49,7 @@
         console.warn('[invAuth] Supabase SDK not loaded — auth disabled');
         return;
       }
-      if (SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY_HERE' || !SUPABASE_ANON_KEY) {
+      if (SUPABASE_ANON_KEY === 'sb_publishable_-9PtQ9cNyzpuR3XithsFgQ_vTYQbbmt' || !SUPABASE_ANON_KEY) {
         console.warn('[invAuth] Supabase publishable key not configured — auth disabled');
         return;
       }
