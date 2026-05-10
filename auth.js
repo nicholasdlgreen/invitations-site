@@ -25,7 +25,7 @@
   const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
   // Same publishable key the album builder uses. Safe to expose; security
   // comes from Row Level Security policies in Supabase.
-  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+  const SUPABASE_ANON_KEY = 'sb_publishable_-9PtQ9cNyzpuR3XithsFgQ_vTYQbbmt';
 
   const PENDING_SAVE_KEY = 'inv_pending_save';
 
