@@ -8,6 +8,7 @@
 //   invAuth.onChange(cb)           -> subscribe to auth state changes
 //   invAuth.signInWithMagicLink(email, redirectTo) -> { error? }
 //   invAuth.signOut()              -> redirects to home on success
+//   invAuth.toggleAuthDropdown(e)  -> opens/closes the header dropdown
 //
 //   invAuth.saveDesign(productType, designId, designData, metadata)
 //   invAuth.loadDesign(designId)
@@ -25,7 +26,7 @@
   const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
   // Same publishable key the album builder uses. Safe to expose; security
   // comes from Row Level Security policies in Supabase.
-  const SUPABASE_ANON_KEY = 'sb_publishable_-9PtQ9cNyzpuR3XithsFgQ_vTYQbbmt';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
 
   const PENDING_SAVE_KEY = 'inv_pending_save';
 
@@ -70,7 +71,6 @@
         currentUser = session ? session.user : null;
         notifyListeners();
         if (currentUser) {
-          // Best-effort flush of any pending save that was queued before login
           flushPendingSave().catch((e) => console.warn('[invAuth] pending save flush failed:', e));
         }
       });
@@ -81,7 +81,7 @@
     return initPromise;
   }
 
-  // ===== Public API =====
+  // ===== Public auth API =====
 
   async function signInWithMagicLink(email, redirectTo) {
     if (!sb) await init();
@@ -107,8 +107,6 @@
 
   function onChange(cb) {
     listeners.push(cb);
-    // Fire once with whatever we know now (even null) so the page can render
-    // its initial state without waiting.
     queueMicrotask(() => { try { cb(currentUser); } catch (e) {} });
     return () => {
       const i = listeners.indexOf(cb);
@@ -116,7 +114,7 @@
     };
   }
 
-  // ----- Designs -----
+  // ===== Designs =====
 
   async function saveDesign(productType, designId, designData, metadata) {
     if (!sb) await init();
@@ -184,7 +182,7 @@
     return { error };
   }
 
-  // ----- Pending save (used when user clicks Save before being logged in) -----
+  // ===== Pending save (queued before login, flushed after) =====
 
   function queuePendingSave(productType, designId, designData, metadata) {
     try {
@@ -203,7 +201,6 @@
     if (!pending) return null;
     if (!currentUser) return null;
 
-    // Drop pending saves older than 24 hours
     if (pending.queuedAt && Date.now() - pending.queuedAt > 24 * 60 * 60 * 1000) {
       localStorage.removeItem(PENDING_SAVE_KEY);
       return null;
@@ -223,7 +220,87 @@
     return null;
   }
 
-  // ===== Bind public API =====
+  // ===== Header auth nav binding =====
+  // The shared header (header.html) gets fetched and injected into pages via
+  // innerHTML, which means any <script> tags inside it never execute. So we
+  // bind the auth UI from here, watching the DOM for the elements to appear.
+
+  let headerBound = false;
+  let dropdownClickHandler = null;
+
+  function bindHeaderAuthNav() {
+    const signedOut = document.getElementById('authSignedOut');
+    const signedIn  = document.getElementById('authSignedIn');
+    if (!signedOut || !signedIn || headerBound) return false;
+
+    headerBound = true;
+
+    // Update visual state to match current user
+    const refresh = () => {
+      const so = document.getElementById('authSignedOut');
+      const si = document.getElementById('authSignedIn');
+      const av = document.getElementById('authAvatar');
+      const em = document.getElementById('authDropdownEmail');
+      if (!so || !si) return;
+
+      if (currentUser) {
+        so.classList.remove('active');
+        si.classList.add('active');
+        if (av) {
+          const letter = (currentUser.email || '?').trim().charAt(0).toUpperCase();
+          av.textContent = letter || '·';
+        }
+        if (em) em.textContent = currentUser.email || '—';
+      } else {
+        so.classList.add('active');
+        si.classList.remove('active');
+      }
+    };
+
+    onChange(refresh);
+
+    // Outside-click handler to close dropdown
+    if (!dropdownClickHandler) {
+      dropdownClickHandler = (e) => {
+        const dropdown = document.getElementById('authDropdown');
+        const trigger = document.getElementById('authTrigger');
+        if (!dropdown || !trigger) return;
+        if (dropdown.contains(e.target) || trigger.contains(e.target)) return;
+        dropdown.classList.remove('open');
+        trigger.classList.remove('open');
+      };
+      document.addEventListener('click', dropdownClickHandler);
+    }
+
+    return true;
+  }
+
+  function toggleAuthDropdown(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById('authDropdown');
+    const trigger = document.getElementById('authTrigger');
+    if (!dropdown || !trigger) return;
+    const isOpen = dropdown.classList.contains('open');
+    dropdown.classList.toggle('open', !isOpen);
+    trigger.classList.toggle('open', !isOpen);
+  }
+
+  // Watch for the header to be injected into the page
+  function watchForHeader() {
+    if (bindHeaderAuthNav()) return;
+
+    const observer = new MutationObserver(() => {
+      if (bindHeaderAuthNav()) {
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Stop watching after 10s as a safety
+    setTimeout(() => observer.disconnect(), 10000);
+  }
+
+  // ===== Public API =====
 
   window.invAuth = {
     init,
@@ -237,9 +314,15 @@
     listSavedDesigns,
     deleteDesign,
     queuePendingSave,
-    flushPendingSave
+    flushPendingSave,
+    toggleAuthDropdown
   };
 
-  // Auto-init as soon as the script loads
+  // Auto-init and watch for the header to appear
   init();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', watchForHeader);
+  } else {
+    watchForHeader();
+  }
 })();
