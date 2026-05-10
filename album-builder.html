@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build Your Album | Invitations</title>
+  <meta name="description" content="Design your wedding album in minutes. Choose your size, upload your photos, and we'll create a beautiful keepsake to treasure.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FAF7F2;
+      --cream-warm: #F4EFE6;
+      --gold: #B8976A;
+      --gold-lt: #D4B896;
+      --gold-dk: #9B7F56;
+      --brown: #6B4F3A;
+      --text: #3D2E24;
+      --text-soft: #6B5A4D;
+      --text-pale: #B0A098;
+      --line: rgba(184, 151, 106, 0.25);
+      --line-strong: rgba(184, 151, 106, 0.5);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      color: var(--text);
+      background: var(--cream);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: -0.005em;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ===== STEP INDICATOR ===== */
+
+    .stepper {
+      background: var(--cream-warm);
+      border-bottom: 1px solid var(--line);
+      padding: 24px 0;
+    }
+
+    .stepper-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .step-list {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .step-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-pale);
+      transition: color 0.2s ease;
+    }
+
+    .step-pill .step-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 14px;
+      width: 22px;
+      height: 22px;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0;
+    }
+
+    .step-pill.active {
+      color: var(--gold-dk);
+    }
+
+    .step-pill.complete {
+      color: var(--brown);
+    }
+
+    .step-divider {
+      width: 24px;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .step-back {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      transition: color 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .step-back:hover { color: var(--gold-dk); }
+
+    /* ===== HERO ===== */
+
+    .builder-hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+
+    .builder-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold-dk);
+      margin-bottom: 20px;
+    }
+
+    .builder-hero h1 {
+      font-size: clamp(40px, 5vw, 60px);
+      line-height: 1.1;
+      margin-bottom: 20px;
+      font-weight: 300;
+    }
+
+    .builder-hero h1 em {
+      font-style: italic;
+      color: var(--gold-dk);
+    }
+
+    .builder-hero p {
+      font-size: 17px;
+      color: var(--text-soft);
+      max-width: 580px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ===== TIER SELECTION ===== */
+
+    .tier-section {
+      padding: 0 0 60px;
+    }
+
+    .tiers-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .tier-card {
+      background: var(--cream-warm);
+      padding: 40px 32px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tier-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -20px rgba(61, 46, 36, 0.18);
+    }
+
+    .tier-card.selected {
+      border-color: var(--gold);
+      background: var(--cream);
+      box-shadow: 0 20px 40px -20px rgba(184, 151, 106, 0.35);
+    }
+
+    .tier-tick {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.25s ease;
+    }
+
+    .tier-card.selected .tier-tick {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .tier-image {
+      aspect-ratio: 4 / 3;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--gold-lt) 100%);
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tier-image::after {
+      content: attr(data-label);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 13px;
+      color: var(--brown);
+    }
+
+    .tier-card.selected .tier-image {
+      background: linear-gradient(135deg, var(--cream-warm) 0%, var(--gold-lt) 100%);
+    }
+
+    .tier-name {
+      font-size: 26px;
+      font-weight: 400;
+      margin-bottom: 6px;
+    }
+
+    .tier-tagline {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold-dk);
+      margin-bottom: 18px;
+    }
+
+    .tier-summary {
+      font-size: 14px;
+      color: var(--text-soft);
+      line-height: 1.7;
+      flex-grow: 1;
+    }
+
+    /* ===== CONFIGURE PANEL ===== */
+
+    .configure {
+      padding: 60px 0 40px;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.6s ease, opacity 0.5s ease, padding 0.5s ease;
+    }
+
+    .configure.visible {
+      max-height: 1600px;
+      opacity: 1;
+    }
+
+    .configure-divider {
+      width: 100%;
+      height: 1px;
+      background: var(--line);
+      margin-bottom: 60px;
+    }
+
+    .configure-block {
+      margin-bottom: 56px;
+    }
+
+    .configure-block:last-child { margin-bottom: 0; }
+
+    .configure-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+
+    .configure-label em {
+      font-style: italic;
+      color: var(--gold-dk);
+    }
+
+    .configure-help {
+      font-size: 14px;
+      color: var(--text-soft);
+      margin-bottom: 28px;
+    }
+
+    /* Size options */
+    .size-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .size-option {
+      background: var(--cream-warm);
+      padding: 24px 20px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: 1px solid transparent;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .size-option:hover {
+      background: var(--cream);
+      border-color: var(--line-strong);
+    }
+
+    .size-option.selected {
+      background: var(--cream);
+      border-color: var(--gold);
+      box-shadow: 0 8px 20px -10px rgba(184, 151, 106, 0.4);
+    }
+
+    .size-shape {
+      background: linear-gradient(135deg, var(--cream) 0%, var(--gold-lt) 100%);
+      border: 1px solid var(--line);
+      transition: all 0.25s ease;
+    }
+
+    .size-option.selected .size-shape {
+      border-color: var(--gold);
+    }
+
+    .size-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    .size-spec {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    /* Page count chips */
+    .pages-grid {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .page-chip {
+      background: var(--cream-warm);
+      padding: 18px 28px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: 1px solid transparent;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .page-chip:hover {
+      background: var(--cream);
+      border-color: var(--line-strong);
+    }
+
+    .page-chip.selected {
+      background: var(--cream);
+      border-color: var(--gold);
+      box-shadow: 0 6px 16px -8px rgba(184, 151, 106, 0.4);
+    }
+
+    .page-chip-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .page-chip-value em {
+      font-style: italic;
+      color: var(--gold-dk);
+    }
+
+    .page-chip-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .page-chip-hint {
+      display: block;
+      font-size: 11px;
+      color: var(--text-pale);
+      margin-top: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ===== CONTINUE BAR ===== */
+
+    .continue-bar {
+      position: sticky;
+      bottom: 0;
+      background: var(--text);
+      color: var(--cream);
+      padding: 20px 0;
+      transform: translateY(100%);
+      transition: transform 0.4s ease;
+      z-index: 50;
+      box-shadow: 0 -10px 30px -10px rgba(0,0,0,0.15);
+    }
+
+    .continue-bar.visible {
+      transform: translateY(0);
+    }
+
+    .continue-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .summary {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      font-size: 13px;
+      letter-spacing: 0.06em;
+    }
+
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .summary-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold-lt);
+    }
+
+    .summary-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 17px;
+      font-style: italic;
+      color: var(--cream);
+    }
+
+    .continue-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 36px;
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      border: 1px solid var(--cream);
+      cursor: pointer;
+    }
+
+    .continue-btn:hover {
+      background: var(--gold-lt);
+      border-color: var(--gold-lt);
+      transform: translateY(-1px);
+    }
+
+    .continue-btn[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Spacer to prevent sticky bar overlap */
+    .builder-spacer {
+      height: 100px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+
+    @media (max-width: 880px) {
+      .tiers-grid { grid-template-columns: 1fr; gap: 20px; max-width: 480px; margin: 0 auto; }
+      .step-list { display: none; }
+      .stepper-inner { justify-content: space-between; }
+      .step-list-mobile {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--gold-dk);
+      }
+    }
+
+    @media (min-width: 881px) {
+      .step-list-mobile { display: none; }
+    }
+
+    @media (max-width: 560px) {
+      .container { padding: 0 24px; }
+      .builder-hero { padding: 56px 0 40px; }
+      .continue-inner { flex-direction: column; align-items: stretch; gap: 16px; }
+      .summary { flex-wrap: wrap; gap: 16px; }
+      .continue-btn { justify-content: center; }
+    }
+
+    /* ===== FADE IN ===== */
+    .fade-in {
+      opacity: 0;
+      animation: fade 0.6s ease forwards;
+    }
+    @keyframes fade { to { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <!-- Shared header -->
+  <div id="site-header"></div>
+
+  <!-- Step indicator -->
+  <div class="stepper">
+    <div class="stepper-inner">
+      <div class="step-list">
+        <div class="step-pill active"><span class="step-num">i</span> Your Album</div>
+        <div class="step-divider"></div>
+        <div class="step-pill"><span class="step-num">ii</span> Upload Photos</div>
+        <div class="step-divider"></div>
+        <div class="step-pill"><span class="step-num">iii</span> Design</div>
+        <div class="step-divider"></div>
+        <div class="step-pill"><span class="step-num">iv</span> Cover</div>
+        <div class="step-divider"></div>
+        <div class="step-pill"><span class="step-num">v</span> Order</div>
+      </div>
+      <div class="step-list-mobile">
+        <span class="step-num" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;width:22px;height:22px;border:1px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;">i</span>
+        Step 1 of 5
+      </div>
+      <a href="/wedding-albums.html" class="step-back">← Back to Albums</a>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="builder-hero">
+    <div class="container">
+      <p class="builder-eyebrow">Step One</p>
+      <h1>Choose <em>your album</em></h1>
+      <p>Pick a collection, then choose the size and number of pages. You'll upload your photos next.</p>
+    </div>
+  </section>
+
+  <!-- Tier selection -->
+  <section class="tier-section">
+    <div class="container">
+      <div class="tiers-grid">
+
+        <article class="tier-card" data-tier="photo-book" onclick="selectTier(this)">
+          <div class="tier-tick">✓</div>
+          <div class="tier-image" data-label="Modern hardback photo book"></div>
+          <h3 class="tier-name">The Photo Book</h3>
+          <p class="tier-tagline">Modern · Hardback</p>
+          <p class="tier-summary">A beautifully designed hardback photo book with a foiled cover. Perfect for a contemporary keepsake.</p>
+        </article>
+
+        <article class="tier-card" data-tier="album" onclick="selectTier(this)">
+          <div class="tier-tick">✓</div>
+          <div class="tier-image" data-label="Layflat wedding album, linen cover"></div>
+          <h3 class="tier-name">The Album</h3>
+          <p class="tier-tagline">Layflat · Premium</p>
+          <p class="tier-summary">A true wedding album with layflat pages, real fabric or eco-leather cover, and premium photographic paper.</p>
+        </article>
+
+        <article class="tier-card" data-tier="heirloom" onclick="selectTier(this)">
+          <div class="tier-tick">✓</div>
+          <div class="tier-image" data-label="Italian leather heirloom, gift box"></div>
+          <h3 class="tier-name">The Heirloom</h3>
+          <p class="tier-tagline">Italian Leather · Gift Box</p>
+          <p class="tier-summary">Our finest album. Italian leather, archival paper, presentation gift box. Made to last generations.</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Configuration panel (revealed after tier selected) -->
+  <section class="configure" id="configurePanel">
+    <div class="container">
+      <div class="configure-divider"></div>
+
+      <!-- Size selection -->
+      <div class="configure-block">
+        <h3 class="configure-label">Choose your <em>size</em></h3>
+        <p class="configure-help" id="sizeHelp">Pick the format and dimensions for your album.</p>
+        <div class="size-grid" id="sizeGrid">
+          <!-- Sizes injected by JS based on tier -->
+        </div>
+      </div>
+
+      <!-- Pages selection -->
+      <div class="configure-block">
+        <h3 class="configure-label">How many <em>pages?</em></h3>
+        <p class="configure-help" id="pagesHelp">Approximately 4–5 photos work beautifully on each spread.</p>
+        <div class="pages-grid" id="pagesGrid">
+          <!-- Page options injected by JS based on tier -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="builder-spacer"></div>
+
+  <!-- Sticky continue bar -->
+  <div class="continue-bar" id="continueBar">
+    <div class="continue-inner">
+      <div class="summary">
+        <div class="summary-item">
+          <span class="summary-label">Collection</span>
+          <span class="summary-value" id="sumTier">—</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Size</span>
+          <span class="summary-value" id="sumSize">—</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Pages</span>
+          <span class="summary-value" id="sumPages">—</span>
+        </div>
+      </div>
+      <button class="continue-btn" id="continueBtn" onclick="continueToUpload()" disabled>
+        Continue → Upload Photos
+      </button>
+    </div>
+  </div>
+
+  <!-- Shared footer -->
+  <div id="site-footer"></div>
+
+  <script>
+    // ===== Shared header / footer =====
+    fetch('/header.html').then(r => r.text()).then(h => document.getElementById('site-header').innerHTML = h).catch(() => {});
+    fetch('/footer.html').then(r => r.text()).then(h => document.getElementById('site-footer').innerHTML = h).catch(() => {});
+
+    // ===== Tier configurations =====
+    const TIERS = {
+      'photo-book': {
+        name: 'The Photo Book',
+        sizes: [
+          { id: '210sq',   name: 'Square',     spec: '210 × 210 mm',  shape: { w: 60, h: 60 } },
+          { id: 'a4-land', name: 'Landscape',  spec: 'A4 (297 × 210 mm)', shape: { w: 84, h: 60 } },
+          { id: 'a4-port', name: 'Portrait',   spec: 'A4 (210 × 297 mm)', shape: { w: 60, h: 84 } }
+        ],
+        pages: [
+          { value: 40, label: 'Pages', hint: 'Around 90 photos' },
+          { value: 60, label: 'Pages', hint: 'Around 135 photos' },
+          { value: 80, label: 'Pages', hint: 'Around 180 photos' }
+        ],
+        pagesUnit: 'pages'
+      },
+      'album': {
+        name: 'The Album',
+        sizes: [
+          { id: '250sq',   name: 'Square',     spec: '250 × 250 mm',  shape: { w: 60, h: 60 } },
+          { id: '300sq',   name: 'Square',     spec: '300 × 300 mm',  shape: { w: 75, h: 75 } },
+          { id: '300land', name: 'Landscape',  spec: '300 × 230 mm',  shape: { w: 84, h: 64 } }
+        ],
+        pages: [
+          { value: 20, label: 'Spreads', hint: 'Around 90 photos' },
+          { value: 30, label: 'Spreads', hint: 'Around 135 photos' },
+          { value: 40, label: 'Spreads', hint: 'Around 180 photos' }
+        ],
+        pagesUnit: 'spreads'
+      },
+      'heirloom': {
+        name: 'The Heirloom',
+        sizes: [
+          { id: '300sq',   name: 'Square',     spec: '300 × 300 mm',  shape: { w: 70, h: 70 } },
+          { id: '350sq',   name: 'Square',     spec: '350 × 350 mm',  shape: { w: 84, h: 84 } },
+          { id: '400land', name: 'Landscape',  spec: '400 × 300 mm',  shape: { w: 96, h: 72 } }
+        ],
+        pages: [
+          { value: 25, label: 'Spreads', hint: 'Around 110 photos' },
+          { value: 35, label: 'Spreads', hint: 'Around 160 photos' },
+          { value: 50, label: 'Spreads', hint: 'Around 225 photos' }
+        ],
+        pagesUnit: 'spreads'
+      }
+    };
+
+    // ===== State =====
+    const STATE_KEY = 'album_builder_state';
+    let state = loadState() || { tier: null, sizeId: null, pages: null };
+
+    function loadState() {
+      try { return JSON.parse(localStorage.getItem(STATE_KEY)); }
+      catch (e) { return null; }
+    }
+
+    function saveState() {
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    }
+
+    // ===== Tier selection =====
+    function selectTier(card) {
+      const tierId = card.dataset.tier;
+
+      // Update visual
+      document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+
+      // Update state — reset size/pages if tier changed
+      if (state.tier !== tierId) {
+        state.tier = tierId;
+        state.sizeId = null;
+        state.pages = null;
+      }
+      saveState();
+
+      // Render configuration options
+      renderConfigure();
+
+      // Reveal panel
+      document.getElementById('configurePanel').classList.add('visible');
+
+      // Scroll to configuration
+      setTimeout(() => {
+        document.getElementById('configurePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+
+      updateSummary();
+    }
+
+    function renderConfigure() {
+      const tier = TIERS[state.tier];
+      if (!tier) return;
+
+      // Sizes
+      const sizeGrid = document.getElementById('sizeGrid');
+      sizeGrid.innerHTML = tier.sizes.map(size => `
+        <div class="size-option ${state.sizeId === size.id ? 'selected' : ''}" data-size-id="${size.id}" onclick="selectSize('${size.id}')">
+          <div class="size-shape" style="width:${size.shape.w}px;height:${size.shape.h}px;"></div>
+          <div>
+            <div class="size-name">${size.name}</div>
+            <div class="size-spec">${size.spec}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // Page counts
+      const pagesGrid = document.getElementById('pagesGrid');
+      pagesGrid.innerHTML = tier.pages.map(p => `
+        <div class="page-chip ${state.pages === p.value ? 'selected' : ''}" data-pages="${p.value}" onclick="selectPages(${p.value})">
+          <div class="page-chip-value"><em>${p.value}</em></div>
+          <div class="page-chip-label">${p.label}</div>
+          <span class="page-chip-hint">${p.hint}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectSize(sizeId) {
+      state.sizeId = sizeId;
+      saveState();
+      document.querySelectorAll('.size-option').forEach(el => {
+        el.classList.toggle('selected', el.dataset.sizeId === sizeId);
+      });
+      updateSummary();
+    }
+
+    function selectPages(pages) {
+      state.pages = pages;
+      saveState();
+      document.querySelectorAll('.page-chip').forEach(el => {
+        el.classList.toggle('selected', parseInt(el.dataset.pages) === pages);
+      });
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const tier = TIERS[state.tier];
+      const bar = document.getElementById('continueBar');
+      const btn = document.getElementById('continueBtn');
+
+      if (!tier) {
+        bar.classList.remove('visible');
+        return;
+      }
+
+      bar.classList.add('visible');
+
+      document.getElementById('sumTier').textContent = tier.name;
+      const size = tier.sizes.find(s => s.id === state.sizeId);
+      document.getElementById('sumSize').textContent = size ? size.spec : '—';
+      document.getElementById('sumPages').textContent = state.pages ? `${state.pages} ${tier.pagesUnit}` : '—';
+
+      btn.disabled = !(state.tier && state.sizeId && state.pages);
+    }
+
+    function continueToUpload() {
+      if (!state.tier || !state.sizeId || !state.pages) return;
+      window.location.href = '/album-builder-upload.html';
+    }
+
+    // ===== Init: restore state if returning to page =====
+    if (state.tier) {
+      const card = document.querySelector(`.tier-card[data-tier="${state.tier}"]`);
+      if (card) {
+        card.classList.add('selected');
+        renderConfigure();
+        document.getElementById('configurePanel').classList.add('visible');
+        updateSummary();
+      }
+    }
+  </script>
+
+</body>
+</html>
