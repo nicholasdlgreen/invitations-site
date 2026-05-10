@@ -757,7 +757,7 @@
     // The anon key is safe to expose client-side as long as you set up
     // proper Row Level Security policies on your storage bucket.
     const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     const STORAGE_BUCKET = 'album-photos';
 
     // ===== Constants =====
@@ -824,11 +824,13 @@
     renderOrderSummary();
 
     // ===== Supabase setup check =====
-    let supabase = null;
+    // Note: variable named 'sb' to avoid conflict with the global 'supabase'
+    // exposed by the SDK loaded from CDN.
+    let sb = null;
     if (SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY_HERE' || !SUPABASE_ANON_KEY) {
       document.getElementById('setupAlert').classList.add('visible');
     } else {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 
     // ===== Upload queue =====
@@ -851,10 +853,10 @@
       const tile = document.getElementById('tile-' + photo.localId);
 
       try {
-        if (!supabase) throw new Error('Supabase not configured');
+        if (!sb) throw new Error('Supabase not configured');
 
         const path = `${state.album_id}/${photo.localId}_${photo.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-        const { data, error } = await supabase.storage
+        const { data, error } = await sb.storage
           .from(STORAGE_BUCKET)
           .upload(path, photo.file, {
             cacheControl: '3600',
@@ -865,7 +867,7 @@
         if (error) throw error;
 
         // Get public URL
-        const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+        const { data: urlData } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
 
         // Save photo metadata
         const photoRecord = {
@@ -998,8 +1000,8 @@
       if (idx >= 0) {
         const photo = state.photos[idx];
         // Remove from Supabase storage (fire and forget)
-        if (supabase && photo.path) {
-          supabase.storage.from(STORAGE_BUCKET).remove([photo.path]).catch(e => console.warn('Storage removal failed:', e));
+        if (sb && photo.path) {
+          sb.storage.from(STORAGE_BUCKET).remove([photo.path]).catch(e => console.warn('Storage removal failed:', e));
         }
         state.photos.splice(idx, 1);
         saveState();
@@ -1017,9 +1019,9 @@
       if (!confirm('Remove all uploaded photos? This cannot be undone.')) return;
 
       // Delete from Supabase
-      if (supabase && state.photos.length) {
+      if (sb && state.photos.length) {
         const paths = state.photos.map(p => p.path);
-        supabase.storage.from(STORAGE_BUCKET).remove(paths).catch(e => console.warn('Bulk removal failed:', e));
+        sb.storage.from(STORAGE_BUCKET).remove(paths).catch(e => console.warn('Bulk removal failed:', e));
       }
 
       state.photos = [];
