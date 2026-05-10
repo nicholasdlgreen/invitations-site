@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/auth.js"></script>
+  <script src="/album-save.js"></script>
   <style>
     :root {
       --cream: #FAF7F2;
@@ -124,6 +125,16 @@
     }
 
     .step-back:hover { color: var(--gold-dk); }
+
+    .stepper-inner > a.step-back,
+    .stepper-inner > .invsave-btn {
+      flex-shrink: 0;
+    }
+    /* When Save button present, give it a small gap from Back */
+    .step-back + .invsave-btn,
+    .invsave-btn + .step-back {
+      margin-left: 16px;
+    }
 
     /* ===== HERO ===== */
 
@@ -855,6 +866,7 @@
         Step 4 of 5
       </div>
       <a href="/album-builder-design.html" class="step-back">← Back</a>
+      <button class="invsave-btn" id="saveBtn" title="Save your design"><span class="invsave-btn-icon">✦</span> Save</button>
     </div>
   </div>
 
@@ -980,6 +992,38 @@
     function saveState() {
       localStorage.setItem(STATE_KEY, JSON.stringify(state));
     }
+
+    // ===== Save & Load (via ?design=xxx) =====
+    // Init the save helper. If the URL has ?design=xxx, this will fetch
+    // it from the database (when logged in) and replace localStorage state
+    // before we continue.
+    (async () => {
+      if (window.invAlbumSave) {
+        const loaded = await window.invAlbumSave.init({
+          productType: 'wedding-album',
+          getDesignId: () => state.album_id,
+          getDesignData: () => state,
+          getMetadata: () => {
+            const tierName = state.tier === 'photo-book' ? 'The Photo Book'
+              : state.tier === 'album' ? 'The Album'
+              : state.tier === 'heirloom' ? 'The Heirloom' : '';
+            const cover = state.cover || {};
+            const names = (cover.names || '').trim();
+            const title = names || tierName || 'Wedding Album';
+            const subtitle = tierName + (cover.date ? ' · ' + cover.date : '');
+            const thumb = (state.photos && state.photos[0] && state.photos[0].url) || null;
+            return { title: title, subtitle: subtitle, thumbnail_url: thumb };
+          }
+        });
+        if (loaded) {
+          // Reload state from localStorage now that the design has been written
+          state = loadState() || {};
+        }
+      }
+      bootstrap();
+    })();
+
+    function bootstrap() {
 
     // Redirect back if missing prerequisites
     if (!state.tier || !state.sizeId || !state.pages) {
@@ -1332,6 +1376,7 @@
 
     // ===== Init =====
     init();
+    } // end of bootstrap()
   </script>
 
 </body>
