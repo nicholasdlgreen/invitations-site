@@ -19,11 +19,11 @@
     min-height: calc(100vh - 64px);
   }
 
-  /* Slim page header — sits below site nav */
+  /* Slim page header */
   .composer-header {
     background: var(--white);
     border-bottom: 1px solid var(--border);
-    padding: 32px 0 28px;
+    padding: 18px 0 16px;
     text-align: center;
   }
   .composer-eyebrow {
@@ -33,42 +33,46 @@
     color: var(--gold);
     font-weight: 500;
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
   .composer-h1 {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
-    font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
     line-height: 1.15;
-    margin: 0 0 6px;
+    margin: 0 0 4px;
     color: var(--text);
   }
   .composer-h1 em { color: var(--gold); font-style: italic; }
   .composer-strap {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--soft);
     letter-spacing: 0.04em;
   }
 
-  /* ===== Two-pane composer ===== */
+  /* ===== Two-pane composer — viewport-sized so the preview stays visible ===== */
   .composer-grid {
     display: grid;
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: 360px 1fr;
     gap: 0;
-    min-height: 720px;
+    height: calc(100vh - 64px - 90px); /* site header + composer header */
+    min-height: 540px;
   }
   .controls {
     background: var(--white);
     border-right: 1px solid var(--border);
-    padding: 32px 28px;
+    padding: 24px 24px;
     overflow-y: auto;
+    height: 100%;
   }
   .preview-area {
     background: linear-gradient(180deg, #f0e8db 0%, #e8ddd0 100%);
-    padding: 60px 40px;
+    padding: 30px 30px;
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 100%;
+    overflow: auto;
   }
 
   .controls-section {
@@ -138,8 +142,8 @@
   /* ===== Invitation preview card ===== */
   .invitation {
     background: var(--cream);
-    width: 500px;
-    height: 700px;
+    width: 400px;
+    height: 560px; /* 5:7 aspect ratio */
     box-shadow: 0 20px 60px -10px rgba(61, 46, 36, 0.25);
     position: relative;
     overflow: hidden;
@@ -148,7 +152,7 @@
 
   .frame-deco {
     position: absolute;
-    inset: 36px;
+    inset: 28px;
     pointer-events: none;
     color: var(--text);
     transition: color 0.3s;
@@ -167,7 +171,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 100px 80px;
+    padding: 80px 60px;
     color: var(--text);
   }
 
@@ -178,13 +182,13 @@
     letter-spacing: 0.32em;
     text-transform: uppercase;
     color: var(--soft);
-    margin-bottom: 24px;
+    margin-bottom: 18px;
   }
   .inv-names {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     font-weight: 300;
-    font-size: 38px;
+    font-size: 32px;
     line-height: 1.1;
     color: var(--text);
     margin-bottom: 4px;
@@ -193,17 +197,17 @@
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     font-weight: 300;
-    font-size: 18px;
+    font-size: 16px;
     color: var(--soft);
     margin: 4px 0;
     display: block;
   }
   .inv-divider {
-    width: 32px;
+    width: 28px;
     height: 1px;
     background: var(--soft);
     opacity: 0.3;
-    margin: 22px 0;
+    margin: 16px 0;
   }
   .inv-line {
     font-family: 'Jost', sans-serif;
@@ -212,8 +216,8 @@
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--soft);
-    line-height: 1.9;
-    margin-bottom: 14px;
+    line-height: 1.8;
+    margin-bottom: 10px;
   }
   .inv-line:last-child { margin-bottom: 0; }
 
@@ -236,33 +240,13 @@
     font-style: italic;
   }
 
-  /* Test-page badge */
-  .test-banner {
-    background: rgba(184, 151, 106, 0.1);
-    border: 1px solid rgba(184, 151, 106, 0.3);
-    padding: 12px 20px;
-    margin: 24px auto;
-    max-width: 800px;
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--soft);
-    text-align: center;
-    line-height: 1.5;
-  }
-  .test-banner strong {
-    color: var(--text);
-    font-family: 'Cormorant Garamond', serif;
-    font-style: italic;
-    font-weight: 400;
-  }
-
   @media (max-width: 880px) {
-    .composer-grid { grid-template-columns: 1fr; }
-    .controls { border-right: none; border-bottom: 1px solid var(--border); }
-    .preview-area { padding: 30px 16px; }
-    .invitation { width: 320px; height: 448px; }
-    .invitation-text { padding: 60px 50px; }
-    .inv-names { font-size: 26px; }
+    .composer-grid { grid-template-columns: 1fr; height: auto; }
+    .controls { border-right: none; border-bottom: 1px solid var(--border); height: auto; max-height: 50vh; }
+    .preview-area { padding: 30px 16px; height: auto; min-height: 400px; }
+    .invitation { width: 280px; height: 392px; }
+    .invitation-text { padding: 50px 40px; }
+    .inv-names { font-size: 22px; }
   }
 </style>
 </head>
@@ -279,10 +263,6 @@
       <p class="composer-strap">Edit any field on the left — the preview updates instantly.</p>
     </div>
   </section>
-
-  <div class="test-banner">
-    This is a <strong>working test</strong> with one template, to prove the composer pattern. The plan is to expand to a gallery of 30+ designs once this works end-to-end.
-  </div>
 
   <div class="composer-grid">
 
