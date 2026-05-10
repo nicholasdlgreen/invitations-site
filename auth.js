@@ -23,10 +23,14 @@
 //   <script src="/auth.js"></script>
 
 (function () {
-  const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
-  // Same publishable key the album builder uses. Safe to expose; security
-  // comes from Row Level Security policies in Supabase.
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+  // Config is loaded from supabase-config.js (a separate file) which sets
+  // window.__SUPABASE_CONFIG before this script runs. Keeping the config
+  // out of this file means updating auth.js never overwrites the key.
+  const _cfg = (typeof window !== 'undefined' && window.__SUPABASE_CONFIG) || {};
+  const SUPABASE_URL = _cfg.url || 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+  // Same publishable (anon) key used by the rest of the site. Safe to expose;
+  // security comes from Row Level Security policies in Supabase.
+  const SUPABASE_ANON_KEY = _cfg.anonKey || '';
 
   const PENDING_SAVE_KEY = 'inv_pending_save';
 
@@ -49,8 +53,8 @@
         console.warn('[invAuth] Supabase SDK not loaded — auth disabled');
         return;
       }
-      if (SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY_HERE' || !SUPABASE_ANON_KEY) {
-        console.warn('[invAuth] Supabase publishable key not configured — auth disabled');
+      if (!SUPABASE_ANON_KEY) {
+        console.warn('[invAuth] Supabase config missing — make sure /supabase-config.js is loaded BEFORE /auth.js. Auth disabled.');
         return;
       }
 
