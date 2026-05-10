@@ -58,24 +58,31 @@ nav a:hover,nav a.active{color:var(--gold);}
 .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:14px 28px;border-radius:60px;font-size:12px;letter-spacing:.06em;opacity:0;transition:all .35s;z-index:999;pointer-events:none;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* === AUTH NAV === */
-.auth-nav{position:relative;display:flex;align-items:center;}
-.auth-state{display:none;align-items:center;}
+/* === RIGHT ZONE: Account dropdown + Basket === */
+.right-zone{display:flex;align-items:center;gap:18px;}
+
+/* Account state (signed-out / signed-in containers, mutually exclusive) */
+.auth-state{position:relative;display:none;align-items:center;}
 .auth-state.active{display:flex;}
-.auth-signin{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;transition:color .2s;}
-.auth-signin:hover{color:var(--gold);}
-.auth-trigger{display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:none;padding:0;font-family:inherit;}
-.auth-avatar{width:28px;height:28px;border-radius:50%;border:1px solid var(--gold);background:var(--cream);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--gold);text-transform:uppercase;flex-shrink:0;transition:all .2s;}
-.auth-trigger:hover .auth-avatar,.auth-trigger.open .auth-avatar{background:var(--gold);color:var(--white);}
-.auth-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);transition:color .2s;display:flex;align-items:center;gap:6px;}
-.auth-chevron{font-size:9px;transition:transform .25s;}
-.auth-trigger.open .auth-chevron{transform:rotate(180deg);}
-.auth-trigger:hover .auth-label,.auth-trigger.open .auth-label{color:var(--gold);}
-.auth-dropdown{position:absolute;top:calc(100% + 14px);right:0;background:var(--white);min-width:240px;box-shadow:0 16px 40px -16px rgba(61,46,36,.25);border-radius:8px;overflow:hidden;display:none;border-top:2px solid var(--gold);}
-.auth-dropdown.open{display:block;animation:fadeUp .25s ease;}
-.auth-dropdown-email{padding:16px 20px 14px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:var(--gold);word-break:break-all;line-height:1.4;}
-.auth-dropdown a,.auth-dropdown button{display:block;width:100%;padding:13px 20px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;border:none;background:none;text-align:left;cursor:pointer;transition:background .2s,color .2s;}
-.auth-dropdown a:hover,.auth-dropdown button:hover{background:var(--cream);color:var(--gold);}
+
+/* Account trigger button */
+.acct-trigger{display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:none;padding:6px 4px;font-family:inherit;}
+.acct-icon{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--soft);flex-shrink:0;transition:all .2s;}
+.acct-icon svg{width:14px;height:14px;}
+.acct-icon.signedin{background:var(--cream);border-color:var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;text-transform:uppercase;}
+.acct-trigger:hover .acct-icon,.acct-trigger.open .acct-icon{background:var(--gold);border-color:var(--gold);color:var(--white);}
+.acct-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.acct-trigger:hover .acct-label,.acct-trigger.open .acct-label{color:var(--gold);}
+.acct-chevron{font-size:9px;transition:transform .25s;}
+.acct-trigger.open .acct-chevron{transform:rotate(180deg);}
+
+/* Account dropdown menu */
+.acct-dropdown{position:absolute;top:calc(100% + 14px);right:0;background:var(--white);min-width:240px;box-shadow:0 16px 40px -16px rgba(61,46,36,.25);border-radius:8px;overflow:hidden;display:none;border-top:2px solid var(--gold);z-index:250;}
+.acct-dropdown.open{display:block;animation:fadeUp .25s ease;}
+.dd-email{padding:16px 20px 14px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:var(--gold);word-break:break-all;line-height:1.4;}
+.acct-dropdown a,.acct-dropdown button{display:block;width:100%;padding:13px 20px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;border:none;background:none;text-align:left;cursor:pointer;transition:background .2s,color .2s;}
+.acct-dropdown a:hover,.acct-dropdown button:hover{background:var(--cream);color:var(--gold);}
+.dd-divider{height:1px;background:var(--border);margin:0 20px;}
 
 @media(max-width:768px){.hinner nav{display:none;}.footer-top{grid-template-columns:1fr 1fr;gap:32px;}}
 @media(max-width:480px){.footer-top{grid-template-columns:1fr;}}
@@ -90,28 +97,50 @@ nav a:hover,nav a.active{color:var(--gold);}
       <a href="/wedding-albums.html">Albums</a>
       <a href="/design-studio.html">Design Studio</a>
       <a href="/how-it-works.html">How We Work</a>
-      <a href="/track-order.html">Track My Order</a>
-
-      <span class="auth-nav" id="authNav">
-        <span class="auth-state active" id="authSignedOut">
-          <a href="/login.html" class="auth-signin">Sign In</a>
-        </span>
-        <span class="auth-state" id="authSignedIn">
-          <button class="auth-trigger" id="authTrigger" onclick="window.invAuth &amp;&amp; window.invAuth.toggleAuthDropdown(event)">
-            <span class="auth-avatar" id="authAvatar">·</span>
-            <span class="auth-label">My Account <span class="auth-chevron">▾</span></span>
-          </button>
-          <div class="auth-dropdown" id="authDropdown">
-            <div class="auth-dropdown-email" id="authDropdownEmail">—</div>
-            <a href="/saved-designs.html">My Saved Designs</a>
-            <button onclick="window.invAuth &amp;&amp; window.invAuth.signOut()">Sign Out</button>
-          </div>
-        </span>
-      </span>
     </nav>
-    <button class="cart-btn" onclick="openCart()">
-      Basket <span class="cart-count" id="cartCount">0</span>
-    </button>
+
+    <div class="right-zone">
+
+      <!-- Signed-out account dropdown -->
+      <div class="auth-state active" id="authSignedOut">
+        <button class="acct-trigger" onclick="window.invAuth &amp;&amp; window.invAuth.toggleAuthDropdown(event)">
+          <span class="acct-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+            </svg>
+          </span>
+          <span class="acct-label">Account <span class="acct-chevron">▾</span></span>
+        </button>
+        <div class="acct-dropdown">
+          <a href="/login.html">Sign In / Register</a>
+          <div class="dd-divider"></div>
+          <a href="/track-order.html">Track My Order</a>
+          <a href="/how-it-works.html">Help &amp; Support</a>
+        </div>
+      </div>
+
+      <!-- Signed-in account dropdown -->
+      <div class="auth-state" id="authSignedIn">
+        <button class="acct-trigger" id="authTrigger" onclick="window.invAuth &amp;&amp; window.invAuth.toggleAuthDropdown(event)">
+          <span class="acct-icon signedin" id="authAvatar">·</span>
+          <span class="acct-label">My Account <span class="acct-chevron">▾</span></span>
+        </button>
+        <div class="acct-dropdown" id="authDropdown">
+          <div class="dd-email" id="authDropdownEmail">—</div>
+          <a href="/saved-designs.html">My Saved Designs</a>
+          <a href="/track-order.html">Track My Order</a>
+          <div class="dd-divider"></div>
+          <button onclick="window.invAuth &amp;&amp; window.invAuth.signOut()">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Basket button -->
+      <button class="cart-btn" onclick="openCart()">
+        Basket <span class="cart-count" id="cartCount">0</span>
+      </button>
+
+    </div>
   </div>
 </header>
 
