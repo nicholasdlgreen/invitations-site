@@ -33,6 +33,15 @@
 .sort-pill:hover{border-color:var(--gold-lt);color:var(--text);}
 .sort-pill.active{background:var(--text);color:var(--white);border-color:var(--text);}
 
+/* Category filter banner — shows when ?cat= is active */
+.cat-banner{display:none;background:var(--cream);border-bottom:1px solid var(--border);padding:14px 0;}
+.cat-banner.visible{display:block;}
+.cat-banner-inner{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
+.cat-banner-text{font-size:13px;color:var(--soft);letter-spacing:.04em;}
+.cat-banner-text strong{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--text);font-weight:400;font-size:16px;margin:0 4px;}
+.cat-banner-clear{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:2px;transition:color .2s;}
+.cat-banner-clear:hover{color:var(--brown);border-bottom-color:var(--brown);}
+
 /* Product grid — 3 columns desktop, 2 mobile, smaller cards than v1 */
 .products-section{background:var(--white);padding:36px 0 72px;}
 .product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
@@ -81,18 +90,26 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth.js"></script>
 </head>
-   
-</head>
-<body>   
+<body>
 
 <div id="site-header"></div>
 
-<!-- SLIM HEADER (was a 500px hero, now ~140px) -->
+<!-- SLIM HEADER -->
 <section class="products-header">
   <div class="container">
-    <span class="products-tag">All Products</span>
-    <h1 class="products-h1">Premium printing for <em>life's important moments.</em></h1>
+    <span class="products-tag" id="cat-eyebrow">All Products</span>
+    <h1 class="products-h1" id="cat-heading">Premium printing for <em>life's important moments.</em></h1>
     <div class="products-strap">UK printed · Next-day delivery available</div>
+  </div>
+</section>
+
+<!-- CATEGORY FILTER BANNER (shown only when ?cat= is in URL) -->
+<section class="cat-banner" id="cat-banner">
+  <div class="container">
+    <div class="cat-banner-inner">
+      <div class="cat-banner-text">Showing <strong id="cat-banner-name">—</strong> products only</div>
+      <a class="cat-banner-clear" href="/products.html">View all products →</a>
+    </div>
   </div>
 </section>
 
@@ -103,8 +120,8 @@
       <div class="filter-count" id="product-count">Loading…</div>
       <div class="sort-pills">
         <span class="sort-label">Sort</span>
-        <button class="sort-pill active" data-sort="featured" onclick="setSort('featured')">Featured</button>
-        <button class="sort-pill" data-sort="alpha" onclick="setSort('alpha')">A–Z</button>
+        <button class="sort-pill" data-sort="featured" onclick="setSort('featured')">Featured</button>
+        <button class="sort-pill active" data-sort="alpha" onclick="setSort('alpha')">A–Z</button>
         <button class="sort-pill" data-sort="newest" onclick="setSort('newest')">Newest</button>
       </div>
     </div>
@@ -120,7 +137,7 @@
   </div>
 </section>
 
-<!-- TRUST STRIP (moved to below the grid per Baymard research) -->
+<!-- TRUST STRIP -->
 <section class="trust-strip">
   <div class="container">
     <span class="trust-tag">Why Foreverprint</span>
@@ -168,11 +185,7 @@
 
 <div id="site-footer"></div>
 
-<!-- JSON-LD: ItemList schema for SEO. Listing page contains references to
-     products; individual prices live on landing pages (per Google guidance:
-     prices in structured data must match what's shown on page, and we render
-     prices via JS rather than baking them in HTML). When we move to Google
-     Shopping pre-rendering, this can be enriched with full Product offers. -->
+<!-- JSON-LD: ItemList schema for SEO -->
 <script type="application/ld+json" id="ld-itemlist">{}</script>
 
 <script>
@@ -181,7 +194,14 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 let allProducts = [];      // unsorted master list from Supabase
 let pricingPayload = null; // latest pricing_config for "from £X" prices
-let currentSort = 'featured';
+let currentSort = 'alpha'; // CHANGED: default to A–Z (was 'featured')
+let currentCat  = null;    // category filter from ?cat= URL param
+
+// Display labels for category filter banner + page heading
+const CAT_LABELS = {
+  invitations: 'Invitations',
+  albums: 'Albums'
+};
 
 function escapeHtml(s) {
   if (s == null) return '';
@@ -189,7 +209,6 @@ function escapeHtml(s) {
 }
 
 // Look up the lowest sell price for a product from published pricing.
-// Returns null if no pricing data published yet (page falls back to "From £—").
 function getStartingPrice(slug) {
   if (!pricingPayload || !Array.isArray(pricingPayload.products)) return null;
   const pp = pricingPayload.products.find(p => p.slug === slug);
@@ -200,7 +219,13 @@ function getStartingPrice(slug) {
   }, null);
 }
 
-// Sort comparators. All return arrays sorted in place; treat undefined as "latest".
+// Filter products by category (if currentCat is set)
+function applyCategoryFilter(products) {
+  if (!currentCat) return products;
+  return products.filter(p => (p.category || '').toLowerCase() === currentCat);
+}
+
+// Sort comparators
 function applySort(products, mode) {
   const arr = [...products];
   if (mode === 'alpha') {
@@ -209,10 +234,10 @@ function applySort(products, mode) {
     arr.sort((a,b) => {
       const da = a.created_at ? new Date(a.created_at).getTime() : 0;
       const db = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return db - da; // newest first
+      return db - da;
     });
   } else {
-    // featured = display_order ascending (admin-controlled). Fallback: alpha.
+    // featured = display_order ascending
     arr.sort((a,b) => {
       const oa = (a.display_order != null) ? a.display_order : 999;
       const ob = (b.display_order != null) ? b.display_order : 999;
@@ -233,9 +258,17 @@ function setSort(mode) {
 
 function renderProducts() {
   const grid = document.getElementById('product-grid');
-  const sorted = applySort(allProducts, currentSort);
+  const filtered = applyCategoryFilter(allProducts);
+  const sorted = applySort(filtered, currentSort);
+
+  // Update count
+  const countEl = document.getElementById('product-count');
+  if (countEl) {
+    countEl.textContent = `${sorted.length} ${sorted.length === 1 ? 'product' : 'products'}`;
+  }
+
   if (!sorted.length) {
-    grid.innerHTML = '<div class="product-grid-empty">No products available right now.</div>';
+    grid.innerHTML = `<div class="product-grid-empty">No products match this filter.</div>`;
     return;
   }
   grid.innerHTML = sorted.map(p => {
@@ -277,17 +310,52 @@ function renderItemListSchema(products) {
   if (el) el.textContent = JSON.stringify(ld);
 }
 
+// ===== Read ?cat= from URL on load =====
+function applyUrlCategory() {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('cat');
+  if (!raw) {
+    currentCat = null;
+    return;
+  }
+  const cat = raw.toLowerCase();
+  if (!CAT_LABELS[cat]) {
+    // Unknown category — ignore
+    currentCat = null;
+    return;
+  }
+  currentCat = cat;
+
+  // Update header text to reflect filter
+  const eyebrow = document.getElementById('cat-eyebrow');
+  const heading = document.getElementById('cat-heading');
+  const banner  = document.getElementById('cat-banner');
+  const bannerName = document.getElementById('cat-banner-name');
+
+  if (eyebrow) eyebrow.textContent = CAT_LABELS[cat];
+  if (banner) banner.classList.add('visible');
+  if (bannerName) bannerName.textContent = CAT_LABELS[cat];
+
+  // Optionally update H1 too — kept generic so SEO doesn't fragment
+}
+
 async function loadData() {
+  applyUrlCategory();
+
   const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+
+  // CHANGED: select now includes `category` so we can filter on it
   const [ptRes, pricesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/product_types?active=eq.true&select=slug,name,tagline,hero_image_url,display_order,created_at`, { headers }),
+    fetch(`${SUPABASE_URL}/rest/v1/product_types?active=eq.true&select=slug,name,tagline,hero_image_url,display_order,created_at,category`, { headers }),
     fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
   ]);
 
   if (ptRes.ok) {
     allProducts = await ptRes.json();
   } else {
-    allProducts = [];
+    // If select fails (e.g. category column doesn't exist yet), retry without it
+    const fallbackRes = await fetch(`${SUPABASE_URL}/rest/v1/product_types?active=eq.true&select=slug,name,tagline,hero_image_url,display_order,created_at`, { headers });
+    allProducts = fallbackRes.ok ? await fallbackRes.json() : [];
   }
   if (pricesRes.ok) {
     const rows = await pricesRes.json();
@@ -296,14 +364,8 @@ async function loadData() {
     }
   }
 
-  // Update count
-  const countEl = document.getElementById('product-count');
-  if (countEl) {
-    countEl.textContent = `${allProducts.length} ${allProducts.length === 1 ? 'product' : 'products'}`;
-  }
-
   renderProducts();
-  renderItemListSchema(applySort(allProducts, 'featured'));
+  renderItemListSchema(applySort(applyCategoryFilter(allProducts), 'featured'));
 }
 
 loadData();
