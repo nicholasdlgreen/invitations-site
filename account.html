@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>My account — forever·print</title>
+<meta name="description" content="Manage your forever·print account — view orders, update preferences and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="/prefetch.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-config.js"></script>
+<script src="/auth.js"></script>
+<style>
+  :root{
+    --cream:#FAF7F2;--white:#FFFFFF;--gold:#B8976A;--gold-lt:#D4B896;
+    --brown:#6B4F3A;--text:#3D2E24;--soft:#7A6A5C;--pale:#A89788;
+    --border:#E5DDD0;--err:#B85C5C;--ok:#5C8A6A;--warn:#C99B5F;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:var(--cream);color:var(--text);font-family:'Jost',sans-serif;font-weight:300;-webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;display:flex;flex-direction:column;}
+  main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:48px 24px 80px;}
+  @media(max-width:640px){main{padding:32px 20px 60px;}}
+
+  /* Page header */
+  .acct-header{margin-bottom:36px;}
+  .acct-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+  .acct-title{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:400;color:var(--text);line-height:1.1;margin-bottom:8px;}
+  @media(max-width:640px){.acct-title{font-size:2rem;}}
+  .acct-sub{font-size:14px;color:var(--soft);line-height:1.6;}
+
+  /* Layout */
+  .acct-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:20px;align-items:start;}
+  @media(max-width:880px){.acct-grid{grid-template-columns:1fr;}}
+
+  .card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 8px 24px rgba(61,46,36,.04);}
+  .card h2{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:6px;}
+  .card .card-sub{font-size:12px;color:var(--soft);margin-bottom:18px;line-height:1.6;}
+  .card-stack > .card + .card{margin-top:20px;}
+
+  /* Field rows */
+  .field-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--border);}
+  .field-row:last-child{border-bottom:0;}
+  .field-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);}
+  .field-val{font-size:13px;color:var(--text);font-weight:400;text-align:right;}
+
+  /* Orders list */
+  .order-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);}
+  .order-row:last-child{border-bottom:0;}
+  .order-num{font-size:11px;letter-spacing:.08em;color:var(--pale);}
+  .order-meta{font-size:13px;color:var(--text);}
+  .order-meta .order-date{font-size:11px;color:var(--soft);margin-top:2px;}
+  .order-right{text-align:right;}
+  .order-total{font-size:14px;color:var(--text);font-weight:500;}
+  .order-status{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-top:2px;}
+  .order-status.paid{color:var(--ok);}
+  .order-status.pending{color:var(--warn);}
+  .order-status.fulfilled{color:var(--gold);}
+
+  /* Toggle */
+  .toggle-row{display:flex;align-items:flex-start;gap:14px;padding:12px;background:var(--cream);border-radius:10px;}
+  .toggle-row .toggle-text{flex:1;font-size:12px;color:var(--soft);line-height:1.6;}
+  .toggle-row .toggle-text strong{color:var(--text);font-weight:500;display:block;font-size:13px;margin-bottom:2px;}
+  .toggle-switch{position:relative;width:40px;height:22px;background:var(--border);border-radius:11px;cursor:pointer;flex-shrink:0;margin-top:2px;transition:background .25s;}
+  .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:var(--white);border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+  .toggle-switch.on{background:var(--gold);}
+  .toggle-switch.on::after{transform:translateX(18px);}
+
+  /* Buttons */
+  .btn{display:inline-block;background:var(--gold);color:var(--white);border:none;padding:11px 22px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:500;letter-spacing:.06em;cursor:pointer;text-decoration:none;transition:background .2s;}
+  .btn:hover{background:var(--brown);}
+  .btn-out{display:inline-block;background:none;color:var(--soft);border:1px solid var(--border);padding:10px 20px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:400;letter-spacing:.06em;cursor:pointer;text-decoration:none;transition:all .2s;}
+  .btn-out:hover{border-color:var(--gold);color:var(--gold);}
+  .btn-link{background:none;border:none;font-family:inherit;font-size:12px;color:var(--gold);cursor:pointer;padding:0;text-decoration:underline;}
+  .btn-link:hover{color:var(--brown);}
+
+  /* States */
+  .empty-state{text-align:center;padding:24px 16px;color:var(--soft);font-size:13px;line-height:1.7;}
+  .empty-state .empty-sub{font-size:12px;color:var(--pale);margin-bottom:14px;}
+  .loading-state{padding:14px 0;font-size:13px;color:var(--pale);text-align:center;}
+  .save-flash{display:inline-block;margin-left:10px;font-size:11px;color:var(--ok);opacity:0;transition:opacity .25s;}
+  .save-flash.show{opacity:1;}
+
+  /* Auth-required gate (shown if not logged in) */
+  #gate{display:none;text-align:center;padding:80px 20px;}
+  #gate h2{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--text);margin-bottom:8px;}
+  #gate p{font-size:14px;color:var(--soft);margin-bottom:24px;}
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main>
+  <!-- Gate shown if user not signed in -->
+  <div id="gate">
+    <h2>Please sign in</h2>
+    <p>You need to be signed in to view your account.</p>
+    <a href="/login.html?next=/account.html" class="btn">Sign in</a>
+    &nbsp;
+    <a href="/register.html" class="btn-out">Create account</a>
+  </div>
+
+  <!-- Account content shown if signed in -->
+  <div id="content" style="display:none;">
+    <div class="acct-header">
+      <div class="acct-eyebrow">forever·print</div>
+      <h1 class="acct-title">Welcome back<span id="firstName"></span></h1>
+      <p class="acct-sub">Manage your profile, view your order history and update your preferences.</p>
+    </div>
+
+    <div class="acct-grid">
+      <!-- LEFT COLUMN -->
+      <div class="card-stack">
+
+        <!-- PROFILE CARD -->
+        <div class="card">
+          <h2>Profile</h2>
+          <div class="card-sub">Your account details. To update, <a href="mailto:hello@foreverprint.com" style="color:var(--gold);">contact us</a> — full self-service edit is coming soon.</div>
+          <div class="field-row">
+            <span class="field-label">Name</span>
+            <span class="field-val" id="profileName">—</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Email</span>
+            <span class="field-val" id="profileEmail">—</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Member since</span>
+            <span class="field-val" id="profileCreated">—</span>
+          </div>
+        </div>
+
+        <!-- PREFERENCES CARD -->
+        <div class="card">
+          <h2>Marketing preferences</h2>
+          <div class="card-sub">Choose whether we send you occasional offers and updates. You can change this any time.</div>
+          <div class="toggle-row" onclick="toggleMarketing()">
+            <div class="toggle-text">
+              <strong>Email me offers and new designs</strong>
+              We send roughly once a month — never spam, easy unsubscribe.
+            </div>
+            <div class="toggle-switch" id="marketingToggle"></div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--pale);">
+            <span id="saveFlash" class="save-flash">✓ Saved</span>
+          </div>
+        </div>
+
+        <!-- SECURITY CARD -->
+        <div class="card">
+          <h2>Security</h2>
+          <div class="card-sub">Manage your password or sign out of your account.</div>
+          <button class="btn-out" onclick="changePassword()">Reset password</button>
+          &nbsp;
+          <button class="btn-out" onclick="window.invAuth.signOut()">Sign out</button>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="card-stack">
+
+        <!-- ORDERS CARD -->
+        <div class="card">
+          <h2>Order history</h2>
+          <div class="card-sub">Every order placed with the email on this account. Click an order to track it.</div>
+          <div id="ordersList">
+            <div class="loading-state">Loading your orders…</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script>
+  fetch('/header.html').then(r=>r.text()).then(h=>{document.getElementById('site-header').innerHTML=h;}).catch(()=>{});
+  fetch('/footer.html').then(r=>r.text()).then(h=>{document.getElementById('site-footer').innerHTML=h;}).catch(()=>{});
+</script>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// Account dashboard
+// Loads in parallel: profile data + orders. Marketing toggle
+// reads/writes the profiles table. Sign-out via invAuth.
+// ─────────────────────────────────────────────────────────────
+
+let sb = null;            // Direct Supabase client for reads (RLS-aware)
+let currentUser = null;   // From invAuth
+let currentProfile = null; // Row from profiles table
+
+// Helper: Supabase client using the same config invAuth uses
+function getSupabase(){
+  if (sb) return sb;
+  const cfg = window.__SUPABASE_CONFIG || {};
+  if (!cfg.url || !cfg.anonKey || !window.supabase) return null;
+  sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+  return sb;
+}
+
+// Format GBP money
+function fmtMoney(pennies){
+  if (pennies == null || pennies === '') return '—';
+  const n = typeof pennies === 'number' ? pennies : parseFloat(pennies);
+  if (!isFinite(n)) return '—';
+  // We store totals as decimals (e.g. 84.50) not pennies based on existing pattern
+  return '£' + n.toFixed(2);
+}
+
+// Format date
+function fmtDate(iso){
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch(e) { return '—'; }
+}
+
+// ─── Load profile (name from auth metadata + marketing pref from profiles table) ───
+async function loadProfile(){
+  // Name comes from user_metadata (set during signUp)
+  const meta = currentUser.user_metadata || {};
+  const name = meta.full_name || meta.name || '';
+  const email = currentUser.email || '—';
+
+  document.getElementById('profileName').textContent = name || '—';
+  document.getElementById('profileEmail').textContent = email;
+  document.getElementById('profileCreated').textContent = fmtDate(currentUser.created_at);
+
+  // Greeting first name
+  if (name){
+    const first = name.split(' ')[0];
+    document.getElementById('firstName').textContent = ', ' + first;
+  }
+
+  // Marketing preference from profiles table
+  const supa = getSupabase();
+  if (!supa) return;
+  try {
+    const { data, error } = await supa
+      .from('profiles')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    if (error){ console.warn('Profile fetch failed:', error.message); return; }
+    currentProfile = data;
+    const toggle = document.getElementById('marketingToggle');
+    if (data && data.marketing_optin){
+      toggle.classList.add('on');
+    } else {
+      toggle.classList.remove('on');
+    }
+  } catch(e){
+    console.warn('Profile fetch error:', e.message);
+  }
+}
+
+// ─── Toggle marketing pref and persist ───
+let saveTimer = null;
+async function toggleMarketing(){
+  const toggle = document.getElementById('marketingToggle');
+  const wasOn = toggle.classList.contains('on');
+  const newState = !wasOn;
+  toggle.classList.toggle('on');
+
+  const supa = getSupabase();
+  if (!supa || !currentUser) return;
+
+  try {
+    // Upsert (in case profile row doesn't exist yet for older accounts)
+    const { error } = await supa.from('profiles').upsert({
+      user_id: currentUser.id,
+      marketing_optin: newState,
+      marketing_optin_date: newState ? new Date().toISOString() : null
+    });
+    if (error){
+      console.warn('Save failed:', error.message);
+      // Revert UI
+      toggle.classList.toggle('on');
+      return;
+    }
+    // Show "Saved" briefly
+    const flash = document.getElementById('saveFlash');
+    flash.classList.add('show');
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => flash.classList.remove('show'), 2000);
+  } catch(e){
+    console.warn('Save error:', e.message);
+    toggle.classList.toggle('on');
+  }
+}
+
+// ─── Load orders matched by customer_email ───
+// We look up orders where the customer_email field equals the signed-in user's email.
+// This will work whether RLS is enabled on the orders table or not — if RLS is on,
+// the policy "users_read_own_orders" must permit reading rows by email match.
+async function loadOrders(){
+  const supa = getSupabase();
+  const container = document.getElementById('ordersList');
+  if (!supa || !currentUser){
+    container.innerHTML = '<div class="empty-state">Cannot load orders right now.</div>';
+    return;
+  }
+
+  try {
+    const { data, error } = await supa
+      .from('orders')
+      .select('id, order_number, customer_email, total, status, created_at')
+      .eq('customer_email', currentUser.email)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error){
+      console.warn('Orders fetch failed:', error.message);
+      container.innerHTML =
+        '<div class="empty-state">We couldn\'t load your orders right now. <br><span class="empty-sub">Please refresh the page or contact us if this persists.</span></div>';
+      return;
+    }
+
+    if (!data || data.length === 0){
+      container.innerHTML =
+        '<div class="empty-state">' +
+        '<strong style="color:var(--text);font-size:14px;display:block;margin-bottom:6px;">No orders yet</strong>' +
+        '<span class="empty-sub">When you place an order it will appear here.</span><br>' +
+        '<a href="/products.html" class="btn" style="margin-top:6px;">Browse products</a>' +
+        '</div>';
+      return;
+    }
+
+    // Render order rows
+    container.innerHTML = data.map(o => {
+      const num = o.order_number || (o.id ? ('#' + String(o.id).slice(0, 8)) : '—');
+      const date = fmtDate(o.created_at);
+      const total = fmtMoney(o.total);
+      const status = (o.status || '').toLowerCase();
+      const statusLabel = status ? (status.charAt(0).toUpperCase() + status.slice(1)) : 'Processing';
+      const statusClass = status === 'paid' ? 'paid' : status === 'fulfilled' ? 'fulfilled' : status === 'pending' ? 'pending' : '';
+      return `
+        <div class="order-row">
+          <div class="order-num">${num}</div>
+          <div class="order-meta">
+            Order placed
+            <div class="order-date">${date}</div>
+          </div>
+          <div class="order-right">
+            <div class="order-total">${total}</div>
+            <div class="order-status ${statusClass}">${statusLabel}</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e){
+    console.warn('Orders fetch error:', e.message);
+    container.innerHTML = '<div class="empty-state">We couldn\'t load your orders right now.</div>';
+  }
+}
+
+// ─── Change password — sends a reset email ───
+async function changePassword(){
+  if (!currentUser || !window.invAuth) return;
+  if (!confirm('We\'ll send a password reset link to ' + currentUser.email + '. Continue?')) return;
+  const { error } = await window.invAuth.requestPasswordReset(
+    currentUser.email,
+    window.location.origin + '/reset-password.html'
+  );
+  if (error){
+    alert('Sorry, we couldn\'t send the email: ' + error.message);
+  } else {
+    alert('Done — check your inbox for the reset link.');
+  }
+}
+
+// ─── Boot ───
+(async () => {
+  if (!window.invAuth || !window.invAuth.init){
+    document.getElementById('gate').style.display = 'block';
+    return;
+  }
+  await window.invAuth.init();
+
+  if (!window.invAuth.isLoggedIn()){
+    document.getElementById('gate').style.display = 'block';
+    return;
+  }
+
+  currentUser = window.invAuth.getUser();
+  document.getElementById('content').style.display = 'block';
+
+  // Kick both loads in parallel — they're independent
+  Promise.all([loadProfile(), loadOrders()]).catch(e => console.warn('Boot error:', e));
+})();
+</script>
+
+</body>
+</html>
