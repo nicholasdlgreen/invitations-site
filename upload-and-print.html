@@ -40,6 +40,19 @@
 .preview-status{font-size:12px;color:var(--soft);letter-spacing:.04em;}
 .preview-img,.preview-canvas{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 4px 20px rgba(61,46,36,.08);background:#fff;}
 .preview-meta{margin-top:16px;font-size:11px;color:var(--soft);letter-spacing:.04em;text-align:center;line-height:1.6;}
+/* BLEED / TRIM / SAFE OVERLAY */
+.bleed-overlay{position:absolute;pointer-events:none;}
+.bleed-line{position:absolute;box-sizing:border-box;border-width:1px;}
+.bleed-bleed{border:1px dashed rgba(200,60,60,.85);}
+.bleed-trim{border:1px solid rgba(60,60,60,.85);}
+.bleed-safe{border:1px dashed rgba(80,140,90,.85);}
+/* Legend */
+.bleed-legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:10px;padding-top:12px;border-top:1px dashed var(--border);font-size:10.5px;color:var(--soft);letter-spacing:.02em;}
+.legend-item{display:flex;align-items:center;gap:6px;}
+.legend-swatch{display:inline-block;width:18px;height:0;border-bottom-width:1.5px;box-sizing:border-box;}
+.swatch-bleed{border-bottom:1.5px dashed rgba(200,60,60,.85);}
+.swatch-trim{border-bottom:1.5px solid rgba(60,60,60,.85);}
+.swatch-safe{border-bottom:1.5px dashed rgba(80,140,90,.85);}
 .check-row{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
 .check-row:last-child{border-bottom:none;padding-bottom:0;}
 .check-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px;}
@@ -218,8 +231,20 @@
             </div>
             <img id="previewImg" class="preview-img" style="display:none" alt="Artwork preview"/>
             <canvas id="previewCanvas" class="preview-canvas" style="display:none"></canvas>
+            <!-- Bleed/trim/safe guides — positioned over the preview by drawBleedOverlay() -->
+            <div id="bleedOverlay" class="bleed-overlay" style="display:none">
+              <div class="bleed-line bleed-bleed" id="bleedBleedLine"></div>
+              <div class="bleed-line bleed-trim" id="bleedTrimLine"></div>
+              <div class="bleed-line bleed-safe" id="bleedSafeLine"></div>
+            </div>
           </div>
           <div id="previewMeta" class="preview-meta"></div>
+          <!-- Legend explaining the overlay colours -->
+          <div id="bleedLegend" class="bleed-legend" style="display:none">
+            <div class="legend-item"><span class="legend-swatch swatch-bleed"></span>Bleed — extend background to here</div>
+            <div class="legend-item"><span class="legend-swatch swatch-trim"></span>Trim — where it's cut</div>
+            <div class="legend-item"><span class="legend-swatch swatch-safe"></span>Safe zone — keep text inside</div>
+          </div>
         </div>
         <!-- RIGHT: real checks -->
         <div class="check-card">
@@ -744,10 +769,14 @@ function resetPreviewUI(){
   const img = document.getElementById('previewImg');
   const canvas = document.getElementById('previewCanvas');
   const meta = document.getElementById('previewMeta');
+  const overlay = document.getElementById('bleedOverlay');
+  const legend = document.getElementById('bleedLegend');
   if (placeholder) placeholder.style.display = 'flex';
   if (img){ img.style.display='none'; img.src=''; }
   if (canvas){ canvas.style.display='none'; }
   if (meta) meta.textContent = '';
+  if (overlay) overlay.style.display = 'none';
+  if (legend) legend.style.display = 'none';
   setPreviewStatus('Preparing your preview…');
 }
 
@@ -813,9 +842,26 @@ async function buildAndRunChecks(file, info){
         checks.push({status:'warn', label:'Pages', val: pdfInfo.numPages+' pages', note:'Multi-page file detected. We\'ll use the first page unless you specify otherwise.'});
       }
 
+      // Bleed check — does file size include the 3mm bleed margin?
+      const expectedWithBleed_w = spec.mmW + 6;
+      const expectedWithBleed_h = spec.mmH + 6;
+      const bleedTol = 2;
+      const hasBleed = Math.abs(pdfInfo.widthMm - expectedWithBleed_w) <= bleedTol &&
+                       Math.abs(pdfInfo.heightMm - expectedWithBleed_h) <= bleedTol;
+      const atTrim = Math.abs(pdfInfo.widthMm - spec.mmW) <= bleedTol &&
+                     Math.abs(pdfInfo.heightMm - spec.mmH) <= bleedTol;
+      if (hasBleed){
+        checks.push({status:'ok', label:'Bleed', val:'3mm bleed detected', note:'Your file includes the 3mm bleed margin — your background will print right to the edge.'});
+      } else if (atTrim){
+        checks.push({status:'warn', label:'Bleed', val:'No bleed', note:'Your file is at exact trim size with no 3mm bleed. If your background extends to the edge, you may see thin white borders after cutting. Our team will check this manually before press.'});
+      }
+
       // Update preview meta + show the rendered canvas
       const previewMeta = document.getElementById('previewMeta');
       if (previewMeta) previewMeta.textContent = `${dimText} · ${pdfInfo.numPages} page${pdfInfo.numPages===1?'':'s'}`;
+
+      // Draw bleed/trim/safe overlay
+      drawBleedOverlay(pdfInfo.widthMm, pdfInfo.heightMm, spec);
     } catch (err){
       checks.push({status:'warn', label:'Preview', val:'Could not preview', note:'We couldn\'t render this PDF in your browser. Our prepress team will check it manually.'});
       setPreviewStatus('Preview unavailable — file received OK, our team will check it manually.');
@@ -855,6 +901,10 @@ async function buildAndRunChecks(file, info){
 
       const previewMeta = document.getElementById('previewMeta');
       if (previewMeta) previewMeta.textContent = `${dimText} · ${dpiRounded} DPI at ${spec.label}`;
+
+      // Draw bleed/trim/safe overlay. For raster images we assume the file
+      // is at trim size (no bleed), so we pass the selected size dimensions.
+      drawBleedOverlay(spec.mmW, spec.mmH, spec);
     } catch (err){
       checks.push({status:'warn', label:'Preview', val:'Could not read image', note:'We couldn\'t inspect this image in your browser. Our prepress team will check it manually.'});
       setPreviewStatus('Preview unavailable — file received OK, our team will check it manually.');
@@ -932,6 +982,96 @@ async function readImageMeta(file){
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
     img.src = url;
+  });
+}
+
+// ── BLEED / TRIM / SAFE OVERLAY ──────────────────────────
+// Positions the overlay precisely over the rendered preview, then draws the
+// three guide lines at the right percentages based on whether the file
+// includes bleed or not.
+//
+// If file dims ≈ selected size + 6mm (e.g. 154×216 for A5), file has bleed:
+//   - Bleed line at the outer edge of the file
+//   - Trim line inset by 3mm/fileMm percent
+//   - Safe zone inset by 6mm/fileMm percent
+//
+// If file dims ≈ selected size (e.g. 148×210 for A5), no bleed in file:
+//   - Trim line at the outer edge of the file
+//   - Safe zone inset by 3mm/fileMm percent
+//   - Bleed line hidden (would be off the page)
+function drawBleedOverlay(fileWidthMm, fileHeightMm, sizeSpec){
+  // Wait for layout to settle (canvas/img dimensions are final)
+  requestAnimationFrame(() => {
+    const canvas = document.getElementById('previewCanvas');
+    const img = document.getElementById('previewImg');
+    const target = (canvas && canvas.style.display !== 'none') ? canvas
+                 : (img && img.style.display !== 'none') ? img : null;
+    if (!target) return;
+
+    const overlay = document.getElementById('bleedOverlay');
+    const legend = document.getElementById('bleedLegend');
+    if (!overlay) return;
+
+    // Position the overlay exactly over the visible preview
+    const wrapRect = target.parentElement.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    overlay.style.left = (targetRect.left - wrapRect.left) + 'px';
+    overlay.style.top = (targetRect.top - wrapRect.top) + 'px';
+    overlay.style.width = targetRect.width + 'px';
+    overlay.style.height = targetRect.height + 'px';
+    overlay.style.display = 'block';
+
+    // Decide whether the file includes bleed
+    const expectedW_withBleed = sizeSpec.mmW + 6;
+    const expectedH_withBleed = sizeSpec.mmH + 6;
+    const tolMm = 2;
+    const hasBleed = Math.abs(fileWidthMm - expectedW_withBleed) <= tolMm &&
+                     Math.abs(fileHeightMm - expectedH_withBleed) <= tolMm;
+
+    const bleedEl = document.getElementById('bleedBleedLine');
+    const trimEl  = document.getElementById('bleedTrimLine');
+    const safeEl  = document.getElementById('bleedSafeLine');
+
+    const setBox = (el, x, y, w, h) => {
+      if (!el) return;
+      el.style.left = x + '%';
+      el.style.top = y + '%';
+      el.style.width = w + '%';
+      el.style.height = h + '%';
+      el.style.display = 'block';
+    };
+
+    if (hasBleed){
+      // File = trim + bleed all around
+      // Bleed = outer edge of file (0% to 100%)
+      setBox(bleedEl, 0, 0, 100, 100);
+      // Trim = inset by 3mm
+      const tx = 3 / fileWidthMm * 100;
+      const ty = 3 / fileHeightMm * 100;
+      const tw = sizeSpec.mmW / fileWidthMm * 100;
+      const th = sizeSpec.mmH / fileHeightMm * 100;
+      setBox(trimEl, tx, ty, tw, th);
+      // Safe zone = inset by 6mm (3mm bleed + 3mm safe inside trim)
+      const sx = 6 / fileWidthMm * 100;
+      const sy = 6 / fileHeightMm * 100;
+      const sw = (sizeSpec.mmW - 6) / fileWidthMm * 100;
+      const sh = (sizeSpec.mmH - 6) / fileHeightMm * 100;
+      setBox(safeEl, sx, sy, sw, sh);
+    } else {
+      // File = trim only (no bleed). Hide the bleed line.
+      if (bleedEl) bleedEl.style.display = 'none';
+      // Trim = outer edge of file
+      setBox(trimEl, 0, 0, 100, 100);
+      // Safe zone = inset by 3mm
+      const sx = 3 / fileWidthMm * 100;
+      const sy = 3 / fileHeightMm * 100;
+      const sw = (fileWidthMm - 6) / fileWidthMm * 100;
+      const sh = (fileHeightMm - 6) / fileHeightMm * 100;
+      setBox(safeEl, sx, sy, sw, sh);
+    }
+
+    // Show the legend
+    if (legend) legend.style.display = 'flex';
   });
 }
 
