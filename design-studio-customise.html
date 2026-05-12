@@ -85,6 +85,16 @@
 .style-btn.italic{font-style:italic}
 
 .colour-row{display:flex;flex-wrap:wrap;gap:8px}
+
+/* SIZE PICKER */
+.size-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:10px;margin-top:4px}
+.size-card{border:1.5px solid var(--border);border-radius:12px;padding:14px 10px 12px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.size-card:hover:not(.on){border-color:var(--gold-lt)}
+.size-card.on{border-color:var(--gold);background:rgba(184,151,106,.05)}
+.size-card-shape{border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s}
+.size-card.on .size-card-shape{border-color:var(--gold);background:rgba(184,151,106,.12)}
+.size-card-label{font-size:11px;font-weight:500;color:var(--text);letter-spacing:.04em}
+.size-card-mm{font-size:9.5px;color:var(--pale);letter-spacing:.02em}
 .colour-opt{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s;position:relative}
 .colour-opt:hover:not(.on){transform:scale(1.1)}
 .colour-opt.on{border-color:var(--text);transform:scale(1.1)}
@@ -140,6 +150,13 @@
 
   <!-- RIGHT: CONTROLS -->
   <div class="controls-col">
+
+    <!-- SIZE -->
+    <div class="section">
+      <h2 class="section-h">Size</h2>
+      <p class="section-help">Choose your invitation size. This affects the printed dimensions.</p>
+      <div class="size-grid" id="sizeGrid"></div>
+    </div>
 
     <!-- WORDING -->
     <div class="section">
@@ -292,6 +309,17 @@ const SCOPE_LABELS = {
   date:'the date', venue:'the venue', lower:'the lower line'
 };
 
+// ─── SIZES ───────────────────────────────────────────────────
+// Single source of truth for invitation sizes (matches upload-and-print).
+// Templates declare which of these they support via `availableSizes`.
+const SIZES = {
+  'A5':    { label:'A5',     mm:'148 × 210mm', mmW:148, mmH:210 },
+  'A6':    { label:'A6',     mm:'105 × 148mm', mmW:105, mmH:148 },
+  '5x7':   { label:'5" × 7"', mm:'127 × 178mm', mmW:127, mmH:178 },
+  'DL':    { label:'DL',     mm:'99 × 210mm',  mmW:99,  mmH:210 },
+  'Square':{ label:'Square', mm:'148 × 148mm', mmW:148, mmH:148 }
+};
+
 // ─── TEMPLATE DEFINITIONS ────────────────────────────────────
 // Each template defines:
 //   svg: the full SVG markup with id="bg", id="motif", and editable text IDs
@@ -300,6 +328,8 @@ const SCOPE_LABELS = {
 const TEMPLATES = {
   botanic: {
     name:'Botanic', style:'Botanical', defaultPalette:'sage',
+    availableSizes: ['A5', 'A6', '5x7'],
+    defaultSize: 'A5',
     illustration: '/img/templates/romantic-wedding/2.svg',
     illustrationFit: { x: 12, y: 14, width: 124, height: 182 },
     svg:`<svg id="previewSvg" viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg">
@@ -327,6 +357,7 @@ const TEMPLATES = {
 // ─── PAGE STATE ─────────────────────────────────────────────
 let currentTemplate = 'botanic';
 let currentPalette = 'sage';
+let currentSize = 'A5';
 let elementState = {};
 let currentScope = 'names';
 
@@ -424,6 +455,9 @@ function init(){
   // Build palette swatches
   buildPaletteSwatches(tpl.defaultPalette);
 
+  // Build size picker from template's available sizes
+  buildSizePicker(tpl);
+
   // Wire up form fields → SVG sync
   bindFormToSvg();
 
@@ -454,6 +488,62 @@ function buildPaletteSwatches(active){
     wrap.dataset.palette = key;
     row.appendChild(wrap);
   });
+}
+
+// ─── SIZE PICKER ────────────────────────────────────────────
+// Build the size cards from the template's availableSizes array.
+// Each card shows a proportional shape preview, the size label, and dimensions.
+function buildSizePicker(tpl){
+  const grid = document.getElementById('sizeGrid');
+  if (!grid) return;
+  const available = tpl.availableSizes || ['A5'];
+  const defaultSize = tpl.defaultSize || available[0];
+  currentSize = defaultSize;
+
+  // Find largest dimensions across available sizes so we can normalise shape previews
+  let maxW = 0, maxH = 0;
+  available.forEach(key => {
+    const s = SIZES[key]; if (!s) return;
+    if (s.mmW > maxW) maxW = s.mmW;
+    if (s.mmH > maxH) maxH = s.mmH;
+  });
+
+  grid.innerHTML = '';
+  available.forEach(key => {
+    const s = SIZES[key]; if (!s) return;
+    const card = document.createElement('div');
+    card.className = 'size-card' + (key === defaultSize ? ' on' : '');
+    card.dataset.size = key;
+    // Shape: proportional little rectangle representing the size
+    const shapeW = Math.round((s.mmW / maxW) * 34);
+    const shapeH = Math.round((s.mmH / maxH) * 44);
+    card.innerHTML = `
+      <div class="size-card-shape" style="width:${shapeW}px;height:${shapeH}px"></div>
+      <div class="size-card-label">${s.label}</div>
+      <div class="size-card-mm">${s.mm}</div>`;
+    card.onclick = () => selectSize(key);
+    grid.appendChild(card);
+  });
+
+  updatePreviewSpec();
+}
+
+function selectSize(key){
+  if (!SIZES[key]) return;
+  currentSize = key;
+  document.querySelectorAll('.size-card').forEach(c => {
+    c.classList.toggle('on', c.dataset.size === key);
+  });
+  updatePreviewSpec();
+}
+
+function updatePreviewSpec(){
+  const spec = document.getElementById('previewSpec');
+  if (!spec) return;
+  const s = SIZES[currentSize];
+  if (!s) return;
+  const tpl = TEMPLATES[currentTemplate];
+  spec.textContent = `${tpl.name} · ${s.label} · ${s.mm}`;
 }
 
 function markActivePalette(key){
@@ -649,9 +739,14 @@ function continueToOrder(){
   const svgEl = document.getElementById('previewSvg');
   const svgString = svgEl ? svgEl.outerHTML : '';
 
+  const sizeInfo = SIZES[currentSize] || SIZES['A5'];
+
   const designState = {
     templateId: currentTemplate,
     templateName: TEMPLATES[currentTemplate].name,
+    size: currentSize,
+    sizeLabel: sizeInfo.label,
+    sizeMm: sizeInfo.mm,
     palette: currentPalette,
     paletteName: PALETTES[currentPalette].name,
     elements: elementState,
@@ -666,7 +761,9 @@ function continueToOrder(){
     thumbnailSvg: svgString
   };
   sessionStorage.setItem('foreverprint_design', JSON.stringify(designState));
-  window.location.href = '/design-studio-order.html';
+  // Route into the existing order flow in design-studio mode so the user
+  // skips the upload step and goes straight to paper/quantity/etc.
+  window.location.href = '/upload-and-print.html?source=design-studio';
 }
 
 // Boot
