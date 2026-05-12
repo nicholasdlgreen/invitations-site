@@ -1168,6 +1168,25 @@ async function proceedToStripe(){
   }
 })();
 
+// ── ACTION=CHECKOUT HANDLER ────────────────────────────────
+// If the user clicked "Continue to Checkout" from the basket drawer on
+// another page, they arrive here with ?action=checkout. Auto-open the
+// checkout modal so they don't have to navigate further.
+(function checkActionCheckout(){
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('action') !== 'checkout') return;
+  // Wait a tick so the page (especially design-mode setup) has settled.
+  setTimeout(() => {
+    if (!cart.length) { showToast('Your basket is empty'); return; }
+    if (typeof openCheckout === 'function') openCheckout();
+  }, 150);
+  // Clean the URL — keep source=design-studio if present, drop action
+  const keep = new URLSearchParams();
+  if (params.get('source')) keep.set('source', params.get('source'));
+  const newUrl = window.location.pathname + (keep.toString() ? '?' + keep.toString() : '');
+  history.replaceState(null, '', newUrl);
+})();
+
 // ── LOAD HEADER/FOOTER ────────────────────────────────────
 fetch('/header.html').then(r=>r.text()).then(html=>{
   document.getElementById('site-header').outerHTML=html;
