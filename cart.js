@@ -84,7 +84,7 @@
           '<div class="cart-item-img">' + (item.icon || '✦') + '</div>' +
           '<div class="cart-item-info">' +
             '<div class="cart-item-name serif">' + item.name + '</div>' +
-            '<div class="cart-item-meta">' + item.qty + ' invitations · ' + (item.paper || 'Smooth White') + '</div>' +
+            '<div class="cart-item-meta">' + (item.size ? item.size + ' · ' : '') + item.qty + ' invitations · ' + (item.paper || 'Smooth White') + '</div>' +
             '<div class="cart-item-price">£' + item.total.toFixed(2) + '</div>' +
           '</div>' +
           '<button class="cart-remove" onclick="removeCartItem(' + i + ')">✕</button>' +
