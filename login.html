@@ -159,9 +159,8 @@ form.addEventListener('submit', async (e) => {
   }
 
   // Success — redirect to where they wanted to go.
-  // Default to home (/) for now since /account.html doesn't exist yet.
-  // When we build the account dashboard, change this default to /account.html.
-  const redirectTo = params.get('next') || '/';
+  // Defaults to the account dashboard.
+  const redirectTo = params.get('next') || '/account.html';
   window.location.href = redirectTo;
 });
 
@@ -186,7 +185,7 @@ form.addEventListener('submit', async (e) => {
     if (subEl) subEl.textContent = 'Your account is verified and you\'re signed in.';
     if (formEl){
       formEl.innerHTML =
-        '<a href="/" class="btn-submit" style="text-decoration:none;">Continue to forever·print</a>';
+        '<a href="/account.html" class="btn-submit" style="text-decoration:none;">Go to my account</a>';
     }
     // Hide the divider + bottom links since they don't apply now
     document.querySelectorAll('.auth-divider, .auth-foot').forEach(el => el.style.display = 'none');
@@ -195,7 +194,7 @@ form.addEventListener('submit', async (e) => {
 
   // Returning visitor already signed in — quietly redirect
   if (window.invAuth.isLoggedIn()){
-    const redirectTo = params.get('next') || '/';
+    const redirectTo = params.get('next') || '/account.html';
     window.location.href = redirectTo;
   }
 })();
