@@ -7,6 +7,10 @@
 //   invAuth.isLoggedIn()           -> true/false
 //   invAuth.onChange(cb)           -> subscribe to auth state changes
 //   invAuth.signInWithMagicLink(email, redirectTo) -> { error? }
+//   invAuth.signUp(email, password, metadata, redirectTo) -> { data, error? }
+//   invAuth.signInWithPassword(email, password)            -> { data, error? }
+//   invAuth.requestPasswordReset(email, redirectTo)        -> { error? }
+//   invAuth.updatePassword(newPassword)                    -> { data, error? }
 //   invAuth.signOut()              -> redirects to home on success
 //   invAuth.toggleAuthDropdown(e)  -> opens/closes the header dropdown
 //
@@ -97,6 +101,54 @@
       options: { emailRedirectTo: target }
     });
     return { error };
+  }
+
+  // ── Password-based signup ──
+  // metadata is stored in auth.users.raw_user_meta_data and is accessible via
+  // user.user_metadata after signin. We typically pass { full_name, marketing_optin }.
+  // The verification email link will redirect to `redirectTo` after click.
+  async function signUp(email, password, metadata, redirectTo) {
+    if (!sb) await init();
+    if (!sb) return { error: new Error('Auth not configured') };
+
+    const target = redirectTo || (window.location.origin + '/login.html?verified=true');
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: target,
+        data: metadata || {}
+      }
+    });
+    return { data, error };
+  }
+
+  // ── Password-based sign in ──
+  async function signInWithPassword(email, password) {
+    if (!sb) await init();
+    if (!sb) return { error: new Error('Auth not configured') };
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    return { data, error };
+  }
+
+  // ── Send a password-reset email ──
+  // The link in the email sends the user to `redirectTo` (default /reset-password.html)
+  // with an access token in the URL fragment, which Supabase auto-detects.
+  async function requestPasswordReset(email, redirectTo) {
+    if (!sb) await init();
+    if (!sb) return { error: new Error('Auth not configured') };
+    const target = redirectTo || (window.location.origin + '/reset-password.html');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: target });
+    return { error };
+  }
+
+  // ── Update the signed-in user's password ──
+  // Used on /reset-password.html after the user clicks the email link.
+  async function updatePassword(newPassword) {
+    if (!sb) await init();
+    if (!sb) return { error: new Error('Auth not configured') };
+    const { data, error } = await sb.auth.updateUser({ password: newPassword });
+    return { data, error };
   }
 
   async function signOut() {
@@ -337,6 +389,10 @@
     isLoggedIn,
     onChange,
     signInWithMagicLink,
+    signUp,
+    signInWithPassword,
+    requestPasswordReset,
+    updatePassword,
     signOut,
     saveDesign,
     loadDesign,
