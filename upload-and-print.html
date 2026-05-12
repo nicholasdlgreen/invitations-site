@@ -622,6 +622,10 @@ try { cart = JSON.parse(localStorage.getItem('inv_cart')||'[]'); } catch(e){ car
 let currentFile=null, currentStep=1, selectedSize=null;
 let selectedPaper='smooth', selectedFinish='None', uploadQty=25, checksPassed=true;
 let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
+// Design-studio mode: set in the IIFE near the bottom of this script if
+// the user came from /design-studio-customise. When true, steps 1 & 2 are
+// hidden and currentFile is a synthetic SVG built from the saved design.
+let designMode = false, designState = null;
 
 // ── CART ──────────────────────────────────────────────────
 function saveCart()       { localStorage.setItem('inv_cart',JSON.stringify(cart)); }
@@ -635,7 +639,7 @@ function renderCartDrawer(){
   const scroll=document.getElementById('cartScroll'),foot=document.getElementById('cartFoot');
   if(!scroll)return;
   if(!cart.length){scroll.innerHTML='<div class="cart-empty"><div style="font-size:40px;margin-bottom:16px;">✦</div><p style="font-size:13px;color:var(--pale);">Your basket is empty</p></div>';foot.style.display='none';return;}
-  scroll.innerHTML=cart.map((item,i)=>`<div class="cart-item"><div class="cart-item-img">${item.icon||'✦'}</div><div class="cart-item-info"><div class="cart-item-name serif">${item.name}</div><div class="cart-item-meta">${item.qty} invitations · ${item.paper||'Smooth White'}</div><div class="cart-item-price">£${item.total.toFixed(2)}</div></div><button class="cart-remove" onclick="removeCartItem(${i})">✕</button></div>`).join('');
+  scroll.innerHTML=cart.map((item,i)=>`<div class="cart-item"><div class="cart-item-img">${item.icon||'✦'}</div><div class="cart-item-info"><div class="cart-item-name serif">${item.name}</div><div class="cart-item-meta">${item.size?item.size+' · ':''}${item.qty} invitations · ${item.paper||'Smooth White'}</div><div class="cart-item-price">£${item.total.toFixed(2)}</div></div><button class="cart-remove" onclick="removeCartItem(${i})">✕</button></div>`).join('');
   const sub=cart.reduce((s,i)=>s+i.total,0);
   document.getElementById('cartNet').textContent='£'+(sub/1.2).toFixed(2);
   document.getElementById('cartVat').textContent='£'+(sub-sub/1.2).toFixed(2);
@@ -939,11 +943,16 @@ function addToCartUpload(){
   if (selectedFinish && selectedFinish !== 'None') paperLabel += ' · ' + selectedFinish;
   paperLabel += envLabel;
   addToCart({
-    name: currentFile?currentFile.name.replace(/\.[^.]+$/,''):'Custom Design',
+    name: designMode && designState ? (designState.templateName + ' — ' + (designState.text.name1 || '') + ' & ' + (designState.text.name2 || '')) : (currentFile?currentFile.name.replace(/\.[^.]+$/,''):'Custom Design'),
     qty: uploadQty,
+    size: selectedSize,
     paper: paperLabel,
     total: total,
-    icon:'✦'
+    icon:'✦',
+    // Design-studio extras (only present when in design mode)
+    source: designMode ? 'design-studio' : 'upload',
+    templateId: designMode && designState ? designState.templateId : null,
+    designState: designMode ? designState : null
   });
   showToast('Added to your basket ✓');
   goStep(4);
@@ -1075,6 +1084,87 @@ async function proceedToStripe(){
   } else if(params.get('order')==='cancelled'){
     setTimeout(()=>showToast('Payment cancelled — your basket is still saved.'),500);
     history.replaceState(null,'',window.location.pathname);
+  }
+})();
+
+// ── DESIGN-STUDIO MODE ────────────────────────────────────
+// If the user came from the design studio, skip the upload steps entirely
+// and jump straight to paper/quantity/checkout. The customised design SVG
+// becomes the "artwork" that gets uploaded at Stripe-checkout time.
+(function checkDesignMode(){
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('source') !== 'design-studio') return;
+
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem('foreverprint_design') || 'null'); } catch(e){}
+  if (!saved || !saved.thumbnailSvg) return;
+
+  designMode = true;
+  designState = saved;
+
+  // 1. Update the page hero
+  const heroTag = document.querySelector('.upload-wrap .tag');
+  const heroH1 = document.querySelector('.upload-wrap h1');
+  const heroP  = document.querySelector('.upload-wrap > div > p');
+  if (heroTag) heroTag.textContent = 'Design Studio';
+  if (heroH1)  heroH1.innerHTML = 'Personalised. <em>Now make it real.</em>';
+  if (heroP)   heroP.textContent = 'Your customised design is ready. Choose paper, quantity and delivery — we\'ll handle the rest.';
+
+  // 2. Step bar: hide steps 1 and 2 (and the two connecting lines before step 3)
+  const stepItems = document.querySelectorAll('.step-bar .step-item');
+  const stepLines = document.querySelectorAll('.step-bar .step-line');
+  if (stepItems[0]) stepItems[0].style.display = 'none';
+  if (stepItems[1]) stepItems[1].style.display = 'none';
+  if (stepLines[0]) stepLines[0].style.display = 'none';
+  if (stepLines[1]) stepLines[1].style.display = 'none';
+  // Renumber remaining step badges so the user sees 1, 2 (not 3, 4)
+  const sn3 = document.getElementById('sn3'); if (sn3) sn3.textContent = '1';
+  const sn4 = document.getElementById('sn4'); if (sn4) sn4.textContent = '2';
+
+  // 3. Hide the step1 and step2 divs entirely
+  document.getElementById('step1')?.classList.add('hidden');
+  document.getElementById('step2')?.classList.add('hidden');
+
+  // 4. Pre-set the size from the design state
+  selectedSize = designState.size || 'A5';
+
+  // 5. Build a synthetic File from the design SVG. This makes the rest of
+  // the existing flow (artwork upload at checkout) work unchanged — the
+  // SVG just gets uploaded to Supabase Storage like any other artwork.
+  const svgBlob = new Blob([designState.thumbnailSvg], { type: 'image/svg+xml' });
+  const cleanName = (designState.templateName || 'design').replace(/\s+/g, '_');
+  const fileName = `${cleanName}_${designState.text?.name1 || ''}_${designState.text?.name2 || ''}_${Date.now()}.svg`.replace(/[^a-zA-Z0-9._-]/g, '_');
+  currentFile = new File([svgBlob], fileName, { type: 'image/svg+xml' });
+
+  // 6. Jump to step 3 (Paper & Quantity)
+  goStep(3);
+
+  // 7. Customise the fileSummary block in step 3 with design info
+  const summaryName = document.getElementById('fileSummaryName');
+  const summaryMeta = document.getElementById('fileSummaryMeta');
+  const couple = [designState.text?.name1, designState.text?.name2].filter(Boolean).join(' & ');
+  if (summaryName) summaryName.textContent = `${designState.templateName}${couple ? ' — ' + couple : ''}`;
+  if (summaryMeta) summaryMeta.textContent = `${designState.sizeLabel || designState.size || 'A5'} · ${designState.paletteName || 'Sage'} palette`;
+
+  // 8. Repoint the "Change" button to go back to the customise page
+  const changeBtn = document.querySelector('#step3 button[onclick="goStep(1)"]');
+  if (changeBtn) {
+    changeBtn.setAttribute('onclick', `window.location.href = '/design-studio-customise.html?template=${designState.templateId}'`);
+    changeBtn.textContent = 'Edit design';
+  }
+
+  // 9. Repoint the "Back" button in step 3 too (was going to step 2)
+  const backBtn = document.querySelector('#step3 button[onclick="goStep(2)"]');
+  if (backBtn) {
+    backBtn.setAttribute('onclick', `window.location.href = '/design-studio-customise.html?template=${designState.templateId}'`);
+    backBtn.textContent = 'Back to design';
+  }
+
+  // 10. Repoint step 4's "Upload Another" button to design studio templates
+  const uploadAnotherBtn = document.querySelector('#step4 button[onclick="goStep(1)"]');
+  if (uploadAnotherBtn) {
+    uploadAnotherBtn.setAttribute('onclick', `window.location.href = '/design-studio-templates.html'`);
+    uploadAnotherBtn.textContent = 'Browse more designs';
   }
 })();
 
