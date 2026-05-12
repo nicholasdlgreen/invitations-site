@@ -158,19 +158,45 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  // Success — redirect to where they wanted to go (or the account dashboard)
-  const redirectTo = params.get('next') || '/account.html';
+  // Success — redirect to where they wanted to go.
+  // Default to home (/) for now since /account.html doesn't exist yet.
+  // When we build the account dashboard, change this default to /account.html.
+  const redirectTo = params.get('next') || '/';
   window.location.href = redirectTo;
 });
 
-// If already signed in, skip the form
+// On page load, handle a few states:
+// 1. If user just verified their email (?verified=true) and is auto-logged-in
+//    by Supabase, show a welcome message — DON'T auto-redirect (better UX
+//    than dumping them somewhere unexpected).
+// 2. If user is already signed in (returning visit) and there's no special
+//    state, redirect to home (or 'next' param).
 (async () => {
-  if (window.invAuth && window.invAuth.init){
-    await window.invAuth.init();
-    if (window.invAuth.isLoggedIn()){
-      const redirectTo = params.get('next') || '/account.html';
-      window.location.href = redirectTo;
+  if (!window.invAuth || !window.invAuth.init) return;
+  await window.invAuth.init();
+
+  const justVerified = params.get('verified') === 'true';
+
+  if (justVerified && window.invAuth.isLoggedIn()){
+    // Replace the form with a welcome message. They're already signed in.
+    const formEl = document.getElementById('loginForm');
+    const subEl = document.querySelector('.auth-sub');
+    const titleEl = document.querySelector('.auth-title');
+    if (titleEl) titleEl.textContent = 'Welcome to forever·print';
+    if (subEl) subEl.textContent = 'Your account is verified and you\'re signed in.';
+    if (formEl){
+      formEl.innerHTML =
+        '<a href="/" class="btn-submit" style="text-decoration:none;">Continue to forever·print</a>';
     }
+    // Hide the divider + bottom links since they don't apply now
+    document.querySelectorAll('.auth-divider, .auth-foot').forEach(el => el.style.display = 'none');
+    return;
+  }
+
+  // Returning visitor already signed in — quietly redirect
+  if (window.invAuth.isLoggedIn()){
+    const redirectTo = params.get('next') || '/';
+    window.location.href = redirectTo;
   }
 })();
 </script>
