@@ -1365,14 +1365,33 @@ async function proceedToStripe(){
       if(uploadRes.ok)artworkUrl=`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`;
     }catch(e){console.warn('Artwork upload error:',e.message);}
   }
+  // ── PRINT-PREP: convert PDFs to PDF/X-1a via pdfRest before Stripe ──
+  // Only runs for actual PDFs. SVG (design studio) and raster images skip
+  // this step for now — prepress team handles those manually. If print-prep
+  // fails, we proceed with just the original artwork — the order still goes
+  // through and prepress catches it.
+  let printReadyUrl=null;
+  if(artworkUrl && currentFile && currentFile.type==='application/pdf'){
+    document.getElementById('coPayBtnText').textContent='Preparing print-ready file…';
+    try{
+      const ppRes=await fetch('/.netlify/functions/print-prep',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileUrl:artworkUrl,outputType:'PDF/X-1a'})});
+      const ppData=await ppRes.json();
+      if(ppRes.ok && ppData.success && ppData.printReadyUrl){
+        printReadyUrl=ppData.printReadyUrl;
+        console.log('[print-prep] Print-ready PDF/X-1a created:',printReadyUrl);
+      }else{
+        console.warn('[print-prep] Failed, proceeding with original artwork only:',ppData);
+      }
+    }catch(e){console.warn('[print-prep] Error, proceeding with original artwork only:',e.message);}
+  }
   document.getElementById('coPayBtnText').textContent='Redirecting to Stripe…';
-  const orderData={cart:JSON.parse(JSON.stringify(cart)),customer,total:cart.reduce((s,i)=>s+i.total,0),date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),timestamp:Date.now()};
+  const orderData={cart:JSON.parse(JSON.stringify(cart)),customer,total:cart.reduce((s,i)=>s+i.total,0),date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),timestamp:Date.now(),artworkUrl,printReadyUrl};
   localStorage.setItem('inv_pending_order',JSON.stringify(orderData));
   const base=window.location.origin+'/upload-and-print.html';
   const successUrl=base+'?order=success';
   const cancelUrl=base+'?order=cancelled';
   try{
-    const res=await fetch('/.netlify/functions/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cart,customer,successUrl,cancelUrl,artworkUrl})});
+    const res=await fetch('/.netlify/functions/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cart,customer,successUrl,cancelUrl,artworkUrl,printReadyUrl})});
     const data=await res.json();
     if(!res.ok||!data.url)throw new Error(data.error||'Could not create checkout session.');
     if(data.orderNumber){const saved=JSON.parse(localStorage.getItem('inv_pending_order')||'{}');saved.ref=data.orderNumber;localStorage.setItem('inv_pending_order',JSON.stringify(saved));}
