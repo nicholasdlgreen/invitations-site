@@ -230,12 +230,13 @@ form.addEventListener('submit', async (e) => {
     `We've sent a verification link to <strong>${email}</strong>. Click it to activate your account, then sign in.`;
 });
 
-// Redirect signed-in users away from the register page
+// Redirect signed-in users away from the register page (no point letting them
+// re-register). For now we send to home; change to /account.html when that page exists.
 (async () => {
   if (window.invAuth && window.invAuth.init){
     await window.invAuth.init();
     if (window.invAuth.isLoggedIn()){
-      window.location.href = '/account.html';
+      window.location.href = '/';
     }
   }
 })();
