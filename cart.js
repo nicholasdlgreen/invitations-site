@@ -99,6 +99,31 @@
     foot.style.display = 'block';
   }
 
+  // goToCheckout — called by the basket drawer's "Continue to Checkout" button.
+  // If we're already on upload-and-print, just open the checkout modal directly
+  // (no navigation, preserves any design-mode context). Otherwise navigate to
+  // /upload-and-print.html with ?action=checkout so it auto-opens on arrival.
+  function goToCheckout() {
+    if (cart.length === 0) {
+      showToast('Your basket is empty');
+      return;
+    }
+    const onUploadAndPrint = window.location.pathname.includes('upload-and-print');
+    if (onUploadAndPrint && typeof window.openCheckout === 'function') {
+      closeCart();
+      window.openCheckout();
+      return;
+    }
+    // Navigate to upload-and-print and trigger the checkout modal on arrival.
+    // Preserve source=design-studio if we're currently in that flow.
+    const currentParams = new URLSearchParams(window.location.search);
+    const navParams = new URLSearchParams();
+    const source = currentParams.get('source');
+    if (source) navParams.set('source', source);
+    navParams.set('action', 'checkout');
+    window.location.href = '/upload-and-print.html?' + navParams.toString();
+  }
+
   // Expose globally so inline onclick handlers (and other page scripts) can call them
   window.cart = cart;
   window.saveCart = saveCart;
@@ -108,6 +133,7 @@
   window.closeCart = closeCart;
   window.showToast = showToast;
   window.renderCartDrawer = renderCartDrawer;
+  window.goToCheckout = goToCheckout;
 
   // If the header is already in the DOM when this script loads, refresh the badge.
   // If not, the page's own header-loader will call updateCartBadge() after injection.
