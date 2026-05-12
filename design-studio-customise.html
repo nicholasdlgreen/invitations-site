@@ -407,19 +407,11 @@ const TEMPLATES = {
   },
   botanic: {
     name:'Botanic', style:'Botanical', defaultPalette:'sage',
+    illustration: '/img/templates/romantic-wedding/2.svg',
+    illustrationFit: { x: 12, y: 14, width: 124, height: 182 },
     svg:`<svg id="previewSvg" viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg">
       <rect width="148" height="210" fill="#F0F2EC" id="bg"/>
-      <g stroke="#7A8B6F" stroke-width=".6" fill="none" opacity=".8" id="motif">
-        <path d="M28,40 Q44,52 60,42 Q76,52 88,40 Q102,52 118,40"/>
-        <ellipse cx="38" cy="44" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-        <ellipse cx="60" cy="46" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-        <ellipse cx="80" cy="44" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-        <ellipse cx="108" cy="46" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-        <path d="M28,170 Q44,180 60,172 Q76,180 88,170 Q102,180 118,170"/>
-        <ellipse cx="38" cy="174" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-        <ellipse cx="80" cy="174" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-        <ellipse cx="108" cy="176" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-      </g>
+      <g id="motif" style="color:#5C6B58"></g>
       <text x="74" y="74" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="5.5" font-style="italic" fill="#5C6B58" id="upperText" class="editable-text" data-element="upper"></text>
       <text x="74" y="94" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="14" fill="#2E3B2A" id="name1Text" class="editable-text" data-element="names">Charlotte</text>
       <text x="74" y="111" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="7" font-style="italic" fill="#5C6B58">&amp;</text>
@@ -646,6 +638,45 @@ function getTemplateFromUrl(){
   return (t && TEMPLATES[t]) ? t : 'cotswold';
 }
 
+// ─── EXTERNAL ILLUSTRATION LOADER ───────────────────────────
+// Fetches a separate SVG file (e.g. /img/templates/romantic-wedding/2.svg)
+// and injects its paths into the motif group, scaled to fit the area defined
+// by illustrationFit ({x, y, width, height} in the 148×210 template viewBox).
+// The injected paths should use fill="currentColor" so palette colour cascades.
+function loadIllustration(url, fit){
+  fit = fit || { x: 14, y: 14, width: 120, height: 182 };
+  fetch(url)
+    .then(r => r.text())
+    .then(svgText => {
+      const motif = document.getElementById('motif');
+      if (!motif) return;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgText, 'image/svg+xml');
+      const sourceSvg = doc.documentElement;
+      if (!sourceSvg || sourceSvg.nodeName === 'parsererror') return;
+
+      // Build a nested SVG that preserves the source viewBox and scales to fit
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+      const wrapper = document.createElementNS(SVG_NS, 'svg');
+      const sourceViewBox = sourceSvg.getAttribute('viewBox') ||
+        `0 0 ${sourceSvg.getAttribute('width') || 100} ${sourceSvg.getAttribute('height') || 100}`;
+      wrapper.setAttribute('viewBox', sourceViewBox);
+      wrapper.setAttribute('x', fit.x);
+      wrapper.setAttribute('y', fit.y);
+      wrapper.setAttribute('width', fit.width);
+      wrapper.setAttribute('height', fit.height);
+      wrapper.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+      // Copy all children from source SVG into wrapper
+      Array.from(sourceSvg.children).forEach(child => {
+        wrapper.appendChild(child.cloneNode(true));
+      });
+
+      motif.appendChild(wrapper);
+    })
+    .catch(err => console.warn('[customise] Could not load illustration:', url, err));
+}
+
 function init(){
   currentTemplate = getTemplateFromUrl();
   const tpl = TEMPLATES[currentTemplate];
@@ -658,6 +689,11 @@ function init(){
   const inlineEditor = document.getElementById('inlineEditor');
   previewBox.innerHTML = tpl.svg;
   previewBox.appendChild(inlineEditor);
+
+  // If template has an external illustration, fetch and inject it into the motif group
+  if (tpl.illustration) {
+    loadIllustration(tpl.illustration, tpl.illustrationFit);
+  }
 
   // Initialise element state from defaults
   elementState = {
@@ -726,6 +762,8 @@ function applyPalette(key){
   const motif = document.getElementById('motif');
   if(motif){
     motif.setAttribute('stroke', p.motifStroke);
+    // Set color so currentColor inside the motif (e.g. injected illustrations) cascades
+    motif.style.color = p.motifStroke;
     motif.querySelectorAll('circle, ellipse').forEach(el=>{
       // Only recolour fills that exist (skip stroke-only elements)
       if(el.getAttribute('fill') && el.getAttribute('fill') !== 'none'){
