@@ -30,6 +30,16 @@
 #fileInput{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
 .check-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:16px;}
 .check-card h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:20px;color:var(--text);}
+/* FILE CHECK GRID — preview + checks side-by-side */
+.check-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:16px;margin-bottom:16px;}
+@media (max-width:760px){.check-grid{grid-template-columns:1fr}}
+.preview-card{display:flex;flex-direction:column;}
+.preview-wrap{position:relative;background:var(--cream);border:1px solid var(--border);border-radius:14px;aspect-ratio:1/1.414;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.preview-placeholder{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--soft);font-size:12px;text-align:center;padding:24px;}
+.preview-spinner{width:24px;height:24px;border:2px solid var(--gold-lt);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+.preview-status{font-size:12px;color:var(--soft);letter-spacing:.04em;}
+.preview-img,.preview-canvas{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 4px 20px rgba(61,46,36,.08);background:#fff;}
+.preview-meta{margin-top:16px;font-size:11px;color:var(--soft);letter-spacing:.04em;text-align:center;line-height:1.6;}
 .check-row{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
 .check-row:last-child{border-bottom:none;padding-bottom:0;}
 .check-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px;}
@@ -82,6 +92,9 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth.js"></script>
+<!-- pdf.js for browser-side preview + metadata (file check page) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}</script>
   
 </head>
 <body>
@@ -181,21 +194,38 @@
       </div>
 
       <div style="margin-top:40px;background:var(--white);border-radius:20px;padding:32px;border:1px solid var(--border);">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;margin-bottom:20px;color:var(--text);">What we check before printing</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;margin-bottom:8px;color:var(--text);">How we check your file</div>
+        <p style="font-size:12px;color:var(--soft);margin-bottom:20px;line-height:1.7;">Instant automated checks when you upload, with a visual proof of your artwork. Anything our team needs to double-check before press is reviewed manually by our prepress studio.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Resolution &amp; Quality</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We check your file is at least 300 DPI for crisp printing.</div></div></div>
-          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Dimensions &amp; Bleed</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We verify your artwork is the correct size with sufficient bleed.</div></div></div>
-          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Colour Mode</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">CMYK is print-ready. We'll flag RGB files before converting.</div></div></div>
-          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">File Format</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We confirm your file is compatible with our print process.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Visual proof</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We render your artwork back to you so you can confirm it's the file you meant to send.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Dimensions</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We verify the page size matches the invitation size you chose.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Resolution</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">For image files, we calculate the effective DPI at your chosen print size and flag anything below 300 DPI.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Prepress review</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">Colour mode, bleed and fine detail are reviewed by our studio team before your file goes to press.</div></div></div>
         </div>
       </div>
     </div>
 
     <!-- STEP 2: FILE CHECK -->
     <div id="step2" class="hidden">
-      <div class="check-card">
-        <h3>File Quality Report</h3>
-        <div id="checkResults"></div>
+      <div class="check-grid">
+        <!-- LEFT: visual proof -->
+        <div class="check-card preview-card">
+          <h3>Your artwork</h3>
+          <div id="previewWrap" class="preview-wrap">
+            <div id="previewPlaceholder" class="preview-placeholder">
+              <div class="preview-spinner"></div>
+              <div class="preview-status" id="previewStatus">Preparing your preview…</div>
+            </div>
+            <img id="previewImg" class="preview-img" style="display:none" alt="Artwork preview"/>
+            <canvas id="previewCanvas" class="preview-canvas" style="display:none"></canvas>
+          </div>
+          <div id="previewMeta" class="preview-meta"></div>
+        </div>
+        <!-- RIGHT: real checks -->
+        <div class="check-card">
+          <h3>File quality report</h3>
+          <div id="checkResults"></div>
+        </div>
       </div>
       <div id="checkActions" class="hidden" style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
         <button class="btn" id="proceedBtn" onclick="goStep(3)">Continue to Paper &amp; Quantity</button>
@@ -679,35 +709,230 @@ function handleFile(file){
 }
 
 function checkFile(file){
-  const results=document.getElementById('checkResults');
-  results.innerHTML=`<div style="display:flex;align-items:center;gap:12px;padding:16px 0;color:var(--soft);font-size:13px;"><div style="width:16px;height:16px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div>Checking your file…</div>`;
+  resetPreviewUI();
   document.getElementById('checkActions').classList.add('hidden');
-  checksPassed=true;
-  setTimeout(()=>{
-    const ext=file.name.split('.').pop().toLowerCase();
-    const sizeMB=(file.size/1024/1024).toFixed(1);
-    const checks=[];
-    const printFormats=['pdf','ai','indd','eps','tif','tiff'];
-    const imageFormats=['jpg','jpeg','png'];
-    const isProFormat=printFormats.includes(ext);
-    const isImage=imageFormats.includes(ext);
-    const isValid=isProFormat||isImage;
-    if(isProFormat){checks.push({status:'ok',label:'File Format',val:ext.toUpperCase()+' file',note:'Professional print format — ideal.'});}
-    else if(isImage){checks.push({status:'warn',label:'File Format',val:ext.toUpperCase()+' file',note:'Image files are accepted. For best results, supply a PDF at 300 DPI or above.'});}
-    else{checks.push({status:'err',label:'File Format',val:ext.toUpperCase()+' — not supported',note:'Please upload a PDF, AI, InDesign, TIFF, PNG or JPG file.'});checksPassed=false;}
-    if(file.size>100*1024*1024){checks.push({status:'err',label:'File Size',val:sizeMB+' MB',note:'Maximum file size is 100MB.'});checksPassed=false;}
-    else if(file.size<0.1*1024*1024){checks.push({status:'warn',label:'File Size',val:sizeMB+' MB',note:'This file is very small. It may not have enough detail for high-quality printing.'});}
-    else{checks.push({status:'ok',label:'File Size',val:sizeMB+' MB',note:'File size looks good.'});}
-    const spec=SIZE_SPECS[selectedSize]||SIZE_SPECS['A5'];
-    checks.push({status:'info',label:'Dimensions',val:'Verified on receipt',note:'We will check your dimensions match '+spec.label+' at minimum 300 DPI when we receive it.'});
-    checks.push({status:'info',label:'Colour Mode',val:'Confirmed on receipt',note:'CMYK is preferred for accurate colour. RGB will be flagged if detected.'});
+  checksPassed = true;
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const sizeMB = (file.size/1024/1024).toFixed(1);
+  const printFormats = ['pdf','ai','indd','eps','tif','tiff'];
+  const imageFormats = ['jpg','jpeg','png'];
+  const isProFormat = printFormats.includes(ext);
+  const isImage = imageFormats.includes(ext);
+  const isPdf = ext === 'pdf';
+  const isValid = isProFormat || isImage;
+
+  // Show "Checking…" state in checks panel
+  renderChecksLoading();
+
+  // Run checks
+  buildAndRunChecks(file, { ext, sizeMB, isProFormat, isImage, isPdf, isValid });
+}
+
+// Show spinner in checks panel while running
+function renderChecksLoading(){
+  document.getElementById('checkResults').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 0;color:var(--soft);font-size:13px;">
+      <div style="width:16px;height:16px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div>
+      Checking your file…
+    </div>`;
+}
+
+// Reset the preview panel back to "preparing" state
+function resetPreviewUI(){
+  const placeholder = document.getElementById('previewPlaceholder');
+  const img = document.getElementById('previewImg');
+  const canvas = document.getElementById('previewCanvas');
+  const meta = document.getElementById('previewMeta');
+  if (placeholder) placeholder.style.display = 'flex';
+  if (img){ img.style.display='none'; img.src=''; }
+  if (canvas){ canvas.style.display='none'; }
+  if (meta) meta.textContent = '';
+  setPreviewStatus('Preparing your preview…');
+}
+
+function setPreviewStatus(text){
+  const el = document.getElementById('previewStatus');
+  if (el) el.textContent = text;
+}
+
+// Main check orchestrator — runs the right path depending on file type
+async function buildAndRunChecks(file, info){
+  const { ext, sizeMB, isProFormat, isImage, isPdf, isValid } = info;
+  const checks = [];
+
+  // 1. FILE FORMAT
+  if (isProFormat){
+    checks.push({status:'ok', label:'File format', val: ext.toUpperCase()+' file', note:'Professional print format — ideal.'});
+  } else if (isImage){
+    checks.push({status:'warn', label:'File format', val: ext.toUpperCase()+' file', note:'Image files are accepted. For best results, supply a PDF at 300 DPI or above.'});
+  } else {
+    checks.push({status:'err', label:'File format', val: ext.toUpperCase()+' — not supported', note:'Please upload a PDF, AI, InDesign, TIFF, PNG or JPG file.'});
+    checksPassed = false;
+  }
+
+  // 2. FILE SIZE
+  if (file.size > 100*1024*1024){
+    checks.push({status:'err', label:'File size', val: sizeMB+' MB', note:'Maximum file size is 100 MB.'});
+    checksPassed = false;
+  } else if (file.size < 0.05*1024*1024){
+    checks.push({status:'warn', label:'File size', val: sizeMB+' MB', note:'This file is very small — it may not have enough detail for high-quality printing.'});
+  } else {
+    checks.push({status:'ok', label:'File size', val: sizeMB+' MB', note:'File size looks good.'});
+  }
+
+  if (!isValid){
     renderChecks(checks);
-    if(isValid){
-      const btn=document.getElementById('proceedBtn');
-      if(!checksPassed){btn.textContent='Continue Anyway';btn.style.background='var(--warn)';}
-      document.getElementById('checkActions').classList.remove('hidden');
+    setPreviewStatus('We can\'t preview this file type. Please upload a PDF, JPG, PNG or TIFF.');
+    return;
+  }
+
+  const spec = SIZE_SPECS[selectedSize] || SIZE_SPECS['A5'];
+
+  // 3. PDF PATH — use pdf.js for preview + metadata
+  if (isPdf && window.pdfjsLib){
+    setPreviewStatus('Rendering your PDF preview…');
+    try {
+      const pdfInfo = await readPdfMeta(file);
+
+      // Dimensions check
+      const tolMm = 3; // ±3mm tolerance to account for bleed
+      const widthMatch = Math.abs(pdfInfo.widthMm - spec.mmW) <= tolMm || Math.abs(pdfInfo.widthMm - (spec.mmW + 6)) <= tolMm;
+      const heightMatch = Math.abs(pdfInfo.heightMm - spec.mmH) <= tolMm || Math.abs(pdfInfo.heightMm - (spec.mmH + 6)) <= tolMm;
+      const dimText = `${Math.round(pdfInfo.widthMm)} × ${Math.round(pdfInfo.heightMm)} mm`;
+      if (widthMatch && heightMatch){
+        checks.push({status:'ok', label:'Dimensions', val: dimText, note:`Matches your selected size (${spec.label}).`});
+      } else {
+        checks.push({status:'warn', label:'Dimensions', val: dimText, note:`Your selected size is ${spec.label} (${spec.mmW} × ${spec.mmH} mm). The file dimensions don't match — your design may be cropped, scaled, or shifted.`});
+      }
+
+      // Page count check
+      if (pdfInfo.numPages === 1){
+        checks.push({status:'ok', label:'Pages', val:'1 page', note:'Single-side invitation as expected.'});
+      } else {
+        checks.push({status:'warn', label:'Pages', val: pdfInfo.numPages+' pages', note:'Multi-page file detected. We\'ll use the first page unless you specify otherwise.'});
+      }
+
+      // Update preview meta + show the rendered canvas
+      const previewMeta = document.getElementById('previewMeta');
+      if (previewMeta) previewMeta.textContent = `${dimText} · ${pdfInfo.numPages} page${pdfInfo.numPages===1?'':'s'}`;
+    } catch (err){
+      checks.push({status:'warn', label:'Preview', val:'Could not preview', note:'We couldn\'t render this PDF in your browser. Our prepress team will check it manually.'});
+      setPreviewStatus('Preview unavailable — file received OK, our team will check it manually.');
     }
-  },1200);
+  }
+
+  // 4. RASTER PATH — show the image directly + calculate effective DPI
+  else if (isImage){
+    setPreviewStatus('Reading your image…');
+    try {
+      const imgInfo = await readImageMeta(file);
+      const dpiW = imgInfo.pxW / (spec.mmW / 25.4);
+      const dpiH = imgInfo.pxH / (spec.mmH / 25.4);
+      const effectiveDpi = Math.min(dpiW, dpiH);
+      const dpiRounded = Math.round(effectiveDpi);
+      const dimText = `${imgInfo.pxW} × ${imgInfo.pxH} px`;
+
+      // Resolution check at selected print size
+      if (effectiveDpi >= 300){
+        checks.push({status:'ok', label:'Resolution', val: dpiRounded+' DPI at '+spec.label, note:'Crisp print quality — well above the 300 DPI threshold.'});
+      } else if (effectiveDpi >= 200){
+        checks.push({status:'warn', label:'Resolution', val: dpiRounded+' DPI at '+spec.label, note:'Below our 300 DPI recommendation. Your print may look slightly soft. To improve: use a higher-resolution source image.'});
+      } else {
+        checks.push({status:'err', label:'Resolution', val: dpiRounded+' DPI at '+spec.label, note:'Too low for premium printing. Your print will likely appear pixelated or blurry. Please supply a higher-resolution image.'});
+        checksPassed = false;
+      }
+
+      // Aspect-ratio check (does image roughly match the chosen size?)
+      const imgRatio = imgInfo.pxW / imgInfo.pxH;
+      const sizeRatio = spec.mmW / spec.mmH;
+      const ratioDiff = Math.abs(imgRatio - sizeRatio) / sizeRatio;
+      if (ratioDiff < 0.05){
+        checks.push({status:'ok', label:'Dimensions', val: dimText, note:`Aspect ratio matches ${spec.label}.`});
+      } else {
+        checks.push({status:'warn', label:'Dimensions', val: dimText, note:`Aspect ratio doesn't match ${spec.label} (${spec.mmW} × ${spec.mmH} mm). Your image will be cropped or scaled — please confirm this is what you want.`});
+      }
+
+      const previewMeta = document.getElementById('previewMeta');
+      if (previewMeta) previewMeta.textContent = `${dimText} · ${dpiRounded} DPI at ${spec.label}`;
+    } catch (err){
+      checks.push({status:'warn', label:'Preview', val:'Could not read image', note:'We couldn\'t inspect this image in your browser. Our prepress team will check it manually.'});
+      setPreviewStatus('Preview unavailable — file received OK, our team will check it manually.');
+    }
+  }
+
+  // 5. OTHER PRINT FORMATS (AI, INDD, EPS, TIFF) — no in-browser preview, defer to prepress
+  else if (isProFormat){
+    checks.push({status:'info', label:'Dimensions', val:'Will be checked by our team', note:`${ext.toUpperCase()} files can't be previewed in your browser. Our prepress team will verify your file matches the ${spec.label} size before printing.`});
+    setPreviewStatus(`${ext.toUpperCase()} preview unavailable — our prepress team will review your file manually before press.`);
+  }
+
+  // 6. PREPRESS REVIEW (always present — sets expectation)
+  checks.push({status:'info', label:'Prepress review', val:'Manual check before press', note:'Our studio reviews colour mode, bleed and fine detail before your file goes to the printer.'});
+
+  renderChecks(checks);
+
+  // Show continue button
+  const btn = document.getElementById('proceedBtn');
+  if (!checksPassed){
+    btn.textContent = 'Continue Anyway';
+    btn.style.background = 'var(--warn)';
+  } else {
+    btn.textContent = 'Continue to Paper & Quantity';
+    btn.style.background = '';
+  }
+  document.getElementById('checkActions').classList.remove('hidden');
+}
+
+// ── PDF PARSING (pdf.js) ──────────────────────────────────
+// Loads a PDF, extracts page 1 dimensions + count, renders the preview to canvas.
+async function readPdfMeta(file){
+  const arrayBuffer = await file.arrayBuffer();
+  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+  const pdf = await loadingTask.promise;
+  const numPages = pdf.numPages;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 1.0 });
+  // PDF points → mm (1 inch = 72 points = 25.4 mm)
+  const widthMm = viewport.width * 25.4 / 72;
+  const heightMm = viewport.height * 25.4 / 72;
+
+  // Render the page to the preview canvas
+  const canvas = document.getElementById('previewCanvas');
+  if (canvas){
+    // Aim for ~600px wide preview render — good quality without being slow
+    const targetWidth = 600;
+    const scale = targetWidth / viewport.width;
+    const renderViewport = page.getViewport({ scale });
+    canvas.width = renderViewport.width;
+    canvas.height = renderViewport.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: renderViewport }).promise;
+    document.getElementById('previewPlaceholder').style.display = 'none';
+    canvas.style.display = 'block';
+  }
+
+  return { numPages, widthMm, heightMm };
+}
+
+// ── RASTER IMAGE PARSING ──────────────────────────────────
+// Reads pixel dimensions + shows the image directly as preview.
+async function readImageMeta(file){
+  const url = URL.createObjectURL(file);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      // Show on the preview panel
+      const previewImg = document.getElementById('previewImg');
+      if (previewImg){
+        previewImg.src = url;
+        previewImg.style.display = 'block';
+        document.getElementById('previewPlaceholder').style.display = 'none';
+      }
+      resolve({ pxW: img.naturalWidth, pxH: img.naturalHeight });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
+    img.src = url;
+  });
 }
 
 function renderChecks(checks){
