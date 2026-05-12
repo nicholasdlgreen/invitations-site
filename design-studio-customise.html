@@ -734,12 +734,12 @@ function applyStateToSvg(id){
 }
 
 // ─── CONTINUE TO ORDER ───────────────────────────────────────
+// Generates a PRINT-READY SVG (with 3mm bleed) from the customer's design,
+// then routes to the order flow. The preview the customer sees stays at
+// trim size — bleed is a production concern, not a design concern.
 function continueToOrder(){
-  // Render the final SVG markup as a string for the order summary thumbnail
-  const svgEl = document.getElementById('previewSvg');
-  const svgString = svgEl ? svgEl.outerHTML : '';
-
   const sizeInfo = SIZES[currentSize] || SIZES['A5'];
+  const printReadySvg = buildPrintReadySvg(sizeInfo);
 
   const designState = {
     templateId: currentTemplate,
@@ -758,12 +758,75 @@ function continueToOrder(){
       venue: document.getElementById('venue').value,
       lower: document.getElementById('lower').value
     },
-    thumbnailSvg: svgString
+    // Print-ready SVG output — includes 3mm bleed margin, explicit mm dimensions
+    thumbnailSvg: printReadySvg,
+    // Production metadata — documents what the printer is receiving
+    bleedMm: 3,
+    trimMm: { w: sizeInfo.mmW, h: sizeInfo.mmH },
+    bleedBoxMm: { w: sizeInfo.mmW + 6, h: sizeInfo.mmH + 6 }
   };
   sessionStorage.setItem('foreverprint_design', JSON.stringify(designState));
   // Route into the existing order flow in design-studio mode so the user
   // skips the upload step and goes straight to paper/quantity/etc.
   window.location.href = '/upload-and-print.html?source=design-studio';
+}
+
+// Builds a print-ready SVG with 3mm bleed margin added on all sides.
+// - The viewBox is extended to (trim + 6mm) × (trim + 6mm)
+// - The background rect is expanded to fill the new viewBox (so the background
+//   colour extends into the bleed area — prevents white edges after cutting)
+// - All other content (motif, text) stays at its current trim-coordinate
+//   positions, wrapped in a <g transform="translate(3,3)"> so it ends up
+//   correctly positioned inside the trim area of the larger viewBox.
+// - Explicit mm dimensions are set on the root <svg> so the printer knows
+//   the physical output size.
+function buildPrintReadySvg(sizeInfo){
+  const svgEl = document.getElementById('previewSvg');
+  if (!svgEl) return '';
+  const bleedMm = 3;
+  const trimW = sizeInfo.mmW;
+  const trimH = sizeInfo.mmH;
+  const totalW = trimW + 2 * bleedMm;
+  const totalH = trimH + 2 * bleedMm;
+
+  // Clone so we don't disturb the live preview
+  const printSvg = svgEl.cloneNode(true);
+
+  // Set explicit print dimensions + extended viewBox
+  printSvg.setAttribute('width', totalW + 'mm');
+  printSvg.setAttribute('height', totalH + 'mm');
+  printSvg.setAttribute('viewBox', `0 0 ${totalW} ${totalH}`);
+
+  // Expand the background rect to fill the bleed area
+  const bg = printSvg.querySelector('#bg');
+  if (bg) {
+    bg.setAttribute('x', '0');
+    bg.setAttribute('y', '0');
+    bg.setAttribute('width', String(totalW));
+    bg.setAttribute('height', String(totalH));
+  }
+
+  // Wrap everything else in a translate(bleed, bleed) group so the design
+  // sits inside the trim area of the new larger viewBox.
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const wrapper = document.createElementNS(SVG_NS, 'g');
+  wrapper.setAttribute('transform', `translate(${bleedMm} ${bleedMm})`);
+  wrapper.setAttribute('id', 'design-content');
+
+  // Move all children except the bg into the wrapper
+  const children = Array.from(printSvg.children);
+  children.forEach(child => {
+    if (child !== bg && child.id !== 'inlineEditor') {
+      wrapper.appendChild(child);
+    }
+  });
+  // Remove any inline editor element if it got cloned in
+  const ie = printSvg.querySelector('#inlineEditor');
+  if (ie && ie.parentNode === printSvg) ie.remove();
+
+  printSvg.appendChild(wrapper);
+
+  return printSvg.outerHTML;
 }
 
 // Boot
