@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Design With Our Tools | Create Your Wedding Invitation | Foreverprint</title>
+<meta name="description" content="Answer a few quick questions about your wedding and we'll compose invitation designs just for you — no design experience needed."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://foreverprint.com/design-studio-create.html"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://foreverprint.com/design-studio-create.html"/>
+<meta property="og:title" content="Design With Our Tools | Foreverprint"/>
+<meta property="og:description" content="Answer a few quick questions and we'll design your wedding invitation for you."/>
+<meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
+<meta property="og:locale" content="en_GB"/>
+<meta property="og:site_name" content="Foreverprint"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Design With Our Tools | Foreverprint"/>
+<meta name="twitter:description" content="Answer a few quick questions and we'll design your wedding invitation for you."/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<style>
+/* BREADCRUMB */
+.breadcrumb{background:var(--cream);padding:14px 32px;font-size:11px;letter-spacing:.04em;color:var(--pale);max-width:1280px;margin:0 auto}
+.breadcrumb a{color:var(--soft);text-decoration:none}
+.breadcrumb a:hover{color:var(--gold)}
+.breadcrumb span{margin:0 8px;color:var(--pale)}
+
+/* HERO */
+.create-hero{background:var(--cream);padding:48px 32px 40px;text-align:center;border-bottom:1px solid var(--border)}
+.create-hero-inner{max-width:680px;margin:0 auto}
+.create-hero .tag{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:16px;display:block}
+.create-hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.2rem,4vw,3rem);font-weight:300;line-height:1.15;color:var(--text);margin-bottom:18px}
+.create-hero h1 em{font-style:italic;color:var(--gold)}
+.create-divider{width:48px;height:1px;background:var(--gold-lt);margin:22px auto}
+.create-hero p{font-size:14px;color:var(--soft);line-height:1.95;max-width:480px;margin:0 auto}
+
+/* QUESTIONS */
+.create-main{max-width:640px;margin:0 auto;padding:48px 32px 40px}
+.q-block{margin-bottom:40px;opacity:0;transform:translateY(10px);animation:qFade .5s ease forwards}
+.q-block:nth-child(1){animation-delay:.05s}
+.q-block:nth-child(2){animation-delay:.15s}
+.q-block:nth-child(3){animation-delay:.25s}
+.q-block:nth-child(4){animation-delay:.35s}
+@keyframes qFade{to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.q-block{animation:none;opacity:1;transform:none}}
+.q-label{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:16px;line-height:1.3}
+.q-opts{display:flex;flex-wrap:wrap;gap:10px}
+.q-opt{font-family:'Jost',sans-serif;font-size:13px;letter-spacing:.03em;padding:11px 18px;border:1px solid var(--border);border-radius:60px;background:var(--white);color:var(--soft);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.q-opt:hover:not(.on){border-color:var(--gold-lt);color:var(--gold)}
+.q-opt.on{background:var(--text);color:#fff;border-color:var(--text)}
+.q-dot{width:11px;height:11px;border-radius:50%;display:inline-block;border:.5px solid rgba(0,0,0,.12)}
+.q-optional{font-size:11px;color:var(--pale);font-style:normal;letter-spacing:.04em;margin-left:6px}
+.q-notes{width:100%;min-height:80px;font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--text);padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--white);outline:none;resize:vertical;line-height:1.7;transition:border-color .2s}
+.q-notes:focus{border-color:var(--gold-lt)}
+.q-notes::placeholder{color:var(--pale)}
+
+/* SUBMIT */
+.create-actions{text-align:center;padding-top:8px}
+.create-hint{font-size:12px;color:var(--gold);letter-spacing:.04em;margin-bottom:16px;height:16px;opacity:0;transition:opacity .25s}
+.create-hint.show{opacity:1}
+.create-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 40px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;cursor:pointer;transition:background .25s}
+.create-btn:hover{background:var(--brown)}
+.create-btn:disabled{opacity:.7;cursor:default}
+.create-btn .spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.create-note{font-size:11px;color:var(--pale);letter-spacing:.04em;margin-top:18px;line-height:1.7}
+
+@media (max-width:760px){
+  .create-main{padding:32px 22px 36px}
+  .breadcrumb{padding:14px 22px}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/auth.js"></script>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="/design-studio.html">Design Studio</a><span>&rsaquo;</span>Design with our tools
+</div>
+
+<!-- HERO -->
+<section class="create-hero">
+  <div class="create-hero-inner">
+    <span class="tag">Design with our tools</span>
+    <h1>Let's design it <em>together.</em></h1>
+    <div class="create-divider"></div>
+    <p>Three quick questions and we'll compose something just for you. Tap your answers — there's no design know-how needed, and you'll be able to change anything later.</p>
+  </div>
+</section>
+
+<!-- QUESTIONS -->
+<main class="create-main">
+
+  <div class="q-block">
+    <div class="q-label">When are you getting married?</div>
+    <div class="q-opts" data-group="season">
+      <button class="q-opt" data-value="spring">Spring</button>
+      <button class="q-opt" data-value="summer">Summer</button>
+      <button class="q-opt" data-value="autumn">Autumn</button>
+      <button class="q-opt" data-value="winter">Winter</button>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label">What should it feel like?</div>
+    <div class="q-opts" data-group="feeling">
+      <button class="q-opt" data-value="classic">Classic &amp; timeless</button>
+      <button class="q-opt" data-value="romantic">Soft &amp; romantic</button>
+      <button class="q-opt" data-value="botanical">Natural &amp; botanical</button>
+      <button class="q-opt" data-value="modern">Modern &amp; understated</button>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label">Any colours you're drawn to?</div>
+    <div class="q-opts" data-group="colour">
+      <button class="q-opt" data-value="soft"><span class="q-dot" style="background:#A8C4B8"></span><span class="q-dot" style="background:#D4A5A5"></span>Soft &amp; muted</button>
+      <button class="q-opt" data-value="warm"><span class="q-dot" style="background:#C97B3A"></span><span class="q-dot" style="background:#B0A088"></span>Warm &amp; natural</button>
+      <button class="q-opt" data-value="deep"><span class="q-dot" style="background:#2C3E50"></span><span class="q-dot" style="background:#8B2942"></span>Rich &amp; deep</button>
+      <button class="q-opt" data-value="light"><span class="q-dot" style="background:#FAF7F2"></span><span class="q-dot" style="background:#4A4A4A"></span>Fresh &amp; light</button>
+      <button class="q-opt on" data-value="auto">Help me choose</button>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-label">Anything you'd love to include?<span class="q-optional">optional</span></div>
+    <textarea class="q-notes" id="qNotes" placeholder="e.g. lots of eucalyptus, we met by the sea, her favourite flower is peonies…"></textarea>
+  </div>
+
+  <div class="create-actions">
+    <div class="create-hint" id="createHint">Just pick a season and a feeling and we're away.</div>
+    <button class="create-btn" id="createBtn">
+      <span class="btn-text">Design my invitation</span>
+      <span class="spin"></span>
+    </button>
+    <div class="create-note">We'll compose three designs from your answers — you choose the one you love.</div>
+  </div>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+fetch('/header.html').then(r=>r.text()).then(html=>{
+  document.getElementById('site-header').outerHTML=html;
+  if(typeof updateCartBadge==='function') updateCartBadge();
+});
+fetch('/footer.html').then(r=>r.text()).then(html=>{
+  document.getElementById('site-footer').outerHTML=html;
+});
+
+// ─── BRIEF STATE ─────────────────────────────────────────────
+const brief = { season:null, feeling:null, colour:'auto', notes:'' };
+
+// Single-select per question group
+document.querySelectorAll('.q-opts').forEach(group => {
+  const key = group.getAttribute('data-group');
+  group.querySelectorAll('.q-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      group.querySelectorAll('.q-opt').forEach(o => o.classList.remove('on'));
+      opt.classList.add('on');
+      brief[key] = opt.getAttribute('data-value');
+      if (brief.season && brief.feeling) {
+        document.getElementById('createHint').classList.remove('show');
+      }
+    });
+  });
+});
+
+// ─── SUBMIT → SAVE BRIEF → NEXT STEP ─────────────────────────
+document.getElementById('createBtn').addEventListener('click', () => {
+  brief.notes = document.getElementById('qNotes').value.trim();
+
+  // Require at least a season and a feeling; colour defaults to "help me choose"
+  if (!brief.season || !brief.feeling) {
+    document.getElementById('createHint').classList.add('show');
+    return;
+  }
+
+  // Save the brief for the next page (the three-design suggestions screen)
+  sessionStorage.setItem('foreverprint_brief', JSON.stringify(brief));
+
+  // Show a brief composing state, then hand off
+  const btn = document.getElementById('createBtn');
+  btn.disabled = true;
+  btn.querySelector('.btn-text').textContent = 'Composing your designs';
+  btn.querySelector('.spin').style.display = 'inline-block';
+
+  setTimeout(() => {
+    window.location.href = '/design-studio-suggestions.html';
+  }, 1200);
+});
+</script>
+
+</body>
+</html>
