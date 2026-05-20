@@ -236,10 +236,12 @@ function go(path){
   sessionStorage.setItem('foreverprint_design_choice', JSON.stringify({
     template:'botanic', recipe:selected, palette:palKey, brief:brief, path:path
   }));
-  // For now both routes land on the existing customise page so the flow is
-  // unbroken. The dedicated express "add your details" page is the next build,
-  // at which point the "love it" button is repointed there.
-  window.location.href = '/design-studio-customise.html?template=botanic';
+  // "Love it" → express add-your-details page. "Refine" → full customise page.
+  if (path === 'love') {
+    window.location.href = '/design-studio-details.html';
+  } else {
+    window.location.href = '/design-studio-customise.html?template=botanic';
+  }
 }
 document.getElementById('btnLove').addEventListener('click', () => go('love'));
 document.getElementById('btnRefine').addEventListener('click', () => go('refine'));
