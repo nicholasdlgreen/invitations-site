@@ -66,9 +66,18 @@
 .concept-box{background:var(--cream);border-radius:10px;padding:14px}
 .concept-box .cb-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
 .concept-box .cb-text{font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap}
-.loading{text-align:center;padding:60px 20px;color:var(--gold);font-size:14px;font-style:italic}
+.loading{text-align:center;padding:48px 20px}
 .pulse{animation:pulse 1.4s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.prog{display:flex;flex-direction:column;gap:14px;max-width:280px;margin:0 auto;text-align:left}
+.prog-step{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--pale);transition:color .3s}
+.prog-step.active{color:var(--gold);font-style:italic}
+.prog-step.done{color:var(--text)}
+.prog-dot{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .3s}
+.prog-step.active .prog-dot{border-color:var(--gold);color:var(--gold)}
+.prog-step.done .prog-dot{background:var(--gold);border-color:var(--gold);color:#fff}
+.prog-bar{height:3px;background:var(--border);border-radius:3px;margin:18px auto 0;max-width:280px;overflow:hidden}
+.prog-bar-fill{height:100%;background:var(--gold);width:0;transition:width .5s ease}
 .err{margin-top:12px;background:#fdecea;color:#9b2c1f;border:1px solid #f3c4bd;border-radius:10px;padding:12px;font-size:13px}
 
 @media(max-width:820px){.ex-grid{grid-template-columns:1fr}.studio-grid{grid-template-columns:1fr}.panel.sticky{position:static}.ai-main{padding:28px 18px 48px}}
@@ -211,6 +220,27 @@ function updateBriefPreview(){
   el.style.color=b?'var(--text)':'var(--gold-lt)';
 }
 
+function progressHTML(stage){
+  // stage: 0 concept, 1 render, 2 refine, 3 done
+  const steps=[['Art-directing your design',0],['Drawing your artwork',1],['Refining the details',2]];
+  const pct=[8,42,80,100][stage]||8;
+  const rows=steps.map(([label,i])=>{
+    const cls=stage>i?'done':stage===i?'active':'';
+    const mark=stage>i?'&#10003;':(i+1);
+    return `<div class="prog-step ${cls}"><div class="prog-dot">${mark}</div><div>${label}${stage===i?'…':''}</div></div>`;
+  }).join('');
+  return `<div class="loading"><div class="prog">${rows}</div><div class="prog-bar"><div class="prog-bar-fill" style="width:${pct}%"></div></div></div>`;
+}
+
+async function callStep(body){
+  const res=await fetch('/.netlify/functions/studio-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  let data;
+  try{data=await res.json();}
+  catch(e){throw new Error('The design service is taking too long or is unavailable. Please try again.');}
+  if(!res.ok)throw new Error(data.error||'Generation failed. Please try again.');
+  return data;
+}
+
 async function generate(){
   const brief=activeBrief().trim();
   const errSlot=document.getElementById('errSlot');
@@ -220,13 +250,17 @@ async function generate(){
   const btn=document.getElementById('genBtn');
   if(btn){btn.disabled=true;btn.textContent='Composing your design...';}
   const ra=document.getElementById('resultArea');
-  ra.innerHTML='<div class="loading"><div class="pulse">Reading your brief and composing your design… this can take up to a minute.</div></div>';
   try{
-    const res=await fetch('/.netlify/functions/studio-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brief})});
-    const data=await res.json();
-    if(!res.ok||!data.svg)throw new Error(data.error||'That didn\'t come out right — please try again.');
-    ra.innerHTML=`<div class="result-svg">${data.svg}</div>`+
-      (data.concept?`<div class="concept-box"><div class="cb-label">The thinking behind it</div><div class="cb-text">${data.concept.replace(/</g,'&lt;')}</div></div>`:'');
+    ra.innerHTML=progressHTML(0);
+    const {concept}=await callStep({step:'concept',brief});
+    ra.innerHTML=progressHTML(1);
+    const r=await callStep({step:'render',concept});
+    let svg=r.svg;
+    ra.innerHTML=progressHTML(2);
+    try{const rf=await callStep({step:'refine',concept,svg});if(rf.svg)svg=rf.svg;}catch(e){/* keep render */}
+    ra.innerHTML=progressHTML(3);
+    ra.innerHTML=`<div class="result-svg">${svg}</div>`+
+      (concept?`<div class="concept-box"><div class="cb-label">The thinking behind it</div><div class="cb-text">${concept.replace(/</g,'&lt;')}</div></div>`:'');
   }catch(e){
     ra.innerHTML='<div class="result-empty">Your invitation will appear here</div>';
     if(errSlot)errSlot.innerHTML=`<div class="err">${(e.message||'Something went wrong. Please try again.').replace(/</g,'&lt;')}</div>`;
