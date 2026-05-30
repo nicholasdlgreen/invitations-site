@@ -118,16 +118,15 @@ try {
   if (saved) brief = Object.assign(brief, saved);
 } catch(e){}
 
-// ─── PALETTES ────────────────────────────────────────────────
+// ─── FALLBACK PALETTES (used if the AI call fails) ───────────
 const PALS = {
-  sage:    {name:'Sage & ivory',    bg:'#F4EFE8', leaf:'#8FA98F', accent:'#C29A9A', text:'#2E3B2A', sub:'#6B6258'},
-  blush:   {name:'Blush & sage',    bg:'#F6EFE9', leaf:'#8FA98F', accent:'#C29A9A', text:'#3D2E24', sub:'#6B6258'},
-  copper:  {name:'Copper & cream',  bg:'#FAF7F2', leaf:'#C97B3A', accent:'#9A7A55', text:'#3D2E24', sub:'#6B6258'},
-  navy:    {name:'Navy & gold',     bg:'#FAF7F2', leaf:'#2C3E50', accent:'#B8976A', text:'#2C3E50', sub:'#6B6258'},
-  burgundy:{name:'Burgundy & rose', bg:'#FAF7F2', leaf:'#8B2942', accent:'#C29A9A', text:'#3D2E24', sub:'#6B6258'},
-  charcoal:{name:'Charcoal & ivory',bg:'#F4EFE8', leaf:'#4A4A4A', accent:'#9A9A9A', text:'#2A2A2A', sub:'#6B6258'}
+  sage:    {bg:'#F4EFE8', ink:'#2E3B2A', accent:'#C29A9A', leaf:'#8FA98F'},
+  blush:   {bg:'#F6EFE9', ink:'#3D2E24', accent:'#C29A9A', leaf:'#8FA98F'},
+  copper:  {bg:'#FAF7F2', ink:'#3D2E24', accent:'#9A7A55', leaf:'#C97B3A'},
+  navy:    {bg:'#FAF7F2', ink:'#2C3E50', accent:'#B8976A', leaf:'#2C3E50'},
+  burgundy:{bg:'#FAF7F2', ink:'#3D2E24', accent:'#C29A9A', leaf:'#8B2942'},
+  charcoal:{bg:'#F4EFE8', ink:'#2A2A2A', accent:'#9A9A9A', leaf:'#4A4A4A'}
 };
-
 function pickPalette(b){
   if(b.colour==='soft')  return b.season==='spring' ? 'sage' : 'blush';
   if(b.colour==='warm')  return 'copper';
@@ -141,102 +140,172 @@ function pickPalette(b){
   return 'sage';
 }
 
-// ─── INVITATION RENDERERS ────────────────────────────────────
-function inviteText(p, opts){
-  opts = opts || {};
-  const ls = opts.spaced ? 'letter-spacing="1.4"' : '';
-  const ns = opts.spaced ? 11 : 12.5;
-  const div = opts.divider===false ? '' : `<line x1="60" y1="144" x2="88" y2="144" stroke="${p.leaf}" stroke-width=".5"/>`;
-  return `
-    <text x="74" y="84" text-anchor="middle" font-family="Georgia,serif" font-size="4.1" font-style="italic" fill="${p.sub}" letter-spacing="1">together with their families</text>
-    <text x="74" y="103" text-anchor="middle" font-family="Georgia,serif" font-size="${ns}" fill="${p.text}" ${ls}>Charlotte</text>
-    <text x="74" y="118" text-anchor="middle" font-family="Georgia,serif" font-size="6.3" font-style="italic" fill="${p.accent}">&amp;</text>
-    <text x="74" y="134" text-anchor="middle" font-family="Georgia,serif" font-size="${ns}" fill="${p.text}" ${ls}>James</text>
-    ${div}
-    <text x="74" y="155" text-anchor="middle" font-family="Georgia,serif" font-size="4.4" font-style="italic" fill="${p.sub}">Saturday &#183; 14 June 2026</text>
-    <text x="74" y="164" text-anchor="middle" font-family="Georgia,serif" font-size="4.4" fill="${p.sub}">Blenheim Palace</text>`;
-}
-
-const MOTIFS = {
-  sprig: p => `
-    <path d="M74 42 Q73 53 74 64" stroke="${p.leaf}" stroke-width=".7" fill="none"/>
-    <ellipse cx="74" cy="42" rx="1.8" ry="3.2" fill="${p.leaf}"/>
-    <ellipse cx="70" cy="48" rx="2" ry="4" fill="${p.leaf}" transform="rotate(-38 70 48)"/>
-    <ellipse cx="78" cy="48" rx="2" ry="4" fill="${p.leaf}" transform="rotate(38 78 48)"/>
-    <ellipse cx="68" cy="55" rx="2.1" ry="4.2" fill="${p.leaf}" transform="rotate(-32 68 55)"/>
-    <ellipse cx="80" cy="55" rx="2.1" ry="4.2" fill="${p.leaf}" transform="rotate(32 80 55)"/>`,
-  floral: p => `
-    <g fill="${p.leaf}">
-      <ellipse cx="58" cy="52" rx="1.7" ry="3.4" transform="rotate(-50 58 52)"/>
-      <ellipse cx="64" cy="48" rx="1.7" ry="3.4" transform="rotate(-30 64 48)"/>
-      <ellipse cx="74" cy="46" rx="1.7" ry="3.4"/>
-      <ellipse cx="84" cy="48" rx="1.7" ry="3.4" transform="rotate(30 84 48)"/>
-      <ellipse cx="90" cy="52" rx="1.7" ry="3.4" transform="rotate(50 90 52)"/>
-    </g>
-    <ellipse cx="62" cy="58" rx="1.6" ry="3" fill="${p.accent}" transform="rotate(-40 62 58)"/>
-    <ellipse cx="74" cy="60" rx="1.7" ry="3.2" fill="${p.accent}"/>
-    <ellipse cx="86" cy="58" rx="1.6" ry="3" fill="${p.accent}" transform="rotate(40 86 58)"/>`,
-  minimal: p => `
-    <line x1="50" y1="70" x2="98" y2="70" stroke="${p.accent}" stroke-width=".5"/>
-    <line x1="50" y1="176" x2="98" y2="176" stroke="${p.accent}" stroke-width=".5"/>`
+// ─── SVG MOTIF LIBRARY (richer set, driven by AI spec) ───────
+const MOTIF = {
+  none: () => '',
+  sprig: c => `
+    <path d="M74 40 Q73 52 74 64" stroke="${c}" stroke-width=".7" fill="none"/>
+    <ellipse cx="74" cy="40" rx="1.8" ry="3.2" fill="${c}"/>
+    <ellipse cx="70" cy="47" rx="2" ry="4" fill="${c}" transform="rotate(-38 70 47)"/>
+    <ellipse cx="78" cy="47" rx="2" ry="4" fill="${c}" transform="rotate(38 78 47)"/>
+    <ellipse cx="68" cy="55" rx="2.1" ry="4.2" fill="${c}" transform="rotate(-32 68 55)"/>
+    <ellipse cx="80" cy="55" rx="2.1" ry="4.2" fill="${c}" transform="rotate(32 80 55)"/>`,
+  singleStem: c => `
+    <path d="M74 36 Q73 56 74 76" stroke="${c}" stroke-width=".6" fill="none"/>
+    <ellipse cx="74" cy="40" rx="1.4" ry="3" fill="${c}"/>
+    <ellipse cx="70" cy="48" rx="1.6" ry="3.4" fill="${c}" transform="rotate(-40 70 48)"/>
+    <ellipse cx="78" cy="54" rx="1.6" ry="3.4" fill="${c}" transform="rotate(40 78 54)"/>
+    <ellipse cx="70" cy="60" rx="1.6" ry="3.4" fill="${c}" transform="rotate(-40 70 60)"/>`,
+  floralCorners: (c,a) => {
+    const corner = (x,y,fx,fy) => `<g transform="translate(${x} ${y}) scale(${fx} ${fy})">
+      <ellipse cx="0" cy="0" rx="1.5" ry="3" fill="${c}" transform="rotate(-50 0 0)"/>
+      <ellipse cx="6" cy="3" rx="1.5" ry="3" fill="${c}" transform="rotate(-20 6 3)"/>
+      <ellipse cx="11" cy="8" rx="1.5" ry="3" fill="${c}" transform="rotate(10 11 8)"/>
+      <ellipse cx="4" cy="9" rx="1.6" ry="2.6" fill="${a}"/></g>`;
+    return corner(20,24,1,1) + corner(128,24,-1,1) + corner(20,186,1,-1) + corner(128,186,-1,-1);
+  },
+  wreath: (c,a) => {
+    let s = `<g fill="${c}">`;
+    for(let i=0;i<22;i++){
+      const ang=(i/22)*2*Math.PI, r=40;
+      const x=74+Math.cos(ang)*r, y=105+Math.sin(ang)*r*1.25;
+      s += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="1.3" ry="3" transform="rotate(${(ang*180/Math.PI+90).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+    }
+    s += `</g>`;
+    return s;
+  },
+  scattered: (c,a) => {
+    const pts=[[40,46],[108,52],[52,180],[100,176],[36,120],[112,118]];
+    return pts.map((pt,i)=>`<g transform="translate(${pt[0]} ${pt[1]}) rotate(${i*47%360})">
+      <ellipse cx="0" cy="0" rx="1.3" ry="2.8" fill="${i%2?a:c}"/>
+      <ellipse cx="2.5" cy="1.5" rx="1.3" ry="2.8" fill="${i%2?a:c}" transform="rotate(40)"/>
+    </g>`).join('');
+  }
 };
 
-function renderInvite(recipe, p){
-  const opts = recipe==='minimal' ? {spaced:true, divider:false} : {};
-  return `<svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:${p.bg}">${MOTIFS[recipe](p)}${inviteText(p,opts)}</svg>`;
+// ─── FRAME / LAYOUT LIBRARY ──────────────────────────────────
+function frame(layout, c){
+  if(layout==='bordered') return `<rect x="10" y="10" width="128" height="190" fill="none" stroke="${c}" stroke-width=".6"/><rect x="13" y="13" width="122" height="184" fill="none" stroke="${c}" stroke-width=".3"/>`;
+  if(layout==='archTop')  return `<path d="M28 96 V70 Q28 40 74 40 Q120 40 120 70 V96" fill="none" stroke="${c}" stroke-width=".5"/>`;
+  return '';
 }
 
-// ─── COPY ────────────────────────────────────────────────────
+// ─── TEXT BLOCK (real, crisp text — names from brief later) ──
+function inviteText(d){
+  const fam = d.headingFont==='script' ? "'Cormorant Garamond',serif"
+            : d.headingFont==='sansCaps' ? "'Jost',sans-serif"
+            : "'Cormorant Garamond',serif";
+  const italic = (d.headingFont==='script'||d.headingFont==='serifItalic') ? 'italic':'normal';
+  const caps = d.headingFont==='sansCaps';
+  const ls = d.letterSpacing==='wide' ? 2 : d.letterSpacing==='tight' ? 0 : 0.6;
+  const align = d.layout==='leftAligned' ? 'start' : 'middle';
+  const cx = d.layout==='leftAligned' ? 26 : 74;
+  const nm = caps ? 'letter-spacing="2"' : `letter-spacing="${ls}"`;
+  const tx = caps ? t=>t.toUpperCase() : t=>t;
+  const div = d.divider===false ? '' : `<line x1="${cx-14}" y1="146" x2="${cx+14}" y2="146" stroke="${d.accent}" stroke-width=".5"/>`;
+  const mono = d.monogram ? `<text x="${cx}" y="64" text-anchor="${align}" font-family="${fam}" font-size="9" font-style="italic" fill="${d.accent}">C &#183; J</text>` : '';
+  return `
+    ${mono}
+    <text x="${cx}" y="86" text-anchor="${align}" font-family="'Cormorant Garamond',serif" font-size="4.1" font-style="italic" fill="${d.accent}" letter-spacing="1">together with their families</text>
+    <text x="${cx}" y="106" text-anchor="${align}" font-family="${fam}" font-size="12.5" font-style="${italic}" fill="${d.ink}" ${nm}>${tx('Charlotte')}</text>
+    <text x="${cx}" y="121" text-anchor="${align}" font-family="'Cormorant Garamond',serif" font-size="6.3" font-style="italic" fill="${d.accent}">&amp;</text>
+    <text x="${cx}" y="137" text-anchor="${align}" font-family="${fam}" font-size="12.5" font-style="${italic}" fill="${d.ink}" ${nm}>${tx('James')}</text>
+    ${div}
+    <text x="${cx}" y="158" text-anchor="${align}" font-family="'Cormorant Garamond',serif" font-size="4.4" font-style="italic" fill="${d.ink}" opacity=".8">Saturday &#183; 14 June 2026</text>
+    <text x="${cx}" y="167" text-anchor="${align}" font-family="'Cormorant Garamond',serif" font-size="4.4" fill="${d.ink}" opacity=".7">Blenheim Palace</text>`;
+}
+
+// ─── RENDER ONE DESIGN FROM AN AI SPEC ───────────────────────
+function renderDesign(d){
+  const motifFn = MOTIF[d.motif] || MOTIF.sprig;
+  let motifSvg = '';
+  try { motifSvg = motifFn(d.leaf || d.accent, d.accent); } catch(e){ motifSvg=''; }
+  return `<svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:${d.bg}">
+    ${frame(d.layout, d.accent)}
+    ${motifSvg}
+    ${inviteText(d)}
+  </svg>`;
+}
+
+// ─── COPY HELPERS ────────────────────────────────────────────
 const FEEL = {classic:'classic and timeless', romantic:'soft and romantic', botanical:'natural and botanical', modern:'modern and understated'};
 const SEASON = {spring:'spring', summer:'summer', autumn:'autumn', winter:'winter'};
-const RECIPE_DESC = {sprig:'A single, simple sprig', floral:'A fuller, more floral take', minimal:'Pared back and minimal'};
 
-function leadRecipe(feeling){
-  if(feeling==='modern') return 'minimal';
-  if(feeling==='classic') return 'sprig';
-  return 'floral';
+// ─── STATE ───────────────────────────────────────────────────
+let designs = [];      // array of AI specs
+let selectedIdx = 0;
+
+// ─── LOCAL FALLBACK (if AI unavailable) ──────────────────────
+function localDesigns(){
+  const p = PALS[pickPalette(brief)];
+  const base = {bg:p.bg, ink:p.ink, accent:p.accent, leaf:p.leaf, divider:true, monogram:false, letterSpacing:'normal'};
+  return [
+    Object.assign({}, base, {name:'Botanical', rationale:'A fuller, floral take.', motif:'floralCorners', layout:'centred', headingFont:'serifItalic'}),
+    Object.assign({}, base, {name:'Simple sprig', rationale:'A single, simple sprig.', motif:'sprig', layout:'centred', headingFont:'serif'}),
+    Object.assign({}, base, {name:'Pared back', rationale:'Minimal and modern.', motif:'none', layout:'bordered', headingFont:'sansCaps', divider:false, letterSpacing:'wide'})
+  ];
 }
 
-// ─── BUILD ───────────────────────────────────────────────────
-const palKey = pickPalette(brief);
-const pal = PALS[palKey];
-const lead = leadRecipe(brief.feeling);
-const order = [lead].concat(['floral','sprig','minimal'].filter(r => r !== lead));
-let selected = lead;
-
-function capFor(recipe){
-  return RECIPE_DESC[recipe] + (recipe === lead ? ' — the one we\u2019d choose.' : '.');
-}
-
+// ─── RENDER CARDS ────────────────────────────────────────────
 function renderCards(){
-  document.getElementById('sgCards').innerHTML = order.map(r => `
-    <div class="sg-card${r===selected?' sel':''}" data-recipe="${r}">
-      ${r===lead?'<span class="sg-badge">Recommended</span>':''}
-      <div class="sg-preview">${renderInvite(r, pal)}</div>
+  document.getElementById('sgCards').innerHTML = designs.map((d,i) => `
+    <div class="sg-card${i===selectedIdx?' sel':''}" data-i="${i}">
+      ${i===0?'<span class="sg-badge">Recommended</span>':''}
+      <div class="sg-preview">${renderDesign(d)}</div>
     </div>`).join('');
   document.querySelectorAll('.sg-card').forEach(c => {
     c.addEventListener('click', () => {
-      selected = c.getAttribute('data-recipe');
-      document.querySelectorAll('.sg-card').forEach(x => x.classList.toggle('sel', x.getAttribute('data-recipe')===selected));
-      document.getElementById('sgCap').textContent = capFor(selected);
+      selectedIdx = parseInt(c.getAttribute('data-i'),10);
+      document.querySelectorAll('.sg-card').forEach(x => x.classList.toggle('sel', parseInt(x.getAttribute('data-i'),10)===selectedIdx));
+      document.getElementById('sgCap').textContent = capFor(selectedIdx);
     });
   });
 }
-
-function init(){
-  document.getElementById('sgHeading').innerHTML = `Three for you to <em>choose from.</em>`;
-  document.getElementById('sgIntro').textContent =
-    `All ${FEEL[brief.feeling]} for your ${SEASON[brief.season]} wedding, in a ${pal.name.toLowerCase()} palette. Pick the one that feels closest — the first is the one we'd recommend.`;
-  renderCards();
-  document.getElementById('sgCap').textContent = capFor(selected);
+function capFor(i){
+  const d = designs[i];
+  return (d && d.rationale ? d.rationale : '') + (i===0 ? ' — the one we\u2019d recommend.' : '');
 }
 
-// ─── THE FORK → NEXT JOURNEY ─────────────────────────────────
+// ─── INIT: try the AI engine, fall back gracefully ───────────
+async function init(){
+  document.getElementById('sgHeading').innerHTML = `Composing your <em>designs&hellip;</em>`;
+  document.getElementById('sgIntro').textContent =
+    `Reading your brief and composing a few ${FEEL[brief.feeling]||'considered'} designs for your ${SEASON[brief.season]||''} wedding.`;
+
+  let ok = false;
+  try {
+    const resp = await fetch('/.netlify/functions/studio-ai', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ brief: brief, count: 3 })
+    });
+    if (resp.ok){
+      const data = await resp.json();
+      if (data && Array.isArray(data.designs) && data.designs.length){
+        designs = data.designs.slice(0,4);
+        ok = true;
+      }
+    }
+  } catch(e){ /* fall through to local */ }
+
+  if (!ok){ designs = localDesigns(); }
+
+  selectedIdx = 0;
+  document.getElementById('sgHeading').innerHTML = ok
+    ? `Designed for <em>you.</em>`
+    : `A few to <em>choose from.</em>`;
+  document.getElementById('sgIntro').textContent =
+    `Pick the one that feels closest${ok?' — these were composed from your answers':''}. The first is the one we'd recommend, and you can refine any of them next.`;
+  renderCards();
+  document.getElementById('sgCap').textContent = capFor(selectedIdx);
+}
+
+// ─── THE FORK → NEXT JOURNEY (unchanged handoff) ─────────────
 function go(path){
+  const d = designs[selectedIdx] || {};
   sessionStorage.setItem('foreverprint_design_choice', JSON.stringify({
-    template:'botanic', recipe:selected, palette:palKey, brief:brief, path:path
+    template:'ai', spec:d, palette:(d.bg||''), brief:brief, path:path
   }));
-  // "Love it" → express add-your-details page. "Refine" → full customise page.
   if (path === 'love') {
     window.location.href = '/design-studio-details.html';
   } else {
