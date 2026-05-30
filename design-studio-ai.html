@@ -145,6 +145,22 @@ let sel={};
 let notes='';
 let freeText='';
 let busy=false;
+let lastSvg='';
+let lastConcept='';
+
+function loveIt(){
+  // Save the chosen AI design + brief for the details page.
+  // Note: the details page currently rebuilds previews from the template/recipe
+  // format; consuming this freeform AI SVG cleanly is part of the engine rebuild.
+  sessionStorage.setItem('foreverprint_design_choice', JSON.stringify({
+    template:'ai',
+    aiSvg:lastSvg,
+    concept:lastConcept,
+    brief:activeBrief().trim(),
+    path:'love'
+  }));
+  window.location.href='/design-studio-details.html';
+}
 
 function composeBrief(){
   const parts=[];
@@ -259,8 +275,10 @@ async function generate(){
     ra.innerHTML=progressHTML(2);
     try{const rf=await callStep({step:'refine',concept,svg});if(rf.svg)svg=rf.svg;}catch(e){/* keep render */}
     ra.innerHTML=progressHTML(3);
+    lastSvg=svg; lastConcept=concept;
     ra.innerHTML=`<div class="result-svg">${svg}</div>`+
-      (concept?`<div class="concept-box"><div class="cb-label">The thinking behind it</div><div class="cb-text">${concept.replace(/</g,'&lt;')}</div></div>`:'');
+      (concept?`<div class="concept-box"><div class="cb-label">The thinking behind it</div><div class="cb-text">${concept.replace(/</g,'&lt;')}</div></div>`:'')+
+      `<button class="gen-btn" style="margin-top:14px" onclick="loveIt()">Love it — add your details</button>`;
   }catch(e){
     ra.innerHTML='<div class="result-empty">Your invitation will appear here</div>';
     if(errSlot)errSlot.innerHTML=`<div class="err">${(e.message||'Something went wrong. Please try again.').replace(/</g,'&lt;')}</div>`;
