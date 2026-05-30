@@ -1,14 +1,13 @@
 // netlify/functions/studio-generate.js
 //
 // Foreverprint AI Design Studio — creative generation engine.
-// Runs a three-step loop server-side:
-//   1. ART-DIRECT  — Claude writes a rich creative concept from the brief
-//   2. RENDER      — Claude draws that concept as print-ready SVG
-//   3. REFINE      — Claude critiques and improves the SVG (optional)
-// Returns { concept, svg }.
+// SINGLE-STEP per request, to stay within Netlify's function timeout.
+// The browser calls this three times in sequence:
+//   step "concept" -> { concept }      (art-direction)
+//   step "render"  -> { svg }          (draw from concept)
+//   step "refine"  -> { svg }          (improve the svg)  [optional]
 //
-// Env: ANTHROPIC_API_KEY (already set in Netlify).
-// Model: Sonnet, for quality (locked; not exposed to the client).
+// Env: ANTHROPIC_API_KEY (already set in Netlify). Model: Sonnet (locked).
 
 const MODEL = 'claude-sonnet-4-20250514';
 const API_URL = 'https://api.anthropic.com/v1/messages';
@@ -44,26 +43,15 @@ function cors() {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 }
-
 function extractSvg(text) {
   const m = text && text.match(/<svg[\s\S]*<\/svg>/i);
   return m ? m[0] : null;
 }
-
 async function callClaude(apiKey, system, user, maxTokens) {
   const resp = await fetch(API_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: maxTokens || 1000,
-      system: system,
-      messages: [{ role: 'user', content: user }]
-    })
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens || 1000, system, messages: [{ role: 'user', content: user }] })
   });
   if (!resp.ok) {
     const t = await resp.text();
@@ -80,35 +68,39 @@ exports.handler = async (event) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { statusCode: 500, headers: cors(), body: JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured' }) };
 
-  let payload;
-  try { payload = JSON.parse(event.body || '{}'); }
+  let p;
+  try { p = JSON.parse(event.body || '{}'); }
   catch (e) { return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Invalid JSON body' }) }; }
 
-  const brief = (payload.brief || '').toString().slice(0, 1000).trim();
-  const refine = payload.refine !== false; // default true
-  if (!brief) return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Missing brief' }) };
+  const step = p.step || 'concept';
 
   try {
-    // Step 1 — art-direct
-    const concept = await callClaude(apiKey, ARTDIRECT_SYSTEM, `The couple's brief: "${brief}"`, 500);
-
-    // Step 2 — render to SVG
-    let raw = await callClaude(apiKey, RENDER_SYSTEM, `Creative concept to realise:\n\n${concept}`, 3000);
-    let svg = extractSvg(raw);
-    if (!svg) {
-      return { statusCode: 502, headers: cors(), body: JSON.stringify({ error: 'Renderer did not return valid SVG', concept }) };
+    if (step === 'concept') {
+      const brief = (p.brief || '').toString().slice(0, 1000).trim();
+      if (!brief) return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Missing brief' }) };
+      const concept = await callClaude(apiKey, ARTDIRECT_SYSTEM, `The couple's brief: "${brief}"`, 500);
+      return { statusCode: 200, headers: cors(), body: JSON.stringify({ concept }) };
     }
 
-    // Step 3 — refine (best-effort; keep step-2 svg if this fails)
-    if (refine) {
-      try {
-        const crit = await callClaude(apiKey, CRITIQUE_SYSTEM, `Concept:\n${concept}\n\nCurrent SVG:\n${svg}`, 3000);
-        const improved = extractSvg(crit);
-        if (improved) svg = improved;
-      } catch (e) { /* keep the step-2 svg */ }
+    if (step === 'render') {
+      const concept = (p.concept || '').toString().slice(0, 4000);
+      if (!concept) return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Missing concept' }) };
+      const raw = await callClaude(apiKey, RENDER_SYSTEM, `Creative concept to realise:\n\n${concept}`, 3000);
+      const svg = extractSvg(raw);
+      if (!svg) return { statusCode: 502, headers: cors(), body: JSON.stringify({ error: 'Renderer did not return valid SVG' }) };
+      return { statusCode: 200, headers: cors(), body: JSON.stringify({ svg }) };
     }
 
-    return { statusCode: 200, headers: cors(), body: JSON.stringify({ concept, svg }) };
+    if (step === 'refine') {
+      const concept = (p.concept || '').toString().slice(0, 4000);
+      const svgIn = (p.svg || '').toString();
+      if (!svgIn) return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Missing svg' }) };
+      const crit = await callClaude(apiKey, CRITIQUE_SYSTEM, `Concept:\n${concept}\n\nCurrent SVG:\n${svgIn}`, 3000);
+      const improved = extractSvg(crit);
+      return { statusCode: 200, headers: cors(), body: JSON.stringify({ svg: improved || svgIn }) };
+    }
+
+    return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Unknown step' }) };
 
   } catch (err) {
     return { statusCode: 500, headers: cors(), body: JSON.stringify({ error: (err.message || 'Generation failed').slice(0, 300) }) };
