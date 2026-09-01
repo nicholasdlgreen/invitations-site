@@ -22,6 +22,13 @@
 {"@context":"https://schema.org","@type":"LocalBusiness","name":"Foreverprint","description":"Luxury personalised invitations and announcement cards printed in the UK.","url":"https://foreverprint.com","priceRange":"££","address":{"@type":"PostalAddress","addressCountry":"GB"}}
 </script>
 <!-- Google Analytics placeholder — add GA4 tag here once domain is confirmed -->
+<!-- Auth + cart scripts (same set every other page loads) so the header
+     Account dropdown and cart badge work. supabase-js first, then config,
+     then auth; cart.js provides updateCartBadge(). -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-config.js"></script>
+<script src="/auth.js"></script>
+<script src="/cart.js"></script>
 <style>
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 .path-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:52px;}
