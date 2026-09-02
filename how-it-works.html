@@ -28,35 +28,45 @@
    ============================================================ */
 
 /* HERO */
-.hiw-hero{padding:88px 0 64px;text-align:center;background:var(--cream);}
+.hiw-hero{padding:56px 0 44px;text-align:center;background:var(--cream);}
 .hiw-hero .container{max-width:680px;}
-.hiw-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:16px;}
-.hiw-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.4rem,5vw,3.6rem);font-weight:300;line-height:1.05;color:var(--text);margin:0 0 18px;}
+.hiw-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:14px;}
+.hiw-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3rem);font-weight:400;line-height:1.08;color:var(--text);margin:0 0 14px;}
 .hiw-h1 em{color:var(--gold);font-style:italic;}
-.hiw-sub{font-size:14px;color:var(--soft);line-height:1.95;max-width:520px;margin:0 auto 24px;}
-.hiw-trust{display:flex;justify-content:center;gap:28px;font-size:11px;color:var(--soft);flex-wrap:wrap;}
+.hiw-sub{font-size:14px;color:var(--soft);line-height:1.8;max-width:500px;margin:0 auto 20px;}
+.hiw-trust{display:flex;justify-content:center;gap:24px;font-size:11px;color:var(--soft);flex-wrap:wrap;}
 .hiw-trust span::before{content:'✓ ';color:var(--gold);font-weight:600;margin-right:4px;}
 
 /* SECTIONS */
-.hiw-section{padding:80px 0;}
+.hiw-section{padding:42px 0;}
 .hiw-section.cream{background:var(--cream);}
 .hiw-section.white{background:var(--white);}
-.hiw-stag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;text-align:center;margin-bottom:14px;}
-.hiw-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:300;line-height:1.15;text-align:center;color:var(--text);margin:0;}
+.hiw-stag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;text-align:center;margin-bottom:10px;}
+.hiw-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,2.6vw,2.1rem);font-weight:400;line-height:1.15;text-align:center;color:var(--text);margin:0;}
 .hiw-h2 em{color:var(--gold);font-style:italic;}
-.hiw-divider{width:36px;height:1px;background:var(--gold);margin:18px auto 48px;}
+.hiw-divider{width:36px;height:1px;background:var(--gold);margin:12px auto 28px;}
+
+/* TWO ROUTES */
+.hiw-routes{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:780px;margin:0 auto;}
+.hiw-route{background:var(--cream);border:1px solid var(--border);border-radius:16px;padding:24px 24px;transition:all .25s;}
+.hiw-route:hover{border-color:var(--gold-lt);box-shadow:0 12px 30px rgba(61,46,36,.06);}
+.hiw-route-tag{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.hiw-route-h{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:8px;}
+.hiw-route-text{font-size:13px;color:var(--soft);line-height:1.7;margin:0 0 14px;}
+.hiw-route-cta{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text);font-weight:500;border-bottom:1px solid var(--gold);padding-bottom:3px;text-decoration:none;transition:color .2s;}
+.hiw-route-cta:hover{color:var(--gold);}
 
 /* TIMELINE — 4 steps */
-.hiw-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;max-width:920px;margin:0 auto;position:relative;}
-.hiw-steps::before{content:'';position:absolute;top:22px;left:12%;right:12%;height:0.5px;background:var(--border);z-index:0;}
-.hiw-step{text-align:center;position:relative;z-index:1;padding:0 16px;}
-.hiw-step-num{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--white);border:1px solid var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:18px;}
-.hiw-step-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;color:var(--text);margin-bottom:8px;}
-.hiw-step-text{font-size:12px;color:var(--soft);line-height:1.85;}
+.hiw-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:780px;margin:0 auto;position:relative;}
+.hiw-steps::before{content:'';position:absolute;top:18px;left:12%;right:12%;height:0.5px;background:var(--border);z-index:0;}
+.hiw-step{text-align:center;position:relative;z-index:1;padding:0 8px;}
+.hiw-step-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--white);border:1px solid var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:12px;}
+.hiw-step-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:400;color:var(--text);margin-bottom:5px;}
+.hiw-step-text{font-size:11.5px;color:var(--soft);line-height:1.7;}
 
 /* PROMISES */
-.hiw-promises-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:920px;margin:0 auto;}
-.hiw-promise{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:28px 22px;text-align:center;transition:all .25s;}
+.hiw-promises-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:880px;margin:0 auto;}
+.hiw-promise{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px 18px;text-align:center;transition:all .25s;}
 .hiw-promise:hover{border-color:var(--gold);}
 .hiw-promise-icon{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--gold);margin-bottom:14px;}
 .hiw-promise-h{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);margin:0 0 10px;line-height:1.2;}
@@ -85,6 +95,7 @@
 
 /* MOBILE */
 @media(max-width:768px){
+  .hiw-routes{grid-template-columns:1fr;gap:16px;}
   .hiw-steps{grid-template-columns:1fr 1fr;gap:32px 16px;}
   .hiw-steps::before{display:none;}
   .hiw-promises-grid{grid-template-columns:1fr 1fr;}
@@ -120,8 +131,31 @@
   </div>
 </section>
 
-<!-- TIMELINE -->
+<!-- TWO ROUTES -->
 <section class="hiw-section white">
+  <div class="container">
+    <span class="hiw-stag">Getting started</span>
+    <h2 class="hiw-h2">Two ways to <em>create.</em></h2>
+    <div class="hiw-divider"></div>
+    <div class="hiw-routes">
+      <div class="hiw-route">
+        <div class="hiw-route-tag">Have your design ready?</div>
+        <div class="hiw-route-h">Upload &amp; Print</div>
+        <p class="hiw-route-text">Already have finished artwork? Upload your file, choose your paper and finishing, and we'll print it beautifully — exactly as you designed it.</p>
+        <a class="hiw-route-cta" href="/upload-and-print.html">Upload your design →</a>
+      </div>
+      <div class="hiw-route">
+        <div class="hiw-route-tag">Starting from scratch?</div>
+        <div class="hiw-route-h">Design Studio</div>
+        <p class="hiw-route-text">No design yet? Choose one of our considered templates and make it yours — or use our AI design tool to create something unique from a few words about your day.</p>
+        <a class="hiw-route-cta" href="/design-studio.html">Open the studio →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="hiw-section cream">
   <div class="container">
     <span class="hiw-stag">How it works</span>
     <h2 class="hiw-h2">Four steps, <em>start to finish.</em></h2>
@@ -130,7 +164,7 @@
       <div class="hiw-step">
         <div class="hiw-step-num">1</div>
         <div class="hiw-step-title">Start your order</div>
-        <div class="hiw-step-text">Upload your finished artwork or use our Design Studio to create something from scratch.</div>
+        <div class="hiw-step-text">Upload your artwork or design in the studio, then choose your paper and finishing.</div>
       </div>
       <div class="hiw-step">
         <div class="hiw-step-num">2</div>
@@ -152,7 +186,7 @@
 </section>
 
 <!-- PROMISES -->
-<section class="hiw-section cream">
+<section class="hiw-section white">
   <div class="container">
     <span class="hiw-stag">Our promises</span>
     <h2 class="hiw-h2">If anything's wrong, <em>we put it right.</em></h2>
@@ -183,7 +217,7 @@
 </section>
 
 <!-- DELIVERY -->
-<section class="hiw-section white">
+<section class="hiw-section cream">
   <div class="container">
     <span class="hiw-stag">Delivery</span>
     <h2 class="hiw-h2">Tracked, <em>UK delivery.</em></h2>
@@ -193,7 +227,7 @@
 </section>
 
 <!-- FAQ -->
-<section class="hiw-section cream">
+<section class="hiw-section white">
   <div class="container">
     <span class="hiw-stag">Common questions</span>
     <h2 class="hiw-h2">Things people <em>ask us.</em></h2>
