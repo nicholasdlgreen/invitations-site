@@ -23,9 +23,9 @@ nav a{font-size:15px;letter-spacing:.04em;text-transform:none;color:var(--soft);
 .megamenu{position:static;height:74px;display:flex;align-items:center;}
 .megamenu-trigger{display:inline-flex;align-items:center;gap:6px;font-size:15px;color:var(--soft);height:74px;}
 .mega-chev{font-size:9px;transition:transform .2s;}
-.megamenu-panel{position:absolute;left:0;right:0;top:74px;background:var(--white);border-top:1px solid var(--border);border-bottom:1px solid var(--border);box-shadow:0 20px 40px -20px rgba(61,46,36,.22);padding:34px 48px 38px;display:none;grid-template-columns:1fr 1fr 1fr;gap:48px;z-index:210;}
+.megamenu-panel{position:absolute;left:16px;right:16px;top:78px;background:var(--white);border:1px solid var(--border);border-radius:20px;box-shadow:0 20px 40px -20px rgba(61,46,36,.22);padding:34px 48px 38px;display:none;grid-template-columns:1fr 1fr 1fr;gap:48px;z-index:210;}
 .megamenu:hover .megamenu-panel,.megamenu.open .megamenu-panel{display:grid;}
-.megamenu-panel::before{content:'';position:absolute;left:0;right:0;top:-12px;height:12px;background:transparent;}
+.megamenu-panel::before{content:'';position:absolute;left:0;right:0;top:-16px;height:16px;background:transparent;}
 .megamenu:hover .mega-chev,.megamenu.open .mega-chev{transform:rotate(180deg);}
 .megamenu:hover .megamenu-trigger,.megamenu.open .megamenu-trigger{color:var(--gold);}
 .mega-cat{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--text);margin-bottom:6px;}
