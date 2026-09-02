@@ -4,19 +4,19 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Luxury Invitations &amp; Announcement Cards | Printed in the UK | Foreverprint</title>
-<meta name="description" content="Luxury personalised invitations and announcement cards printed in the UK on premium paper stocks. Weddings, new arrivals, birthdays and celebrations. Upload your own design or create one in our Design Studio. Digital proof on every order. No minimum quantities."/>
+<meta name="description" content="Luxury personalised invitations and announcement cards printed in the UK on premium paper stocks. Weddings, new arrivals, birthdays and celebrations. Upload your own design or create one in our Design Studio. No minimum quantities."/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://foreverprint.com/"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://foreverprint.com/"/>
 <meta property="og:title" content="Luxury Invitations &amp; Announcement Cards | Foreverprint"/>
-<meta property="og:description" content="Luxury personalised invitations and announcement cards printed in the UK. Digital proof included on every order."/>
+<meta property="og:description" content="Luxury personalised invitations and announcement cards printed in the UK on premium paper stocks. No minimum quantities."/>
 <meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
 <meta property="og:locale" content="en_GB"/>
 <meta property="og:site_name" content="Foreverprint"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Luxury Invitations &amp; Announcement Cards | Foreverprint"/>
-<meta name="twitter:description" content="Luxury personalised invitations and announcement cards printed in the UK. Digital proof included on every order."/>
+<meta name="twitter:description" content="Luxury personalised invitations and announcement cards printed in the UK on premium paper stocks. No minimum quantities."/>
 <meta name="twitter:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"LocalBusiness","name":"Foreverprint","description":"Luxury personalised invitations and announcement cards printed in the UK.","url":"https://foreverprint.com","priceRange":"££","address":{"@type":"PostalAddress","addressCountry":"GB"}}
@@ -51,7 +51,14 @@
 /* Background layers cross-fade; text content is shared and sits above in normal flow */
 .hero-bg-layer{position:absolute;inset:0;opacity:0;transition:opacity 1s ease;background-size:cover;background-position:center;background-repeat:no-repeat;}
 .hero-bg-layer.is-active{opacity:1;}
-.hero-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(250,247,242,0.80) 0%,rgba(250,247,242,0.60) 42%,rgba(250,247,242,0.88) 100%);z-index:1;}
+.hero-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(250,247,242,0.82) 0%,rgba(250,247,242,0.62) 45%,rgba(250,247,242,0.90) 100%);z-index:1;}
+.announce-bar{background:#E7D9BF;color:#5C4A2E;text-align:center;padding:10px 16px;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:.16em;text-transform:uppercase;}
+.hero-rule{width:44px;height:1px;background:var(--gold,#C4B49B);margin:0 auto 24px;}
+.hero-h1-seo{font-family:'Jost',sans-serif;font-size:12px;font-weight:400;letter-spacing:.22em;text-transform:uppercase;color:var(--gold,#A08D76);margin:0 0 22px;line-height:1.6;}
+.hero-editorial .hero-message{font-size:clamp(38px,6vw,60px);line-height:1.08;font-weight:500;color:var(--ink,#3D3833);margin:0 0 22px;}
+.hero-editorial .hero-message em{font-style:italic;color:var(--brown,#6B5D4A);}
+.hero-editorial .hero-sub{font-size:15px;line-height:1.8;color:var(--soft);max-width:440px;margin:0 auto 34px;min-height:80px;}
+@media(max-width:768px){.hero-editorial .hero-message{font-size:36px;}}
 .hero-content{position:relative;z-index:2;padding:0 24px;max-width:680px;margin:0 auto;text-align:center;}
 .hero-copy{transition:none;}
 .hero-h1{font-size:clamp(2.6rem,5vw,4.6rem);font-weight:300;line-height:1.12;margin-bottom:22px;color:var(--text);}
@@ -84,27 +91,29 @@
 <div id="site-header"></div>
 
 <!-- HERO CAROUSEL -->
-<section class="hero-carousel" aria-label="Featured occasions" style="min-height:90vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden;background:var(--cream);">
+<!-- Announcement bar -->
+<div class="announce-bar">Printed on the finest papers · Tracked UK delivery · No minimum quantities</div>
 
-<!-- Fixed hero background (single image; text rotates below) -->
-<div class="hero-bg-layer is-active" data-bg="0" style="background-image:url('https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1600&q=80&fit=crop');"></div>
+<section class="hero-editorial" aria-label="Welcome" style="min-height:86vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden;background:var(--cream);">
+
+<!-- Product hero background: wedding flat-lay + soft scrim -->
+<div class="hero-bg-layer is-active" style="background-image:url('https://raw.githubusercontent.com/nicholasdlgreen/invitations-site/main/occasion-weddings.jpg');"></div>
 <div class="hero-scrim"></div>
 
-<!-- Shared content: headline + subhead swap; buttons stay put -->
 <div class="hero-content">
-<div class="hero-copy">
-<h1 class="serif hero-h1" id="hero-h1">Every love story deserves<br><em>a beautiful beginning.</em></h1>
+<div class="hero-rule"></div>
+<h1 class="hero-h1-seo">Luxury Invitations &amp; Announcement Cards, Printed in the UK</h1>
+<div class="serif hero-message" id="hero-message">Every love story deserves<br><em>a beautiful beginning.</em></div>
 <p class="hero-sub" id="hero-sub">Luxury wedding invitations, save the dates and the whole coordinated suite — printed on the finest papers and checked by hand before they reach you.</p>
-</div>
 <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
 <a class="btn" href="/upload-and-print.html">I Have a Design</a>
 <a class="btn-out" href="/design-studio.html">Help Me Create One</a>
 </div>
-<p style="font-size:11px;color:var(--pale);margin-top:20px;letter-spacing:.06em;">Printed on premium papers · Tracked delivery · No minimum quantities</p>
+<div class="hero-rule" style="margin-top:34px;"></div>
 </div>
 
-<button class="hero-arrow hero-prev" aria-label="Previous message">‹</button>
-<button class="hero-arrow hero-next" aria-label="Next message">›</button>
+<button class="hero-arrow hero-prev" id="heroPrev" aria-label="Previous message">‹</button>
+<button class="hero-arrow hero-next" id="heroNext" aria-label="Next message">›</button>
 
 </section>
 
@@ -133,7 +142,7 @@
 <p class="path-desc">You have already created something beautiful. Upload your artwork and we will bring it to life on the finest papers — exactly as you imagined it.</p>
 <div class="path-details">
 <div class="path-detail">PDF, AI, InDesign or high-res image files</div>
-<div class="path-detail">Digital proof before anything goes to print</div>
+<div class="path-detail">See your design on screen before you order</div>
 <div class="path-detail">Premium paper stocks from 300gsm to vellum</div>
 <div class="path-detail">Delivered to your door from 5 working days</div>
 </div>
@@ -206,8 +215,8 @@
 <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;">300gsm smooth white, cotton rag and vellum overlay</div>
 </div>
 <div style="padding:36px 32px;background:rgba(255,255,255,.05);border-radius:20px;text-align:center;">
-<div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:var(--gold-lt);margin-bottom:8px;">Digital Proofs</div>
-<div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;">Your approval before a single sheet goes to print</div>
+<div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:var(--gold-lt);margin-bottom:8px;">Checked by Hand</div>
+<div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;">Every order reviewed before it goes to print</div>
 </div>
 <div style="padding:36px 32px;background:rgba(255,255,255,.05);border-radius:20px;text-align:center;">
 <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:var(--gold-lt);margin-bottom:8px;">No Minimums</div>
@@ -227,7 +236,7 @@
 <span class="tag">Why Foreverprint</span>
 <h2 class="section-title" style="margin-bottom:24px;">Made in the UK.<br>Made for every moment.</h2>
 <div class="divider"></div>
-<p style="font-size:14px;color:var(--soft);line-height:2;margin-bottom:32px;">We are a small, specialist team who believe an invitation deserves more than a template and a printer. Every order is reviewed by hand, every proof is checked before it leaves us, and every box is packed with care.</p>
+<p style="font-size:14px;color:var(--soft);line-height:2;margin-bottom:32px;">We are a small, specialist team who believe an invitation deserves more than a template and a printer. Every order is reviewed by hand, every detail checked before it leaves us, and every box is packed with care.</p>
 <div style="display:flex;flex-direction:column;gap:16px;">
 <div style="display:flex;align-items:flex-start;gap:16px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;"></div><div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Artwork review on every order</div><div style="font-size:12px;color:var(--soft);line-height:1.8;">We check your file for resolution, bleed and colour mode before printing.</div></div></div>
 <div style="display:flex;align-items:flex-start;gap:16px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;"></div><div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Premium papers, not compromises</div><div style="font-size:12px;color:var(--soft);line-height:1.8;">Smooth 300gsm white, luxurious cotton rag and ethereal vellum overlay.</div></div></div>
@@ -259,7 +268,7 @@
 <section style="background:var(--gold);padding:80px 0;text-align:center;">
 <div class="container">
 <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,2.8rem);font-weight:300;color:#fff;margin-bottom:16px;line-height:1.2;">Ready to begin?</h2>
-<p style="font-size:14px;color:rgba(255,255,255,.8);max-width:420px;margin:0 auto 36px;line-height:1.9;">Upload your design or start from scratch in the studio. Your digital proof arrives within one working day.</p>
+<p style="font-size:14px;color:rgba(255,255,255,.8);max-width:420px;margin:0 auto 36px;line-height:1.9;">Upload your design or start from scratch in the studio — printed on the finest papers and delivered to your door.</p>
 <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
 <a href="/upload-and-print.html" style="display:inline-flex;align-items:center;padding:15px 38px;background:#fff;color:var(--gold);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;text-decoration:none;border-radius:60px;">Upload My Design</a>
 <a href="/design-studio.html" style="display:inline-flex;align-items:center;padding:14px 37px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;text-decoration:none;border-radius:60px;">Open the Studio</a>
@@ -270,38 +279,31 @@
 <div id="site-footer"></div>
 
 <script>
-// Hero — fixed image, static messages with arrows + auto-rotate (no fade)
+// Hero brand messages rotate; the SEO H1 stays fixed
 (function(){
   var COPY = [
-    { h: 'Every love story deserves<br><em>a beautiful beginning.</em>',
+    { m: 'Every love story deserves<br><em>a beautiful beginning.</em>',
       s: 'Luxury wedding invitations, save the dates and the whole coordinated suite — printed on the finest papers and checked by hand before they reach you.' },
-    { h: 'Share your happy news<br><em>in beautiful style.</em>',
+    { m: 'Share your happy news<br><em>in beautiful style.</em>',
       s: "A new arrival, an engagement, a move — announcement cards worth keeping, for the moments you can't wait to tell everyone about." },
-    { h: 'Invite them to something<br><em>unforgettable.</em>',
+    { m: 'Invite them to something<br><em>unforgettable.</em>',
       s: 'From milestone birthdays to anniversaries and celebrations of every kind — invitations that set the tone before your guests even open the envelope.' }
   ];
-  var h1 = document.getElementById('hero-h1');
+  var msg = document.getElementById('hero-message');
   var sub = document.getElementById('hero-sub');
-  if(!h1 || !sub) return;
-  var i = 0, timer = null, DELAY = 6000;
+  if(!msg || !sub) return;
+  var i = 0, timer = null;
   function show(n){
     i = (n + COPY.length) % COPY.length;
-    h1.innerHTML = COPY[i].h;
+    msg.innerHTML = COPY[i].m;
     sub.textContent = COPY[i].s;
   }
-  function next(){ show(i+1); }
-  function prev(){ show(i-1); }
-  function start(){ stop(); timer = setInterval(next, DELAY); }
+  function start(){ stop(); timer = setInterval(function(){ show(i+1); }, 6000); }
   function stop(){ if(timer){ clearInterval(timer); timer = null; } }
-  var nextBtn = document.querySelector('.hero-next');
-  var prevBtn = document.querySelector('.hero-prev');
-  if(nextBtn) nextBtn.addEventListener('click', function(){ next(); start(); });
-  if(prevBtn) prevBtn.addEventListener('click', function(){ prev(); start(); });
-  var carousel = document.querySelector('.hero-carousel');
-  if(carousel){
-    carousel.addEventListener('mouseenter', stop);
-    carousel.addEventListener('mouseleave', start);
-  }
+  var nextBtn = document.getElementById('heroNext');
+  var prevBtn = document.getElementById('heroPrev');
+  if(nextBtn) nextBtn.addEventListener('click', function(){ show(i+1); start(); });
+  if(prevBtn) prevBtn.addEventListener('click', function(){ show(i-1); start(); });
   start();
 })();
 </script>
