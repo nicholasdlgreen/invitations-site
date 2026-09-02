@@ -16,33 +16,42 @@
    header.html. */
 
 /* HERO — H1 plain (message-match), price prominent, single CTA */
-.lp-hero{background:var(--cream);padding:64px 0 56px;}
-.lp-hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:64px;align-items:center;}
-.lp-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:14px;}
-.lp-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.2rem,4vw,3.4rem);font-weight:300;line-height:1.05;color:var(--text);margin:0 0 14px;}
-.lp-hero-sub{font-size:14px;color:var(--soft);line-height:1.85;margin:0 0 24px;max-width:480px;}
-.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px 24px;display:inline-block;margin-bottom:24px;min-width:220px;}
-.lp-price-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:6px;}
-.lp-price-value{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:400;color:var(--text);line-height:1;}
-.lp-price-meta{font-size:11px;color:var(--soft);margin-top:6px;}
-.lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:6px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
+.lp-hero{background:var(--cream);padding:44px 0 40px;}
+.lp-hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;}
+.lp-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;}
+.lp-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.6vw,3rem);font-weight:400;line-height:1.06;color:var(--text);margin:0 0 12px;}
+.lp-hero-sub{font-size:14px;color:var(--soft);line-height:1.75;margin:0 0 20px;max-width:460px;}
+.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 22px;display:inline-block;margin-bottom:20px;min-width:220px;}
+.lp-price-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:5px;}
+.lp-price-value{font-family:'Cormorant Garamond',serif;font-size:2.3rem;font-weight:400;color:var(--text);line-height:1;}
+.lp-price-meta{font-size:11px;color:var(--soft);margin-top:5px;}
+.lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
 .lp-cta:hover{background:transparent;color:var(--gold);}
 .lp-cta::after{content:'→';transition:transform .2s;}
 .lp-cta:hover::after{transform:translateX(4px);}
-.lp-hero-trust{display:flex;gap:24px;margin-top:18px;font-size:11px;color:var(--soft);flex-wrap:wrap;}
+.lp-hero-trust{display:flex;gap:22px;margin-top:16px;font-size:11px;color:var(--soft);flex-wrap:wrap;}
 .lp-hero-trust span::before{content:'✓ ';color:var(--gold);font-weight:600;}
-.lp-hero-img{width:100%;aspect-ratio:5/4;object-fit:cover;border-radius:18px;background:var(--pale);}
-.lp-hero-img-placeholder{width:100%;aspect-ratio:5/4;border-radius:18px;background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:48px;color:var(--gold-lt);}
+.lp-hero-img{width:100%;max-width:360px;aspect-ratio:4/5;object-fit:cover;border-radius:16px;background:var(--pale);}
+.lp-hero-img-placeholder{width:100%;max-width:360px;aspect-ratio:4/5;border-radius:16px;background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--gold-lt);border:1px solid var(--border);}
+.lp-hero-img-placeholder::before{content:'✦';font-size:40px;}
 
-/* PRICING SECTION — anchor cards (3 tiers) + upgrades */
-.lp-section{padding:72px 0;}
+/* PRICING SECTION — full quantity table */
+.lp-section{padding:44px 0;}
 .lp-section-cream{background:var(--cream);}
 .lp-section-white{background:var(--white);}
-.lp-section-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;text-align:center;margin-bottom:12px;}
-.lp-section-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:300;line-height:1.15;text-align:center;color:var(--text);margin:0 0 8px;}
+.lp-section-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;text-align:center;margin-bottom:10px;}
+.lp-section-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,2.6vw,2.1rem);font-weight:400;line-height:1.15;text-align:center;color:var(--text);margin:0 0 8px;}
 .lp-section-h2 em{color:var(--gold);font-style:italic;}
-.lp-section-divider{width:36px;height:1px;background:var(--gold);margin:18px auto 36px;}
-.lp-anchor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:880px;margin:0 auto 24px;}
+.lp-section-divider{width:36px;height:1px;background:var(--gold);margin:14px auto 28px;}
+.lp-anchor-grid{max-width:720px;margin:0 auto;}
+.lp-price-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.lp-price-table th{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);font-weight:500;text-align:right;padding:14px 18px;background:var(--cream);}
+.lp-price-table th:first-child{text-align:left;}
+.lp-price-table td{padding:13px 18px;font-size:14px;color:var(--text);border-top:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;}
+.lp-price-table td:first-child{text-align:left;font-family:'Jost',sans-serif;font-size:13px;color:var(--soft);}
+.lp-price-table tr.pt-popular td{background:rgba(184,151,106,.06);}
+.pt-badge{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold-lt);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;}
+.lp-price-note{font-size:11px;color:var(--soft);text-align:center;margin-top:14px;line-height:1.6;}
 .lp-anchor{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:30px 28px;position:relative;}
 .lp-anchor.popular{border:2px solid var(--gold);}
 .lp-anchor-badge{position:absolute;top:-11px;left:22px;background:var(--gold);color:#fff;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:5px 12px;border-radius:12px;font-weight:500;}
@@ -59,16 +68,29 @@
 .lp-upgrade-value{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--text);font-weight:400;}
 .lp-cta-row{text-align:center;margin-top:36px;}
 
-/* COMPACT STRIPS — paper / sizes / finishes as pills */
-.lp-strip{padding:36px 0;border-top:1px solid var(--border);}
-.lp-strip-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:14px;}
-.lp-strip-pills{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
-.lp-strip-pill{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:9px 16px;font-size:12px;color:var(--text);}
-.lp-strip-pill .pill-dim{font-size:10px;color:var(--soft);margin-left:6px;}
-.lp-strip-pill .pill-extra{font-size:10px;color:var(--gold);margin-left:6px;}
+/* PAPER & FINISH SHOWCASE — editorial, sensory, no prices */
+.lp-strip{padding:52px 0;border-top:1px solid var(--border);}
+.lp-strip-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:8px;}
+.lp-strip-h{font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,2.4vw,2rem);font-weight:400;text-align:center;color:var(--text);margin:0 0 6px;}
+.lp-strip-intro{font-size:13px;color:var(--soft);text-align:center;max-width:500px;margin:10px auto 30px;line-height:1.75;}
+.lp-showcase{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:920px;margin:0 auto;}
+.lp-show-card{text-align:left;}
+.lp-swatch{aspect-ratio:3/2;border-radius:12px;border:1px solid var(--border);background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;color:var(--gold-lt);margin-bottom:12px;}
+.lp-show-name{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);margin-bottom:2px;}
+.lp-show-tier{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.lp-show-desc{font-size:12.5px;color:var(--soft);line-height:1.7;}
+/* Finishing — dark panel, framed as craft */
+.lp-finish-panel{background:var(--text);border-radius:18px;padding:44px 40px;max-width:920px;margin:0 auto;}
+.lp-finish-panel .lp-strip-tag{color:var(--gold-lt);}
+.lp-finish-panel .lp-strip-h{color:var(--cream);}
+.lp-finish-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}
+.lp-finish-item{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:18px 22px;}
+.lp-finish-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--cream);margin-bottom:4px;}
+.lp-finish-desc{font-size:12px;color:rgba(255,255,255,.6);line-height:1.6;}
+.lp-finish-foot{text-align:center;margin-top:22px;font-size:12px;color:rgba(255,255,255,.55);}
 
 /* HOW IT WORKS — compact horizontal */
-.lp-how{padding:56px 0;background:var(--cream);}
+.lp-how{padding:48px 0;background:var(--cream);}
 .lp-how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1000px;margin:0 auto;}
 .lp-how-step{text-align:center;padding:0 16px;}
 .lp-how-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--white);border:1px solid var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:12px;}
@@ -151,7 +173,7 @@
           <div class="lp-price-value" id="lp-price-value">£—</div>
           <div class="lp-price-meta" id="lp-price-meta">Pricing loads from your published data</div>
         </div>
-        <div><button class="lp-cta" type="button" onclick="openPathModal(this)">Start Your Order</button></div>
+        <div><button class="lp-cta" id="lp-hero-cta" type="button" onclick="openPathModal(this)">Start Your Order</button></div>
         <div class="lp-hero-trust">
           <span>UK printed</span>
           <span>Next-day delivery available</span>
@@ -168,7 +190,7 @@
 <section class="lp-section lp-section-white" id="pricing">
   <div class="container">
     <span class="lp-section-tag">Pricing</span>
-    <h2 class="lp-section-h2">Three options, <em>honest pricing.</em></h2>
+    <h2 class="lp-section-h2">Simple, <em>honest pricing.</em></h2>
     <div class="lp-section-divider"></div>
     <div id="lp-anchor-grid" class="lp-anchor-grid">
       <div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:13px;padding:40px;">Loading pricing…</div>
@@ -184,25 +206,25 @@
   </div>
 </section>
 
-<!-- COMPACT STRIPS -->
+<!-- PAPER SHOWCASE -->
 <section class="lp-strip lp-section-cream" id="lp-papers-strip-section" style="display:none;">
   <div class="container">
-    <span class="lp-strip-tag">Paper stocks</span>
-    <div id="lp-papers-strip" class="lp-strip-pills"></div>
+    <span class="lp-strip-tag">Choose your paper</span>
+    <h2 class="lp-strip-h">Each one a pleasure to hold</h2>
+    <p class="lp-strip-intro">The paper is what sets each option apart — from our smooth signature stock to luxurious cotton rag and textured finishes.</p>
+    <div id="lp-papers-strip" class="lp-showcase"></div>
   </div>
 </section>
 
-<section class="lp-strip lp-section-cream" id="lp-sizes-strip-section" style="display:none;">
-  <div class="container">
-    <span class="lp-strip-tag">Sizes available</span>
-    <div id="lp-sizes-strip" class="lp-strip-pills"></div>
-  </div>
-</section>
-
+<!-- FINISHING SHOWCASE -->
 <section class="lp-strip lp-section-cream" id="lp-finishes-strip-section" style="display:none;">
   <div class="container">
-    <span class="lp-strip-tag">Finishing options</span>
-    <div id="lp-finishes-strip" class="lp-strip-pills"></div>
+    <div class="lp-finish-panel">
+      <span class="lp-strip-tag">Finishing touches</span>
+      <h2 class="lp-strip-h">The details that make it unforgettable</h2>
+      <div id="lp-finishes-strip" class="lp-finish-grid"></div>
+      <div class="lp-finish-foot">Add any finishing touch when you personalise your design in the studio.</div>
+    </div>
   </div>
 </section>
 
@@ -489,31 +511,39 @@ function renderPricing() {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:13px;padding:40px;">No pricing yet for ${escapeHtml(defaultPaper)} × ${escapeHtml(defaultSize)}.</div>`;
     return;
   }
-  const qtys = matches.map(m => parseInt(m.qty,10));
-  const anchorQtys = pickAnchorQtys(qtys);
-  const anchors = anchorQtys.map(q => matches.find(m => parseInt(m.qty,10) === q)).filter(Boolean);
+  const qtys = [...new Set(productPricing.sheet_sells
+      .filter(s => s.size === defaultSize && papers.includes(s.paper))
+      .map(m => parseInt(m.qty,10)))].sort((a,b)=>a-b);
 
-  const labels = ['For smaller orders', 'Most popular', 'For larger orders'];
-  const popularIdx = anchors.length === 3 ? 1 : -1;
+  // Build a price lookup: price[paper][qty]
+  const priceOf = (paper, qty) => {
+    const m = productPricing.sheet_sells.find(s => s.paper === paper && s.size === defaultSize && parseInt(s.qty,10) === qty);
+    return m ? Math.round(parseFloat(m.sell)) : null;
+  };
 
-  // Hero price block
-  const lowestSell = parseFloat(anchors[0].sell);
-  priceValue.textContent = `£${Math.round(lowestSell)}`;
-  priceMeta.textContent = `From ${anchors[0].qty} · ${escapeHtml(defaultSize)} · ${escapeHtml(defaultPaper)} · Inc. VAT`;
+  // Hero price = cheapest paper, lowest qty
+  const lowest = priceOf(defaultPaper, qtys[0]);
+  priceValue.textContent = `£${lowest}`;
+  priceMeta.textContent = `From ${qtys[0]} · ${escapeHtml(defaultSize)} · Inc. VAT`;
 
-  grid.innerHTML = anchors.map((a,i) => {
-    const isPopular = i === popularIdx;
-    return `
-      <div class="lp-anchor${isPopular ? ' popular' : ''}">
-        ${isPopular ? '<div class="lp-anchor-badge">Most popular</div>' : ''}
-        <div class="lp-anchor-tag">${escapeHtml(labels[i] || '')}</div>
-        <div class="lp-anchor-price">£${Math.round(parseFloat(a.sell))}</div>
-        <div class="lp-anchor-qty">${a.qty} ${escapeHtml((productData.name || 'units').toLowerCase())}</div>
-        <div class="lp-anchor-spec">${escapeHtml(defaultSize)} · ${escapeHtml(defaultPaper)} · Inc. VAT</div>
-      </div>`;
-  }).join('');
+  const popularQty = qtys.length >= 3 ? qtys[Math.floor(qtys.length/2)] : null;
 
-  renderUpgradeRows(productPricing, defaultPaper, defaultSize, anchors);
+  grid.innerHTML = `
+    <table class="lp-price-table">
+      <thead><tr><th>Quantity</th>${papers.map(p => `<th>${escapeHtml(p)}</th>`).join('')}</tr></thead>
+      <tbody>
+        ${qtys.map(q => {
+          const pop = q === popularQty;
+          return `<tr${pop ? ' class="pt-popular"' : ''}>
+            <td>${q} cards${pop ? ' <span class="pt-badge">Most popular</span>' : ''}</td>
+            ${papers.map(p => { const pr = priceOf(p, q); return `<td>${pr !== null ? '£'+pr : '—'}</td>`; }).join('')}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div class="lp-price-note">${escapeHtml(defaultSize)} · all prices include VAT · finishing touches adjust the price in the studio</div>`;
+
+  renderUpgradeRows(productPricing, defaultPaper, defaultSize, []);
 }
 
 function renderUpgradeRows(pp, defaultPaper, defaultSize, anchors) {
@@ -555,21 +585,47 @@ function renderUpgradeRows(pp, defaultPaper, defaultSize, anchors) {
   document.getElementById('lp-upgrade-card').style.display = '';
 }
 
+const PAPER_DESC = {
+  'Smooth 300gsm': ['Our signature', 'Clean, crisp and substantial — a soft matte white that lets colour and detail sing.'],
+  'Smooth White': ['Our signature', 'Clean, crisp and substantial — a soft matte white that lets colour and detail sing.'],
+  'Cotton Rag': ['Premium', 'Thick, tactile and softly textured — the deep, pillowy cotton stock reserved for fine stationery.'],
+  'Textured Ivory': ['Luxe', 'A warm ivory with a fine felt-like grain and gentle weight — heirloom paper for the most special day.'],
+  'Vellum': ['Delicate', 'A translucent, whisper-thin sheet that veils your design in soft elegance.']
+};
+const FINISH_DESC = {
+  'Gold Foil': 'Mirror-bright foil, pressed into the paper — it catches the light as the envelope opens.',
+  'Foil': 'Mirror-bright foil, pressed into the paper — it catches the light as the envelope opens.',
+  'Deckle Edge': 'A soft, feathered edge with the romance of old-world, hand-torn paper.',
+  'Vellum Wrap': 'A translucent overlay that veils your design in delicate, whisper-thin elegance.',
+  'Wax Seal': 'A pressed wax seal to close the suite — the oldest mark of something worth opening.',
+  'Letterpress': 'Ink pressed deep into thick paper, leaving an impression you can feel.'
+};
+
 function renderPapersStrip() {
   const papers = (productPricing && productPricing.available_papers) || [];
   if (!papers.length) return;
   const strip = document.getElementById('lp-papers-strip');
-  strip.innerHTML = papers.map(name => `<span class="lp-strip-pill">${escapeHtml(name)}</span>`).join('');
+  strip.innerHTML = papers.map(name => {
+    const meta = PAPER_DESC[name] || ['', 'A beautiful stock, chosen for its quality and feel.'];
+    return `<div class="lp-show-card">
+      <div class="lp-swatch">${escapeHtml(name)}</div>
+      <div class="lp-show-name">${escapeHtml(name)}</div>
+      ${meta[0] ? `<div class="lp-show-tier">${escapeHtml(meta[0])}</div>` : ''}
+      <div class="lp-show-desc">${escapeHtml(meta[1])}</div>
+    </div>`;
+  }).join('');
   document.getElementById('lp-papers-strip-section').style.display = '';
 }
 
 function renderSizesStrip() {
+  const section = document.getElementById('lp-sizes-strip-section');
+  const strip = document.getElementById('lp-sizes-strip');
+  if (!section || !strip) return;
   const sizes = (productPricing && productPricing.available_sizes) || [];
   if (!sizes.length) return;
-  const strip = document.getElementById('lp-sizes-strip');
   strip.innerHTML = sizes.map(size => {
     const dim = SIZE_DIMS[size] || '';
-    return `<span class="lp-strip-pill">${escapeHtml(size)}${dim ? `<span class="pill-dim">${escapeHtml(dim)}</span>` : ''}</span>`;
+    return `<span class="lp-strip-pill" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:13px;">${escapeHtml(size)}${dim ? `<span class="pill-dim" style="display:block;font-size:11px;color:var(--soft);margin-top:3px;">${escapeHtml(dim)}</span>` : ''}</span>`;
   }).join('');
   document.getElementById('lp-sizes-strip-section').style.display = '';
 }
@@ -578,13 +634,12 @@ function renderFinishesStrip() {
   const finishes = ((productPricing && productPricing.available_finishes) || []).filter(f => f && f !== 'None');
   if (!finishes.length) return;
   const strip = document.getElementById('lp-finishes-strip');
-  const sellMap = {};
-  if (productPricing && Array.isArray(productPricing.finish_sells)) {
-    productPricing.finish_sells.forEach(f => { sellMap[f.name] = parseFloat(f.sell) || 0; });
-  }
   strip.innerHTML = finishes.map(name => {
-    const sell = sellMap[name] || 0;
-    return `<span class="lp-strip-pill">${escapeHtml(name)}${sell > 0 ? `<span class="pill-extra">+£${Math.round(sell)}</span>` : ''}</span>`;
+    const desc = FINISH_DESC[name] || 'A premium finishing touch, added when you personalise your design.';
+    return `<div class="lp-finish-item">
+      <div class="lp-finish-name">${escapeHtml(name)}</div>
+      <div class="lp-finish-desc">${escapeHtml(desc)}</div>
+    </div>`;
   }).join('');
   document.getElementById('lp-finishes-strip-section').style.display = '';
 }
