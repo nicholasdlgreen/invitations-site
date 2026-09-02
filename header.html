@@ -15,11 +15,11 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:var(--cream); 
 @keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
 @keyframes spin { to{transform:rotate(360deg);} }
 header{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;}
-.hinner{max-width:1180px;margin:0 auto;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;letter-spacing:.06em;color:var(--text);text-decoration:none;}
+.hinner{max-width:1180px;margin:0 auto;padding:0 32px;height:74px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:400;letter-spacing:.06em;color:var(--text);text-decoration:none;}
 .logo span{color:var(--gold);}
-nav{display:flex;align-items:center;gap:32px;}
-nav a{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;transition:color .2s;}
+nav{display:flex;align-items:center;gap:36px;}
+nav a{font-size:15px;letter-spacing:.04em;text-transform:none;color:var(--soft);text-decoration:none;transition:color .2s;font-weight:400;}
 nav a:hover,nav a.active{color:var(--gold);}
 .cart-btn{display:flex;align-items:center;gap:8px;padding:10px 22px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:background .25s;border-radius:60px;}
 .cart-btn:hover{background:var(--brown);}
@@ -68,7 +68,7 @@ nav a:hover,nav a.active{color:var(--gold);}
 .acct-icon svg{width:14px;height:14px;}
 .acct-icon.signedin{background:var(--cream);border-color:var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;text-transform:uppercase;}
 .acct-trigger:hover .acct-icon,.acct-trigger.open .acct-icon{background:var(--gold);border-color:var(--gold);color:var(--white);}
-.acct-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.acct-label{font-size:14px;letter-spacing:.04em;text-transform:none;color:var(--soft);display:flex;align-items:center;gap:6px;transition:color .2s;}
 .acct-trigger:hover .acct-label,.acct-trigger.open .acct-label{color:var(--gold);}
 .acct-chevron{font-size:9px;transition:transform .25s;}
 .acct-trigger.open .acct-chevron{transform:rotate(180deg);}
@@ -79,13 +79,26 @@ nav a:hover,nav a.active{color:var(--gold);}
 .acct-dropdown a,.acct-dropdown button{display:block;width:100%;padding:13px 20px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;border:none;background:none;text-align:left;cursor:pointer;transition:background .2s,color .2s;}
 .acct-dropdown a:hover,.acct-dropdown button:hover{background:var(--cream);color:var(--gold);}
 .dd-divider{height:1px;background:var(--border);margin:0 20px;}
-@media(max-width:768px){.hinner nav{display:none;}.footer-top{grid-template-columns:1fr 1fr;gap:32px;}}
+.nav-toggle{display:none;background:none;border:none;cursor:pointer;color:var(--text);padding:6px;}
+.nav-toggle svg{width:26px;height:26px;}
+@media(max-width:768px){
+.nav-toggle{display:block;order:-1;}
+.hinner{position:relative;}
+.hinner nav{display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);flex-direction:column;align-items:stretch;gap:0;padding:8px 0;border-bottom:1px solid var(--border);box-shadow:0 16px 32px -18px rgba(61,46,36,.25);}
+.hinner nav.open{display:flex;}
+.hinner nav a{padding:15px 32px;font-size:16px;border-bottom:1px solid var(--border);}
+.hinner nav a:last-child{border-bottom:none;}
+.footer-top{grid-template-columns:1fr 1fr;gap:32px;}
+}
 @media(max-width:480px){.footer-top{grid-template-columns:1fr;}}
 </style>
 <header>
 <div class="hinner">
 <a class="logo" href="/">forever<span>print</span></a>
-<nav>
+<button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" onclick="toggleMobileNav()">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+</button>
+<nav id="mainNav">
 <a href="/products.html">All Products</a>
 <a href="/invitations">Invitations</a>
 <!-- Albums temporarily hidden pre-launch — restore this line when the albums product is ready:
@@ -151,6 +164,16 @@ Basket <span class="cart-count" id="cartCount">0</span>
 </div>
 </div>
 <div class="toast" id="toast"></div>
+<script>
+window.toggleMobileNav = function(){
+  var nav = document.getElementById('mainNav');
+  var btn = document.getElementById('navToggle');
+  if(!nav || !btn) return;
+  var open = nav.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+};
+</script>
 <!--
 Cart logic lives in /cart.js (loaded by each page).
 The inline <script> that used to be here never executed when this header
