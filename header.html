@@ -15,11 +15,24 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:var(--cream); 
 @keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
 @keyframes spin { to{transform:rotate(360deg);} }
 header{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;}
-.hinner{max-width:1180px;margin:0 auto;padding:0 32px;height:74px;display:flex;align-items:center;justify-content:space-between;}
+.hinner{max-width:1180px;margin:0 auto;padding:0 32px;height:74px;display:flex;align-items:center;justify-content:space-between;position:relative;}
 .logo{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:400;letter-spacing:.06em;color:var(--text);text-decoration:none;}
 .logo span{color:var(--gold);}
 nav{display:flex;align-items:center;gap:36px;}
 nav a{font-size:15px;letter-spacing:.04em;text-transform:none;color:var(--soft);text-decoration:none;transition:color .2s;font-weight:400;}
+.megamenu{position:static;height:74px;display:flex;align-items:center;}
+.megamenu-trigger{display:inline-flex;align-items:center;gap:6px;font-size:15px;color:var(--soft);height:74px;}
+.mega-chev{font-size:9px;transition:transform .2s;}
+.megamenu-panel{position:absolute;left:0;right:0;top:74px;background:var(--white);border-top:1px solid var(--border);border-bottom:1px solid var(--border);box-shadow:0 20px 40px -20px rgba(61,46,36,.22);padding:34px 48px 38px;display:none;grid-template-columns:1fr 1fr 1fr;gap:48px;z-index:210;}
+.megamenu:hover .megamenu-panel,.megamenu.open .megamenu-panel{display:grid;}
+.megamenu-panel::before{content:'';position:absolute;left:0;right:0;top:-12px;height:12px;background:transparent;}
+.megamenu:hover .mega-chev,.megamenu.open .mega-chev{transform:rotate(180deg);}
+.megamenu:hover .megamenu-trigger,.megamenu.open .megamenu-trigger{color:var(--gold);}
+.mega-cat{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--text);margin-bottom:6px;}
+.mega-rule{width:28px;height:1px;background:var(--gold-lt);margin-bottom:16px;}
+.megamenu-panel a{display:block;font-size:14px;letter-spacing:.02em;text-transform:none;color:var(--soft);padding:7px 0;transition:color .2s;}
+.megamenu-panel a:hover{color:var(--gold);}
+.mega-viewall{font-size:11px !important;letter-spacing:.1em !important;text-transform:uppercase !important;color:var(--gold) !important;margin-top:12px;}
 nav a:hover,nav a.active{color:var(--gold);}
 .cart-btn{display:flex;align-items:center;gap:8px;padding:10px 22px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:background .25s;border-radius:60px;}
 .cart-btn:hover{background:var(--brown);}
@@ -89,6 +102,14 @@ nav a:hover,nav a.active{color:var(--gold);}
 .hinner nav a{padding:15px 32px;font-size:16px;border-bottom:1px solid var(--border);}
 .hinner nav a:last-child{border-bottom:none;}
 .footer-top{grid-template-columns:1fr 1fr;gap:32px;}
+/* Mega-menu on mobile: show panel inline, stacked, not as a floating dropdown */
+.megamenu{width:100%;height:auto;display:block;}
+.megamenu-trigger{padding:15px 32px;border-bottom:1px solid var(--border);width:100%;height:auto;}
+.megamenu-panel{position:static;display:block !important;box-shadow:none;border:none;padding:0 0 8px;background:var(--cream);}
+.mega-col{padding:14px 32px 6px;}
+.mega-cat{font-size:1.1rem;margin-bottom:4px;}
+.megamenu-panel a{padding:9px 0;font-size:15px;}
+.mega-chev{display:none;}
 }
 @media(max-width:480px){.footer-top{grid-template-columns:1fr;}}
 </style>
@@ -99,11 +120,43 @@ nav a:hover,nav a.active{color:var(--gold);}
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
 </button>
 <nav id="mainNav">
-<a href="/products.html">All Products</a>
-<a href="/invitations">Invitations</a>
-<!-- Albums temporarily hidden pre-launch — restore this line when the albums product is ready:
-<a href="/wedding-albums.html">Albums</a>
--->
+<div class="megamenu" id="megamenu">
+  <a href="/products.html" class="megamenu-trigger" id="megaTrigger" aria-haspopup="true" aria-expanded="false">All Products <span class="mega-chev">▾</span></a>
+  <div class="megamenu-panel" id="megaPanel">
+    <div class="mega-col">
+      <div class="mega-cat">Weddings</div>
+      <div class="mega-rule"></div>
+      <a href="/wedding-invitations">Wedding Invitations</a>
+      <a href="/save-the-dates">Save the Dates</a>
+      <a href="/order-of-service">Order of Service</a>
+      <a href="/table-plans">Table Plans</a>
+      <a href="/menu-cards">Menu Cards</a>
+      <a href="/thank-you-cards">Thank You Cards</a>
+      <a href="/products.html?category=weddings" class="mega-viewall">View all →</a>
+    </div>
+    <div class="mega-col">
+      <div class="mega-cat">Celebrations</div>
+      <div class="mega-rule"></div>
+      <a href="/party-invitations">Party Invitations</a>
+      <a href="/milestone-birthdays">Milestone Birthdays</a>
+      <a href="/anniversary-cards">Anniversary Cards</a>
+      <a href="/celebration-menu-cards">Menu Cards</a>
+      <a href="/place-cards">Place Cards</a>
+      <a href="/celebration-thank-you-cards">Thank You Cards</a>
+      <a href="/products.html?category=celebrations" class="mega-viewall">View all →</a>
+    </div>
+    <div class="mega-col">
+      <div class="mega-cat">Announcements</div>
+      <div class="mega-rule"></div>
+      <a href="/new-arrival-cards">New Arrival Cards</a>
+      <a href="/christening-invitations">Christening Invitations</a>
+      <a href="/moving-cards">Moving Cards</a>
+      <a href="/engagement-cards">Engagement Cards</a>
+      <a href="/announcement-cards">Announcement Cards</a>
+      <a href="/products.html?category=announcements" class="mega-viewall">View all →</a>
+    </div>
+  </div>
+</div>
 <a href="/design-studio.html">Design Studio</a>
 <a href="/how-it-works.html">How We Work</a>
 </nav>
@@ -173,6 +226,26 @@ window.toggleMobileNav = function(){
   btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
 };
+
+// Mega-menu: on touch/no-hover devices, tap the trigger to open the panel
+(function(){
+  var mega = document.getElementById('megamenu');
+  var trigger = document.getElementById('megaTrigger');
+  if(!mega || !trigger) return;
+  var canHover = window.matchMedia('(hover:hover)').matches;
+  if(!canHover){
+    trigger.addEventListener('click', function(e){
+      if(!mega.classList.contains('open')){
+        e.preventDefault();
+        mega.classList.add('open');
+        trigger.setAttribute('aria-expanded','true');
+      }
+    });
+    document.addEventListener('click', function(e){
+      if(!mega.contains(e.target)){ mega.classList.remove('open'); trigger.setAttribute('aria-expanded','false'); }
+    });
+  }
+})();
 </script>
 <!--
 Cart logic lives in /cart.js (loaded by each page).
