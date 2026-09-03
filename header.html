@@ -8,14 +8,14 @@
 /* Fluid type scale — scales smoothly from laptop to large screens.
    clamp(min, preferred, max): min is the floor (never smaller),
    max is the ceiling (never larger), preferred grows with the viewport. */
---text-xs:   clamp(12px, 0.55vw + 10px, 14px);   /* small labels, captions */
---text-sm:   clamp(14px, 0.6vw + 11px, 16px);    /* secondary / meta text */
---text-body: clamp(16px, 0.6vw + 13px, 18px);    /* body copy */
---text-lg:   clamp(18px, 0.7vw + 14px, 21px);    /* lead paragraphs */
---text-h3:   clamp(20px, 1.2vw + 15px, 26px);
---text-h2:   clamp(28px, 2.2vw + 18px, 40px);
---text-h1:   clamp(38px, 3.5vw + 20px, 56px);
---nav-size:  clamp(15px, 0.5vw + 13px, 17px);    /* nav links */
+--text-xs:   clamp(13px, 0.55vw + 11px, 15px);   /* small labels, captions */
+--text-sm:   clamp(15px, 0.6vw + 12px, 17px);    /* secondary / meta text */
+--text-body: clamp(17px, 0.7vw + 14px, 19px);    /* body copy */
+--text-lg:   clamp(19px, 0.8vw + 15px, 22px);    /* lead paragraphs */
+--text-h3:   clamp(21px, 1.3vw + 16px, 27px);
+--text-h2:   clamp(30px, 2.4vw + 19px, 42px);
+--text-h1:   clamp(40px, 3.8vw + 21px, 58px);
+--nav-size:  clamp(16px, 0.5vw + 14px, 18px);    /* nav links */
 }
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html { scroll-behavior:smooth; font-size:16px; }
