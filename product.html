@@ -17,10 +17,11 @@
 
 /* HERO — H1 plain (message-match), price prominent, single CTA */
 .lp-hero{background:var(--cream);padding:44px 0 40px;}
-.lp-hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;}
+.lp-hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:start;}
+@media(min-width:769px){.lp-hero-grid > div:last-child{margin-top:34px;}}
 .lp-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;}
 .lp-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.6vw,3rem);font-weight:400;line-height:1.06;color:var(--text);margin:0 0 12px;}
-.lp-hero-sub{font-size:var(--text-body);color:var(--soft);line-height:1.75;margin:0 0 20px;max-width:460px;}
+.lp-hero-sub{font-size:var(--text-body);color:var(--soft);line-height:1.7;margin:0 0 22px;max-width:500px;}
 .lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:11px 18px;display:inline-block;margin-bottom:18px;}
 .lp-price-label{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:3px;}
 .lp-price-value{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--text);line-height:1;}
@@ -31,7 +32,7 @@
 .lp-cta:hover::after{transform:translateX(4px);}
 .lp-hero-trust{display:flex;gap:22px;margin-top:16px;font-size:var(--text-xs);color:var(--soft);flex-wrap:wrap;}
 .lp-hero-reassure{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-top:22px;padding-top:20px;border-top:1px solid var(--border);}
-.lp-hr-item{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--soft);}
+.lp-hr-item{display:flex;align-items:center;gap:9px;font-size:var(--text-sm);color:var(--soft);}
 .lp-hr-icon{color:var(--gold);font-size:var(--text-sm);flex-shrink:0;}
 .lp-hero-trust span::before{content:'✓ ';color:var(--gold);font-weight:600;}
 .lp-hero-img{width:100%;max-width:480px;aspect-ratio:4/3;object-fit:cover;border-radius:16px;background:var(--pale);}
@@ -81,7 +82,7 @@
 .lp-swatch{aspect-ratio:3/2;border-radius:12px;border:1px solid var(--border);background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);color:var(--gold-lt);margin-bottom:12px;}
 .lp-show-name{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);margin-bottom:2px;}
 .lp-show-tier{font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
-.lp-show-desc{font-size:12.5px;color:var(--soft);line-height:1.7;}
+.lp-show-desc{font-size:var(--text-sm);color:var(--soft);line-height:1.7;}
 /* Finishing — dark panel, framed as craft */
 .lp-finish-panel{background:var(--text);border-radius:18px;padding:44px 40px;max-width:920px;margin:0 auto;}
 .lp-finish-panel .lp-strip-tag{color:var(--gold-lt);}
@@ -98,7 +99,7 @@
 .lp-how-step{text-align:center;padding:0 16px;}
 .lp-how-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--white);border:1px solid var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:12px;}
 .lp-how-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:400;color:var(--text);margin-bottom:6px;}
-.lp-how-text{font-size:11.5px;color:var(--soft);line-height:1.7;}
+.lp-how-text{font-size:var(--text-xs);color:var(--soft);line-height:1.7;}
 
 /* WHY US — 4 items, real claims */
 .lp-why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;max-width:1000px;margin:0 auto;}
