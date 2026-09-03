@@ -24,11 +24,11 @@
 .entry-wrap{max-width:1080px;width:100%;margin:0 auto;text-align:center}
 
 .entry-intro{margin-bottom:60px}
-.entry-intro .tag{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:18px;display:block}
+.entry-intro .tag{font-size:var(--text-xs);letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:18px;display:block}
 .entry-intro h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.4rem,4.5vw,3.4rem);font-weight:300;line-height:1.1;color:var(--text);margin-bottom:18px}
 .entry-intro h1 em{font-style:italic;color:var(--gold)}
 .entry-divider{width:48px;height:1px;background:var(--gold-lt);margin:24px auto}
-.entry-intro p{font-size:14px;color:var(--soft);max-width:520px;margin:0 auto;line-height:1.95}
+.entry-intro p{font-size:var(--text-body);color:var(--soft);max-width:520px;margin:0 auto;line-height:1.95}
 
 .doors{display:grid;grid-template-columns:1fr 1fr;gap:32px}
 .door{background:var(--white);border:1px solid var(--border);border-radius:24px;padding:0;text-decoration:none;color:inherit;cursor:pointer;transition:all .35s;position:relative;overflow:hidden;display:flex;flex-direction:column;text-align:left}
@@ -52,24 +52,24 @@
 .brief-prompt-line:nth-child(2){width:70%}
 .brief-prompt-line:nth-child(3){width:84%;background:rgba(212,184,150,.25)}
 .brief-spark{position:absolute;color:rgba(212,184,150,.4);font-family:serif;z-index:1}
-.brief-spark.s1{top:18%;left:14%;font-size:14px}
-.brief-spark.s2{top:70%;right:16%;font-size:18px}
-.brief-spark.s3{top:30%;right:20%;font-size:10px}
-.brief-spark.s4{bottom:22%;left:22%;font-size:12px}
+.brief-spark.s1{top:18%;left:14%;font-size:var(--text-body)}
+.brief-spark.s2{top:70%;right:16%;font-size:var(--text-lg)}
+.brief-spark.s3{top:30%;right:20%;font-size:var(--text-xs)}
+.brief-spark.s4{bottom:22%;left:22%;font-size:var(--text-sm)}
 
-.coming-soon-badge{position:absolute;top:14px;right:14px;background:var(--gold);color:#fff;padding:5px 12px;border-radius:60px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.coming-soon-badge{position:absolute;top:14px;right:14px;background:var(--gold);color:#fff;padding:5px 12px;border-radius:60px;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 
 .door-body{padding:32px 32px 36px;flex:1;display:flex;flex-direction:column}
-.door-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:12px}
+.door-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:12px}
 .door-title{font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:400;color:var(--text);line-height:1.2;margin-bottom:14px}
 .door-title em{font-style:italic;color:var(--gold)}
-.door-desc{font-size:13px;color:var(--soft);line-height:1.95;margin-bottom:24px;flex:1}
+.door-desc{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin-bottom:24px;flex:1}
 .door-points{margin-bottom:28px;display:flex;flex-direction:column;gap:8px}
-.door-point{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:10px}
+.door-point{font-size:var(--text-sm);color:var(--soft);display:flex;align-items:center;gap:10px}
 .door-point::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--gold-lt);flex-shrink:0}
-.door-cta{display:inline-flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:500;align-self:flex-start;transition:gap .25s}
+.door-cta{display:inline-flex;align-items:center;gap:10px;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:500;align-self:flex-start;transition:gap .25s}
 .door:hover .door-cta{gap:18px}
-.door-cta::after{content:'→';font-size:14px}
+.door-cta::after{content:'→';font-size:var(--text-body)}
 
 .door.coming-soon{cursor:default}
 .door.coming-soon:hover{transform:none;box-shadow:none;border-color:var(--border)}
@@ -83,9 +83,9 @@
 @keyframes csFade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .cs-modal h3{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:400;color:var(--text);margin-bottom:14px}
 .cs-modal h3 em{font-style:italic;color:var(--gold)}
-.cs-modal p{font-size:13px;color:var(--soft);line-height:1.85;margin-bottom:24px}
+.cs-modal p{font-size:var(--text-sm);color:var(--soft);line-height:1.85;margin-bottom:24px}
 .cs-modal .cs-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.cs-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;border-radius:60px;cursor:pointer;text-decoration:none;transition:background .25s}
+.cs-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;border-radius:60px;cursor:pointer;text-decoration:none;transition:background .25s}
 .cs-btn:hover{background:var(--brown)}
 .cs-btn-out{background:transparent;color:var(--soft);border:1px solid var(--border)}
 .cs-btn-out:hover{background:transparent;color:var(--gold);border-color:var(--gold)}
@@ -206,11 +206,11 @@
             <div class="brief-spark s3">✦</div>
             <div class="brief-spark s4">✧</div>
             <div class="brief-prompt-box">
-              <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(212,184,150,.7);margin-bottom:10px;">Describe your wedding</div>
+              <div style="font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:rgba(212,184,150,.7);margin-bottom:10px;">Describe your wedding</div>
               <div class="brief-prompt-line"></div>
               <div class="brief-prompt-line"></div>
               <div class="brief-prompt-line"></div>
-              <div style="margin-top:10px;font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(250,247,242,.7);font-size:11px;">Cotswolds · sage greens · soft florals</div>
+              <div style="margin-top:10px;font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(250,247,242,.7);font-size:var(--text-xs);">Cotswolds · sage greens · soft florals</div>
             </div>
           </div>
         </div>

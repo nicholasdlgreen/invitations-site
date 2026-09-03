@@ -199,24 +199,24 @@ footer { background: var(--text); color: rgba(255,255,255,.6); padding: 60px 0 3
 .co-head { padding:28px 32px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
 .co-head h3 { font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400; }
 .co-body { padding:28px 32px; }
-.co-section-title { font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;margin-top:24px;display:block; }
+.co-section-title { font-size:var(--text-xs);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;margin-top:24px;display:block; }
 .co-section-title:first-child { margin-top:0; }
-.co-summary-item { display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);color:var(--soft); }
+.co-summary-item { display:flex;justify-content:space-between;font-size:var(--text-sm);padding:8px 0;border-bottom:1px solid var(--border);color:var(--soft); }
 .co-summary-item:last-child { border-bottom:none; }
 .co-summary-item.total { font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);font-weight:400;padding-top:12px;margin-top:4px;border-top:2px solid var(--border);border-bottom:none; }
 .co-field { margin-bottom:16px; }
-.co-label { font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:6px;font-weight:400; }
-.co-input { width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border-color .2s; }
+.co-label { font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:6px;font-weight:400; }
+.co-input { width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);background:var(--white);outline:none;transition:border-color .2s; }
 .co-input:focus { border-color:var(--gold-lt); }
 .co-input.error { border-color:var(--err); }
 .co-row { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
 .co-stripe-note { display:flex;align-items:center;gap:10px;background:var(--cream);border-radius:12px;padding:14px 16px;margin-top:8px;margin-bottom:20px; }
 .co-stripe-note svg { flex-shrink:0; }
-.co-stripe-note p { font-size:11px;color:var(--soft);line-height:1.6; }
-.co-err { background:#FCEAEA;color:var(--err);border-radius:10px;padding:12px 16px;font-size:12px;margin-bottom:16px;display:none; }
+.co-stripe-note p { font-size:var(--text-xs);color:var(--soft);line-height:1.6; }
+.co-err { background:#FCEAEA;color:var(--err);border-radius:10px;padding:12px 16px;font-size:var(--text-sm);margin-bottom:16px;display:none; }
 
 /* ── QTY CHIPS ── */
-.qty-chip { display:inline-flex;align-items:center;justify-content:center;min-width:56px;padding:10px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--text);cursor:pointer;transition:all .2s;background:var(--white); }
+.qty-chip { display:inline-flex;align-items:center;justify-content:center;min-width:56px;padding:10px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:var(--text-body);font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--text);cursor:pointer;transition:all .2s;background:var(--white); }
 .qty-chip:hover { border-color:var(--gold-lt); }
 .qty-chip.selected { border-color:var(--gold);background:rgba(184,151,106,.06);color:var(--gold); }
 
@@ -290,10 +290,10 @@ footer { background: var(--text); color: rgba(255,255,255,.6); padding: 60px 0 3
 .st-vc { border: 1.5px solid var(--border); border-radius: 7px; padding: 4px; cursor: pointer; background: var(--white); transition: border-color .2s; }
 .st-vc:hover { border-color: var(--gold); }
 .st-vc svg { width: 100%; height: auto; display: block; border-radius: 4px; }
-.st-fopt { display:inline-flex;align-items:center;padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;font-size:11px;color:var(--soft);transition:all .2s;background:var(--white);font-family:inherit; }
+.st-fopt { display:inline-flex;align-items:center;padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;font-size:var(--text-xs);color:var(--soft);transition:all .2s;background:var(--white);font-family:inherit; }
 .st-fopt.on { border-color:var(--gold);color:var(--gold);background:rgba(184,151,106,.05); }
 .st-fopt:hover { border-color:var(--gold-lt); }
-.st-topt { padding:5px 12px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;font-size:11px;color:var(--soft);transition:all .2s;background:var(--white);font-family:'Jost',sans-serif;line-height:1; }
+.st-topt { padding:5px 12px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;font-size:var(--text-xs);color:var(--soft);transition:all .2s;background:var(--white);font-family:'Jost',sans-serif;line-height:1; }
 .st-topt.on { background:var(--gold);color:#fff;border-color:var(--gold); }
 .st-topt:hover:not(.on) { border-color:var(--gold-lt); }
 .st-vcl { font-size: 8px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); text-align: center; margin-top: 3px; }
@@ -368,25 +368,25 @@ footer { background: var(--text); color: rgba(255,255,255,.6); padding: 60px 0 3
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
         <div style="padding:24px;background:var(--cream);border-radius:14px;text-align:center;">
           <div class="serif" style="font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:8px;">Standard</div>
-          <div style="font-size:13px;color:var(--gold);font-weight:500;margin-bottom:8px;">Free</div>
-          <div style="font-size:12px;color:var(--soft);line-height:1.7;">5–7 working days<br>after proof approval</div>
+          <div style="font-size:var(--text-sm);color:var(--gold);font-weight:500;margin-bottom:8px;">Free</div>
+          <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">5–7 working days<br>after proof approval</div>
         </div>
         <div style="padding:24px;background:var(--cream);border-radius:14px;text-align:center;">
           <div class="serif" style="font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:8px;">Express</div>
-          <div style="font-size:13px;color:var(--gold);font-weight:500;margin-bottom:8px;">£12.00</div>
-          <div style="font-size:12px;color:var(--soft);line-height:1.7;">2–3 working days<br>after proof approval</div>
+          <div style="font-size:var(--text-sm);color:var(--gold);font-weight:500;margin-bottom:8px;">£12.00</div>
+          <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">2–3 working days<br>after proof approval</div>
         </div>
         <div style="padding:24px;background:var(--cream);border-radius:14px;text-align:center;">
           <div class="serif" style="font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:8px;">Next Day</div>
-          <div style="font-size:13px;color:var(--gold);font-weight:500;margin-bottom:8px;">£18.00</div>
-          <div style="font-size:12px;color:var(--soft);line-height:1.7;">Order before 12pm<br>after proof approval</div>
+          <div style="font-size:var(--text-sm);color:var(--gold);font-weight:500;margin-bottom:8px;">£18.00</div>
+          <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">Order before 12pm<br>after proof approval</div>
         </div>
       </div>
     </div>
 
     <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px;margin-bottom:20px;">
       <h2 class="serif" style="font-size:1.4rem;font-weight:400;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">How It Works</h2>
-      <div style="font-size:13px;color:var(--soft);line-height:2;">
+      <div style="font-size:var(--text-sm);color:var(--soft);line-height:2;">
         <p style="margin-bottom:14px;">All orders are dispatched via tracked courier once your digital proof has been approved and your invitations printed. You will receive a tracking link by email as soon as your order is on its way.</p>
         <p style="margin-bottom:14px;">Please note that delivery times begin from the point of proof approval, not from the date of order. We aim to send your digital proof within 1 working day of receiving your order.</p>
         <p>We currently deliver to addresses within the United Kingdom only. If you require international delivery, please contact us before placing your order.</p>
@@ -395,7 +395,7 @@ footer { background: var(--text); color: rgba(255,255,255,.6); padding: 60px 0 3
 
     <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px;margin-bottom:40px;">
       <h2 class="serif" style="font-size:1.4rem;font-weight:400;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">Packaging</h2>
-      <p style="font-size:13px;color:var(--soft);line-height:2;">Your invitations are carefully packaged to arrive in perfect condition. All orders are wrapped in tissue paper and packed in a rigid box to prevent damage in transit. We take great care to ensure that what you receive looks exactly as you approved in your proof.</p>
+      <p style="font-size:var(--text-sm);color:var(--soft);line-height:2;">Your invitations are carefully packaged to arrive in perfect condition. All orders are wrapped in tissue paper and packed in a rigid box to prevent damage in transit. We take great care to ensure that what you receive looks exactly as you approved in your proof.</p>
     </div>
 
     <div style="text-align:center;">
@@ -438,7 +438,7 @@ function closeCart(){document.getElementById('cartBg').classList.remove('open');
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function renderCartDrawer(){
   const scroll=document.getElementById('cartScroll'),foot=document.getElementById('cartFoot');
-  if(!cart.length){scroll.innerHTML='<div class="cart-empty"><div style="font-size:40px;margin-bottom:16px;">&#x2736;</div><p style="font-size:13px;color:var(--pale);">Your basket is empty</p></div>';foot.style.display='none';return;}
+  if(!cart.length){scroll.innerHTML='<div class="cart-empty"><div style="font-size:var(--text-h2);margin-bottom:16px;">&#x2736;</div><p style="font-size:var(--text-sm);color:var(--pale);">Your basket is empty</p></div>';foot.style.display='none';return;}
   scroll.innerHTML=cart.map((item,i)=>`<div class="cart-item"><div class="cart-item-img">${item.icon||'&#x2736;'}</div><div class="cart-item-info"><div class="cart-item-name serif">${item.name}</div><div class="cart-item-meta">${item.qty} invitations &middot; ${item.paper||'Smooth White'}</div><div class="cart-item-price">&#163;${item.total.toFixed(2)}</div></div><button class="cart-remove" onclick="removeCartItem(${i})">&#x2715;</button></div>`).join('');
   const sub=cart.reduce((s,i)=>s+i.total,0);
   document.getElementById('cartNet').textContent='&#163;'+(sub/1.2).toFixed(2);

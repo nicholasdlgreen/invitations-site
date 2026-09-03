@@ -19,10 +19,10 @@
 .step-bar{display:flex;align-items:center;gap:0;margin-bottom:56px;}
 .step-item{display:flex;align-items:center;gap:12px;flex:1;}
 .step-item:last-child{flex:0;}
-.step-num{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--pale);font-weight:500;flex-shrink:0;transition:all .3s;background:var(--white);}
+.step-num{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);color:var(--pale);font-weight:500;flex-shrink:0;transition:all .3s;background:var(--white);}
 .step-num.active{border-color:var(--gold);color:var(--gold);}
 .step-num.done{background:var(--gold);border-color:var(--gold);color:#fff;}
-.step-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);transition:color .3s;}
+.step-label{font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--pale);transition:color .3s;}
 .step-label.active{color:var(--text);}
 .step-line{flex:1;height:1px;background:var(--border);margin:0 16px;}
 .drop-zone{border:1.5px dashed var(--border);border-radius:24px;padding:72px 40px;text-align:center;cursor:pointer;transition:all .3s;background:var(--white);position:relative;}
@@ -35,11 +35,11 @@
 @media (max-width:760px){.check-grid{grid-template-columns:1fr}}
 .preview-card{display:flex;flex-direction:column;}
 .preview-wrap{position:relative;background:var(--cream);border:1px solid var(--border);border-radius:14px;aspect-ratio:1/1.414;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.preview-placeholder{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--soft);font-size:12px;text-align:center;padding:24px;}
+.preview-placeholder{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--soft);font-size:var(--text-sm);text-align:center;padding:24px;}
 .preview-spinner{width:24px;height:24px;border:2px solid var(--gold-lt);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
-.preview-status{font-size:12px;color:var(--soft);letter-spacing:.04em;}
+.preview-status{font-size:var(--text-sm);color:var(--soft);letter-spacing:.04em;}
 .preview-img,.preview-canvas{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 4px 20px rgba(61,46,36,.08);background:#fff;}
-.preview-meta{margin-top:16px;font-size:11px;color:var(--soft);letter-spacing:.04em;text-align:center;line-height:1.6;}
+.preview-meta{margin-top:16px;font-size:var(--text-xs);color:var(--soft);letter-spacing:.04em;text-align:center;line-height:1.6;}
 /* BLEED / TRIM / SAFE OVERLAY */
 .bleed-overlay{position:absolute;pointer-events:none;}
 .bleed-line{position:absolute;box-sizing:border-box;border-width:1px;}
@@ -47,7 +47,7 @@
 .bleed-trim{border:1px solid rgba(60,60,60,.85);}
 .bleed-safe{border:1px dashed rgba(80,140,90,.85);}
 /* Legend */
-.bleed-legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:10px;padding-top:12px;border-top:1px dashed var(--border);font-size:10.5px;color:var(--soft);letter-spacing:.02em;}
+.bleed-legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:10px;padding-top:12px;border-top:1px dashed var(--border);font-size:var(--text-xs);color:var(--soft);letter-spacing:.02em;}
 .legend-item{display:flex;align-items:center;gap:6px;}
 .legend-swatch{display:inline-block;width:18px;height:0;border-bottom-width:1.5px;box-sizing:border-box;}
 .swatch-bleed{border-bottom:1.5px dashed rgba(200,60,60,.85);}
@@ -55,30 +55,30 @@
 .swatch-safe{border-bottom:1.5px dashed rgba(80,140,90,.85);}
 .check-row{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
 .check-row:last-child{border-bottom:none;padding-bottom:0;}
-.check-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px;}
+.check-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--text-sm);flex-shrink:0;margin-top:1px;}
 .check-icon.ok{background:#EAF4EE;color:#5A9E6F;}
 .check-icon.warn{background:#FDF4E7;color:#C97B3A;}
 .check-icon.err{background:#FCEAEA;color:#C94A3A;}
 .check-icon.info{background:#EAF0F7;color:#4A7FAA;}
-.check-label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:4px;}
-.check-val{font-size:14px;color:var(--text);font-weight:400;}
-.check-note{font-size:12px;color:var(--soft);margin-top:3px;line-height:1.6;}
+.check-label{font-size:var(--text-sm);letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:4px;}
+.check-val{font-size:var(--text-body);color:var(--text);font-weight:400;}
+.check-note{font-size:var(--text-sm);color:var(--soft);margin-top:3px;line-height:1.6;}
 .paper-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;}
 .paper-opt{border:1.5px solid var(--border);border-radius:16px;padding:20px 18px;cursor:pointer;transition:all .25s;text-align:center;background:var(--white);}
 .paper-opt:hover{border-color:var(--gold-lt);}
 .paper-opt.selected{border-color:var(--gold);background:rgba(184,151,106,.04);}
 .paper-opt .paper-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:400;margin-bottom:4px;color:var(--text);}
-.paper-opt .paper-sub{font-size:11px;color:var(--soft);line-height:1.6;margin-bottom:8px;}
-.paper-opt .paper-price{font-size:12px;color:var(--gold);}
-.qty-chip{display:inline-flex;align-items:center;justify-content:center;min-width:56px;padding:10px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--text);cursor:pointer;transition:all .2s;background:var(--white);}
+.paper-opt .paper-sub{font-size:var(--text-xs);color:var(--soft);line-height:1.6;margin-bottom:8px;}
+.paper-opt .paper-price{font-size:var(--text-sm);color:var(--gold);}
+.qty-chip{display:inline-flex;align-items:center;justify-content:center;min-width:56px;padding:10px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:var(--text-body);font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--text);cursor:pointer;transition:all .2s;background:var(--white);}
 .qty-chip:hover{border-color:var(--gold-lt);}
 .qty-chip.selected{border-color:var(--gold);background:rgba(184,151,106,.06);color:var(--gold);}
 .price-strip{background:var(--cream);border-radius:16px;padding:24px 28px;margin-top:24px;}
-.price-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;color:var(--soft);}
+.price-row{display:flex;justify-content:space-between;font-size:var(--text-sm);margin-bottom:8px;color:var(--soft);}
 .price-row.total{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--text);font-weight:400;margin-bottom:0;padding-top:12px;border-top:1px solid var(--border);margin-top:8px;}
-.form-input,.form-select{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--white);font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--text);outline:none;transition:border-color .2s;appearance:none;border-radius:8px;}
+.form-input,.form-select{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--white);font-family:'Jost',sans-serif;font-size:var(--text-sm);font-weight:300;color:var(--text);outline:none;transition:border-color .2s;appearance:none;border-radius:8px;}
 .form-input:focus,.form-select:focus{border-color:var(--gold-lt);}
-.hint{font-size:11px;color:var(--pale);margin-top:7px;line-height:1.6;}
+.hint{font-size:var(--text-xs);color:var(--pale);margin-top:7px;line-height:1.6;}
 .success-wrap{max-width:560px;margin:0 auto;padding:100px 32px;text-align:center;}
 /* ── CHECKOUT MODAL ── */
 .co-modal-bg{position:fixed;inset:0;background:rgba(61,46,36,.55);z-index:600;display:none;align-items:center;justify-content:center;padding:24px;}
@@ -87,20 +87,20 @@
 .co-head{padding:28px 32px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .co-head h3{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;}
 .co-body{padding:28px 32px;}
-.co-section-title{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;margin-top:24px;display:block;}
+.co-section-title{font-size:var(--text-xs);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;margin-top:24px;display:block;}
 .co-section-title:first-child{margin-top:0;}
-.co-summary-item{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);color:var(--soft);}
+.co-summary-item{display:flex;justify-content:space-between;font-size:var(--text-sm);padding:8px 0;border-bottom:1px solid var(--border);color:var(--soft);}
 .co-summary-item.total{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);font-weight:400;padding-top:12px;margin-top:4px;border-top:2px solid var(--border);border-bottom:none;}
 .co-field{margin-bottom:16px;}
-.co-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:6px;font-weight:400;}
-.co-input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border-color .2s;}
+.co-label{font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:6px;font-weight:400;}
+.co-input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);background:var(--white);outline:none;transition:border-color .2s;}
 .co-input:focus{border-color:var(--gold-lt);}
 .co-input.error{border-color:var(--err);}
 .co-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .co-stripe-note{display:flex;align-items:center;gap:10px;background:var(--cream);border-radius:12px;padding:14px 16px;margin-top:8px;margin-bottom:20px;}
-.co-stripe-note p{font-size:11px;color:var(--soft);line-height:1.6;}
-.co-err{background:#FCEAEA;color:var(--err);border-radius:10px;padding:12px 16px;font-size:12px;margin-bottom:16px;display:none;}
-.modal-close{background:none;border:none;font-size:20px;color:var(--pale);cursor:pointer;line-height:1;padding:4px;}
+.co-stripe-note p{font-size:var(--text-xs);color:var(--soft);line-height:1.6;}
+.co-err{background:#FCEAEA;color:var(--err);border-radius:10px;padding:12px 16px;font-size:var(--text-sm);margin-bottom:16px;display:none;}
+.modal-close{background:none;border:none;font-size:var(--text-h3);color:var(--pale);cursor:pointer;line-height:1;padding:4px;}
 @media(max-width:768px){.paper-grid{grid-template-columns:1fr 1fr;}.step-label{display:none;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -136,7 +136,7 @@
         <div class="co-field"><label class="co-label">Town / City *</label><input class="co-input" id="coCity" placeholder="London" type="text"></div>
         <div class="co-field"><label class="co-label">Postcode *</label><input class="co-input" id="coPostcode" placeholder="SW1A 1AA" type="text"></div>
       </div>
-      <div class="co-field"><label class="co-label">Order Notes <span style="color:var(--pale);font-size:10px;">(optional)</span></label><textarea class="co-input" id="coNotes" rows="3" placeholder="Any special instructions…" style="resize:vertical;line-height:1.7;"></textarea></div>
+      <div class="co-field"><label class="co-label">Order Notes <span style="color:var(--pale);font-size:var(--text-xs);">(optional)</span></label><textarea class="co-input" id="coNotes" rows="3" placeholder="Any special instructions…" style="resize:vertical;line-height:1.7;"></textarea></div>
       <div class="co-err" id="coErr">Please fill in all required fields.</div>
       <div class="co-stripe-note">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8976A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -146,7 +146,7 @@
         <span id="coPayBtnText">Pay Securely with Stripe</span>
         <div id="coPaySpinner" style="width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;flex-shrink:0;"></div>
       </button>
-      <p style="text-align:center;font-size:11px;color:var(--pale);margin-top:12px;">You can review your order again on the Stripe payment page before paying.</p>
+      <p style="text-align:center;font-size:var(--text-xs);color:var(--pale);margin-top:12px;">You can review your order again on the Stripe payment page before paying.</p>
     </div>
   </div>
 </div>
@@ -158,7 +158,7 @@
     <div style="text-align:center;margin-bottom:52px;">
       <span class="tag">Upload &amp; Print</span>
       <h1 class="serif" style="font-size:clamp(2.2rem,4vw,3.2rem);font-weight:300;line-height:1.15;margin-bottom:14px;">Your design, beautifully printed.</h1>
-      <p style="font-size:14px;color:var(--soft);max-width:460px;margin:0 auto;line-height:1.9;">Upload your artwork and we handle everything from here — quality checked, printed on premium paper and delivered to your door.</p>
+      <p style="font-size:var(--text-body);color:var(--soft);max-width:460px;margin:0 auto;line-height:1.9;">Upload your artwork and we handle everything from here — quality checked, printed on premium paper and delivered to your door.</p>
     </div>
 
     <!-- STEP BAR -->
@@ -176,15 +176,15 @@
     <div id="step1">
       <div id="size-selector" style="margin-bottom:32px;">
         <div id="size-selector-title" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:6px;">Choose your invitation size</div>
-        <p style="font-size:13px;color:var(--soft);margin-bottom:20px;line-height:1.8;">Select a size first — this helps us check your file is set up correctly for print.</p>
+        <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:20px;line-height:1.8;">Select a size first — this helps us check your file is set up correctly for print.</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;">
-          <div id="size-opt-A5" onclick="selectSize('A5')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A5" style="width:26px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A5" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">A5</div><div style="font-size:10px;color:var(--pale);">148×210mm</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Most popular</div></div>
-          <div id="size-opt-A6" onclick="selectSize('A6')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A6" style="width:26px;height:28px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A6" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">A6</div><div style="font-size:10px;color:var(--pale);">105×148mm</div></div>
-          <div id="size-opt-5x7" onclick="selectSize('5x7')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-5x7" style="width:22px;height:36px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-5x7" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">5"×7"</div><div style="font-size:10px;color:var(--pale);">127×178mm</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Traditional</div></div>
-          <div id="size-opt-DL" onclick="selectSize('DL')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-DL" style="width:16px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-DL" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">DL</div><div style="font-size:10px;color:var(--pale);">99×210mm</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Slim</div></div>
-          <div id="size-opt-Square" onclick="selectSize('Square')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-Square" style="width:30px;height:30px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-Square" style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">Square</div><div style="font-size:10px;color:var(--pale);">148×148mm</div></div>
+          <div id="size-opt-A5" onclick="selectSize('A5')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A5" style="width:26px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A5" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">A5</div><div style="font-size:var(--text-xs);color:var(--pale);">148×210mm</div><div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Most popular</div></div>
+          <div id="size-opt-A6" onclick="selectSize('A6')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A6" style="width:26px;height:28px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A6" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">A6</div><div style="font-size:var(--text-xs);color:var(--pale);">105×148mm</div></div>
+          <div id="size-opt-5x7" onclick="selectSize('5x7')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-5x7" style="width:22px;height:36px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-5x7" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">5"×7"</div><div style="font-size:var(--text-xs);color:var(--pale);">127×178mm</div><div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Traditional</div></div>
+          <div id="size-opt-DL" onclick="selectSize('DL')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-DL" style="width:16px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-DL" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">DL</div><div style="font-size:var(--text-xs);color:var(--pale);">99×210mm</div><div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Slim</div></div>
+          <div id="size-opt-Square" onclick="selectSize('Square')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-Square" style="width:30px;height:30px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-Square" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">Square</div><div style="font-size:var(--text-xs);color:var(--pale);">148×148mm</div></div>
         </div>
-        <p id="sizeNote" style="font-size:12px;color:var(--pale);margin-top:14px;text-align:center;">↑ Select a size above to unlock the upload</p>
+        <p id="sizeNote" style="font-size:var(--text-sm);color:var(--pale);margin-top:14px;text-align:center;">↑ Select a size above to unlock the upload</p>
       </div>
 
       <div class="drop-zone" id="dropZone" style="opacity:.45;pointer-events:none;">
@@ -193,27 +193,27 @@
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B8976A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;margin-bottom:10px;color:var(--text);">Upload your artwork</div>
-        <p style="font-size:13px;color:var(--soft);line-height:1.8;margin-bottom:28px;">Drag and drop your file here, or click to browse.</p>
-        <div style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:1px solid var(--gold);border-radius:60px;color:var(--gold);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;margin-bottom:24px;">Click to choose a file</div>
+        <p style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin-bottom:28px;">Drag and drop your file here, or click to browse.</p>
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:1px solid var(--gold);border-radius:60px;color:var(--gold);font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;font-weight:500;margin-bottom:24px;">Click to choose a file</div>
         <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
-          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">PDF</span>
-          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">AI</span>
-          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">InDesign</span>
-          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">PNG</span>
-          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">JPG</span>
-          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--soft);">TIFF</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">PDF</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">AI</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">InDesign</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">PNG</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">JPG</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">TIFF</span>
         </div>
-        <div style="font-size:11px;color:var(--pale);letter-spacing:.06em;">Maximum file size 100MB · Colour mode: CMYK preferred</div>
+        <div style="font-size:var(--text-xs);color:var(--pale);letter-spacing:.06em;">Maximum file size 100MB · Colour mode: CMYK preferred</div>
       </div>
 
       <div style="margin-top:40px;background:var(--white);border-radius:20px;padding:32px;border:1px solid var(--border);">
         <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;margin-bottom:8px;color:var(--text);">How we check your file</div>
-        <p style="font-size:12px;color:var(--soft);margin-bottom:20px;line-height:1.7;">Instant automated checks when you upload, with a visual proof of your artwork. Anything our team needs to double-check before press is reviewed manually by our prepress studio.</p>
+        <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:20px;line-height:1.7;">Instant automated checks when you upload, with a visual proof of your artwork. Anything our team needs to double-check before press is reviewed manually by our prepress studio.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Visual proof</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We render your artwork back to you so you can confirm it's the file you meant to send.</div></div></div>
-          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Dimensions</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">We verify the page size matches the invitation size you chose.</div></div></div>
-          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Resolution</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">For image files, we calculate the effective DPI at your chosen print size and flag anything below 300 DPI.</div></div></div>
-          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;">Prepress review</div><div style="font-size:12px;color:var(--soft);line-height:1.7;">Colour mode, bleed and fine detail are reviewed by our studio team before your file goes to press.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:3px;">Visual proof</div><div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">We render your artwork back to you so you can confirm it's the file you meant to send.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:3px;">Dimensions</div><div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">We verify the page size matches the invitation size you chose.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:3px;">Resolution</div><div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">For image files, we calculate the effective DPI at your chosen print size and flag anything below 300 DPI.</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0;"></div><div><div style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:3px;">Prepress review</div><div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">Colour mode, bleed and fine detail are reviewed by our studio team before your file goes to press.</div></div></div>
         </div>
       </div>
     </div>
@@ -261,9 +261,9 @@
     <!-- STEP 3: PAPER, ENVELOPES & QUANTITY -->
     <div id="step3" class="hidden">
       <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
-        <div style="width:40px;height:40px;border-radius:10px;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">✦</div>
-        <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);" id="fileSummaryName">your-design.pdf</div><div style="font-size:12px;color:var(--soft);margin-top:2px;" id="fileSummaryMeta">File ready for print</div></div>
-        <button onclick="goStep(1)" style="font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;">Change</button>
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:var(--text-body);flex-shrink:0;">✦</div>
+        <div style="flex:1;"><div style="font-size:var(--text-sm);font-weight:500;color:var(--text);" id="fileSummaryName">your-design.pdf</div><div style="font-size:var(--text-sm);color:var(--soft);margin-top:2px;" id="fileSummaryMeta">File ready for print</div></div>
+        <button onclick="goStep(1)" style="font-size:var(--text-xs);color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;">Change</button>
       </div>
 
       <div class="check-card">
@@ -273,7 +273,7 @@
 
       <div class="check-card" id="finishCard" style="display:none;">
         <h3>Finishing</h3>
-        <p style="font-size:13px;color:var(--soft);margin-bottom:16px;line-height:1.8;">Optional finishing touches that elevate the final piece.</p>
+        <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:16px;line-height:1.8;">Optional finishing touches that elevate the final piece.</p>
         <div id="finishGrid" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
       </div>
 
@@ -281,24 +281,24 @@
         <h3>Envelopes</h3>
         <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:16px;border:1.5px solid var(--border);border-radius:14px;transition:border-color .25s;" id="envToggleWrap">
           <input type="checkbox" id="envToggle" onchange="toggleEnvelopes()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
-          <div><div style="font-size:13px;color:var(--text);font-weight:400;">Add matching envelopes</div><div style="font-size:11px;color:var(--pale);margin-top:2px;">Premium gummed · Priced per envelope</div></div>
+          <div><div style="font-size:var(--text-sm);color:var(--text);font-weight:400;">Add matching envelopes</div><div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">Premium gummed · Priced per envelope</div></div>
         </label>
         <div id="envSection" style="display:none;margin-top:16px;">
-          <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;font-weight:500;">Choose colour</div>
+          <div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;font-weight:500;">Choose colour</div>
           <div id="envPicker" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
           <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:12px;color:var(--soft);">Envelope total</span>
-            <span style="font-size:13px;color:var(--gold);font-weight:500;" id="envLineTotal">£0.00</span>
+            <span style="font-size:var(--text-sm);color:var(--soft);">Envelope total</span>
+            <span style="font-size:var(--text-sm);color:var(--gold);font-weight:500;" id="envLineTotal">£0.00</span>
           </div>
         </div>
       </div>
 
       <div class="check-card">
         <h3>Quantity</h3>
-        <p style="font-size:13px;color:var(--soft);margin-bottom:20px;line-height:1.8;">We recommend ordering a few extras — reprinting a small batch later costs more per unit.</p>
+        <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:20px;line-height:1.8;">We recommend ordering a few extras — reprinting a small batch later costs more per unit.</p>
         <div style="display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;">
-          <button id="tabPreset" onclick="switchQtyTab('preset')" style="flex:1;padding:10px;border:none;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Choose amount</button>
-          <button id="tabCustom" onclick="switchQtyTab('custom')" style="flex:1;padding:10px;border:none;background:var(--white);color:var(--soft);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Enter exact amount</button>
+          <button id="tabPreset" onclick="switchQtyTab('preset')" style="flex:1;padding:10px;border:none;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Choose amount</button>
+          <button id="tabCustom" onclick="switchQtyTab('custom')" style="flex:1;padding:10px;border:none;background:var(--white);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Enter exact amount</button>
         </div>
         <div id="qtyPresetPane" style="display:flex;flex-wrap:wrap;gap:10px;">
           <div class="qty-chip selected" onclick="selectChip(this,25)">25</div>
@@ -319,9 +319,9 @@
       <div class="check-card">
         <h3>Delivery</h3>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gold);border-radius:12px;background:rgba(184,151,106,.04);" onclick="selectDelivery(0,this)"><input type="radio" name="delivery" checked style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:13px;color:var(--text);">Standard</div><div style="font-size:11px;color:var(--pale);margin-top:2px;">5–7 working days</div></div><div style="font-size:13px;color:var(--gold);font-weight:500;">Free</div></label>
-          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;" onclick="selectDelivery(12,this)"><input type="radio" name="delivery" style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:13px;color:var(--text);">Express</div><div style="font-size:11px;color:var(--pale);margin-top:2px;">2–3 working days</div></div><div style="font-size:13px;color:var(--soft);">+£12.00</div></label>
-          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;" onclick="selectDelivery(18,this)"><input type="radio" name="delivery" style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:13px;color:var(--text);">Next Day</div><div style="font-size:11px;color:var(--pale);margin-top:2px;">Order before 12pm</div></div><div style="font-size:13px;color:var(--soft);">+£18.00</div></label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gold);border-radius:12px;background:rgba(184,151,106,.04);" onclick="selectDelivery(0,this)"><input type="radio" name="delivery" checked style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:var(--text-sm);color:var(--text);">Standard</div><div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">5–7 working days</div></div><div style="font-size:var(--text-sm);color:var(--gold);font-weight:500;">Free</div></label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;" onclick="selectDelivery(12,this)"><input type="radio" name="delivery" style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:var(--text-sm);color:var(--text);">Express</div><div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">2–3 working days</div></div><div style="font-size:var(--text-sm);color:var(--soft);">+£12.00</div></label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;" onclick="selectDelivery(18,this)"><input type="radio" name="delivery" style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:var(--text-sm);color:var(--text);">Next Day</div><div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">Order before 12pm</div></div><div style="font-size:var(--text-sm);color:var(--soft);">+£18.00</div></label>
         </div>
       </div>
 
@@ -344,9 +344,9 @@
     <!-- STEP 4: ADDED TO BASKET -->
     <div id="step4" class="hidden">
       <div class="success-wrap" style="margin:0 auto;">
-        <div style="width:80px;height:80px;border-radius:50%;background:rgba(184,151,106,.12);border:1.5px solid var(--gold-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;font-size:28px;">✓</div>
+        <div style="width:80px;height:80px;border-radius:50%;background:rgba(184,151,106,.12);border:1.5px solid var(--gold-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;font-size:var(--text-h2);">✓</div>
         <h2 class="serif" style="font-size:2.2rem;font-weight:400;margin-bottom:16px;">Added to your basket</h2>
-        <p style="font-size:14px;color:var(--soft);line-height:1.9;margin-bottom:32px;">Your upload print order has been added. Continue browsing or head to checkout when you're ready.</p>
+        <p style="font-size:var(--text-body);color:var(--soft);line-height:1.9;margin-bottom:32px;">Your upload print order has been added. Continue browsing or head to checkout when you're ready.</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
           <button class="btn" onclick="openCheckout()">Proceed to Checkout</button>
           <button class="btn-out" onclick="goStep(1)">Upload Another</button>
@@ -693,7 +693,7 @@ function showToast(msg)   { const t=document.getElementById('toast');t.textConte
 function renderCartDrawer(){
   const scroll=document.getElementById('cartScroll'),foot=document.getElementById('cartFoot');
   if(!scroll)return;
-  if(!cart.length){scroll.innerHTML='<div class="cart-empty"><div style="font-size:40px;margin-bottom:16px;">✦</div><p style="font-size:13px;color:var(--pale);">Your basket is empty</p></div>';foot.style.display='none';return;}
+  if(!cart.length){scroll.innerHTML='<div class="cart-empty"><div style="font-size:var(--text-h2);margin-bottom:16px;">✦</div><p style="font-size:var(--text-sm);color:var(--pale);">Your basket is empty</p></div>';foot.style.display='none';return;}
   scroll.innerHTML=cart.map((item,i)=>`<div class="cart-item"><div class="cart-item-img">${item.icon||'✦'}</div><div class="cart-item-info"><div class="cart-item-name serif">${item.name}</div><div class="cart-item-meta">${item.size?item.size+' · ':''}${item.qty} invitations · ${item.paper||'Smooth White'}</div><div class="cart-item-price">£${item.total.toFixed(2)}</div></div><button class="cart-remove" onclick="removeCartItem(${i})">✕</button></div>`).join('');
   const sub=cart.reduce((s,i)=>s+i.total,0);
   document.getElementById('cartNet').textContent='£'+(sub/1.2).toFixed(2);
@@ -757,7 +757,7 @@ function checkFile(file){
 // Show spinner in checks panel while running
 function renderChecksLoading(){
   document.getElementById('checkResults').innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;padding:16px 0;color:var(--soft);font-size:13px;">
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 0;color:var(--soft);font-size:var(--text-sm);">
       <div style="width:16px;height:16px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div>
       Checking your file…
     </div>`;
@@ -1126,7 +1126,7 @@ function initStep3(){
   picker.innerHTML=ENVELOPES.map(e=>`
     <div onclick="selectEnvColour('${e.id}')" title="${e.name}" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;">
       <div id="env-swatch-${e.id}" style="width:36px;height:36px;border-radius:50%;background:${e.hex};border:2px solid ${selectedEnvColour===e.id?'var(--text)':e.border};transition:all .2s;transform:${selectedEnvColour===e.id?'scale(1.15)':'scale(1)'};"></div>
-      <div style="font-size:9px;color:var(--soft);text-align:center;max-width:48px;line-height:1.3;">${e.name}</div>
+      <div style="font-size:var(--text-xs);color:var(--soft);text-align:center;max-width:48px;line-height:1.3;">${e.name}</div>
     </div>`).join('');
   updatePrice();
 }
@@ -1328,7 +1328,7 @@ function openCheckout(){
   if(!cart.length){showToast('Your basket is empty');return;}
   closeCart();
   const sub=cart.reduce((s,i)=>s+i.total,0);
-  document.getElementById('coSummaryItems').innerHTML=cart.map(item=>`<div class="co-summary-item"><span>${item.name} <span style="color:var(--pale);font-size:11px;">× ${item.qty}</span></span><span>£${item.total.toFixed(2)}</span></div>`).join('');
+  document.getElementById('coSummaryItems').innerHTML=cart.map(item=>`<div class="co-summary-item"><span>${item.name} <span style="color:var(--pale);font-size:var(--text-xs);">× ${item.qty}</span></span><span>£${item.total.toFixed(2)}</span></div>`).join('');
   document.getElementById('coSummaryTotal').textContent='£'+sub.toFixed(2);
   document.getElementById('coErr').style.display='none';
   document.getElementById('coModalBg').classList.add('open');
@@ -1427,22 +1427,22 @@ async function proceedToStripe(){
     const net=order?.total?'£'+(order.total/1.2).toFixed(2):'—';
     const vat=order?.total?'£'+(order.total-order.total/1.2).toFixed(2):'—';
     const orderDate=order?.date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-    const itemsHtml=order?.cart?.length?order.cart.map(item=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border);"><div><div style="font-size:13px;font-weight:500;color:var(--text);">${item.name}</div><div style="font-size:11px;color:var(--soft);margin-top:3px;">${item.qty} invitations · ${item.paper||'Smooth White'}</div></div><div style="font-size:13px;color:var(--gold);font-weight:500;">£${item.total.toFixed(2)}</div></div>`).join(''):'<div style="font-size:13px;color:var(--soft);padding:14px 0;">Order details confirmed</div>';
+    const itemsHtml=order?.cart?.length?order.cart.map(item=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border);"><div><div style="font-size:var(--text-sm);font-weight:500;color:var(--text);">${item.name}</div><div style="font-size:var(--text-xs);color:var(--soft);margin-top:3px;">${item.qty} invitations · ${item.paper||'Smooth White'}</div></div><div style="font-size:var(--text-sm);color:var(--gold);font-weight:500;">£${item.total.toFixed(2)}</div></div>`).join(''):'<div style="font-size:var(--text-sm);color:var(--soft);padding:14px 0;">Order details confirmed</div>';
     document.querySelector('[style*="min-height:calc(100vh - 64px)"]').innerHTML=`
       <div style="max-width:640px;margin:0 auto;padding:60px 32px 100px;">
         <div style="text-align:center;margin-bottom:48px;">
-          <div style="width:72px;height:72px;border-radius:50%;background:rgba(90,158,111,.1);border:1.5px solid #5A9E6F;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#5A9E6F;">✓</div>
-          <span style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;">Order Confirmed</span>
+          <div style="width:72px;height:72px;border-radius:50%;background:rgba(90,158,111,.1);border:1.5px solid #5A9E6F;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:var(--text-h2);color:#5A9E6F;">✓</div>
+          <span style="font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;">Order Confirmed</span>
           <h1 style="font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:400;line-height:1.15;margin-bottom:12px;color:var(--text);">Thank you, ${name.split(' ')[0]}.</h1>
-          <p style="font-size:14px;color:var(--soft);line-height:1.9;max-width:420px;margin:0 auto;">Your order has been received and payment confirmed.</p>
+          <p style="font-size:var(--text-body);color:var(--soft);line-height:1.9;max-width:420px;margin:0 auto;">Your order has been received and payment confirmed.</p>
         </div>
         <div style="background:var(--text);border-radius:16px;padding:20px 28px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-          <div><div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px;">Order Reference</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;color:#fff;">${ref}</div></div>
-          <div style="text-align:right;"><div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px;">Order Date</div><div style="font-size:13px;color:rgba(255,255,255,.7);">${orderDate}</div></div>
+          <div><div style="font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px;">Order Reference</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;color:#fff;">${ref}</div></div>
+          <div style="text-align:right;"><div style="font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px;">Order Date</div><div style="font-size:var(--text-sm);color:rgba(255,255,255,.7);">${orderDate}</div></div>
         </div>
         <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:20px;">
           <div style="font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">What happens next</div>
-          <div style="font-size:13px;color:var(--soft);line-height:2;">
+          <div style="font-size:var(--text-sm);color:var(--soft);line-height:2;">
             <p style="margin-bottom:10px;">✓ <strong style="color:var(--text);">Payment confirmed</strong></p>
             <p style="margin-bottom:10px;">→ <strong style="color:var(--text);">Digital proof by ${proofStr}</strong> — sent to <strong>${email}</strong></p>
             <p style="margin-bottom:10px;">○ <strong style="color:var(--text);">Printed &amp; dispatched</strong> — 2–3 working days after proof approval</p>
@@ -1453,14 +1453,14 @@ async function proceedToStripe(){
           <div style="font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">Order Summary</div>
           ${itemsHtml}
           <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--soft);margin-bottom:6px;"><span>Subtotal (excl. VAT)</span><span>${net}</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--soft);margin-bottom:12px;"><span>VAT (20%)</span><span>${vat}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);color:var(--soft);margin-bottom:6px;"><span>Subtotal (excl. VAT)</span><span>${net}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);color:var(--soft);margin-bottom:12px;"><span>VAT (20%)</span><span>${vat}</span></div>
             <div style="display:flex;justify-content:space-between;font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;"><span>Total paid</span><span style="color:var(--gold);">${total}</span></div>
           </div>
         </div>
         <div style="background:rgba(184,151,106,.06);border:1px solid var(--gold-lt);border-radius:16px;padding:20px 24px;margin-bottom:32px;">
-          <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px;">Need to make a change?</div>
-          <div style="font-size:12px;color:var(--soft);line-height:1.7;">Contact us at <strong>hello@foreverprint.com</strong> quoting reference <strong>${ref}</strong> before your proof is approved.</div>
+          <div style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:4px;">Need to make a change?</div>
+          <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">Contact us at <strong>hello@foreverprint.com</strong> quoting reference <strong>${ref}</strong> before your proof is approved.</div>
         </div>
         <div style="text-align:center;"><a class="btn" href="/">Back to Homepage</a></div>
       </div>`;

@@ -19,9 +19,9 @@
 <meta name="twitter:description" content="Track your wedding invitation order from print to delivery."/>
 <meta name="twitter:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
 <style>
-.form-input{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--white);font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--text);outline:none;transition:border-color .2s;border-radius:8px;}
+.form-input{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--white);font-family:'Jost',sans-serif;font-size:var(--text-sm);font-weight:300;color:var(--text);outline:none;transition:border-color .2s;border-radius:8px;}
 .form-input:focus{border-color:var(--gold-lt);}
-.form-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:8px;font-weight:400;}
+.form-label{font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:8px;font-weight:400;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/supabase-config.js"></script>   
@@ -39,7 +39,7 @@
     <span class="tag">Track Your Order</span>
     <h1 class="serif" style="font-size:2.5rem;font-weight:400;margin-bottom:16px;">Where is my order?</h1>
     <div class="divider" style="margin:20px auto;"></div>
-    <p style="font-size:13px;color:var(--soft);line-height:1.9;margin-bottom:36px;">Enter your order number and email address to see the current status of your invitations.</p>
+    <p style="font-size:var(--text-sm);color:var(--soft);line-height:1.9;margin-bottom:36px;">Enter your order number and email address to see the current status of your invitations.</p>
     <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px;">
       <div style="margin-bottom:16px;text-align:left;">
         <label class="form-label">Order Number</label>
@@ -52,7 +52,7 @@
       <button class="btn" style="width:100%;justify-content:center;" onclick="trackOrder()">Track My Order</button>
     </div>
     <div id="trackResult" style="margin-top:24px;"></div>
-    <p style="font-size:12px;color:var(--pale);margin-top:24px;line-height:1.8;">Can't find your order? Email us at <a href="mailto:hello@foreverprint.com" style="color:var(--gold);text-decoration:underline;">hello@foreverprint.com</a> and we'll help you straight away.</p>
+    <p style="font-size:var(--text-sm);color:var(--pale);margin-top:24px;line-height:1.8;">Can't find your order? Email us at <a href="mailto:hello@foreverprint.com" style="color:var(--gold);text-decoration:underline;">hello@foreverprint.com</a> and we'll help you straight away.</p>
   </div>
 </div>
 
@@ -74,17 +74,17 @@ async function trackOrder() {
   const result = document.getElementById('trackResult');
 
   if (!orderNum || !email) {
-    result.innerHTML = `<div style="background:#FCEAEA;border:1px solid #f5c5c5;border-radius:16px;padding:20px;text-align:center;font-size:13px;color:var(--err);">Please enter both your order number and email address.</div>`;
+    result.innerHTML = `<div style="background:#FCEAEA;border:1px solid #f5c5c5;border-radius:16px;padding:20px;text-align:center;font-size:var(--text-sm);color:var(--err);">Please enter both your order number and email address.</div>`;
     return;
   }
 
-  result.innerHTML = `<div style="text-align:center;padding:20px;font-size:13px;color:var(--soft);">Looking up your order…</div>`;
+  result.innerHTML = `<div style="text-align:center;padding:20px;font-size:var(--text-sm);color:var(--soft);">Looking up your order…</div>`;
 
   const order = await lookupLiveOrder(orderNum, email);
   if (order) {
     renderTrackResult(result, order);
   } else {
-    result.innerHTML = `<div style="background:#FCEAEA;border:1px solid #f5c5c5;border-radius:16px;padding:24px;text-align:center;"><div style="font-size:13px;color:var(--err);line-height:1.7;">No order found with those details. Please check your order number and email address — or contact us at <a href="mailto:hello@foreverprint.com" style="color:var(--err);text-decoration:underline;">hello@foreverprint.com</a> and we'll find it for you.</div></div>`;
+    result.innerHTML = `<div style="background:#FCEAEA;border:1px solid #f5c5c5;border-radius:16px;padding:24px;text-align:center;"><div style="font-size:var(--text-sm);color:var(--err);line-height:1.7;">No order found with those details. Please check your order number and email address — or contact us at <a href="mailto:hello@foreverprint.com" style="color:var(--err);text-decoration:underline;">hello@foreverprint.com</a> and we'll find it for you.</div></div>`;
   }
 }
 
@@ -135,23 +135,23 @@ function renderTrackResult(result, order) {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
         <div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:4px;">${order.name}</div>
-          <div style="font-size:12px;color:var(--soft);">${order.suite} · ${order.qty} invitations · ${order.total}</div>
-          <div style="font-size:11px;color:var(--pale);margin-top:4px;">Ordered ${order.date}</div>
+          <div style="font-size:var(--text-sm);color:var(--soft);">${order.suite} · ${order.qty} invitations · ${order.total}</div>
+          <div style="font-size:var(--text-xs);color:var(--pale);margin-top:4px;">Ordered ${order.date}</div>
         </div>
-        <div style="background:${sc[0]};color:${sc[1]};padding:6px 14px;border-radius:20px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;">${statusLabels[order.status]||order.status}</div>
+        <div style="background:${sc[0]};color:${sc[1]};padding:6px 14px;border-radius:20px;font-size:var(--text-xs);letter-spacing:.08em;text-transform:uppercase;font-weight:500;">${statusLabels[order.status]||order.status}</div>
       </div>
-      ${order.dpd ? `<div style="background:var(--cream);border-radius:12px;padding:14px 18px;margin-bottom:24px;font-size:12px;color:var(--soft);">Tracking: <span style="color:var(--text);font-weight:500;">${order.dpd}</span></div>` : ''}
+      ${order.dpd ? `<div style="background:var(--cream);border-radius:12px;padding:14px 18px;margin-bottom:24px;font-size:var(--text-sm);color:var(--soft);">Tracking: <span style="color:var(--text);font-weight:500;">${order.dpd}</span></div>` : ''}
       <div style="position:relative;">
         ${order.stages.map((s,i) => `
           <div style="display:flex;gap:16px;${i<order.stages.length-1?'margin-bottom:0;padding-bottom:24px;':''}">
             <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
-              <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${s.done?'var(--gold)':s.active?'var(--gold)':'var(--border)'};background:${s.done?'var(--gold)':'var(--white)'};display:flex;align-items:center;justify-content:center;font-size:11px;color:${s.done?'#fff':s.active?'var(--gold)':'var(--pale)'};">${s.done?'&#x2713;':s.active?'&#x25CF;':'&#x25CB;'}</div>
+              <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${s.done?'var(--gold)':s.active?'var(--gold)':'var(--border)'};background:${s.done?'var(--gold)':'var(--white)'};display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);color:${s.done?'#fff':s.active?'var(--gold)':'var(--pale)'};">${s.done?'&#x2713;':s.active?'&#x25CF;':'&#x25CB;'}</div>
               ${i<order.stages.length-1?`<div style="width:2px;flex:1;min-height:24px;background:${s.done?'var(--gold-lt)':'var(--border)'};margin-top:4px;margin-bottom:-4px;"></div>`:''}
             </div>
             <div style="padding-bottom:${i<order.stages.length-1?'24':'0'}px;">
-              <div style="font-size:13px;font-weight:${s.done||s.active?500:400};color:${s.done||s.active?'var(--text)':'var(--pale)'};">${s.name}</div>
-              <div style="font-size:12px;color:var(--soft);margin-top:2px;">${s.desc}</div>
-              ${s.date && s.date!=='—' ? `<div style="font-size:11px;color:var(--pale);margin-top:2px;">${s.date}</div>` : ''}
+              <div style="font-size:var(--text-sm);font-weight:${s.done||s.active?500:400};color:${s.done||s.active?'var(--text)':'var(--pale)'};">${s.name}</div>
+              <div style="font-size:var(--text-sm);color:var(--soft);margin-top:2px;">${s.desc}</div>
+              ${s.date && s.date!=='—' ? `<div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">${s.date}</div>` : ''}
             </div>
           </div>`).join('')}
       </div>
