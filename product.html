@@ -18,54 +18,54 @@
 /* HERO — H1 plain (message-match), price prominent, single CTA */
 .lp-hero{background:var(--cream);padding:44px 0 40px;}
 .lp-hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;}
-.lp-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;}
+.lp-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;}
 .lp-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.6vw,3rem);font-weight:400;line-height:1.06;color:var(--text);margin:0 0 12px;}
-.lp-hero-sub{font-size:14px;color:var(--soft);line-height:1.75;margin:0 0 20px;max-width:460px;}
+.lp-hero-sub{font-size:var(--text-body);color:var(--soft);line-height:1.75;margin:0 0 20px;max-width:460px;}
 .lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:11px 18px;display:inline-block;margin-bottom:18px;}
-.lp-price-label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:3px;}
+.lp-price-label{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:3px;}
 .lp-price-value{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--text);line-height:1;}
-.lp-price-meta{font-size:11px;color:var(--soft);margin-top:5px;}
-.lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
+.lp-price-meta{font-size:var(--text-xs);color:var(--soft);margin-top:5px;}
+.lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
 .lp-cta:hover{background:transparent;color:var(--gold);}
 .lp-cta::after{content:'→';transition:transform .2s;}
 .lp-cta:hover::after{transform:translateX(4px);}
-.lp-hero-trust{display:flex;gap:22px;margin-top:16px;font-size:11px;color:var(--soft);flex-wrap:wrap;}
+.lp-hero-trust{display:flex;gap:22px;margin-top:16px;font-size:var(--text-xs);color:var(--soft);flex-wrap:wrap;}
 .lp-hero-reassure{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-top:22px;padding-top:20px;border-top:1px solid var(--border);}
 .lp-hr-item{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--soft);}
-.lp-hr-icon{color:var(--gold);font-size:13px;flex-shrink:0;}
+.lp-hr-icon{color:var(--gold);font-size:var(--text-sm);flex-shrink:0;}
 .lp-hero-trust span::before{content:'✓ ';color:var(--gold);font-weight:600;}
 .lp-hero-img{width:100%;max-width:480px;aspect-ratio:4/3;object-fit:cover;border-radius:16px;background:var(--pale);}
-.lp-hero-img-placeholder{width:100%;max-width:480px;aspect-ratio:4/3;border-radius:16px;background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--gold-lt);border:1px solid var(--border);}
-.lp-hero-img-placeholder::before{content:'✦';font-size:40px;}
+.lp-hero-img-placeholder{width:100%;max-width:480px;aspect-ratio:4/3;border-radius:16px;background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:var(--text-body);font-style:italic;color:var(--gold-lt);border:1px solid var(--border);}
+.lp-hero-img-placeholder::before{content:'✦';font-size:var(--text-h2);}
 
 /* PRICING SECTION — full quantity table */
 .lp-section{padding:44px 0;}
 .lp-section-cream{background:var(--cream);}
 .lp-section-white{background:var(--white);}
-.lp-section-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;text-align:center;margin-bottom:10px;}
+.lp-section-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;text-align:center;margin-bottom:10px;}
 .lp-section-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,2.6vw,2.1rem);font-weight:400;line-height:1.15;text-align:center;color:var(--text);margin:0 0 8px;}
 .lp-section-h2 em{color:var(--gold);font-style:italic;}
 .lp-section-divider{width:36px;height:1px;background:var(--gold);margin:14px auto 28px;}
 .lp-anchor-grid{max-width:720px;margin:0 auto;}
 .lp-price-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.lp-price-table th{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);font-weight:500;text-align:right;padding:14px 18px;background:var(--cream);}
+.lp-price-table th{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--soft);font-weight:500;text-align:right;padding:14px 18px;background:var(--cream);}
 .lp-price-table th:first-child{text-align:left;}
-.lp-price-table td{padding:13px 18px;font-size:14px;color:var(--text);border-top:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;}
-.lp-price-table td:first-child{text-align:left;font-family:'Jost',sans-serif;font-size:13px;color:var(--soft);}
+.lp-price-table td{padding:13px 18px;font-size:var(--text-body);color:var(--text);border-top:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;}
+.lp-price-table td:first-child{text-align:left;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--soft);}
 .lp-price-table tr.pt-popular td{background:rgba(184,151,106,.06);}
-.pt-badge{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold-lt);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;}
-.lp-price-note{font-size:11px;color:var(--soft);text-align:center;margin-top:14px;line-height:1.6;}
+.pt-badge{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold-lt);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;}
+.lp-price-note{font-size:var(--text-xs);color:var(--soft);text-align:center;margin-top:14px;line-height:1.6;}
 .lp-anchor{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:30px 28px;position:relative;}
 .lp-anchor.popular{border:2px solid var(--gold);}
-.lp-anchor-badge{position:absolute;top:-11px;left:22px;background:var(--gold);color:#fff;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:5px 12px;border-radius:12px;font-weight:500;}
-.lp-anchor-tag{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;}
+.lp-anchor-badge{position:absolute;top:-11px;left:22px;background:var(--gold);color:#fff;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;padding:5px 12px;border-radius:12px;font-weight:500;}
+.lp-anchor-tag{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;}
 .lp-anchor-price{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:400;color:var(--text);line-height:1;margin-bottom:6px;}
-.lp-anchor-qty{font-size:12px;color:var(--soft);margin-bottom:16px;}
-.lp-anchor-spec{font-size:11px;color:var(--pale);padding-top:16px;border-top:1px solid var(--border);}
+.lp-anchor-qty{font-size:var(--text-sm);color:var(--soft);margin-bottom:16px;}
+.lp-anchor-spec{font-size:var(--text-xs);color:var(--pale);padding-top:16px;border-top:1px solid var(--border);}
 .lp-upgrade-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:28px 36px;max-width:680px;margin:0 auto;}
 .lp-upgrade-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;margin-bottom:6px;color:var(--text);}
-.lp-upgrade-sub{font-size:11px;color:var(--soft);margin-bottom:18px;}
-.lp-upgrade-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+.lp-upgrade-sub{font-size:var(--text-xs);color:var(--soft);margin-bottom:18px;}
+.lp-upgrade-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--border);font-size:var(--text-sm);}
 .lp-upgrade-row:last-child{border-bottom:none;}
 .lp-upgrade-label{color:var(--soft);}
 .lp-upgrade-value{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--text);font-weight:400;}
@@ -73,14 +73,14 @@
 
 /* PAPER & FINISH SHOWCASE — editorial, sensory, no prices */
 .lp-strip{padding:52px 0;border-top:1px solid var(--border);}
-.lp-strip-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:8px;}
+.lp-strip-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:8px;}
 .lp-strip-h{font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,2.4vw,2rem);font-weight:400;text-align:center;color:var(--text);margin:0 0 6px;}
-.lp-strip-intro{font-size:13px;color:var(--soft);text-align:center;max-width:500px;margin:10px auto 30px;line-height:1.75;}
+.lp-strip-intro{font-size:var(--text-sm);color:var(--soft);text-align:center;max-width:500px;margin:10px auto 30px;line-height:1.75;}
 .lp-showcase{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:920px;margin:0 auto;}
 .lp-show-card{text-align:left;}
-.lp-swatch{aspect-ratio:3/2;border-radius:12px;border:1px solid var(--border);background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;color:var(--gold-lt);margin-bottom:12px;}
+.lp-swatch{aspect-ratio:3/2;border-radius:12px;border:1px solid var(--border);background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);color:var(--gold-lt);margin-bottom:12px;}
 .lp-show-name{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);margin-bottom:2px;}
-.lp-show-tier{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.lp-show-tier{font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
 .lp-show-desc{font-size:12.5px;color:var(--soft);line-height:1.7;}
 /* Finishing — dark panel, framed as craft */
 .lp-finish-panel{background:var(--text);border-radius:18px;padding:44px 40px;max-width:920px;margin:0 auto;}
@@ -89,8 +89,8 @@
 .lp-finish-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}
 .lp-finish-item{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:18px 22px;}
 .lp-finish-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--cream);margin-bottom:4px;}
-.lp-finish-desc{font-size:12px;color:rgba(255,255,255,.6);line-height:1.6;}
-.lp-finish-foot{text-align:center;margin-top:22px;font-size:12px;color:rgba(255,255,255,.55);}
+.lp-finish-desc{font-size:var(--text-sm);color:rgba(255,255,255,.6);line-height:1.6;}
+.lp-finish-foot{text-align:center;margin-top:22px;font-size:var(--text-sm);color:rgba(255,255,255,.55);}
 
 /* HOW IT WORKS — compact horizontal */
 .lp-how{padding:48px 0;background:var(--cream);}
@@ -103,9 +103,9 @@
 /* WHY US — 4 items, real claims */
 .lp-why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;max-width:1000px;margin:0 auto;}
 .lp-why-item{text-align:center;padding:0 8px;}
-.lp-why-icon{font-size:22px;color:var(--gold);margin-bottom:12px;}
+.lp-why-icon{font-size:var(--text-h3);color:var(--gold);margin-bottom:12px;}
 .lp-why-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);margin-bottom:8px;}
-.lp-why-text{font-size:12px;color:var(--soft);line-height:1.85;}
+.lp-why-text{font-size:var(--text-sm);color:var(--soft);line-height:1.85;}
 
 /* FAQs */
 .lp-faq-wrap{max-width:680px;margin:0 auto;}
@@ -113,9 +113,9 @@
 .lp-faq-q{padding:20px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:24px;list-style:none;}
 .lp-faq-q::-webkit-details-marker{display:none;}
 .lp-faq-q-text{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);}
-.lp-faq-toggle{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gold);transition:transform .25s;}
+.lp-faq-toggle{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:var(--text-sm);color:var(--gold);transition:transform .25s;}
 .lp-faq-item[open] .lp-faq-toggle{transform:rotate(45deg);}
-.lp-faq-a{font-size:13px;color:var(--soft);line-height:1.95;padding:0 0 20px;max-width:600px;}
+.lp-faq-a{font-size:var(--text-sm);color:var(--soft);line-height:1.95;padding:0 0 20px;max-width:600px;}
 
 /* FINAL CTA */
 .lp-final{background:var(--cream);padding:88px 0;text-align:center;}
@@ -127,21 +127,21 @@
 .path-modal.open{display:flex;}
 .path-modal-backdrop{position:absolute;inset:0;background:rgba(33,22,12,.62);animation:pmFade .2s ease;}
 .path-modal-panel{position:relative;background:var(--cream);border-radius:18px;padding:40px 40px 36px;max-width:680px;width:100%;box-shadow:0 30px 80px rgba(33,22,12,.30);animation:pmSlide .25s ease;}
-.path-modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--soft);cursor:pointer;line-height:1;}
+.path-modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:var(--text-body);color:var(--soft);cursor:pointer;line-height:1;}
 .path-modal-close:hover{color:var(--text);}
-.path-modal-tag{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:8px;}
+.path-modal-tag{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:8px;}
 .path-modal-h{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;line-height:1.15;color:var(--text);text-align:center;margin:0 0 8px;}
 .path-modal-h em{color:var(--gold);font-style:italic;}
-.path-modal-sub{font-size:13px;color:var(--soft);text-align:center;line-height:1.7;margin:0 auto 28px;max-width:440px;}
+.path-modal-sub{font-size:var(--text-sm);color:var(--soft);text-align:center;line-height:1.7;margin:0 auto 28px;max-width:440px;}
 .path-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .path-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:28px 28px 24px;text-decoration:none;display:flex;flex-direction:column;transition:all .2s;cursor:pointer;}
 .path-card:hover{border-color:var(--gold);box-shadow:0 12px 28px rgba(184,153,104,.10);transform:translateY(-2px);}
 .path-icon{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);margin-bottom:10px;}
 .path-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;color:var(--text);margin:0 0 8px;line-height:1.2;}
-.path-desc{font-size:12px;color:var(--soft);line-height:1.75;margin:0 0 16px;flex:1;}
-.path-card-cta{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text);font-weight:500;border-bottom:1px solid var(--gold);padding-bottom:3px;display:inline-block;align-self:flex-start;}
+.path-desc{font-size:var(--text-sm);color:var(--soft);line-height:1.75;margin:0 0 16px;flex:1;}
+.path-card-cta{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--text);font-weight:500;border-bottom:1px solid var(--gold);padding-bottom:3px;display:inline-block;align-self:flex-start;}
 .path-card-cta::after{content:' →';color:var(--gold);}
-.path-modal-help{margin-top:22px;text-align:center;font-size:11px;color:var(--soft);}
+.path-modal-help{margin-top:22px;text-align:center;font-size:var(--text-xs);color:var(--soft);}
 .path-modal-help a{color:var(--gold);text-decoration:none;}
 @keyframes pmFade{from{opacity:0;}to{opacity:1;}}
 @keyframes pmSlide{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
@@ -198,7 +198,7 @@
     <h2 class="lp-section-h2">Simple, <em>honest pricing.</em></h2>
     <div class="lp-section-divider"></div>
     <div id="lp-anchor-grid" class="lp-anchor-grid">
-      <div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:13px;padding:40px;">Loading pricing…</div>
+      <div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Loading pricing…</div>
     </div>
     <div id="lp-upgrade-card" class="lp-upgrade-card" style="display:none;">
       <div class="lp-upgrade-title">Upgrade options</div>
@@ -415,8 +415,8 @@ function showNotFound() {
     const html = `<section style="padding:120px 20px;text-align:center;background:var(--cream);">
       <div style="max-width:560px;margin:0 auto;font-family:'Cormorant Garamond',serif;color:var(--text);">
         <div style="font-size:2.4rem;font-weight:300;margin-bottom:14px;">Product not found</div>
-        <p style="font-family:'Jost',sans-serif;font-size:14px;color:var(--soft);line-height:1.9;margin-bottom:32px;">We couldn't find a product matching <strong style="color:var(--text);">/${escapeHtml(PRODUCT.slug)}</strong>.</p>
-        <a href="/products" style="font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:4px;">Browse all products →</a>
+        <p style="font-family:'Jost',sans-serif;font-size:var(--text-body);color:var(--soft);line-height:1.9;margin-bottom:32px;">We couldn't find a product matching <strong style="color:var(--text);">/${escapeHtml(PRODUCT.slug)}</strong>.</p>
+        <a href="/products" style="font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:4px;">Browse all products →</a>
       </div></section>`;
     sections[0].outerHTML = html;
     for (let i = sections.length - 1; i > 0; i--) sections[i].remove();
@@ -468,7 +468,7 @@ function renderPricing() {
   const priceMeta = document.getElementById('lp-price-meta');
 
   if (!productPricing || !Array.isArray(productPricing.sheet_sells) || !productPricing.sheet_sells.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:13px;padding:40px;">Pricing will appear here once published in admin.</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Pricing will appear here once published in admin.</div>';
     priceValue.textContent = '£—';
     priceMeta.textContent = 'Pricing to be confirmed';
     return;
@@ -476,14 +476,14 @@ function renderPricing() {
   const papers = productPricing.available_papers || [];
   const sizes  = productPricing.available_sizes || [];
   if (!papers.length || !sizes.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:13px;padding:40px;">Configure available sizes and papers in admin.</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Configure available sizes and papers in admin.</div>';
     return;
   }
   const defaultPaper = papers[0];
   const defaultSize  = sizes.includes('A5') ? 'A5' : sizes[0];
   const matches = productPricing.sheet_sells.filter(s => s.paper === defaultPaper && s.size === defaultSize);
   if (!matches.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:13px;padding:40px;">No pricing yet for ${escapeHtml(defaultPaper)} × ${escapeHtml(defaultSize)}.</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">No pricing yet for ${escapeHtml(defaultPaper)} × ${escapeHtml(defaultSize)}.</div>`;
     return;
   }
   const qtys = [...new Set(productPricing.sheet_sells
@@ -600,7 +600,7 @@ function renderSizesStrip() {
   if (!sizes.length) return;
   strip.innerHTML = sizes.map(size => {
     const dim = SIZE_DIMS[size] || '';
-    return `<span class="lp-strip-pill" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:13px;">${escapeHtml(size)}${dim ? `<span class="pill-dim" style="display:block;font-size:11px;color:var(--soft);margin-top:3px;">${escapeHtml(dim)}</span>` : ''}</span>`;
+    return `<span class="lp-strip-pill" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:var(--text-sm);">${escapeHtml(size)}${dim ? `<span class="pill-dim" style="display:block;font-size:var(--text-xs);color:var(--soft);margin-top:3px;">${escapeHtml(dim)}</span>` : ''}</span>`;
   }).join('');
   document.getElementById('lp-sizes-strip-section').style.display = '';
 }
