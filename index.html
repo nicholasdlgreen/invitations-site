@@ -37,9 +37,9 @@
 .path-icon{font-size:28px;margin-bottom:24px;display:block;}
 .path-tag{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;display:block;}
 .path-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:400;color:var(--text);margin-bottom:16px;line-height:1.2;}
-.path-desc{font-size:13px;color:var(--soft);line-height:1.95;margin-bottom:28px;}
+.path-desc{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin-bottom:28px;}
 .path-details{margin-bottom:32px;}
-.path-detail{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.path-detail{font-size:var(--text-sm);color:var(--soft);display:flex;align-items:center;gap:9px;margin-bottom:8px;}
 .path-detail::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--gold-lt);flex-shrink:0;}
 .path-cta{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:500;display:inline-flex;align-items:center;gap:10px;transition:gap .2s;}
 .path-card:hover .path-cta{gap:16px;}
@@ -57,13 +57,13 @@
 .hero-h1-seo{font-family:'Jost',sans-serif;font-size:12px;font-weight:400;letter-spacing:.22em;text-transform:uppercase;color:var(--gold,#A08D76);margin:0 0 22px;line-height:1.6;}
 .hero-editorial .hero-message{font-size:clamp(38px,6vw,60px);line-height:1.08;font-weight:500;color:var(--ink,#3D3833);margin:0 0 22px;}
 .hero-editorial .hero-message em{font-style:italic;color:var(--brown,#6B5D4A);}
-.hero-editorial .hero-sub{font-size:15px;line-height:1.8;color:var(--soft);max-width:440px;margin:0 auto 34px;min-height:80px;}
+.hero-editorial .hero-sub{font-size:var(--text-lg);line-height:1.8;color:var(--soft);max-width:440px;margin:0 auto 34px;min-height:80px;}
 @media(max-width:768px){.hero-editorial .hero-message{font-size:36px;}}
 .hero-content{position:relative;z-index:2;padding:0 24px;max-width:680px;margin:0 auto;text-align:center;}
 .hero-copy{transition:none;}
 .hero-h1{font-size:clamp(2.6rem,5vw,4.6rem);font-weight:300;line-height:1.12;margin-bottom:22px;color:var(--text);}
 .hero-h1 em{font-style:italic;color:var(--gold);}
-.hero-sub{font-size:15px;color:var(--soft);max-width:480px;margin:0 auto 44px;line-height:2;min-height:90px;}
+.hero-sub{font-size:var(--text-lg);color:var(--soft);max-width:480px;margin:0 auto 44px;line-height:2;min-height:90px;}
 .hero-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:46px;height:46px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.65);color:var(--gold);font-size:26px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .25s;backdrop-filter:blur(2px);}
 .hero-arrow:hover{background:#fff;}
 .hero-prev{left:24px;}.hero-next{right:24px;}
@@ -82,7 +82,7 @@
 .occasion-flag{display:inline-block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#fff;background:var(--gold);padding:5px 12px;border-radius:40px;margin-bottom:12px;font-weight:500;}
 .occasion-name{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:#fff;line-height:1.15;margin-bottom:6px;}
 .occasion-card.flagship .occasion-name{font-size:2.2rem;}
-.occasion-sub{font-size:12px;color:rgba(255,255,255,.85);line-height:1.6;}
+.occasion-sub{font-size:var(--text-sm);color:rgba(255,255,255,.85);line-height:1.6;}
 @media(max-width:768px){.occasions-grid{grid-template-columns:1fr 1fr;}.occasion-card.flagship{grid-row:auto;grid-column:1 / span 2;min-height:240px;}}
 @media(max-width:480px){.occasions-grid{grid-template-columns:1fr;}.occasion-card.flagship{grid-column:auto;}}
 </style>
@@ -236,11 +236,11 @@
 <span class="tag">Why Foreverprint</span>
 <h2 class="section-title" style="margin-bottom:24px;">Made in the UK.<br>Made for every moment.</h2>
 <div class="divider"></div>
-<p style="font-size:14px;color:var(--soft);line-height:2;margin-bottom:32px;">We are a small, specialist team who believe an invitation deserves more than a template and a printer. Every order is reviewed by hand, every detail checked before it leaves us, and every box is packed with care.</p>
+<p style="font-size:var(--text-sm);color:var(--soft);line-height:2;margin-bottom:32px;">We are a small, specialist team who believe an invitation deserves more than a template and a printer. Every order is reviewed by hand, every detail checked before it leaves us, and every box is packed with care.</p>
 <div style="display:flex;flex-direction:column;gap:16px;">
-<div style="display:flex;align-items:flex-start;gap:16px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;"></div><div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Artwork review on every order</div><div style="font-size:12px;color:var(--soft);line-height:1.8;">We check your file for resolution, bleed and colour mode before printing.</div></div></div>
-<div style="display:flex;align-items:flex-start;gap:16px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;"></div><div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Premium papers, not compromises</div><div style="font-size:12px;color:var(--soft);line-height:1.8;">Smooth 300gsm white, luxurious cotton rag and ethereal vellum overlay.</div></div></div>
-<div style="display:flex;align-items:flex-start;gap:16px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;"></div><div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Matching envelopes available</div><div style="font-size:12px;color:var(--soft);line-height:1.8;">From brilliant white to midnight navy — add matching envelopes at checkout.</div></div></div>
+<div style="display:flex;align-items:flex-start;gap:16px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;"></div><div><div style="font-size:var(--text-sm);font-weight:500;margin-bottom:4px;">Artwork review on every order</div><div style="font-size:12px;color:var(--soft);line-height:1.8;">We check your file for resolution, bleed and colour mode before printing.</div></div></div>
+<div style="display:flex;align-items:flex-start;gap:16px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;"></div><div><div style="font-size:var(--text-sm);font-weight:500;margin-bottom:4px;">Premium papers, not compromises</div><div style="font-size:12px;color:var(--soft);line-height:1.8;">Smooth 300gsm white, luxurious cotton rag and ethereal vellum overlay.</div></div></div>
+<div style="display:flex;align-items:flex-start;gap:16px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;"></div><div><div style="font-size:var(--text-sm);font-weight:500;margin-bottom:4px;">Matching envelopes available</div><div style="font-size:12px;color:var(--soft);line-height:1.8;">From brilliant white to midnight navy — add matching envelopes at checkout.</div></div></div>
 </div>
 </div>
 <div style="background:var(--cream);border-radius:24px;overflow:hidden;aspect-ratio:4/5;">
@@ -257,9 +257,9 @@
 <h2 class="section-title centered">Words from Our Customers</h2>
 <div class="divider" style="margin:20px auto;"></div>
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px;">
-<div style="background:var(--white);padding:36px;border:1px solid var(--border);border-radius:20px;"><div style="color:var(--gold);font-size:13px;letter-spacing:3px;margin-bottom:16px;">★★★★★</div><p style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:18px;">"Absolutely breathtaking. Every guest commented on how beautiful our invitations were. Worth every penny."</p><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);">Charlotte &amp; James</div></div>
-<div style="background:var(--white);padding:36px;border:1px solid var(--border);border-radius:20px;"><div style="color:var(--gold);font-size:13px;letter-spacing:3px;margin-bottom:16px;">★★★★★</div><p style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:18px;">"The design studio was so intuitive. We created exactly what we had in our minds and it came out perfectly."</p><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);">Amelia &amp; Oliver</div></div>
-<div style="background:var(--white);padding:36px;border:1px solid var(--border);border-radius:20px;"><div style="color:var(--gold);font-size:13px;letter-spacing:3px;margin-bottom:16px;">★★★★★</div><p style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:18px;">"From ordering to delivery, the whole experience was luxurious. Our guests thought we had hired a designer."</p><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);">Isabella &amp; William</div></div>
+<div style="background:var(--white);padding:36px;border:1px solid var(--border);border-radius:20px;"><div style="color:var(--gold);font-size:var(--text-sm);letter-spacing:3px;margin-bottom:16px;">★★★★★</div><p style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:18px;">"Absolutely breathtaking. Every guest commented on how beautiful our invitations were. Worth every penny."</p><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);">Charlotte &amp; James</div></div>
+<div style="background:var(--white);padding:36px;border:1px solid var(--border);border-radius:20px;"><div style="color:var(--gold);font-size:var(--text-sm);letter-spacing:3px;margin-bottom:16px;">★★★★★</div><p style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:18px;">"The design studio was so intuitive. We created exactly what we had in our minds and it came out perfectly."</p><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);">Amelia &amp; Oliver</div></div>
+<div style="background:var(--white);padding:36px;border:1px solid var(--border);border-radius:20px;"><div style="color:var(--gold);font-size:var(--text-sm);letter-spacing:3px;margin-bottom:16px;">★★★★★</div><p style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:18px;">"From ordering to delivery, the whole experience was luxurious. Our guests thought we had hired a designer."</p><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);">Isabella &amp; William</div></div>
 </div>
 </div>
 </section>
@@ -268,7 +268,7 @@
 <section style="background:var(--gold);padding:80px 0;text-align:center;">
 <div class="container">
 <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,2.8rem);font-weight:300;color:#fff;margin-bottom:16px;line-height:1.2;">Ready to begin?</h2>
-<p style="font-size:14px;color:rgba(255,255,255,.8);max-width:420px;margin:0 auto 36px;line-height:1.9;">Upload your design or start from scratch in the studio — printed on the finest papers and delivered to your door.</p>
+<p style="font-size:var(--text-sm);color:rgba(255,255,255,.8);max-width:420px;margin:0 auto 36px;line-height:1.9;">Upload your design or start from scratch in the studio — printed on the finest papers and delivered to your door.</p>
 <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
 <a href="/upload-and-print.html" style="display:inline-flex;align-items:center;padding:15px 38px;background:#fff;color:var(--gold);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;text-decoration:none;border-radius:60px;">Upload My Design</a>
 <a href="/design-studio.html" style="display:inline-flex;align-items:center;padding:14px 37px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;text-decoration:none;border-radius:60px;">Open the Studio</a>
