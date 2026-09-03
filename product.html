@@ -21,15 +21,18 @@
 .lp-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;}
 .lp-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.6vw,3rem);font-weight:400;line-height:1.06;color:var(--text);margin:0 0 12px;}
 .lp-hero-sub{font-size:14px;color:var(--soft);line-height:1.75;margin:0 0 20px;max-width:460px;}
-.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 22px;display:inline-block;margin-bottom:20px;min-width:220px;}
-.lp-price-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:5px;}
-.lp-price-value{font-family:'Cormorant Garamond',serif;font-size:2.3rem;font-weight:400;color:var(--text);line-height:1;}
+.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:11px 18px;display:inline-block;margin-bottom:18px;}
+.lp-price-label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:3px;}
+.lp-price-value{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--text);line-height:1;}
 .lp-price-meta{font-size:11px;color:var(--soft);margin-top:5px;}
 .lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
 .lp-cta:hover{background:transparent;color:var(--gold);}
 .lp-cta::after{content:'→';transition:transform .2s;}
 .lp-cta:hover::after{transform:translateX(4px);}
 .lp-hero-trust{display:flex;gap:22px;margin-top:16px;font-size:11px;color:var(--soft);flex-wrap:wrap;}
+.lp-hero-reassure{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-top:22px;padding-top:20px;border-top:1px solid var(--border);}
+.lp-hr-item{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--soft);}
+.lp-hr-icon{color:var(--gold);font-size:13px;flex-shrink:0;}
 .lp-hero-trust span::before{content:'✓ ';color:var(--gold);font-weight:600;}
 .lp-hero-img{width:100%;max-width:480px;aspect-ratio:4/3;object-fit:cover;border-radius:16px;background:var(--pale);}
 .lp-hero-img-placeholder{width:100%;max-width:480px;aspect-ratio:4/3;border-radius:16px;background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--gold-lt);border:1px solid var(--border);}
@@ -167,16 +170,18 @@
       <div>
         <span class="lp-tag" id="lp-tag">Wedding Stationery</span>
         <h1 class="lp-h1" id="lp-h1">Wedding Invitations</h1>
-        <p class="lp-hero-sub" id="lp-sub">[REPLACE: Premium UK-printed wedding invitations, made to last. Choose your size, paper, and finish, and we'll handle the rest.]</p>
+        <p class="lp-hero-sub" id="lp-sub">Luxury wedding invitations, designed to be the first glimpse of your day. Each one is printed in the UK on the finest papers and checked by hand before it reaches you — from smooth signature stock to richly textured cotton rag, finished with foil, deckle edges or a wax seal. Whether you upload your own artwork or create something new in our studio, we'll make it beautiful.</p>
         <div class="lp-price-block" id="lp-price-block">
           <div class="lp-price-label">From</div>
           <div class="lp-price-value" id="lp-price-value">£—</div>
           <div class="lp-price-meta" id="lp-price-meta">Pricing loads from your published data</div>
         </div>
         <div><button class="lp-cta" id="lp-hero-cta" type="button" onclick="openPathModal(this)">Start Your Order</button></div>
-        <div class="lp-hero-trust">
-          <span>UK printed</span>
-          <span>Next-day delivery available</span>
+        <div class="lp-hero-reassure">
+          <div class="lp-hr-item"><span class="lp-hr-icon">✦</span><span>UK printed</span></div>
+          <div class="lp-hr-item"><span class="lp-hr-icon">✧</span><span>Premium paper</span></div>
+          <div class="lp-hr-item"><span class="lp-hr-icon">✸</span><span>Tracked delivery</span></div>
+          <div class="lp-hr-item"><span class="lp-hr-icon">✶</span><span>File checked by hand</span></div>
         </div>
       </div>
       <div>
@@ -260,36 +265,6 @@
 </section>
 
 <!-- WHY US — 4 items, real claims only -->
-<section class="lp-section lp-section-white">
-  <div class="container">
-    <span class="lp-section-tag">Why Foreverprint</span>
-    <h2 class="lp-section-h2">More than just <em>printing.</em></h2>
-    <div class="lp-section-divider"></div>
-    <div class="lp-why-grid">
-      <div class="lp-why-item">
-        <div class="lp-why-icon">✦</div>
-        <div class="lp-why-title">UK printed</div>
-        <div class="lp-why-text">[REPLACE: Every order printed at our UK facility.]</div>
-      </div>
-      <div class="lp-why-item">
-        <div class="lp-why-icon">✧</div>
-        <div class="lp-why-title">Next-day delivery</div>
-        <div class="lp-why-text">[REPLACE: Available on eligible orders for that last-minute moment.]</div>
-      </div>
-      <div class="lp-why-item">
-        <div class="lp-why-icon">✸</div>
-        <div class="lp-why-title">Premium paper</div>
-        <div class="lp-why-text">[REPLACE: Curated selection of British paper stocks.]</div>
-      </div>
-      <div class="lp-why-item">
-        <div class="lp-why-icon">✶</div>
-        <div class="lp-why-title">File checks</div>
-        <div class="lp-why-text">[REPLACE: Our team reviews every file before it goes to print.]</div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- FAQS — 5 questions, marked [REPLACE] for honest answers -->
 <section class="lp-section lp-section-cream">
   <div class="container">
