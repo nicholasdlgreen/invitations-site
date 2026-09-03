@@ -746,6 +746,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <div class="field"><label>Name</label><input type="text" id="pt_name" placeholder="e.g. Wedding Invitations" oninput="autoSlug()"></div>
       <div class="field"><label>URL Slug</label><input type="text" id="pt_slug" placeholder="e.g. wedding-invitations"></div>
     </div>
+    <div class="field"><label>Category (which menu it appears under)</label><select id="pt_category" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"><option value="">— none —</option><option value="weddings">Weddings</option><option value="celebrations">Celebrations</option><option value="announcements">Announcements</option></select></div>
     <div class="field"><label>Tagline (small text above title)</label><input type="text" id="pt_tagline" placeholder="e.g. Our signature product"></div>
     <div class="field"><label>Description (paragraph on products.html card)</label><input type="text" id="pt_description" placeholder="Short paragraph about this product"></div>
     <div class="field"><label>Features (one per line, shown as bullet points)</label><textarea id="pt_features" rows="4" placeholder="Available in A5, A6, 5x7&quot;, DL and Square&#10;Choose from Smooth White, Cotton Rag or Vellum&#10;Single or double-sided printing" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;resize:vertical;"></textarea></div>
@@ -1926,6 +1927,7 @@ function openProductTypeModal(editId) {
   const fields = ['pt_name','pt_slug','pt_tagline','pt_description','pt_features','pt_heroImage','pt_fromPrice','pt_metaTitle','pt_metaDescription','pt_displayOrder','pt_marginPct'];
   fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('pt_active').value = 'true';
+  document.getElementById('pt_category').value = '';
   document.getElementById('pt_editId').value = '';
   document.getElementById('pt_slug').dataset.autoSet = 'false';
 
@@ -1942,6 +1944,7 @@ function openProductTypeModal(editId) {
       document.getElementById('pt_name').value            = p.name || '';
       document.getElementById('pt_slug').value            = p.slug || '';
       document.getElementById('pt_tagline').value         = p.tagline || '';
+      document.getElementById('pt_category').value        = p.category || '';
       document.getElementById('pt_description').value     = p.description || '';
       document.getElementById('pt_features').value        = p.features || '';
       document.getElementById('pt_heroImage').value       = p.hero_image_url || '';
@@ -1983,6 +1986,7 @@ async function saveProductType() {
     name,
     slug,
     tagline:            document.getElementById('pt_tagline').value.trim() || null,
+    category:           document.getElementById('pt_category').value || null,
     description:        document.getElementById('pt_description').value.trim() || null,
     features:           document.getElementById('pt_features').value.trim() || null,
     hero_image_url:     document.getElementById('pt_heroImage').value.trim() || null,
