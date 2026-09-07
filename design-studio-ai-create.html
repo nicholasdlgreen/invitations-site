@@ -373,8 +373,39 @@
   bind('w-line','pv-line'); bind('w-date','pv-date'); bind('w-venue','pv-venue');
 
   document.getElementById('ds-generate').addEventListener('click', function(){
-    var self=this; this.textContent='Creating your design…';
-    setTimeout(function(){ document.getElementById('art-a').classList.add('show'); document.getElementById('art-b').classList.add('show'); self.textContent='↻ Generate again'; },900);
+    var self=this;
+    var brief = buildBrief();
+    self.textContent='Creating your design…';
+    self.disabled=true;
+    fetch('/.netlify/functions/studio-nano', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ brief: brief })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      self.disabled=false;
+      if(data.image){
+        // drop the real Nano design in as the full-frame background
+        var canvas=document.getElementById('ds-canvas');
+        var bg=document.getElementById('ds-nano-bg');
+        if(!bg){ bg=document.createElement('img'); bg.id='ds-nano-bg'; bg.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;'; canvas.insertBefore(bg, canvas.firstChild); }
+        bg.src=data.image;
+        // hide the placeholder art layers; keep text above
+        document.getElementById('art-a').style.display='none';
+        document.getElementById('art-b').style.display='none';
+        document.getElementById('pv-text').style.zIndex='2';
+        self.textContent='↻ Generate again';
+      } else {
+        self.textContent='↻ Try again';
+        alert('Design generation had a problem: ' + (data.error || 'unknown error'));
+      }
+    })
+    .catch(function(err){
+      self.disabled=false;
+      self.textContent='↻ Try again';
+      alert('Could not reach the design service: ' + err.message);
+    });
   });
 
   // init
