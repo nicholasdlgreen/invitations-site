@@ -6,7 +6,9 @@
 //
 // Requires env var: GEMINI_API_KEY  (set in Netlify site settings)
 
-const MODEL = 'gemini-2.5-flash-image'; // Nano Banana. Swap to a Lite/Pro id when ready.
+// Nano Banana Pro (Gemini 3 Pro Image) — supports native 4K output for print quality.
+// At 4K (~4096px), prints cleanly at 300 DPI up to ~13.7 inches — covers all invitation sizes.
+const MODEL = 'gemini-3-pro-image-preview';
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent';
 
 function cors() {
@@ -48,7 +50,11 @@ exports.handler = async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: fullPrompt }] }],
-        generationConfig: { responseModalities: ['IMAGE'] }
+        generationConfig: {
+          responseModalities: ['IMAGE'],
+          // request 4K (print-quality). Portrait/square handled via the brief + aspect ratio.
+          imageConfig: { imageSize: '4K' }
+        }
       })
     });
 
