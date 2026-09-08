@@ -8,8 +8,8 @@
 
 const https = require('https');
 
-// Nano Banana Pro (Gemini 3 Pro Image) — native 4K for print quality.
-const MODEL = 'gemini-3-pro-image-preview';
+// Nano Banana (Gemini 2.5 Flash Image) — the model confirmed working on this key.
+const MODEL = 'gemini-2.5-flash-image';
 
 function cors() {
   return {
@@ -45,8 +45,7 @@ exports.handler = async (event) => {
   const requestBody = JSON.stringify({
     contents: [{ parts: [{ text: fullPrompt }] }],
     generationConfig: {
-      responseModalities: ['IMAGE'],
-      imageConfig: { imageSize: '4K' }
+      responseModalities: ['IMAGE']
     }
   });
 
