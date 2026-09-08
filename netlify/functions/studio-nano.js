@@ -1,15 +1,15 @@
 // netlify/functions/studio-nano.js
 //
 // Foreverprint AI Design Studio — Nano Banana (Gemini image) generation.
-// Takes the assembled brief from the studio page, asks Gemini to generate a
-// decorative invitation design (no text, empty centre), returns a base64 image.
+// Uses the built-in https module (like help-chat.js) so it works regardless of
+// the Netlify Node version — no dependency on global fetch.
 //
 // Requires env var: GEMINI_API_KEY  (set in Netlify site settings)
 
-// Nano Banana Pro (Gemini 3 Pro Image) — supports native 4K output for print quality.
-// At 4K (~4096px), prints cleanly at 300 DPI up to ~13.7 inches — covers all invitation sizes.
+const https = require('https');
+
+// Nano Banana Pro (Gemini 3 Pro Image) — native 4K for print quality.
 const MODEL = 'gemini-3-pro-image-preview';
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent';
 
 function cors() {
   return {
@@ -36,42 +36,53 @@ exports.handler = async (event) => {
   }
   if (!brief) return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Missing brief' }) };
 
-  // Safety net: always reinforce the "decorative only, no text, leave space" rule,
-  // even if the client brief forgot it.
   const fullPrompt = brief +
     '\n\nImportant: generate ONLY the decorative artwork for a wedding invitation. ' +
     'Leave a large, clean, empty area in the centre for text to be added later. ' +
     'Do NOT render any letters, words, names or dates. Flat, straight-on view, ' +
     'the design filling the whole frame, portrait orientation, soft cream background, print quality.';
 
+  const requestBody = JSON.stringify({
+    contents: [{ parts: [{ text: fullPrompt }] }],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+      imageConfig: { imageSize: '4K' }
+    }
+  });
+
   try {
-    const resp = await fetch(API_URL + '?key=' + encodeURIComponent(apiKey), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: fullPrompt }] }],
-        generationConfig: {
-          responseModalities: ['IMAGE'],
-          imageConfig: { imageSize: '4K' }
+    const response = await new Promise((resolve, reject) => {
+      const req = https.request({
+        hostname: 'generativelanguage.googleapis.com',
+        path: '/v1beta/models/' + MODEL + ':generateContent?key=' + encodeURIComponent(apiKey),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(requestBody)
         }
-      })
+      }, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          let parsed = null;
+          try { parsed = JSON.parse(data); } catch (e) { parsed = null; }
+          resolve({ status: res.statusCode, parsed: parsed, raw: data });
+        });
+      });
+      req.on('error', reject);
+      req.write(requestBody);
+      req.end();
     });
 
-    // Read the body as TEXT first, then try to parse — so a non-JSON error
-    // (HTML, plain text) never throws "unexpected token".
-    const rawText = await resp.text();
-    let data = null;
-    try { data = JSON.parse(rawText); } catch (e) { data = null; }
-
-    if (!resp.ok || !data) {
-      // surface the real error message from Google, readable
-      var msg = 'Nano service error (' + resp.status + ')';
-      if (data && data.error && data.error.message) msg += ': ' + data.error.message;
-      else if (rawText) msg += ': ' + rawText.slice(0, 300);
+    // handle errors readably (never throw "unexpected token")
+    if (response.status !== 200 || !response.parsed) {
+      let msg = 'Nano service error (' + response.status + ')';
+      if (response.parsed && response.parsed.error && response.parsed.error.message) msg += ': ' + response.parsed.error.message;
+      else if (response.raw) msg += ': ' + response.raw.slice(0, 300);
       return { statusCode: 502, headers: cors(), body: JSON.stringify({ error: msg }) };
     }
 
-    // Pull the first inline image out of the response.
+    const data = response.parsed;
     let imageB64 = null, mime = 'image/png';
     const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
     for (const p of parts) {
