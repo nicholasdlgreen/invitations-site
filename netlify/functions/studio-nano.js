@@ -52,18 +52,24 @@ exports.handler = async (event) => {
         contents: [{ parts: [{ text: fullPrompt }] }],
         generationConfig: {
           responseModalities: ['IMAGE'],
-          // request 4K (print-quality). Portrait/square handled via the brief + aspect ratio.
           imageConfig: { imageSize: '4K' }
         }
       })
     });
 
-    if (!resp.ok) {
-      const t = await resp.text();
-      return { statusCode: 502, headers: cors(), body: JSON.stringify({ error: 'Nano service error (' + resp.status + '): ' + t.slice(0, 300) }) };
-    }
+    // Read the body as TEXT first, then try to parse — so a non-JSON error
+    // (HTML, plain text) never throws "unexpected token".
+    const rawText = await resp.text();
+    let data = null;
+    try { data = JSON.parse(rawText); } catch (e) { data = null; }
 
-    const data = await resp.json();
+    if (!resp.ok || !data) {
+      // surface the real error message from Google, readable
+      var msg = 'Nano service error (' + resp.status + ')';
+      if (data && data.error && data.error.message) msg += ': ' + data.error.message;
+      else if (rawText) msg += ': ' + rawText.slice(0, 300);
+      return { statusCode: 502, headers: cors(), body: JSON.stringify({ error: msg }) };
+    }
 
     // Pull the first inline image out of the response.
     let imageB64 = null, mime = 'image/png';
