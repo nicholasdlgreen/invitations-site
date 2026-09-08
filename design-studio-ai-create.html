@@ -7,8 +7,8 @@
 <meta name="description" content="Design your own bespoke wedding invitation. Choose a layout, add your wording, describe the look."/>
 <meta name="robots" content="noindex"/>
 <style>
-.ds-wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px;}
-.ds-hero{text-align:center;padding:44px 0 20px;}
+.ds-wrap{max-width:1200px;margin:0 auto;padding:0 24px 80px;}
+.ds-hero{text-align:center;padding:36px 0 14px;}
 .ds-eyebrow{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:12px;}
 .ds-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,2.6rem);font-weight:400;color:var(--text);line-height:1.1;margin:0 0 10px;}
 .ds-sub{font-size:var(--text-body);color:var(--soft);line-height:1.7;max-width:520px;margin:0 auto;}
@@ -21,7 +21,7 @@
 .ds-steps-label{font-size:var(--text-sm);color:var(--soft);white-space:nowrap;}
 .ds-steps-label.active{color:var(--text);}
 .ds-steps-line{flex:1;height:1px;background:var(--border);margin:0 12px;min-width:20px;}
-.ds-guide-note{text-align:center;font-size:var(--text-sm);color:var(--soft);margin:0 auto 30px;font-style:italic;}
+.ds-guide-note{text-align:center;font-size:var(--text-sm);color:var(--soft);margin:0 auto 22px;font-style:italic;}
 .ds-grid{display:grid;grid-template-columns:1fr 1.35fr;gap:22px;align-items:start;}
 .ds-acc{display:flex;flex-direction:column;gap:12px;}
 .ds-sec{background:var(--cream);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;}
@@ -33,13 +33,25 @@
 .ds-sec.open .ds-chev{transform:rotate(180deg);}
 .ds-sec-body{display:none;padding:0 20px 20px;}
 .ds-sec.open .ds-sec-body{display:block;}
-.ds-sec-hint{font-size:var(--text-sm);color:var(--soft);margin-bottom:14px;line-height:1.6;}
+.ds-sec-hint{font-size:var(--text-sm);color:var(--soft);margin-bottom:12px;line-height:1.5;margin-top:-2px;}
 .ds-frames{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 .ds-frame{aspect-ratio:3/4;border:1px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;padding:8px;transition:all .2s;position:relative;}
 .ds-frame:hover{border-color:var(--gold-lt);}
 .ds-frame.sel{border:2px solid var(--gold);}
 .ds-frame-inner{width:100%;height:100%;position:relative;}
 .ds-frame-name{position:absolute;bottom:-2px;left:0;right:0;text-align:center;font-size:var(--text-xs);color:var(--soft);}
+
+.ds-sizes{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+.ds-size{border:1px solid var(--border);border-radius:12px;background:var(--white);cursor:pointer;padding:18px 10px 14px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;}
+.ds-size:hover{border-color:var(--gold-lt);box-shadow:0 6px 18px rgba(61,46,36,.06);}
+.ds-size.sel{border:2px solid var(--gold);background:#F4EDE6;}
+.ds-size-icon{height:52px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.ds-size-card{background:#FBF8F2;border:1px solid #D8CBB8;border-radius:3px;box-shadow:0 3px 8px rgba(61,46,36,.08);}
+.ds-size.sel .ds-size-card{border-color:var(--gold);}
+.ds-size-name{font-family:'Cormorant Garamond',serif;font-size:var(--text-lg);color:var(--text);line-height:1;}
+.ds-size-dim{font-size:var(--text-xs);color:var(--soft);margin-top:4px;}
+.ds-size-note{font-size:calc(var(--text-xs) * .92);color:var(--pale);margin-top:8px;line-height:1.35;}
+@media(max-width:600px){.ds-sizes{grid-template-columns:1fr 1fr;}}
 .ds-fld{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);outline:none;width:100%;box-sizing:border-box;margin-bottom:8px;transition:border-color .2s;}
 .ds-fld:focus{border-color:var(--gold-lt);}
 .ds-fld::placeholder{color:var(--pale);}
@@ -67,14 +79,32 @@
 .ds-preview{background:#F1EFE9;border:1px solid var(--border);border-radius:16px;padding:18px;}
 .ds-preview-label{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-align:center;margin-bottom:12px;}
 .ds-canvas{aspect-ratio:3/4;background:#FBF8F2;border-radius:8px;position:relative;overflow:hidden;box-shadow:0 8px 26px rgba(61,46,36,.12);}
+.ds-safe{position:absolute;top:11%;left:10%;right:10%;bottom:11%;display:flex;align-items:center;justify-content:center;z-index:1;}
+/* square: wider text zone (tighter sides, tighter top/bottom) so lines wrap cleanly */
+.ds-canvas.is-square .ds-safe{top:8%;bottom:8%;left:7%;right:7%;}
+.ds-canvas.is-square .ln.names{font-size:clamp(1.3rem,2.6vw,1.8rem);}
+.ds-stack{width:100%;text-align:center;transform-origin:center center;}
+.ds-empty{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--pale);font-size:var(--text-sm);line-height:1.6;}
+.ds-stack .ln{font-family:'Cormorant Garamond',serif;color:#3D3833;line-height:1.32;display:none;}
+.ds-stack .ln.show{display:block;}
+.ln.host{font-style:italic;font-size:calc(var(--text-sm) * .95);color:#8A7A68;margin-bottom:9px;}
+.ln.request{font-style:italic;font-size:calc(var(--text-sm) * .9);color:#5C5148;margin-bottom:12px;}
+.ln.names{font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,3vw,2.1rem);font-weight:500;line-height:1.08;margin-bottom:4px;}
+.ln.date{font-size:var(--text-sm);letter-spacing:.5px;margin-top:11px;}
+.ln.time{font-size:calc(var(--text-sm) * .9);color:#5C5148;margin-bottom:6px;}
+.ln.venue{font-size:var(--text-sm);letter-spacing:.5px;margin-top:9px;}
+.ln.reception{font-style:italic;font-size:calc(var(--text-sm) * .9);color:#5C5148;margin-top:11px;}
+.ln.dress{font-size:calc(var(--text-xs) * .95);letter-spacing:.1em;text-transform:uppercase;color:#8A7A68;margin-top:9px;}
+.ln.rsvp{font-size:calc(var(--text-xs) * .95);color:#8A7A68;margin-top:9px;}
+.ln.custom{font-style:italic;font-size:calc(var(--text-sm) * .9);color:var(--gold);margin-top:11px;}
 .ds-art{position:absolute;pointer-events:none;transition:opacity .4s;opacity:0;}
 .ds-art.show{opacity:.85;}
-.ds-canvas-text{position:absolute;text-align:center;transition:all .3s;}
-.ds-ct-eyebrow{font-size:calc(var(--text-xs) * .8);letter-spacing:.14em;color:#96784E;margin-bottom:6px;text-transform:uppercase;}
-.ds-ct-names{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(1.3rem,3vw,1.9rem);color:var(--text);line-height:1.05;}
-.ds-ct-line{font-size:calc(var(--text-xs) * .85);color:#5C5148;margin-top:6px;font-style:italic;}
-.ds-ct-detail{font-size:calc(var(--text-xs) * .9);color:#5C5148;margin-top:5px;}
-.ds-ct-venue{font-size:calc(var(--text-xs) * .8);color:#96784E;}
+
+
+
+
+
+
 .ds-preview-cta{display:block;width:100%;margin-top:16px;background:var(--text);color:var(--cream);border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;padding:14px;border-radius:60px;cursor:pointer;text-align:center;}
 .ds-preview-hint{text-align:center;font-size:var(--text-xs);color:var(--soft);margin-top:10px;line-height:1.5;}
 @media(max-width:820px){
@@ -102,7 +132,7 @@
   </div>
 
   <div class="ds-steps" id="ds-steps">
-    <div class="ds-steps-item"><span class="ds-dot active" data-dot="0">1</span><span class="ds-steps-label active" data-lbl="0">Layout</span><span class="ds-steps-line"></span></div>
+    <div class="ds-steps-item"><span class="ds-dot active" data-dot="0">1</span><span class="ds-steps-label active" data-lbl="0">Size</span><span class="ds-steps-line"></span></div>
     <div class="ds-steps-item"><span class="ds-dot" data-dot="1">2</span><span class="ds-steps-label" data-lbl="1">Wording</span><span class="ds-steps-line"></span></div>
     <div class="ds-steps-item"><span class="ds-dot" data-dot="2">3</span><span class="ds-steps-label" data-lbl="2">The look</span></div>
   </div>
@@ -112,21 +142,33 @@
     <div class="ds-acc" id="ds-acc">
 
       <div class="ds-sec open" data-sec="0">
-        <button class="ds-sec-head" data-head="0"><span><span class="ds-sec-num">1</span>Choose a layout</span><span class="ds-chev">▾</span></button>
+        <button class="ds-sec-head" data-head="0"><span><span class="ds-sec-num">1</span>Choose your size</span><span class="ds-chev">▾</span></button>
         <div class="ds-sec-body">
-          <div class="ds-sec-hint">A print-perfect frame to build on. The decoration fills the edges; your words sit in the space it leaves.</div>
-          <div class="ds-frames" id="ds-frames">
-            <div class="ds-frame sel" data-frame="wreath">
-              <div class="ds-frame-inner"><div style="position:absolute;top:2px;left:10%;right:10%;height:26%;border:1px solid #DDD3C4;border-radius:40%;border-bottom:none;"></div></div>
-              <div class="ds-frame-name">Wreath</div>
+          <div class="ds-sec-hint">The size and shape of your invitation. Everything else builds on this.</div>
+          <div class="ds-sizes" id="ds-sizes">
+            <div class="ds-size sel" data-size="a7">
+              <div class="ds-size-icon"><div class="ds-size-card" style="width:32px;height:44px;"></div></div>
+              <div class="ds-size-name">5&times;7&Prime;</div>
+              <div class="ds-size-dim">127 &times; 178mm</div>
+              <div class="ds-size-note">The classic · most popular</div>
             </div>
-            <div class="ds-frame" data-frame="border">
-              <div class="ds-frame-inner"><div style="position:absolute;inset:2px;border:1px solid #DDD3C4;border-radius:4px;"></div></div>
-              <div class="ds-frame-name">Border</div>
+            <div class="ds-size" data-size="a5">
+              <div class="ds-size-icon"><div class="ds-size-card" style="width:35px;height:49px;"></div></div>
+              <div class="ds-size-name">A5</div>
+              <div class="ds-size-dim">148 &times; 210mm</div>
+              <div class="ds-size-note">Larger · a real statement</div>
             </div>
-            <div class="ds-frame" data-frame="corners">
-              <div class="ds-frame-inner"><div style="position:absolute;top:2px;left:2px;width:30%;height:22%;border:1px solid #DDD3C4;border-right:none;border-bottom:none;"></div><div style="position:absolute;bottom:2px;right:2px;width:30%;height:22%;border:1px solid #DDD3C4;border-left:none;border-top:none;"></div></div>
-              <div class="ds-frame-name">Corners</div>
+            <div class="ds-size" data-size="a6">
+              <div class="ds-size-icon"><div class="ds-size-card" style="width:28px;height:39px;"></div></div>
+              <div class="ds-size-name">A6</div>
+              <div class="ds-size-dim">105 &times; 148mm</div>
+              <div class="ds-size-note">Smaller · intimate</div>
+            </div>
+            <div class="ds-size" data-size="square">
+              <div class="ds-size-icon"><div class="ds-size-card" style="width:42px;height:42px;"></div></div>
+              <div class="ds-size-name">Square</div>
+              <div class="ds-size-dim">148 &times; 148mm</div>
+              <div class="ds-size-note">Distinctive · modern</div>
             </div>
           </div>
         </div>
@@ -135,18 +177,20 @@
       <div class="ds-sec" data-sec="1">
         <button class="ds-sec-head" data-head="1"><span><span class="ds-sec-num">2</span>Your wording</span><span class="ds-chev">▾</span></button>
         <div class="ds-sec-body">
-          <div class="ds-sec-hint">Your details go in first, so the design works around them. Edit any time.</div>
+          <div class="ds-sec-hint">Fill in whatever you'd like — every line is optional, and appears in your invitation as you type.</div>
           <input class="ds-fld" id="w-names" placeholder="Your names — e.g. Eleanor &amp; Thomas"/>
+          <input class="ds-fld" id="w-host" placeholder="Host line — Together with their families (optional)"/>
           <input class="ds-fld" id="w-line" placeholder="Invitation line — invite you to celebrate their marriage"/>
-          <input class="ds-fld" id="w-date" placeholder="Date &amp; time — Saturday 14th September 2026, 3pm"/>
+          <input class="ds-fld" id="w-date" placeholder="Date — Saturday, 14th September 2026"/>
+          <input class="ds-fld" id="w-time" placeholder="Time — at half past three in the afternoon"/>
           <input class="ds-fld" id="w-venue" placeholder="Venue — Cotswold Manor, Oxfordshire"/>
           <div class="ds-more" id="w-more">
-            <input class="ds-fld" placeholder="Reception — dinner &amp; dancing to follow"/>
-            <input class="ds-fld" placeholder="Dress code — black tie (optional)"/>
-            <input class="ds-fld" placeholder="RSVP — by 1st August (optional)"/>
-            <input class="ds-fld" placeholder="A quote or extra line (optional)"/>
+            <input class="ds-fld" id="w-reception" placeholder="Reception — dinner &amp; dancing to follow (optional)"/>
+            <input class="ds-fld" id="w-dress" placeholder="Dress code — black tie (optional)"/>
+            <input class="ds-fld" id="w-rsvp" placeholder="RSVP — by 1st August · your website (optional)"/>
+            <input class="ds-fld" id="w-custom" placeholder="Add your own line — a quote, a note… (optional)"/>
           </div>
-          <button class="ds-addmore" id="w-addbtn">+ add reception, dress code, RSVP…</button>
+          <button class="ds-addmore" id="w-addbtn">+ add reception, dress code, RSVP, your own line…</button>
         </div>
       </div>
 
@@ -236,12 +280,20 @@
         <div class="ds-canvas" id="ds-canvas">
           <div class="ds-art" id="art-a"></div>
           <div class="ds-art" id="art-b"></div>
-          <div class="ds-canvas-text" id="pv-text">
-            <div class="ds-ct-eyebrow">Together with their families</div>
-            <div class="ds-ct-names" id="pv-names">Your names</div>
-            <div class="ds-ct-line" id="pv-line"></div>
-            <div class="ds-ct-detail" id="pv-date"></div>
-            <div class="ds-ct-venue" id="pv-venue"></div>
+          <div class="ds-safe">
+            <div class="ds-stack" id="ds-stack">
+              <div class="ds-empty" id="ds-empty">Your invitation will appear here as you add your wording.</div>
+              <div class="ln host"   id="pv-host"></div>
+              <div class="ln request" id="pv-request"></div>
+              <div class="ln names"  id="pv-names"></div>
+              <div class="ln date"   id="pv-date"></div>
+              <div class="ln time"   id="pv-time"></div>
+              <div class="ln venue"  id="pv-venue"></div>
+              <div class="ln reception" id="pv-reception"></div>
+              <div class="ln dress"  id="pv-dress"></div>
+              <div class="ln rsvp"   id="pv-rsvp"></div>
+              <div class="ln custom" id="pv-custom"></div>
+            </div>
           </div>
         </div>
         <div class="ds-preview-cta">Love it — choose paper &amp; order →</div>
@@ -257,80 +309,38 @@
 <script>
 (function(){
   var sel = { style:[], touch:[], mood:[], finish:[], colour:[] };
-  var frame = 'wreath';
+  var size = 'a7';
 
-  // ---- layout definitions: art zones + text zone per frame ----
-  var LAYOUTS = {
-    wreath: {
-      text: {top:'40%', left:'8%', right:'8%', bottom:'auto', transform:'none'},
-      art: [
-        {top:'0', left:'0', right:'0', height:'34%', grad:'radial-gradient(ellipse at 50% 0%, ART1 0%, ART2 35%, transparent 66%)'},
-        {bottom:'0', left:'0', right:'0', height:'26%', grad:'radial-gradient(ellipse at 50% 100%, ART1 0%, ART2 40%, transparent 70%)'}
-      ]
-    },
-    border: {
-      text: {top:'50%', left:'18%', right:'18%', bottom:'auto', transform:'translateY(-50%)'},
-      art: [
-        {top:'0', left:'0', right:'0', bottom:'0', border:true, grad:'transparent'}
-      ]
-    },
-    corners: {
-      text: {top:'42%', left:'12%', right:'12%', bottom:'auto', transform:'none'},
-      art: [
-        {top:'0', left:'0', width:'42%', height:'32%', grad:'radial-gradient(ellipse at 0% 0%, ART1 0%, ART2 45%, transparent 75%)'},
-        {bottom:'0', right:'0', width:'42%', height:'32%', grad:'radial-gradient(ellipse at 100% 100%, ART1 0%, ART2 45%, transparent 75%)'}
-      ]
-    }
+  // ---- size definitions: aspect ratio (width/height) per size ----
+  var SIZES = {
+    a7:     { ratio: 5/7,    desc: 'a 5x7 inch portrait invitation' },
+    a5:     { ratio: 148/210, desc: 'an A5 portrait invitation' },
+    a6:     { ratio: 105/148, desc: 'an A6 portrait invitation' },
+    square: { ratio: 1,      desc: 'a square invitation' }
   };
 
-  function applyLayout(){
-    var L = LAYOUTS[frame];
-    var t = document.getElementById('pv-text');
-    t.style.top=L.text.top; t.style.left=L.text.left; t.style.right=L.text.right;
-    t.style.bottom=L.text.bottom; t.style.transform=L.text.transform;
-    // reset art layers
-    ['art-a','art-b'].forEach(function(id,i){
-      var el=document.getElementById(id);
-      var z=L.art[i];
-      if(!z){ el.style.display='none'; return; }
-      el.style.display='block';
-      el.style.top=z.top||'auto'; el.style.bottom=z.bottom||'auto';
-      el.style.left=z.left||'auto'; el.style.right=z.right||'auto';
-      el.style.width=z.width||'auto'; el.style.height=z.height||'auto';
-      if(z.border){ el.style.inset='0'; el.style.border='14px solid transparent'; el.dataset.border='1'; }
-      else { el.dataset.border=''; el.style.border='none'; }
-      el.dataset.grad=z.grad;
-    });
-  }
-
-  function paintArt(){
-    var col1='#E7C9C4', col2='#DDE7D0';
-    // rough: derive art tint from selected colours
-    ['art-a','art-b'].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el.style.display==='none') return;
-      if(el.dataset.border){
-        el.style.background='none';
-        el.style.borderImage='none';
-        el.style.border='12px solid '+col2;
-        el.style.borderRadius='6px';
-        el.style.opacity='.55';
-      } else {
-        el.style.background=(el.dataset.grad||'').replace('ART1',col1).replace('ART2',col2);
-      }
-    });
+  function applySize(){
+    var S = SIZES[size];
+    var canvas = document.getElementById('ds-canvas');
+    // set the preview canvas to the chosen proportions with a smooth transition
+    canvas.style.transition = 'aspect-ratio .3s ease, max-width .3s ease';
+    canvas.style.aspectRatio = S.ratio;
+    // square needs a smaller max-width so it doesn't tower; portraits taller
+    canvas.style.maxWidth = (size==='square') ? '340px' : '380px';
+    canvas.style.margin = '0 auto';
+    canvas.classList.toggle('is-square', size==='square');
+    setTimeout(function(){ if(typeof autofit==='function') autofit(); }, 320);
   }
 
   function buildBrief(){
     var parts=[];
     var lead=(sel.mood[0]?sel.mood[0]+', ':'')+(sel.style[0]||'elegant');
-    parts.push('A '+lead+' wedding invitation design');
+    parts.push('A '+lead+' wedding invitation design for '+(SIZES[size].desc));
     if(sel.touch.length) parts.push('with '+sel.touch.join(', '));
     if(sel.colour.length) parts.push('in '+sel.colour.join(', '));
     if(sel.finish.length) parts.push(sel.finish.join(', '));
     var ft=document.getElementById('w-story').value.trim();
-    var layoutDesc = frame==='wreath' ? 'a floral wreath framing the top and bottom' : (frame==='border' ? 'a decorative border framing all four edges' : 'decorative florals in opposite corners');
-    var s = parts.join(', ')+', with '+layoutDesc+'. A decorative design only, with generous clear empty space in the centre for text — no lettering or words in the image. Flat, straight-on, fills the frame, on a soft cream background, print quality.';
+    var s = parts.join(', ')+'. A decorative design only, with generous clear empty space in the centre for text — no lettering or words in the image. Flat, straight-on, fills the frame, on a soft cream background, print quality.';
     if(ft) s += ' '+ft.charAt(0).toUpperCase()+ft.slice(1)+'.';
     document.getElementById('ds-brief-text').textContent = '"'+s+'"';
     return s;
@@ -347,10 +357,10 @@
 
   document.getElementById('w-addbtn').addEventListener('click', function(){ document.getElementById('w-more').classList.add('show'); this.style.display='none'; });
 
-  document.querySelectorAll('.ds-frame').forEach(function(f){
+  document.querySelectorAll('.ds-size').forEach(function(f){
     f.addEventListener('click', function(){
-      document.querySelectorAll('.ds-frame').forEach(function(x){x.classList.remove('sel');});
-      f.classList.add('sel'); frame=f.dataset.frame; applyLayout(); paintArt(); buildBrief();
+      document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');});
+      f.classList.add('sel'); size=f.dataset.size; applySize(); buildBrief();
     });
   });
 
@@ -367,10 +377,46 @@
   });
   document.getElementById('w-story').addEventListener('input', buildBrief);
 
-  var names=document.getElementById('w-names');
-  names.addEventListener('input', function(){ document.getElementById('pv-names').textContent=names.value.trim()||'Your names'; });
-  function bind(id,t){ document.getElementById(id).addEventListener('input', function(){ document.getElementById(t).textContent=this.value.trim(); }); }
-  bind('w-line','pv-line'); bind('w-date','pv-date'); bind('w-venue','pv-venue');
+  // --- live preview: map every wording field to its template line ---
+  var FIELD_MAP = [
+    ['w-host','pv-host'],
+    ['w-line','pv-request'],
+    ['w-names','pv-names'],
+    ['w-date','pv-date'],
+    ['w-time','pv-time'],
+    ['w-venue','pv-venue'],
+    ['w-reception','pv-reception'],
+    ['w-dress','pv-dress'],
+    ['w-rsvp','pv-rsvp'],
+    ['w-custom','pv-custom']
+  ];
+  function refreshPreview(){
+    var anyFilled = false;
+    FIELD_MAP.forEach(function(pair){
+      var input = document.getElementById(pair[0]);
+      var line  = document.getElementById(pair[1]);
+      if(!input || !line) return;
+      var v = input.value.trim();
+      if(v){ line.textContent = v; line.classList.add('show'); anyFilled = true; }
+      else { line.textContent = ''; line.classList.remove('show'); }
+    });
+    document.getElementById('ds-empty').style.display = anyFilled ? 'none' : 'block';
+    autofit();
+  }
+
+  // --- auto-fit: shrink the stack to stay within the safe area ---
+  function autofit(){
+    var stack = document.getElementById('ds-stack');
+    var safe = stack.parentElement;
+    stack.style.transform = 'scale(1)';
+    var avail = safe.clientHeight, need = stack.scrollHeight;
+    if(need > avail){ stack.style.transform = 'scale(' + Math.max(0.4, avail/need) + ')'; }
+  }
+
+  FIELD_MAP.forEach(function(pair){
+    var el = document.getElementById(pair[0]);
+    if(el) el.addEventListener('input', refreshPreview);
+  });
 
   document.getElementById('ds-generate').addEventListener('click', function(){
     var self=this;
@@ -391,9 +437,9 @@
         var bg=document.getElementById('ds-nano-bg');
         if(!bg){ bg=document.createElement('img'); bg.id='ds-nano-bg'; bg.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;'; canvas.insertBefore(bg, canvas.firstChild); }
         bg.src=data.image;
-        // hide the placeholder art layers; keep text above
-        document.getElementById('art-a').style.display='none';
-        document.getElementById('art-b').style.display='none';
+        // keep text above the generated art
+        var ta=document.getElementById('art-a'); if(ta) ta.style.display='none';
+        var tb=document.getElementById('art-b'); if(tb) tb.style.display='none';
         document.getElementById('pv-text').style.zIndex='2';
         self.textContent='↻ Generate again';
       } else {
@@ -409,9 +455,7 @@
   });
 
   // init
-  applyLayout(); paintArt(); buildBrief();
-  document.getElementById('art-a').classList.add('show');
-  document.getElementById('art-b').classList.add('show');
+  applySize(); buildBrief(); refreshPreview();
   setStep(0);
 })();
 fetch('/header.html').then(function(r){return r.text();}).then(function(html){ document.getElementById('site-header').outerHTML=html; if(typeof updateCartBadge==='function') updateCartBadge(); });
