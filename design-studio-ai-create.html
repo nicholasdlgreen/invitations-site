@@ -440,7 +440,7 @@
         // keep text above the generated art
         var ta=document.getElementById('art-a'); if(ta) ta.style.display='none';
         var tb=document.getElementById('art-b'); if(tb) tb.style.display='none';
-        document.getElementById('pv-text').style.zIndex='2';
+        var safe=document.querySelector('.ds-safe'); if(safe) safe.style.zIndex='2';
         self.textContent='↻ Generate again';
       } else {
         self.textContent='↻ Try again';
