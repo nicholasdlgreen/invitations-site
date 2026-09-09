@@ -44,7 +44,7 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 <div class="tw-wrap">
   <div class="tw-eyebrow">Design your own · Make some tweaks</div>
   <h1 class="tw-title">Let's refine it</h1>
-  <p class="tw-sub">Tell us what to adjust — we'll tweak your design while keeping its character. This changes the design, not your wording.</p>
+  <p class="tw-sub">Tell us what to adjust — we'll create a variation of your design in that direction, keeping its overall character. Each tweak is a fresh take, not a pixel-level edit.</p>
 
   <div class="tw-grid">
     <div class="tw-preview">
@@ -88,7 +88,7 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 (function(){
   var state = null;
   try { state = JSON.parse(sessionStorage.getItem('fp_design_tweak') || 'null'); } catch(e){}
-  if(!state || !state.image){ window.location.href = '/design-studio-ai-create.html'; return; }
+  if(!state || !state.image){ window.location.href = '/design-studio-ai-create.html?back=1'; return; }
 
   var currentImage = state.image;
   document.getElementById('tw-img').src = currentImage;
@@ -113,7 +113,7 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 
     fetch('/.netlify/functions/studio-tweak', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ imageUrl: currentImage, tweak: tweak, brief: state.brief || '', strength: 0.7 })
+      body: JSON.stringify({ imageUrl: currentImage, tweak: tweak, brief: state.brief || '', strength: 0.4 })
     })
     .then(function(r){ return r.json(); })
     .then(function(data){
@@ -156,7 +156,7 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
   });
 
   document.getElementById('tw-back').addEventListener('click', function(){
-    window.location.href = '/design-studio-ai-create.html';
+    window.location.href = '/design-studio-ai-create.html?back=1';
   });
 })();
 </script>
