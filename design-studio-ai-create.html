@@ -1128,17 +1128,28 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   applySize(); buildBrief(); refreshPreview();
   setStep(0);
 
-  // If returning from the tweak page with a kept/tweaked design, reinstate it
-  // so the customer sees their design (not a blank studio) and can order it.
+  // If returning from the tweak page with a kept/tweaked design, reinstate it.
+  // Only do this when we came back via an explicit return (the ?tweaked flag or
+  // a fresh tweak-result). A plain fresh visit must start blank — so we ignore
+  // (and clear) any stale fp_design_tweak left over from a previous session.
   (function reinstateTweaked(){
     var params = new URLSearchParams(window.location.search);
+    var isReturn = params.get('tweaked') === '1' || params.get('back') === '1';
+
     var result = null;
     try { result = JSON.parse(sessionStorage.getItem('fp_design_tweak_result') || 'null'); } catch(e){}
+
+    // fresh visit (no return flag, no fresh result) → start blank, clear stale
+    if(!isReturn && (!result || !result.image)){
+      try { sessionStorage.removeItem('fp_design_tweak'); } catch(e){}
+      return;
+    }
+
     var backState = null;
     try { backState = JSON.parse(sessionStorage.getItem('fp_design_tweak') || 'null'); } catch(e){}
     var restore = result || backState;
     if(!restore || !restore.image) return;
-    // restore wording fields if present
+
     if(restore.wording && Array.isArray(restore.wording)){
       FIELD_MAP.forEach(function(pair, i){
         var el=document.getElementById(pair[0]);
@@ -1146,14 +1157,11 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       });
       refreshPreview();
     }
-    // restore size
     if(restore.size){
       var szBtn = document.querySelector('.ds-size[data-size="'+restore.size+'"]');
       if(szBtn){ document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');}); szBtn.classList.add('sel'); size=restore.size; applySize(); }
     }
-    // put the (tweaked) image back and enter generated mode
     setTimeout(function(){ enterGeneratedMode(restore.image); }, 100);
-    // clear the tweak-result so a later fresh visit starts blank
     try { sessionStorage.removeItem('fp_design_tweak_result'); } catch(e){}
   })();
 })();
