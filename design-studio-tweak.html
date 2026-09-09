@@ -17,6 +17,20 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 .tw-preview{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:18px;position:sticky;top:20px;}
 .tw-canvas{aspect-ratio:3/4;background:var(--cream);border-radius:8px;overflow:hidden;position:relative;box-shadow:0 8px 26px rgba(61,46,36,.12);}
 .tw-canvas img{width:100%;height:100%;object-fit:cover;display:block;}
+.tw-textlayer{position:absolute;inset:0;z-index:2;pointer-events:none;}
+.tw-stack{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:84%;text-align:center;transform-origin:center center;}
+.tln{font-family:'Cormorant Garamond',serif;color:#3D3833;line-height:1.32;display:none;}
+.tln.show{display:block;}
+.tln.host{font-style:italic;font-size:14px;color:#8A7A68;margin-bottom:9px;}
+.tln.request{font-style:italic;font-size:13px;color:#5C5148;margin-bottom:12px;}
+.tln.names{font-size:32px;font-weight:500;line-height:1.08;margin-bottom:4px;}
+.tln.date{font-size:14px;letter-spacing:.5px;margin-top:11px;}
+.tln.time{font-size:13px;color:#5C5148;margin-bottom:6px;}
+.tln.venue{font-size:14px;letter-spacing:.5px;margin-top:9px;}
+.tln.reception{font-style:italic;font-size:13px;color:#5C5148;margin-top:11px;}
+.tln.dress{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#8A7A68;margin-top:9px;}
+.tln.rsvp{font-size:12px;color:#8A7A68;margin-top:9px;}
+.tln.custom{font-style:italic;font-size:13px;color:#B8976A;margin-top:11px;}
 .tw-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(251,248,244,.85);font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold);font-size:var(--text-body);}
 .tw-loading.show{display:flex;}
 .tw-panel{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:24px;}
@@ -48,8 +62,22 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 
   <div class="tw-grid">
     <div class="tw-preview">
-      <div class="tw-canvas">
+      <div class="tw-canvas" id="tw-canvas">
         <img id="tw-img" alt="Your design"/>
+        <div class="tw-textlayer" id="tw-textlayer">
+          <div class="tw-stack" id="tw-stack">
+            <div class="tln host"   data-k="host"></div>
+            <div class="tln request" data-k="line"></div>
+            <div class="tln names"  data-k="names"></div>
+            <div class="tln date"   data-k="date"></div>
+            <div class="tln time"   data-k="time"></div>
+            <div class="tln venue"  data-k="venue"></div>
+            <div class="tln reception" data-k="reception"></div>
+            <div class="tln dress"  data-k="dress"></div>
+            <div class="tln rsvp"   data-k="rsvp"></div>
+            <div class="tln custom" data-k="custom"></div>
+          </div>
+        </div>
         <div class="tw-loading" id="tw-loading">Tweaking your design…</div>
       </div>
     </div>
@@ -92,6 +120,30 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 
   var currentImage = state.image;
   document.getElementById('tw-img').src = currentImage;
+
+  // render the customer's wording as an overlay, in the position they left it
+  (function renderTextOverlay(){
+    // FIELD_MAP order matches the create page:
+    // [host, line, names, date, time, venue, reception, dress, rsvp, custom]
+    var order = ['host','line','names','date','time','venue','reception','dress','rsvp','custom'];
+    var w = state.wording || [];
+    document.querySelectorAll('#tw-stack .tln').forEach(function(el){
+      var k = el.dataset.k;
+      var idx = order.indexOf(k);
+      var val = (idx>-1 && w[idx]) ? w[idx].trim() : '';
+      if(val){ el.textContent = val; el.classList.add('show'); }
+      else { el.classList.remove('show'); }
+    });
+    // apply saved position
+    var tp = state.textPos;
+    if(tp){
+      var stack = document.getElementById('tw-stack');
+      stack.style.left = tp.left || '50%';
+      stack.style.top = tp.top || '50%';
+      stack.style.transform = 'translate(-50%,-50%) scale('+(tp.scale||1)+')';
+    }
+  })();
+
   var quick = [];
 
   document.querySelectorAll('#tw-quick .tw-chip').forEach(function(c){
@@ -149,9 +201,8 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
   document.getElementById('tw-keep').addEventListener('click', function(){
     try {
       state.image = currentImage;
-      sessionStorage.setItem('fp_design_tweak_result', JSON.stringify({ image: currentImage, size: state.size, wording: state.wording }));
+      sessionStorage.setItem('fp_design_tweak_result', JSON.stringify({ image: currentImage, size: state.size, wording: state.wording, textPos: state.textPos }));
     } catch(e){}
-    // return to create page with a flag to reinstate this design ready to order
     window.location.href = '/design-studio-ai-create.html?tweaked=1';
   });
 
