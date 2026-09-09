@@ -1,15 +1,15 @@
 // netlify/functions/studio-tweak.js
 //
-// "Make some tweaks" — image-to-image via fal.ai Flux dev image-to-image.
-// Takes the current design image + a tweak instruction, returns an adjusted
-// version that keeps the design's character but applies the requested change.
+// "Make some tweaks" — TARGETED image editing via fal.ai Flux Kontext [pro].
+// Unlike image-to-image, Kontext performs local, instruction-based edits
+// ("change the pink flowers to black") while keeping the rest of the design.
 //
 // Requires env var: FAL_KEY (or FAL_API_KEY)
 
 const https = require('https');
 
 const HOST = 'fal.run';
-const PATH = '/fal-ai/flux/dev/image-to-image';
+const PATH = '/fal-ai/flux-pro/kontext';
 
 function cors() {
   return {
@@ -50,32 +50,27 @@ exports.handler = async (event) => {
   const apiKey = process.env.FAL_KEY || process.env.FAL_API_KEY;
   if (!apiKey) return { statusCode: 500, headers: cors(), body: JSON.stringify({ error: 'FAL_KEY not configured' }) };
 
-  let imageUrl = '', tweak = '', brief = '', strength = 0.7;
+  let imageUrl = '', tweak = '';
   try {
     const b = JSON.parse(event.body || '{}');
-    imageUrl = (b.imageUrl || '').toString();   // data URL or http URL of current design
+    imageUrl = (b.imageUrl || '').toString();
     tweak = (b.tweak || '').toString().trim();
-    brief = (b.brief || '').toString().trim();
-    if (typeof b.strength === 'number') strength = Math.max(0.25, Math.min(0.85, b.strength));
   } catch (e) {
     return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Invalid request body' }) };
   }
   if (!imageUrl) return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Missing image' }) };
+  if (!tweak) return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Missing tweak instruction' }) };
 
-  // Combine the original brief with the tweak instruction so the model keeps
-  // the design language but applies the change.
-  const prompt = (brief ? brief + '. ' : '') +
-    'Apply this change: ' + (tweak || 'subtle refinement') + '. ' +
-    'Keep it a decorative wedding invitation design with a clear empty centre for text, no words, flat, print quality.';
+  // Kontext wants an EDITING INSTRUCTION. Frame it to preserve the rest.
+  const prompt = tweak + ', while keeping the rest of the design, composition and the empty centre space exactly the same.';
 
   try {
     const gen = await postJSON(HOST, PATH, apiKey, {
       image_url: imageUrl,
       prompt: prompt,
-      strength: strength,
       num_images: 1,
       output_format: 'jpeg',
-      enable_safety_checker: true
+      safety_tolerance: '2'
     });
 
     if (gen.status !== 200 || !gen.parsed) {
