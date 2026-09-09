@@ -857,22 +857,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     .then(function(data){
       self.disabled=false;
       if(data.image){
-        // drop the real Nano design in as the full-frame background
-        var canvas=document.getElementById('ds-canvas');
-        var bg=document.getElementById('ds-nano-bg');
-        if(!bg){ bg=document.createElement('img'); bg.id='ds-nano-bg'; bg.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;'; canvas.insertBefore(bg, canvas.firstChild); }
-        bg.src=data.image;
-        // keep text above the generated art
-        var ta=document.getElementById('art-a'); if(ta) ta.style.display='none';
-        var tb=document.getElementById('art-b'); if(tb) tb.style.display='none';
-        var safe=document.querySelector('.ds-safe'); if(safe) safe.style.zIndex='2';
-        // enter "generated" mode: draggable text, resize, two action buttons
-        canvas.classList.add('is-generated');
-        document.getElementById('ds-drag-hint').style.display='block';
-        document.getElementById('ds-resize').style.display='flex';
-        document.getElementById('ds-actions').style.display='flex';
-        document.getElementById('ds-prehint').style.display='none';
-        enableDrag();
+        enterGeneratedMode(data.image);
         self.textContent='↻ Generate again';
       } else {
         self.textContent='↻ Try again';
@@ -885,6 +870,25 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       alert('Could not reach the design service: ' + err.message);
     });
   });
+
+  // put an image into the canvas and switch on the generated-state UI
+  function enterGeneratedMode(imageSrc){
+    var canvas=document.getElementById('ds-canvas');
+    var bg=document.getElementById('ds-nano-bg');
+    if(!bg){ bg=document.createElement('img'); bg.id='ds-nano-bg'; bg.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;'; canvas.insertBefore(bg, canvas.firstChild); }
+    bg.src=imageSrc;
+    var ta=document.getElementById('art-a'); if(ta) ta.style.display='none';
+    var tb=document.getElementById('art-b'); if(tb) tb.style.display='none';
+    var safe=document.querySelector('.ds-safe'); if(safe) safe.style.zIndex='2';
+    canvas.classList.add('is-generated');
+    document.getElementById('ds-drag-hint').style.display='block';
+    document.getElementById('ds-resize').style.display='flex';
+    document.getElementById('ds-actions').style.display='flex';
+    document.getElementById('ds-prehint').style.display='none';
+    document.getElementById('ds-generate').textContent='↻ Generate again';
+    enableDrag();
+    setStep(2);
+  }
 
   // --- drag & resize the text over the generated design ---
   var textScale = 1;
@@ -1123,6 +1127,35 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // init
   applySize(); buildBrief(); refreshPreview();
   setStep(0);
+
+  // If returning from the tweak page with a kept/tweaked design, reinstate it
+  // so the customer sees their design (not a blank studio) and can order it.
+  (function reinstateTweaked(){
+    var params = new URLSearchParams(window.location.search);
+    var result = null;
+    try { result = JSON.parse(sessionStorage.getItem('fp_design_tweak_result') || 'null'); } catch(e){}
+    var backState = null;
+    try { backState = JSON.parse(sessionStorage.getItem('fp_design_tweak') || 'null'); } catch(e){}
+    var restore = result || backState;
+    if(!restore || !restore.image) return;
+    // restore wording fields if present
+    if(restore.wording && Array.isArray(restore.wording)){
+      FIELD_MAP.forEach(function(pair, i){
+        var el=document.getElementById(pair[0]);
+        if(el && restore.wording[i]) el.value = restore.wording[i];
+      });
+      refreshPreview();
+    }
+    // restore size
+    if(restore.size){
+      var szBtn = document.querySelector('.ds-size[data-size="'+restore.size+'"]');
+      if(szBtn){ document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');}); szBtn.classList.add('sel'); size=restore.size; applySize(); }
+    }
+    // put the (tweaked) image back and enter generated mode
+    setTimeout(function(){ enterGeneratedMode(restore.image); }, 100);
+    // clear the tweak-result so a later fresh visit starts blank
+    try { sessionStorage.removeItem('fp_design_tweak_result'); } catch(e){}
+  })();
 })();
 
 
