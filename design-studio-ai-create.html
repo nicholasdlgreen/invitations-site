@@ -1065,7 +1065,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
             }
           };
           try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
-          window.location.href = '/upload-and-print.html?product=wedding-invitations&design=1';
+          window.location.href = '/upload-and-print.html?product=wedding-invitations&source=design-studio';
         });
       })
       .catch(function(){
@@ -1073,7 +1073,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         makeThumb(printImage, function(thumb){
           var design = { source:'ai-studio', templateName:'Your bespoke design', templateId:'ai-'+Date.now(), size: sizeMap[size]||'A5', artworkUrl:null, thumbnail:thumb, text:{ name1:(parts[0]||'').trim(), name2:(parts[1]||'').trim() } };
           try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
-          window.location.href = '/upload-and-print.html?product=wedding-invitations&design=1';
+          window.location.href = '/upload-and-print.html?product=wedding-invitations&source=design-studio';
         });
       });
     });
