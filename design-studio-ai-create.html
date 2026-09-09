@@ -1163,7 +1163,39 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     }
     setTimeout(function(){ enterGeneratedMode(restore.image); }, 100);
     try { sessionStorage.removeItem('fp_design_tweak_result'); } catch(e){}
+
+    // Returned from the tweak page with an updated design → invite them to
+    // check the wording still sits well on the new design before ordering.
+    if(params.get('tweaked') === '1'){
+      setTimeout(function(){ showTweakedCheck(); }, 500);
+    }
   })();
+
+  // popup: design updated, check your layout, then continue to order
+  function showTweakedCheck(){
+    if(document.getElementById('ds-tweaked-modal')) return;
+    var overlay = document.createElement('div');
+    overlay.id = 'ds-tweaked-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(61,46,36,.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px;';
+    overlay.innerHTML =
+      '<div style="background:#FBF8F4;border-radius:16px;max-width:420px;padding:28px 30px;text-align:center;box-shadow:0 20px 60px rgba(61,46,36,.3);">' +
+        '<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;color:#3D3833;margin-bottom:10px;">Your design has been updated</div>' +
+        '<div style="font-size:14px;color:#8A7A68;line-height:1.7;margin-bottom:22px;">Because the design has changed, just check your wording still sits nicely — drag it to reposition if you need to. When you\'re happy, continue to choose paper &amp; order.</div>' +
+        '<button id="ds-tweaked-continue" style="background:#3D3833;color:#F4EDE6;border:none;font-family:\'Jost\',sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:14px 28px;border-radius:60px;cursor:pointer;width:100%;margin-bottom:10px;">Looks good — continue to order →</button>' +
+        '<button id="ds-tweaked-adjust" style="background:none;color:#8A7A68;border:none;font-family:\'Jost\',sans-serif;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:6px;">Let me check the layout first</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    document.getElementById('ds-tweaked-continue').addEventListener('click', function(){
+      overlay.remove();
+      var loveBtn = document.getElementById('ds-love');
+      if(loveBtn) loveBtn.click();
+    });
+    document.getElementById('ds-tweaked-adjust').addEventListener('click', function(){
+      overlay.remove();
+      // they stay on the page to check/drag; the three buttons are available
+      window.scrollTo({top:document.querySelector('.ds-preview-col')?document.querySelector('.ds-preview-col').offsetTop:0,behavior:'smooth'});
+    });
+  }
 })();
 
 
