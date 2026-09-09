@@ -404,8 +404,8 @@ was fetched and injected via innerHTML — that was the bug behind the
 
 <div class="ds-wrap">
   <div class="ds-hero">
-    <div class="ds-eyebrow">Design your own · Wedding Invitation</div>
-    <h1 class="ds-title">Let's design it together</h1>
+    <div class="ds-eyebrow" id="ds-eyebrow">Design your own</div>
+    <h1 class="ds-title" id="ds-title-el">Let's design it together</h1>
     <p class="ds-sub">We'll take it one step at a time — choose a layout, add your wording, then describe the look. You can change anything as you go.</p>
   </div>
 
@@ -948,7 +948,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       var cfg = rows[0];
       if(cfg.base_prompt) CONFIG_BASE_PROMPT = cfg.base_prompt;
       // update the page title + subtitle
-      if(cfg.intro_title){ var t=document.querySelector('.ds-title'); if(t) t.textContent = cfg.intro_title; }
+      var titleEl=document.getElementById('ds-title-el')||document.querySelector('.ds-title'); if(cfg.intro_title && titleEl) titleEl.textContent=cfg.intro_title;
       if(cfg.intro_sub){ var su=document.querySelector('.ds-sub'); if(su) su.textContent = cfg.intro_sub; }
       buildBrief();
     })
