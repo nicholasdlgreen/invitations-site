@@ -927,20 +927,158 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   document.getElementById('ds-bigger').addEventListener('click', function(){ rescale(0.1); });
   document.getElementById('ds-smaller').addEventListener('click', function(){ rescale(-0.1); });
 
-  // --- the two post-generation actions ---
+  // --- flatten the design (Flux image + positioned text) to a print-res file ---
+  function flattenToPrintFile(callback){
+    var bg = document.getElementById('ds-nano-bg');
+    if(!bg || !bg.src){ callback(null); return; }
+
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function(){
+      // print canvas at the Flux image's native (print) resolution
+      var PW = img.naturalWidth, PH = img.naturalHeight;
+      var cv = document.createElement('canvas');
+      cv.width = PW; cv.height = PH;
+      var ctx = cv.getContext('2d');
+      // 1. draw the decorative background at full print resolution
+      ctx.drawImage(img, 0, 0, PW, PH);
+
+      // 2. draw the text, mapping the on-screen preview positions to print pixels
+      var preview = document.getElementById('ds-canvas');
+      var pr = preview.getBoundingClientRect();
+      var scaleX = PW / pr.width, scaleY = PH / pr.height;
+
+      var stack = document.getElementById('ds-stack');
+      // where the stack centre sits within the preview (percentages -> px)
+      var stackLeftPct = parseFloat(stack.style.left) || 50;
+      var stackTopPct  = parseFloat(stack.style.top)  || 50;
+      var centreX = (stackLeftPct/100) * PW;
+      var centreY = (stackTopPct/100)  * PH;
+
+      // gather visible lines with their computed font sizes, scaled to print
+      var lines = [];
+      stack.querySelectorAll('.ln.show').forEach(function(el){
+        var cs = window.getComputedStyle(el);
+        lines.push({
+          text: el.textContent,
+          px: parseFloat(cs.fontSize) * scaleY * textScale,
+          italic: cs.fontStyle === 'italic',
+          weight: cs.fontWeight,
+          colour: cs.color,
+          spacing: parseFloat(cs.letterSpacing) || 0,
+          upper: cs.textTransform === 'uppercase',
+          mb: parseFloat(cs.marginBottom||0)*scaleY,
+          mt: parseFloat(cs.marginTop||0)*scaleY
+        });
+      });
+
+      // measure total block height
+      var total = 0;
+      lines.forEach(function(l){ total += l.mt + l.px*1.32 + l.mb; });
+      var y = centreY - total/2;
+
+      ctx.textAlign = 'center';
+      lines.forEach(function(l){
+        y += l.mt;
+        var fam = l.italic ? "italic " : "";
+        fam += (l.weight>=500?'500 ':'') + l.px + "px 'Cormorant Garamond', Georgia, serif";
+        ctx.font = fam;
+        ctx.fillStyle = l.colour;
+        var txt = l.upper ? l.text.toUpperCase() : l.text;
+        ctx.fillText(txt, centreX, y + l.px);
+        y += l.px*1.32 + l.mb;
+      });
+
+      // export as JPEG data URL (high quality)
+      var dataUrl = cv.toDataURL('image/jpeg', 0.95);
+      callback(dataUrl);
+    };
+    img.onerror = function(){ callback(null); };
+    img.src = bg.src;
+  }
+
+  // Supabase (same project/bucket the order flow already uses)
+  var SB_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+
+  // make a small thumbnail (data URL) from a full canvas
+  function makeThumb(fullDataUrl, cb){
+    var im = new Image();
+    im.onload = function(){
+      var tw = 400, th = Math.round(400 * im.naturalHeight / im.naturalWidth);
+      var c = document.createElement('canvas'); c.width = tw; c.height = th;
+      c.getContext('2d').drawImage(im, 0, 0, tw, th);
+      cb(c.toDataURL('image/jpeg', 0.8));
+    };
+    im.onerror = function(){ cb(null); };
+    im.src = fullDataUrl;
+  }
+
+  // dataURL -> Blob
+  function dataUrlToBlob(dataUrl){
+    var parts = dataUrl.split(','), mime = parts[0].match(/:(.*?);/)[1];
+    var bin = atob(parts[1]), n = bin.length, arr = new Uint8Array(n);
+    while(n--) arr[n] = bin.charCodeAt(n);
+    return new Blob([arr], { type: mime });
+  }
+
+  // the two post-generation actions
   document.getElementById('ds-love').addEventListener('click', function(){
-    // carry the design forward and go to the order page
-    try {
-      var design = {
-        image: document.getElementById('ds-nano-bg') ? document.getElementById('ds-nano-bg').src : '',
-        size: size,
-        wording: FIELD_MAP.map(function(p){ var el=document.getElementById(p[0]); return el?el.value:''; }),
-        textPos: { left: document.getElementById('ds-stack').style.left, top: document.getElementById('ds-stack').style.top, scale: textScale }
-      };
-      sessionStorage.setItem('fp_design', JSON.stringify(design));
-    } catch(e){}
-    window.location.href = '/design-studio-order.html';
+    var btn = this;
+    btn.textContent = 'Preparing your design…';
+    btn.disabled = true;
+
+    flattenToPrintFile(function(printImage){
+      if(!printImage){ btn.textContent = '↻ Try again'; btn.disabled=false; return; }
+
+      var names = (document.getElementById('w-names') || {}).value || '';
+      var parts = names.split(/\s*&\s*|\s+and\s+/i);
+      var sizeMap = { a7:'5x7', a5:'A5', a6:'A6', square:'Square' };
+      var fileName = 'ai-design-' + Date.now() + '.jpg';
+
+      // 1. upload the FULL print-res file to Supabase (the real print artwork)
+      var blob = dataUrlToBlob(printImage);
+      fetch(SB_URL + '/storage/v1/object/artwork/' + fileName, {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'image/jpeg', 'x-upsert': 'false' },
+        body: blob
+      })
+      .then(function(r){
+        var artworkUrl = r.ok ? (SB_URL + '/storage/v1/object/artwork/' + fileName) : null;
+        // 2. make a small thumbnail for display on the order pages
+        makeThumb(printImage, function(thumb){
+          var design = {
+            source: 'ai-studio',
+            templateName: 'Your bespoke design',
+            templateId: 'ai-' + Date.now(),
+            size: sizeMap[size] || 'A5',
+            artworkUrl: artworkUrl,       // full print file lives here (for printing)
+            thumbnail: thumb,             // small image for display only
+            text: {
+              name1: (parts[0]||'').trim(),
+              name2: (parts[1]||'').trim(),
+              host: (document.getElementById('w-host')||{}).value||'',
+              line: (document.getElementById('w-line')||{}).value||'',
+              date: (document.getElementById('w-date')||{}).value||'',
+              time: (document.getElementById('w-time')||{}).value||'',
+              venue: (document.getElementById('w-venue')||{}).value||''
+            }
+          };
+          try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
+          window.location.href = '/upload-and-print.html?product=wedding-invitations&design=1';
+        });
+      })
+      .catch(function(){
+        // if upload fails, still proceed with just the thumbnail (order can't print without artwork, but flow continues)
+        makeThumb(printImage, function(thumb){
+          var design = { source:'ai-studio', templateName:'Your bespoke design', templateId:'ai-'+Date.now(), size: sizeMap[size]||'A5', artworkUrl:null, thumbnail:thumb, text:{ name1:(parts[0]||'').trim(), name2:(parts[1]||'').trim() } };
+          try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
+          window.location.href = '/upload-and-print.html?product=wedding-invitations&design=1';
+        });
+      });
+    });
   });
+
   document.getElementById('ds-adjust').addEventListener('click', function(){
     try {
       var design = { image: document.getElementById('ds-nano-bg') ? document.getElementById('ds-nano-bg').src : '', size: size, brief: buildBrief() };
