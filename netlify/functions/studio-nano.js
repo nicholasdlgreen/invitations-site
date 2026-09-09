@@ -8,7 +8,7 @@
 const https = require('https');
 
 const FAL_ENDPOINT_HOST = 'fal.run';
-const FAL_ENDPOINT_PATH = '/fal-ai/flux-pro/v1.1';
+const FAL_ENDPOINT_PATH = '/fal-ai/flux-pro/v1.1-ultra';
 
 function cors() {
   return {
@@ -84,20 +84,19 @@ exports.handler = async (event) => {
     ' A decorative design only — leave a large clean empty area in the centre for text. ' +
     'No letters, no words, no text anywhere. Flat, straight-on, fills the frame, soft cream background, luxury print quality.';
 
-  // request print-oriented dimensions. fal flux-pro-1.1 accepts an image_size
-  // object {width,height}. Square uses 1:1; portraits use a tall ratio.
+  // Flux Pro Ultra generates up to 2K/4MP. It uses aspect_ratio presets.
+  // Square -> 1:1; all portrait invitation sizes -> 3:4 (closest to invitation ratio).
   const isSquare = (sizeName === 'square');
-  const imageSize = isSquare
-    ? { width: 2048, height: 2048 }
-    : { width: 1600, height: 2240 }; // ~portrait, print-oriented
+  const aspectRatio = isSquare ? '1:1' : '3:4';
 
   try {
     const gen = await postJSON(FAL_ENDPOINT_HOST, FAL_ENDPOINT_PATH, apiKey, {
       prompt: fullPrompt,
-      image_size: imageSize,
+      aspect_ratio: aspectRatio,
       num_images: 1,
       output_format: 'jpeg',
-      enable_safety_checker: true
+      enable_safety_checker: true,
+      safety_tolerance: '2'
     });
 
     if (gen.status !== 200 || !gen.parsed) {
