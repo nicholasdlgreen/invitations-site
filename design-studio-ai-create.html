@@ -92,6 +92,8 @@
 .ds-act-primary:hover{background:var(--brown);}
 .ds-act-secondary{background:none;color:var(--gold);border:1px solid var(--gold-lt);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;padding:14px;border-radius:60px;cursor:pointer;transition:all .2s;}
 .ds-act-secondary:hover{background:#F4EDE6;}
+.ds-act-tertiary{background:none;color:var(--soft);border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.06em;padding:8px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.ds-act-tertiary:hover{color:var(--gold);}
 /* square: wider text zone (tighter sides, tighter top/bottom) so lines wrap cleanly */
 .ds-canvas.is-square .ds-safe{top:8%;bottom:8%;left:7%;right:7%;}
 .ds-canvas.is-square .ln.names{font-size:clamp(1.3rem,2.6vw,1.8rem);}
@@ -580,7 +582,8 @@ was fetched and injected via innerHTML — that was the bug behind the
         </div>
         <div class="ds-actions" id="ds-actions" style="display:none;">
           <button class="ds-act-primary" id="ds-love">Love it — choose paper &amp; order →</button>
-          <button class="ds-act-secondary" id="ds-adjust">Make adjustments to the design</button>
+          <button class="ds-act-secondary" id="ds-tweak">Make some tweaks</button>
+          <button class="ds-act-tertiary" id="ds-restart">Start again</button>
         </div>
         <div class="ds-preview-hint" id="ds-prehint">Add your wording, describe the look, then generate your design.</div>
       </div>
@@ -1079,12 +1082,42 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     });
   });
 
-  document.getElementById('ds-adjust').addEventListener('click', function(){
+  // Start again: clear the generated design and reset to the create flow
+  document.getElementById('ds-restart').addEventListener('click', function(){
+    // remove the generated background + exit generated mode
+    var bg = document.getElementById('ds-nano-bg'); if(bg) bg.remove();
+    var canvas = document.getElementById('ds-canvas');
+    canvas.classList.remove('is-generated');
+    // hide the post-gen controls, restore the generate button
+    document.getElementById('ds-actions').style.display = 'none';
+    document.getElementById('ds-drag-hint').style.display = 'none';
+    document.getElementById('ds-resize').style.display = 'none';
+    document.getElementById('ds-prehint').style.display = 'block';
+    var gen = document.getElementById('ds-generate');
+    gen.textContent = '✦ Generate my design'; gen.disabled = false;
+    // reset text position
+    var stack = document.getElementById('ds-stack');
+    stack.style.left=''; stack.style.top=''; stack.style.transform='';
+    textScale = 1;
+    // back to step 1
+    setStep(0);
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  // Make some tweaks: keep this design, go to the tweaks page (image-to-image)
+  document.getElementById('ds-tweak').addEventListener('click', function(){
     try {
-      var design = { image: document.getElementById('ds-nano-bg') ? document.getElementById('ds-nano-bg').src : '', size: size, brief: buildBrief() };
-      sessionStorage.setItem('fp_design_refine', JSON.stringify(design));
+      var bg = document.getElementById('ds-nano-bg');
+      var tweakState = {
+        image: bg ? bg.src : '',
+        size: size,
+        brief: buildBrief(),
+        wording: FIELD_MAP.map(function(p){ var el=document.getElementById(p[0]); return el?el.value:''; }),
+        sel: sel
+      };
+      sessionStorage.setItem('fp_design_tweak', JSON.stringify(tweakState));
     } catch(e){}
-    window.location.href = '/design-studio-refine.html';
+    window.location.href = '/design-studio-tweak.html';
   });
 
   // init
