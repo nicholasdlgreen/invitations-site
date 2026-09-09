@@ -789,18 +789,67 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     });
   });
 
-  document.querySelectorAll('.ds-chips').forEach(function(g){
-    var cat=g.dataset.group;
-    g.querySelectorAll('.ds-chip, .ds-sw').forEach(function(c){
-      c.addEventListener('click', function(){
-        c.classList.toggle('on');
-        var v=c.dataset.v, i=sel[cat].indexOf(v);
-        if(i>-1) sel[cat].splice(i,1); else sel[cat].push(v);
-        buildBrief();
+  function wireChips(){
+    document.querySelectorAll('.ds-chips').forEach(function(g){
+      var cat=g.dataset.group;
+      g.querySelectorAll('.ds-chip, .ds-sw').forEach(function(c){
+        if(c.dataset.wired) return; c.dataset.wired='1';
+        c.addEventListener('click', function(){
+          c.classList.toggle('on');
+          var v=c.dataset.v, i=sel[cat].indexOf(v);
+          if(i>-1) sel[cat].splice(i,1); else sel[cat].push(v);
+          buildBrief();
+        });
       });
     });
-  });
+  }
+  wireChips();
   document.getElementById('w-story').addEventListener('input', buildBrief);
+
+  // ---- Stage 2: load prompt vocabulary (chips) from Supabase config ----
+  // Falls back silently to the hardcoded chips if the fetch fails.
+  var PRODUCT_SLUG = (new URLSearchParams(window.location.search).get('product')) || 'wedding-invitations';
+  var CFG_SB_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+  var CFG_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+
+  function loadStudioConfig(){
+    fetch(CFG_SB_URL + '/rest/v1/studio_prompt_options?product_slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&active=eq.true&order=category,display_order&select=*', {
+      headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY }
+    })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(rows){
+      if(!rows || !rows.length) return;   // keep hardcoded fallback
+      // group by category
+      var byCat = {};
+      rows.forEach(function(o){ (byCat[o.category] = byCat[o.category] || []).push(o); });
+      // reset selection state, then rebuild each chip group
+      Object.keys(sel).forEach(function(k){ sel[k] = []; });
+      document.querySelectorAll('.ds-chips').forEach(function(g){
+        var cat = g.dataset.group;
+        if(!byCat[cat]) return;   // leave group untouched if no config
+        g.innerHTML = '';
+        byCat[cat].forEach(function(o){
+          var el;
+          if(cat === 'colour'){
+            el = document.createElement('span');
+            el.className = 'ds-sw' + (o.default_on ? ' on' : '');
+            el.style.background = o.swatch_hex || '#ccc';
+          } else {
+            el = document.createElement('button');
+            el.className = 'ds-chip' + (o.default_on ? ' on' : '');
+            el.textContent = o.label;
+          }
+          el.dataset.v = o.phrase;
+          g.appendChild(el);
+          if(o.default_on) sel[cat].push(o.phrase);
+        });
+      });
+      wireChips();
+      buildBrief();
+    })
+    .catch(function(){ /* silent — hardcoded chips remain */ });
+  }
+  loadStudioConfig();
 
   // --- live preview: map every wording field to its template line ---
   var FIELD_MAP = [
