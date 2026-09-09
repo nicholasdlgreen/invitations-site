@@ -424,25 +424,25 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div class="ds-sec-body">
           <div class="ds-sec-hint">The size and shape of your invitation. Everything else builds on this.</div>
           <div class="ds-sizes" id="ds-sizes">
-            <div class="ds-size sel" data-size="a7">
+            <div class="ds-size sel" data-size="5x7">
               <div class="ds-size-icon"><div class="ds-size-card" style="width:32px;height:44px;"></div></div>
               <div class="ds-size-name">5&times;7&Prime;</div>
               <div class="ds-size-dim">127 &times; 178mm</div>
               <div class="ds-size-note">The classic · most popular</div>
             </div>
-            <div class="ds-size" data-size="a5">
+            <div class="ds-size" data-size="A5">
               <div class="ds-size-icon"><div class="ds-size-card" style="width:35px;height:49px;"></div></div>
               <div class="ds-size-name">A5</div>
               <div class="ds-size-dim">148 &times; 210mm</div>
               <div class="ds-size-note">Larger · a real statement</div>
             </div>
-            <div class="ds-size" data-size="a6">
+            <div class="ds-size" data-size="A6">
               <div class="ds-size-icon"><div class="ds-size-card" style="width:28px;height:39px;"></div></div>
               <div class="ds-size-name">A6</div>
               <div class="ds-size-dim">105 &times; 148mm</div>
               <div class="ds-size-note">Smaller · intimate</div>
             </div>
-            <div class="ds-size" data-size="square">
+            <div class="ds-size" data-size="Square">
               <div class="ds-size-icon"><div class="ds-size-card" style="width:42px;height:42px;"></div></div>
               <div class="ds-size-name">Square</div>
               <div class="ds-size-dim">148 &times; 148mm</div>
@@ -734,14 +734,17 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 <script>
 (function(){
   var sel = { style:[], touch:[], mood:[], finish:[], colour:[] };
-  var size = 'a7';
+  var size = '5x7';
 
   // ---- size definitions: aspect ratio (width/height) per size ----
+  // Size definitions — keys and dimensions match upload-and-print's SIZE_SPECS
+  // so sizes are consistent across the whole site (one source of truth).
   var SIZES = {
-    a7:     { ratio: 5/7,    desc: 'a 5x7 inch portrait invitation' },
-    a5:     { ratio: 148/210, desc: 'an A5 portrait invitation' },
-    a6:     { ratio: 105/148, desc: 'an A6 portrait invitation' },
-    square: { ratio: 1,      desc: 'a square invitation' }
+    '5x7':   { ratio: 127/178, desc: 'a 5x7 inch portrait invitation', label: '5×7″', dim: '127 × 178mm', note: 'The classic' },
+    'A5':    { ratio: 148/210, desc: 'an A5 portrait invitation',       label: 'A5',    dim: '148 × 210mm', note: 'Larger · a statement' },
+    'A6':    { ratio: 105/148, desc: 'an A6 portrait invitation',       label: 'A6',    dim: '105 × 148mm', note: 'Smaller · intimate' },
+    'DL':    { ratio: 99/210,  desc: 'a slim DL portrait invitation',   label: 'DL',    dim: '99 × 210mm',  note: 'Slim' },
+    'Square':{ ratio: 1,       desc: 'a square invitation',             label: 'Square',dim: '148 × 148mm', note: 'Distinctive' }
   };
 
   function applySize(){
@@ -751,9 +754,9 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     canvas.style.transition = 'aspect-ratio .3s ease, max-width .3s ease';
     canvas.style.aspectRatio = S.ratio;
     // square needs a smaller max-width so it doesn't tower; portraits taller
-    canvas.style.maxWidth = (size==='square') ? '340px' : '380px';
+    canvas.style.maxWidth = (size==='Square') ? '340px' : '380px';
     canvas.style.margin = '0 auto';
-    canvas.classList.toggle('is-square', size==='square');
+    canvas.classList.toggle('is-square', size==='Square');
     setTimeout(function(){ if(typeof autofit==='function') autofit(); }, 320);
   }
 
@@ -826,6 +829,51 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     } catch(e){ /* logging must never break the studio */ }
   }
 
+  // ---- sizes: read the product's available_sizes from product_types ----
+  // (same field your admin sets and upload-and-print uses — one source of truth)
+  function loadStudioSizes(){
+    fetch(CFG_SB_URL + '/rest/v1/product_types?slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&select=available_sizes', {
+      headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY }
+    })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(rows){
+      var avail = (rows && rows[0] && Array.isArray(rows[0].available_sizes) && rows[0].available_sizes.length)
+        ? rows[0].available_sizes : null;
+      if(!avail) return;   // keep hardcoded fallback sizes
+      var wrap = document.getElementById('ds-sizes');
+      if(!wrap) return;
+      wrap.innerHTML = '';
+      var first = null;
+      avail.forEach(function(key){
+        var spec = SIZES[key];
+        if(!spec) return;   // skip any size we don't have a definition for
+        if(!first) first = key;
+        var d = document.createElement('div');
+        d.className = 'ds-size';
+        d.dataset.size = key;
+        // shape icon proportional to the size
+        var h = 56, w = Math.round(56 * spec.ratio);
+        d.innerHTML = '<div class="ds-size-icon"><div class="ds-size-card" style="width:'+w+'px;height:'+h+'px;"></div></div>' +
+                      '<div class="ds-size-name">'+spec.label+'</div>' +
+                      '<div class="ds-size-dim">'+spec.dim+'</div>' +
+                      '<div class="ds-size-note">'+(spec.note||'')+'</div>';
+        wrap.appendChild(d);
+      });
+      // wire clicks + select the first
+      wrap.querySelectorAll('.ds-size').forEach(function(f){
+        f.addEventListener('click', function(){
+          wrap.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');});
+          f.classList.add('sel'); size=f.dataset.size; applySize(); buildBrief();
+        });
+      });
+      if(first){
+        var firstEl = wrap.querySelector('.ds-size[data-size="'+first+'"]');
+        if(firstEl){ firstEl.classList.add('sel'); size=first; applySize(); buildBrief(); }
+      }
+    })
+    .catch(function(){ /* silent — hardcoded sizes remain */ });
+  }
+
   function loadStudioConfig(){
     fetch(CFG_SB_URL + '/rest/v1/studio_prompt_options?product_slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&active=eq.true&order=category,display_order&select=*', {
       headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY }
@@ -864,6 +912,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     .catch(function(){ /* silent — hardcoded chips remain */ });
   }
   loadStudioConfig();
+  loadStudioSizes();
 
   // ---- Stage 2 part 2: load wording FIELDS from Supabase config ----
   // Rebuilds the input fields, the matching preview lines, and FIELD_MAP.
@@ -1178,7 +1227,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
       var names = (document.getElementById('w-names') || {}).value || '';
       var parts = names.split(/\s*&\s*|\s+and\s+/i);
-      var sizeMap = { a7:'5x7', a5:'A5', a6:'A6', square:'Square' };
       var fileName = 'ai-design-' + Date.now() + '.jpg';
 
       // 1. upload the FULL print-res file to Supabase (the real print artwork)
@@ -1196,7 +1244,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
             source: 'ai-studio',
             templateName: 'Your bespoke design',
             templateId: 'ai-' + Date.now(),
-            size: sizeMap[size] || 'A5',
+            size: size || 'A5',
             artworkUrl: artworkUrl,       // full print file lives here (for printing)
             thumbnail: thumb,             // small image for display only
             text: {
@@ -1216,7 +1264,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       .catch(function(){
         // if upload fails, still proceed with just the thumbnail (order can't print without artwork, but flow continues)
         makeThumb(printImage, function(thumb){
-          var design = { source:'ai-studio', templateName:'Your bespoke design', templateId:'ai-'+Date.now(), size: sizeMap[size]||'A5', artworkUrl:null, thumbnail:thumb, text:{ name1:(parts[0]||'').trim(), name2:(parts[1]||'').trim() } };
+          var design = { source:'ai-studio', templateName:'Your bespoke design', templateId:'ai-'+Date.now(), size: size||'A5', artworkUrl:null, thumbnail:thumb, text:{ name1:(parts[0]||'').trim(), name2:(parts[1]||'').trim() } };
           try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
           window.location.href = '/upload-and-print.html?product=wedding-invitations&source=design-studio';
         });
