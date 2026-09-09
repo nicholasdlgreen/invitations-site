@@ -760,17 +760,40 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     setTimeout(function(){ if(typeof autofit==='function') autofit(); }, 320);
   }
 
+  var CONFIG_BASE_PROMPT = null;   // set from studio_config when it loads
+  var CONFIG_PRODUCT_NOUN = 'wedding invitation';  // fallback noun
   function buildBrief(){
-    var parts=[];
-    var lead=(sel.mood[0]?sel.mood[0]+', ':'')+(sel.style[0]||'elegant');
-    parts.push('A '+lead+' wedding invitation design for '+(SIZES[size].desc));
-    if(sel.touch.length) parts.push('with '+sel.touch.join(', '));
-    if(sel.colour.length) parts.push('in '+sel.colour.join(', '));
-    if(sel.finish.length) parts.push(sel.finish.join(', '));
-    var ft=document.getElementById('w-story').value.trim();
-    var s = parts.join(', ')+'. A decorative design only, with generous clear empty space in the centre for text — no lettering or words in the image. Flat, straight-on, fills the frame, on a soft cream background, print quality.';
-    if(ft) s += ' '+ft.charAt(0).toUpperCase()+ft.slice(1)+'.';
-    document.getElementById('ds-brief-text').textContent = '"'+s+'"';
+    var mood = sel.mood.length ? sel.mood.join(', ') : '';
+    var style = sel.style.length ? sel.style.join(', ') : 'elegant';
+    var touch = sel.touch.length ? 'with ' + sel.touch.join(', ') : '';
+    var colour = sel.colour.length ? 'in ' + sel.colour.join(', ') : '';
+    var finish = sel.finish.length ? sel.finish.join(', ') : '';
+    var ft = document.getElementById('w-story') ? document.getElementById('w-story').value.trim() : '';
+
+    var s;
+    if(CONFIG_BASE_PROMPT){
+      // fill the config template's {placeholders}
+      s = CONFIG_BASE_PROMPT
+        .replace('{mood}', mood ? mood : '')
+        .replace('{style}', style)
+        .replace('{touch}', touch)
+        .replace('{colour}', colour)
+        .replace('{finish}', finish)
+        .replace(/\s{2,}/g, ' ')       // tidy double spaces from empty placeholders
+        .replace(/\s+,/g, ',')
+        .replace('A ,', 'A ');
+    } else {
+      // fallback (hardcoded), but with the product noun not fixed to wedding
+      var lead = (mood ? mood + ', ' : '') + style;
+      var parts = ['A ' + lead + ' ' + CONFIG_PRODUCT_NOUN + ' design for ' + (SIZES[size] ? SIZES[size].desc : 'an invitation')];
+      if(touch) parts.push(touch);
+      if(colour) parts.push(colour);
+      if(finish) parts.push(finish);
+      s = parts.join(', ') + '. A decorative design only, with generous clear empty space in the centre for text — no lettering or words in the image. Flat, straight-on, fills the frame, print quality.';
+    }
+    if(ft) s += ' ' + ft.charAt(0).toUpperCase() + ft.slice(1) + '.';
+    var briefEl = document.getElementById('ds-brief-text');
+    if(briefEl) briefEl.textContent = '"' + s + '"';
     return s;
   }
 
@@ -913,6 +936,25 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   }
   loadStudioConfig();
   loadStudioSizes();
+
+  // ---- read studio_config: base prompt + intro text for this product ----
+  function loadProductConfig(){
+    fetch(CFG_SB_URL + '/rest/v1/studio_config?product_slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&select=*', {
+      headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY }
+    })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(rows){
+      if(!rows || !rows[0]) return;
+      var cfg = rows[0];
+      if(cfg.base_prompt) CONFIG_BASE_PROMPT = cfg.base_prompt;
+      // update the page title + subtitle
+      if(cfg.intro_title){ var t=document.querySelector('.ds-title'); if(t) t.textContent = cfg.intro_title; }
+      if(cfg.intro_sub){ var su=document.querySelector('.ds-sub'); if(su) su.textContent = cfg.intro_sub; }
+      buildBrief();
+    })
+    .catch(function(){ /* silent — hardcoded fallback */ });
+  }
+  loadProductConfig();
 
   // ---- Stage 2 part 2: load wording FIELDS from Supabase config ----
   // Rebuilds the input fields, the matching preview lines, and FIELD_MAP.
