@@ -798,6 +798,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
           c.classList.toggle('on');
           var v=c.dataset.v, i=sel[cat].indexOf(v);
           if(i>-1) sel[cat].splice(i,1); else sel[cat].push(v);
+          logEvent(c.classList.contains('on') ? 'chip_select' : 'chip_deselect', { category: cat, label: c.textContent || v, phrase: v });
           buildBrief();
         });
       });
@@ -811,6 +812,19 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   var PRODUCT_SLUG = (new URLSearchParams(window.location.search).get('product')) || 'wedding-invitations';
   var CFG_SB_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
   var CFG_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+
+  // ---- usage tracking (Stage 2): log events to studio_events ----
+  var SESSION_ID = 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+  var genCount = 0;
+  function logEvent(type, detail){
+    try {
+      fetch(CFG_SB_URL + '/rest/v1/studio_events', {
+        method: 'POST',
+        headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ session_id: SESSION_ID, product_slug: PRODUCT_SLUG, event_type: type, detail: detail || {} })
+      });
+    } catch(e){ /* logging must never break the studio */ }
+  }
 
   function loadStudioConfig(){
     fetch(CFG_SB_URL + '/rest/v1/studio_prompt_options?product_slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&active=eq.true&order=category,display_order&select=*', {
@@ -851,7 +865,70 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   }
   loadStudioConfig();
 
+  // ---- Stage 2 part 2: load wording FIELDS from Supabase config ----
+  // Rebuilds the input fields, the matching preview lines, and FIELD_MAP.
+  // Falls back silently to the hardcoded fields if the fetch fails.
+  function loadStudioFields(){
+    fetch(CFG_SB_URL + '/rest/v1/studio_fields?product_slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&active=eq.true&order=display_order&select=*', {
+      headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY }
+    })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(fields){
+      if(!fields || !fields.length) return;   // keep hardcoded fallback
+
+      var body = document.querySelector('.ds-sec[data-sec="1"] .ds-sec-body');
+      var stack = document.getElementById('ds-stack');
+      if(!body || !stack) return;
+
+      // clear existing inputs (keep the hint), and clear preview lines (keep ds-empty)
+      body.querySelectorAll('.ds-fld, .ds-more, #w-addbtn').forEach(function(el){ el.remove(); });
+      stack.querySelectorAll('.ln').forEach(function(el){ el.remove(); });
+
+      var moreWrap = document.createElement('div');
+      moreWrap.className = 'ds-more'; moreWrap.id = 'w-more';
+      var hasMore = false;
+      var newMap = [];
+
+      fields.forEach(function(f){
+        // input
+        var inp = document.createElement('input');
+        inp.className = 'ds-fld';
+        inp.id = 'w-' + f.key;
+        inp.placeholder = f.label;
+        if(f.in_more){ moreWrap.appendChild(inp); hasMore = true; }
+        else { body.appendChild(inp); }
+        // preview line
+        var ln = document.createElement('div');
+        ln.className = 'ln ' + (f.preview_style || 'body');
+        ln.id = 'pv-' + f.key;
+        stack.appendChild(ln);
+        // map
+        newMap.push(['w-' + f.key, 'pv-' + f.key]);
+      });
+
+      if(hasMore){
+        body.appendChild(moreWrap);
+        var addBtn = document.createElement('button');
+        addBtn.className = 'ds-addmore'; addBtn.id = 'w-addbtn';
+        addBtn.textContent = '+ add more details…';
+        addBtn.addEventListener('click', function(){ moreWrap.classList.add('show'); addBtn.style.display='none'; });
+        body.appendChild(addBtn);
+      }
+
+      // rebuild FIELD_MAP and rewire preview
+      FIELD_MAP = newMap;
+      FIELD_MAP.forEach(function(pair){
+        var el = document.getElementById(pair[0]);
+        if(el) el.addEventListener('input', refreshPreview);
+      });
+      refreshPreview();
+    })
+    .catch(function(){ /* silent — hardcoded fields remain */ });
+  }
+  // loadStudioFields() is called at the end of the script (after refreshPreview + FIELD_MAP exist)
+
   // --- live preview: map every wording field to its template line ---
+  // (default hardcoded map; replaced by loadStudioFields() when config loads)
   var FIELD_MAP = [
     ['w-host','pv-host'],
     ['w-line','pv-request'],
@@ -899,6 +976,8 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   document.getElementById('ds-generate').addEventListener('click', function(){
     var self=this;
     var brief = buildBrief();
+    genCount++;
+    logEvent(genCount === 1 ? 'generate' : 'regenerate', { count: genCount, size: size, selections: sel, brief: brief });
     self.textContent='Creating your design…';
     self.disabled=true;
     fetch('/.netlify/functions/studio-nano', {
@@ -1084,6 +1163,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
   // the two post-generation actions
   document.getElementById('ds-love').addEventListener('click', function(){
+    logEvent('love_it', { size: size, brief: buildBrief() });
     var btn = this;
     btn.textContent = 'Preparing your design…';
     btn.disabled = true;
@@ -1141,6 +1221,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
   // Start again: clear the generated design and reset to the create flow
   document.getElementById('ds-restart').addEventListener('click', function(){
+    logEvent('start_again', {});
     // remove the generated background + exit generated mode
     var bg = document.getElementById('ds-nano-bg'); if(bg) bg.remove();
     var canvas = document.getElementById('ds-canvas');
@@ -1163,6 +1244,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
   // Make some tweaks: keep this design, go to the tweaks page (image-to-image)
   document.getElementById('ds-tweak').addEventListener('click', function(){
+    logEvent('tweak_start', { size: size });
     try {
       var bg = document.getElementById('ds-nano-bg');
       var stack = document.getElementById('ds-stack');
@@ -1182,6 +1264,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // init
   applySize(); buildBrief(); refreshPreview();
   setStep(0);
+  loadStudioFields();   // config-driven wording fields (after deps defined)
 
   // If returning from the tweak page with a kept/tweaked design, reinstate it.
   // Only do this when we came back via an explicit return (the ?tweaked flag or
