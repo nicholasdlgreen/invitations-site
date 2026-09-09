@@ -1527,10 +1527,19 @@ async function proceedToStripe(){
     artworkUrl = saved.artworkUrl || null;      // already-uploaded print file
     currentFile = null;                          // nothing to upload again
     designState.aiArtworkUrl = saved.artworkUrl; // used by checkout below
-    // show the thumbnail as the visual proof
+    // show the thumbnail in the step-3 summary bar (replace the ✦ icon)
     if (saved.thumbnail) {
-      const proofImg = document.getElementById('proofImage') || document.querySelector('.proof-img, #artworkPreview');
-      if (proofImg && proofImg.tagName === 'IMG') proofImg.src = saved.thumbnail;
+      const summaryBar = document.getElementById('fileSummaryName');
+      if (summaryBar) {
+        const iconBox = summaryBar.closest('div[style*="gap:16px"]')?.querySelector('div[style*="width:40px"]');
+        if (iconBox) {
+          iconBox.style.width = '48px';
+          iconBox.style.height = '60px';
+          iconBox.style.padding = '0';
+          iconBox.style.overflow = 'hidden';
+          iconBox.innerHTML = '<img src="' + saved.thumbnail + '" style="width:100%;height:100%;object-fit:cover;" alt="Your design"/>';
+        }
+      }
     }
   } else {
     const svgBlob = new Blob([designState.thumbnailSvg], { type: 'image/svg+xml' });
@@ -1549,19 +1558,28 @@ async function proceedToStripe(){
   if (summaryName) summaryName.textContent = `${designState.templateName}${couple ? ' — ' + couple : ''}`;
   if (summaryMeta) summaryMeta.textContent = `${designState.sizeLabel || designState.size || 'A5'} · ${designState.paletteName || 'Sage'} palette`;
 
-  // 8. Repoint the "Change" button
-  const editTarget = isAiDesign ? '/design-studio-ai-create.html' : `/design-studio-customise.html?template=${designState.templateId}`;
+  // 8. The "Change" button in the summary bar: remove it for AI designs
+  //    (an approved AI design can't be meaningfully re-edited — they'd start over).
   const changeBtn = document.querySelector('#step3 button[onclick="goStep(1)"]');
   if (changeBtn) {
-    changeBtn.setAttribute('onclick', `window.location.href = '${editTarget}'`);
-    changeBtn.textContent = 'Edit design';
+    if (isAiDesign) {
+      changeBtn.style.display = 'none';
+    } else {
+      changeBtn.setAttribute('onclick', `window.location.href = '/design-studio-customise.html?template=${designState.templateId}'`);
+      changeBtn.textContent = 'Edit design';
+    }
   }
 
   // 9. Repoint the "Back" button in step 3 too
   const backBtn = document.querySelector('#step3 button[onclick="goStep(2)"]');
   if (backBtn) {
-    backBtn.setAttribute('onclick', `window.location.href = '${editTarget}'`);
-    backBtn.textContent = 'Back to design';
+    if (isAiDesign) {
+      backBtn.setAttribute('onclick', "window.location.href = '/design-studio-ai-create.html'");
+      backBtn.textContent = 'Start a new design';
+    } else {
+      backBtn.setAttribute('onclick', `window.location.href = '/design-studio-customise.html?template=${designState.templateId}'`);
+      backBtn.textContent = 'Back to design';
+    }
   }
 
   // 10. Repoint step 4's "Upload Another" button to design studio templates
