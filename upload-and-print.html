@@ -1358,7 +1358,11 @@ async function proceedToStripe(){
   btn.disabled=true;
   const customer={name,email,phone:document.getElementById('coPhone').value.trim(),address:[addr1,document.getElementById('coAddr2').value.trim(),city,postcode].filter(Boolean).join(', '),notes:document.getElementById('coNotes').value.trim()};
   let artworkUrl=null;
-  if(currentFile){
+  // AI-studio designs already have their print-ready artwork uploaded — use it.
+  if (designMode && designState && designState.aiArtworkUrl) {
+    artworkUrl = designState.aiArtworkUrl;
+  }
+  if(!artworkUrl && currentFile){
     try{
       const fileName=Date.now()+'_'+currentFile.name.replace(/\s+/g,'_');
       const uploadRes=await fetch(`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`,{method:'POST',headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Content-Type':currentFile.type||'application/octet-stream','x-upsert':'false'},body:currentFile});
@@ -1481,7 +1485,10 @@ async function proceedToStripe(){
 
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem('foreverprint_design') || 'null'); } catch(e){}
-  if (!saved || !saved.thumbnailSvg) return;
+  // Accept either the old customise format (thumbnailSvg) OR the new AI-studio
+  // format (thumbnail + artworkUrl).
+  if (!saved || (!saved.thumbnailSvg && !saved.artworkUrl && !saved.thumbnail)) return;
+  const isAiDesign = saved.source === 'ai-studio' || (!!saved.artworkUrl && !saved.thumbnailSvg);
 
   designMode = true;
   designState = saved;
@@ -1512,13 +1519,25 @@ async function proceedToStripe(){
   // 4. Pre-set the size from the design state
   selectedSize = designState.size || 'A5';
 
-  // 5. Build a synthetic File from the design SVG. This makes the rest of
-  // the existing flow (artwork upload at checkout) work unchanged — the
-  // SVG just gets uploaded to Supabase Storage like any other artwork.
-  const svgBlob = new Blob([designState.thumbnailSvg], { type: 'image/svg+xml' });
-  const cleanName = (designState.templateName || 'design').replace(/\s+/g, '_');
-  const fileName = `${cleanName}_${designState.text?.name1 || ''}_${designState.text?.name2 || ''}_${Date.now()}.svg`.replace(/[^a-zA-Z0-9._-]/g, '_');
-  currentFile = new File([svgBlob], fileName, { type: 'image/svg+xml' });
+  // 5. Attach the artwork.
+  //    - AI studio: the print-ready file is ALREADY uploaded to Supabase; just
+  //      record its URL so checkout uses it. Show the thumbnail for the proof.
+  //    - Old customise: build a synthetic SVG File to upload at checkout.
+  if (isAiDesign) {
+    artworkUrl = saved.artworkUrl || null;      // already-uploaded print file
+    currentFile = null;                          // nothing to upload again
+    designState.aiArtworkUrl = saved.artworkUrl; // used by checkout below
+    // show the thumbnail as the visual proof
+    if (saved.thumbnail) {
+      const proofImg = document.getElementById('proofImage') || document.querySelector('.proof-img, #artworkPreview');
+      if (proofImg && proofImg.tagName === 'IMG') proofImg.src = saved.thumbnail;
+    }
+  } else {
+    const svgBlob = new Blob([designState.thumbnailSvg], { type: 'image/svg+xml' });
+    const cleanName = (designState.templateName || 'design').replace(/\s+/g, '_');
+    const fileName = `${cleanName}_${designState.text?.name1 || ''}_${designState.text?.name2 || ''}_${Date.now()}.svg`.replace(/[^a-zA-Z0-9._-]/g, '_');
+    currentFile = new File([svgBlob], fileName, { type: 'image/svg+xml' });
+  }
 
   // 6. Jump to step 3 (Paper & Quantity)
   goStep(3);
@@ -1530,17 +1549,18 @@ async function proceedToStripe(){
   if (summaryName) summaryName.textContent = `${designState.templateName}${couple ? ' — ' + couple : ''}`;
   if (summaryMeta) summaryMeta.textContent = `${designState.sizeLabel || designState.size || 'A5'} · ${designState.paletteName || 'Sage'} palette`;
 
-  // 8. Repoint the "Change" button to go back to the customise page
+  // 8. Repoint the "Change" button
+  const editTarget = isAiDesign ? '/design-studio-ai-create.html' : `/design-studio-customise.html?template=${designState.templateId}`;
   const changeBtn = document.querySelector('#step3 button[onclick="goStep(1)"]');
   if (changeBtn) {
-    changeBtn.setAttribute('onclick', `window.location.href = '/design-studio-customise.html?template=${designState.templateId}'`);
+    changeBtn.setAttribute('onclick', `window.location.href = '${editTarget}'`);
     changeBtn.textContent = 'Edit design';
   }
 
-  // 9. Repoint the "Back" button in step 3 too (was going to step 2)
+  // 9. Repoint the "Back" button in step 3 too
   const backBtn = document.querySelector('#step3 button[onclick="goStep(2)"]');
   if (backBtn) {
-    backBtn.setAttribute('onclick', `window.location.href = '/design-studio-customise.html?template=${designState.templateId}'`);
+    backBtn.setAttribute('onclick', `window.location.href = '${editTarget}'`);
     backBtn.textContent = 'Back to design';
   }
 
