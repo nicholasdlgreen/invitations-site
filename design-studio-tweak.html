@@ -44,7 +44,7 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 <div class="tw-wrap">
   <div class="tw-eyebrow">Design your own · Make some tweaks</div>
   <h1 class="tw-title">Let's refine it</h1>
-  <p class="tw-sub">Tell us what to adjust — we'll create a variation of your design in that direction, keeping its overall character. Each tweak is a fresh take, not a pixel-level edit.</p>
+  <p class="tw-sub">Tell us what to change — we'll edit just that part and keep the rest of your design exactly as it is.</p>
 
   <div class="tw-grid">
     <div class="tw-preview">
@@ -60,18 +60,18 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 
       <div class="tw-label">Quick tweaks</div>
       <div class="tw-chips" id="tw-quick">
-        <button class="tw-chip" data-v="more floral and abundant">More floral</button>
-        <button class="tw-chip" data-v="simpler and more minimal">Simpler</button>
-        <button class="tw-chip" data-v="softer, more delicate">Softer</button>
-        <button class="tw-chip" data-v="bolder and more dramatic">Bolder</button>
-        <button class="tw-chip" data-v="more greenery and foliage">More greenery</button>
-        <button class="tw-chip" data-v="warmer tones">Warmer</button>
-        <button class="tw-chip" data-v="cooler tones">Cooler</button>
-        <button class="tw-chip" data-v="more gold detailing">More gold</button>
+        <button class="tw-chip" data-v="add more flowers and make it more abundant">Add more flowers</button>
+        <button class="tw-chip" data-v="remove some elements to make it simpler and more minimal">Make it simpler</button>
+        <button class="tw-chip" data-v="make the design softer and more delicate">Softer</button>
+        <button class="tw-chip" data-v="make the design bolder and more dramatic">Bolder</button>
+        <button class="tw-chip" data-v="add more greenery and foliage">Add greenery</button>
+        <button class="tw-chip" data-v="change the colours to warmer tones">Warmer tones</button>
+        <button class="tw-chip" data-v="change the colours to cooler tones">Cooler tones</button>
+        <button class="tw-chip" data-v="add more gold detailing">Add gold</button>
       </div>
 
       <div class="tw-label">Or describe it</div>
-      <textarea class="tw-text" id="tw-desc" placeholder="e.g. add more eucalyptus around the edges, make the roses a deeper blush, less busy at the top…"></textarea>
+      <textarea class="tw-text" id="tw-desc" placeholder="e.g. change the pink roses to deep red · add eucalyptus in the corners · make the background a warmer cream…"></textarea>
 
       <button class="tw-go" id="tw-go">✦ Apply tweak</button>
 
@@ -113,7 +113,7 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 
     fetch('/.netlify/functions/studio-tweak', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ imageUrl: currentImage, tweak: tweak, brief: state.brief || '', strength: 0.4 })
+      body: JSON.stringify({ imageUrl: currentImage, tweak: tweak, brief: state.brief || '' })
     })
     .then(function(r){ return r.json(); })
     .then(function(data){
