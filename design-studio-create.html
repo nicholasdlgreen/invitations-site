@@ -3,197 +3,1096 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Design With Our Tools | Create Your Wedding Invitation | Foreverprint</title>
-<meta name="description" content="Answer a few quick questions about your wedding and we'll compose invitation designs just for you — no design experience needed."/>
-<meta name="robots" content="index, follow"/>
-<link rel="canonical" href="https://foreverprint.com/design-studio-create.html"/>
-<meta property="og:type" content="website"/>
-<meta property="og:url" content="https://foreverprint.com/design-studio-create.html"/>
-<meta property="og:title" content="Design With Our Tools | Foreverprint"/>
-<meta property="og:description" content="Answer a few quick questions and we'll design your wedding invitation for you."/>
-<meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
-<meta property="og:locale" content="en_GB"/>
-<meta property="og:site_name" content="Foreverprint"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Design With Our Tools | Foreverprint"/>
-<meta name="twitter:description" content="Answer a few quick questions and we'll design your wedding invitation for you."/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<title>Design Your Own · Wedding Invitation | Foreverprint</title>
+<meta name="description" content="Design your own bespoke wedding invitation. Choose a layout, add your wording, describe the look."/>
+<meta name="robots" content="noindex"/>
 <style>
-/* BREADCRUMB */
-.breadcrumb{background:var(--cream);padding:14px 32px;font-size:var(--text-xs);letter-spacing:.04em;color:var(--pale);max-width:1280px;margin:0 auto}
-.breadcrumb a{color:var(--soft);text-decoration:none}
-.breadcrumb a:hover{color:var(--gold)}
-.breadcrumb span{margin:0 8px;color:var(--pale)}
+.ds-wrap{max-width:1200px;margin:0 auto;padding:0 24px 80px;}
+.ds-hero{text-align:center;padding:36px 0 14px;}
+.ds-eyebrow{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:12px;}
+.ds-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,2.6rem);font-weight:400;color:var(--text);line-height:1.1;margin:0 0 10px;}
+.ds-sub{font-size:var(--text-body);color:var(--soft);line-height:1.7;max-width:520px;margin:0 auto;}
+.ds-steps{display:flex;align-items:center;justify-content:center;margin:26px auto 12px;max-width:640px;}
+.ds-steps-item{display:flex;align-items:center;gap:10px;flex:1;}
+.ds-steps-item:last-child{flex:none;}
+.ds-dot{width:30px;height:30px;border-radius:50%;background:var(--white);border:1px solid var(--border);color:var(--soft);display:flex;align-items:center;justify-content:center;font-family:'Jost',sans-serif;font-size:var(--text-sm);flex-shrink:0;transition:all .3s;}
+.ds-dot.active{background:var(--gold);border-color:var(--gold);color:#fff;}
+.ds-dot.done{background:var(--white);border-color:var(--gold);color:var(--gold);}
+.ds-steps-label{font-size:var(--text-sm);color:var(--soft);white-space:nowrap;}
+.ds-steps-label.active{color:var(--text);}
+.ds-steps-line{flex:1;height:1px;background:var(--border);margin:0 12px;min-width:20px;}
+.ds-guide-note{text-align:center;font-size:var(--text-sm);color:var(--soft);margin:0 auto 22px;font-style:italic;}
+.ds-grid{display:grid;grid-template-columns:1fr 1.35fr;gap:22px;align-items:start;}
+.ds-acc{display:flex;flex-direction:column;gap:12px;}
+.ds-sec{background:var(--cream);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;}
+.ds-sec.open{border-color:var(--gold-lt);}
+.ds-sec-head{width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:var(--text-h3);color:var(--text);text-align:left;}
+.ds-sec-num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);align-items:center;justify-content:center;margin-right:10px;}
+.ds-sec-done .ds-sec-num{background:var(--white);border:1px solid var(--gold);color:var(--gold);}
+.ds-chev{font-size:var(--text-sm);color:var(--gold);transition:transform .25s;}
+.ds-sec.open .ds-chev{transform:rotate(180deg);}
+.ds-sec-body{display:none;padding:0 20px 20px;}
+.ds-sec.open .ds-sec-body{display:block;}
+.ds-sec-hint{font-size:var(--text-sm);color:var(--soft);margin-bottom:12px;line-height:1.5;margin-top:-2px;}
+.ds-frames{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.ds-frame{aspect-ratio:3/4;border:1px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;padding:8px;transition:all .2s;position:relative;}
+.ds-frame:hover{border-color:var(--gold-lt);}
+.ds-frame.sel{border:2px solid var(--gold);}
+.ds-frame-inner{width:100%;height:100%;position:relative;}
+.ds-frame-name{position:absolute;bottom:-2px;left:0;right:0;text-align:center;font-size:var(--text-xs);color:var(--soft);}
 
-/* HERO */
-.create-hero{background:var(--cream);padding:48px 32px 40px;text-align:center;border-bottom:1px solid var(--border)}
-.create-hero-inner{max-width:680px;margin:0 auto}
-.create-hero .tag{font-size:var(--text-xs);letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:16px;display:block}
-.create-hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.2rem,4vw,3rem);font-weight:300;line-height:1.15;color:var(--text);margin-bottom:18px}
-.create-hero h1 em{font-style:italic;color:var(--gold)}
-.create-divider{width:48px;height:1px;background:var(--gold-lt);margin:22px auto}
-.create-hero p{font-size:var(--text-body);color:var(--soft);line-height:1.95;max-width:480px;margin:0 auto}
+.ds-sizes{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+.ds-size{border:1px solid var(--border);border-radius:12px;background:var(--white);cursor:pointer;padding:18px 10px 14px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;}
+.ds-size:hover{border-color:var(--gold-lt);box-shadow:0 6px 18px rgba(61,46,36,.06);}
+.ds-size.sel{border:2px solid var(--gold);background:#F4EDE6;}
+.ds-size-icon{height:52px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.ds-size-card{background:#FBF8F2;border:1px solid #D8CBB8;border-radius:3px;box-shadow:0 3px 8px rgba(61,46,36,.08);}
+.ds-size.sel .ds-size-card{border-color:var(--gold);}
+.ds-size-name{font-family:'Cormorant Garamond',serif;font-size:var(--text-lg);color:var(--text);line-height:1;}
+.ds-size-dim{font-size:var(--text-xs);color:var(--soft);margin-top:4px;}
+.ds-size-note{font-size:calc(var(--text-xs) * .92);color:var(--pale);margin-top:8px;line-height:1.35;}
+@media(max-width:600px){.ds-sizes{grid-template-columns:1fr 1fr;}}
+.ds-fld{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);outline:none;width:100%;box-sizing:border-box;margin-bottom:8px;transition:border-color .2s;}
+.ds-fld:focus{border-color:var(--gold-lt);}
+.ds-fld::placeholder{color:var(--pale);}
+.ds-addmore{background:none;border:none;color:var(--gold);font-family:'Jost',sans-serif;font-size:var(--text-sm);cursor:pointer;padding:6px 0 0;letter-spacing:.02em;}
+.ds-more{display:none;}
+.ds-more.show{display:block;}
+.ds-label{font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin:16px 0 8px;}
+.ds-label:first-child{margin-top:0;}
+.ds-chips{display:flex;gap:7px;flex-wrap:wrap;}
+.ds-chip{border:1px solid var(--border);background:var(--white);border-radius:60px;padding:8px 15px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--soft);cursor:pointer;transition:all .2s;}
+.ds-chip:hover{border-color:var(--gold-lt);}
+.ds-chip.on{border-color:var(--gold);background:#F4EDE6;color:var(--brown);}
+.ds-sw{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative;display:inline-block;}
+.ds-sw:hover{transform:scale(1.08);}
+.ds-sw.on{border-color:var(--gold);}
+.ds-sw.on::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;text-shadow:0 1px 2px rgba(0,0,0,.35);}
+.ds-freetext{width:100%;box-sizing:border-box;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);outline:none;line-height:1.6;resize:vertical;min-height:60px;}
+.ds-freetext:focus{border-color:var(--gold-lt);}
+.ds-generate{display:block;width:100%;margin-top:18px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;font-weight:500;padding:15px;border-radius:60px;cursor:pointer;transition:background .2s;}
+.ds-generate:hover{background:var(--brown);}
+.ds-brief{background:var(--text);border-radius:10px;padding:14px 16px;margin-top:14px;}
+.ds-brief-label{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-lt);margin-bottom:8px;}
+.ds-brief-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);color:var(--cream);line-height:1.7;}
+.ds-preview-col{position:sticky;top:20px;}
+.ds-preview{background:#F1EFE9;border:1px solid var(--border);border-radius:16px;padding:18px;}
+.ds-preview-label{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-align:center;margin-bottom:12px;}
+.ds-canvas{aspect-ratio:3/4;background:#FBF8F2;border-radius:8px;position:relative;overflow:hidden;box-shadow:0 8px 26px rgba(61,46,36,.12);}
+.ds-safe{position:absolute;top:11%;left:10%;right:10%;bottom:11%;display:flex;align-items:center;justify-content:center;z-index:1;}
+/* draggable text mode (after generation) */
+.ds-canvas.is-generated .ds-safe{cursor:move;top:0;left:0;right:0;bottom:0;padding:6% 8%;align-items:flex-start;}
+.ds-canvas.is-generated .ds-stack{position:absolute;transition:none;}
+.ds-drag-hint{text-align:center;font-size:var(--text-xs);color:var(--soft);margin-top:12px;line-height:1.4;}
+.ds-resize{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;font-size:var(--text-xs);color:var(--soft);}
+.ds-resize button{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--white);color:var(--gold);font-size:16px;cursor:pointer;line-height:1;}
+.ds-resize button:hover{border-color:var(--gold);}
+.ds-actions{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+.ds-act-primary{background:var(--text);color:var(--cream);border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;padding:15px;border-radius:60px;cursor:pointer;transition:background .2s;}
+.ds-act-primary:hover{background:var(--brown);}
+.ds-act-secondary{background:none;color:var(--gold);border:1px solid var(--gold-lt);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;padding:14px;border-radius:60px;cursor:pointer;transition:all .2s;}
+.ds-act-secondary:hover{background:#F4EDE6;}
+/* square: wider text zone (tighter sides, tighter top/bottom) so lines wrap cleanly */
+.ds-canvas.is-square .ds-safe{top:8%;bottom:8%;left:7%;right:7%;}
+.ds-canvas.is-square .ln.names{font-size:clamp(1.3rem,2.6vw,1.8rem);}
+.ds-stack{width:100%;text-align:center;transform-origin:center center;}
+.ds-empty{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--pale);font-size:var(--text-sm);line-height:1.6;}
+.ds-stack .ln{font-family:'Cormorant Garamond',serif;color:#3D3833;line-height:1.32;display:none;}
+.ds-stack .ln.show{display:block;}
+.ln.host{font-style:italic;font-size:calc(var(--text-sm) * .95);color:#8A7A68;margin-bottom:9px;}
+.ln.request{font-style:italic;font-size:calc(var(--text-sm) * .9);color:#5C5148;margin-bottom:12px;}
+.ln.names{font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,3vw,2.1rem);font-weight:500;line-height:1.08;margin-bottom:4px;}
+.ln.date{font-size:var(--text-sm);letter-spacing:.5px;margin-top:11px;}
+.ln.time{font-size:calc(var(--text-sm) * .9);color:#5C5148;margin-bottom:6px;}
+.ln.venue{font-size:var(--text-sm);letter-spacing:.5px;margin-top:9px;}
+.ln.reception{font-style:italic;font-size:calc(var(--text-sm) * .9);color:#5C5148;margin-top:11px;}
+.ln.dress{font-size:calc(var(--text-xs) * .95);letter-spacing:.1em;text-transform:uppercase;color:#8A7A68;margin-top:9px;}
+.ln.rsvp{font-size:calc(var(--text-xs) * .95);color:#8A7A68;margin-top:9px;}
+.ln.custom{font-style:italic;font-size:calc(var(--text-sm) * .9);color:var(--gold);margin-top:11px;}
+.ds-art{position:absolute;pointer-events:none;transition:opacity .4s;opacity:0;}
+.ds-art.show{opacity:.85;}
 
-/* QUESTIONS */
-.create-main{max-width:640px;margin:0 auto;padding:48px 32px 40px}
-.q-block{margin-bottom:40px;opacity:0;transform:translateY(10px);animation:qFade .5s ease forwards}
-.q-block:nth-child(1){animation-delay:.05s}
-.q-block:nth-child(2){animation-delay:.15s}
-.q-block:nth-child(3){animation-delay:.25s}
-.q-block:nth-child(4){animation-delay:.35s}
-@keyframes qFade{to{opacity:1;transform:translateY(0)}}
-@media (prefers-reduced-motion:reduce){.q-block{animation:none;opacity:1;transform:none}}
-.q-label{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:16px;line-height:1.3}
-.q-opts{display:flex;flex-wrap:wrap;gap:10px}
-.q-opt{font-family:'Jost',sans-serif;font-size:var(--text-sm);letter-spacing:.03em;padding:11px 18px;border:1px solid var(--border);border-radius:60px;background:var(--white);color:var(--soft);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
-.q-opt:hover:not(.on){border-color:var(--gold-lt);color:var(--gold)}
-.q-opt.on{background:var(--text);color:#fff;border-color:var(--text)}
-.q-dot{width:11px;height:11px;border-radius:50%;display:inline-block;border:.5px solid rgba(0,0,0,.12)}
-.q-optional{font-size:var(--text-xs);color:var(--pale);font-style:normal;letter-spacing:.04em;margin-left:6px}
-.q-notes{width:100%;min-height:80px;font-family:'Jost',sans-serif;font-size:var(--text-sm);font-weight:300;color:var(--text);padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--white);outline:none;resize:vertical;line-height:1.7;transition:border-color .2s}
-.q-notes:focus{border-color:var(--gold-lt)}
-.q-notes::placeholder{color:var(--pale)}
 
-/* SUBMIT */
-.create-actions{text-align:center;padding-top:8px}
-.create-hint{font-size:var(--text-sm);color:var(--gold);letter-spacing:.04em;margin-bottom:16px;height:16px;opacity:0;transition:opacity .25s}
-.create-hint.show{opacity:1}
-.create-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 40px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;cursor:pointer;transition:background .25s}
-.create-btn:hover{background:var(--brown)}
-.create-btn:disabled{opacity:.7;cursor:default}
-.create-btn .spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
-@keyframes spin{to{transform:rotate(360deg)}}
-.create-note{font-size:var(--text-xs);color:var(--pale);letter-spacing:.04em;margin-top:18px;line-height:1.7}
 
-@media (max-width:760px){
-  .create-main{padding:32px 22px 36px}
-  .breadcrumb{padding:14px 22px}
+
+
+
+.ds-preview-cta{display:block;width:100%;margin-top:16px;background:var(--text);color:var(--cream);border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;padding:14px;border-radius:60px;cursor:pointer;text-align:center;}
+.ds-preview-hint{text-align:center;font-size:var(--text-xs);color:var(--soft);margin-top:10px;line-height:1.5;}
+@media(max-width:820px){
+  .ds-grid{grid-template-columns:1fr;}
+  .ds-preview-col{position:static;order:-1;margin-bottom:8px;}
+  .ds-canvas{max-width:300px;margin:0 auto;}
+  .ds-steps-label{display:none;}
+  .ds-steps-line{min-width:16px;}
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/auth.js"></script>
 </head>
-<body>
+<body><script>window.updateCartBadge=function(){};window.invAuth={toggleAuthDropdown:function(){},signOut:function(){}};window.openCart=function(){};window.closeCart=function(){};</script>
 
-<div id="site-header"></div>
-
-<!-- BREADCRUMB -->
-<div class="breadcrumb">
-  <a href="/design-studio.html">Design Studio</a><span>&rsaquo;</span>Design with our tools
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet"/>
+<style>
+:root {
+--cream:#FAF7F2; --blush:#F0DDD8; --lav:#DDD5E8; --sage:#D1DDD0;
+--mist:#E8EBF0; --gold:#B8976A; --gold-lt:#D4B896; --brown:#6B4F3A;
+--text:#3D2E24; --soft:#7A6558; --pale:#B0A098; --white:#FFFFFF;
+--border:#E8DDD8; --ok:#5A9E6F; --warn:#C97B3A; --err:#C94A3A;
+/* Fluid type scale — scales smoothly from laptop to large screens.
+   clamp(min, preferred, max): min is the floor (never smaller),
+   max is the ceiling (never larger), preferred grows with the viewport. */
+--text-xs:   clamp(13px, 0.55vw + 11px, 15px);   /* small labels, captions */
+--text-sm:   clamp(15px, 0.6vw + 12px, 17px);    /* secondary / meta text */
+--text-body: clamp(17px, 0.7vw + 14px, 19px);    /* body copy */
+--text-lg:   clamp(19px, 0.8vw + 15px, 22px);    /* lead paragraphs */
+--text-h3:   clamp(21px, 1.3vw + 16px, 27px);
+--text-h2:   clamp(30px, 2.4vw + 19px, 42px);
+--text-h1:   clamp(40px, 3.8vw + 21px, 58px);
+--nav-size:  clamp(16px, 0.5vw + 14px, 18px);    /* nav links */
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; font-size:var(--text-body); }
+body { font-family:'Jost',sans-serif; font-weight:300; background:var(--cream); color:var(--text); line-height:1.6; min-height:100vh; font-size:var(--text-body); }
+.serif { font-family:'Cormorant Garamond',serif; }
+.hidden { display:none !important; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+@keyframes spin { to{transform:rotate(360deg);} }
+header{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;}
+.hinner{max-width:1180px;margin:0 auto;padding:0 32px;height:74px;display:flex;align-items:center;justify-content:space-between;position:relative;}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:400;letter-spacing:.06em;color:var(--text);text-decoration:none;}
+.logo span{color:var(--gold);}
+nav{display:flex;align-items:center;gap:36px;}
+nav a{font-size:var(--nav-size);letter-spacing:.04em;text-transform:none;color:var(--soft);text-decoration:none;transition:color .2s;font-weight:400;}
+.megamenu{position:static;height:74px;display:flex;align-items:center;}
+.megamenu-trigger{display:inline-flex;align-items:center;gap:6px;font-size:var(--nav-size);color:var(--soft);height:74px;}
+.mega-chev{font-size:var(--text-xs);transition:transform .2s;}
+.megamenu-panel{position:absolute;left:16px;right:16px;top:78px;background:var(--white);border:1px solid var(--border);border-radius:20px;box-shadow:0 20px 40px -20px rgba(61,46,36,.22);padding:34px 48px 38px;display:none;grid-template-columns:1fr 1fr 1fr;gap:48px;z-index:210;}
+.megamenu:hover .megamenu-panel,.megamenu.open .megamenu-panel{display:grid;}
+.megamenu-panel::before{content:'';position:absolute;left:0;right:0;top:-16px;height:16px;background:transparent;}
+.megamenu:hover .mega-chev,.megamenu.open .mega-chev{transform:rotate(180deg);}
+.megamenu:hover .megamenu-trigger,.megamenu.open .megamenu-trigger{color:var(--gold);}
+.mega-cat{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--text);margin-bottom:6px;}
+.mega-rule{width:28px;height:1px;background:var(--gold-lt);margin-bottom:16px;}
+.megamenu-panel a{display:block;font-size:var(--text-sm);letter-spacing:.02em;text-transform:none;color:var(--soft);padding:7px 0;transition:color .2s;}
+.megamenu-panel a:hover{color:var(--gold);}
+.mega-viewall{font-size:var(--text-xs) !important;letter-spacing:.1em !important;text-transform:uppercase !important;color:var(--gold) !important;margin-top:12px;}
+nav a:hover,nav a.active{color:var(--gold);}
+.cart-btn{display:flex;align-items:center;gap:8px;padding:10px 22px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:background .25s;border-radius:60px;}
+.cart-btn:hover{background:var(--brown);}
+.cart-count{background:rgba(255,255,255,.25);padding:2px 8px;font-size:var(--text-xs);border-radius:20px;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:15px 38px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:background .25s,box-shadow .25s;text-decoration:none;border-radius:60px;box-shadow:0 4px 18px rgba(184,151,106,.25);}
+.btn:hover{background:var(--brown);box-shadow:0 6px 24px rgba(107,79,58,.3);}
+.btn-out{display:inline-flex;align-items:center;gap:8px;padding:14px 37px;background:transparent;color:var(--gold);border:1px solid var(--gold);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:all .25s;text-decoration:none;border-radius:60px;}
+.btn-out:hover{background:var(--gold);color:#fff;}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;}
+.section{padding:90px 0;}
+.tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;display:block;}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:400;line-height:1.2;color:var(--text);}
+.divider{width:48px;height:1px;background:var(--gold-lt);margin:20px 0;}
+.centered{text-align:center;}
+.centered .divider{margin:20px auto;}
+.cart-bg{position:fixed;inset:0;background:rgba(61,46,36,.4);z-index:400;display:none;}
+.cart-bg.open{display:block;}
+.cart-drawer{position:fixed;right:0;top:0;bottom:0;width:420px;background:var(--white);z-index:401;transform:translateX(100%);transition:transform .35s ease;display:flex;flex-direction:column;border-radius:20px 0 0 20px;}
+.cart-drawer.open{transform:translateX(0);}
+.cart-head{padding:24px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cart-head h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;}
+.cart-scroll{flex:1;overflow-y:auto;padding:20px 28px;}
+.cart-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border);}
+.cart-item-img{width:60px;height:80px;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:var(--text-lg);border-radius:8px;}
+.cart-item-info{flex:1;}
+.cart-item-name{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:400;margin-bottom:4px;}
+.cart-item-meta{font-size:var(--text-xs);color:var(--soft);margin-bottom:8px;}
+.cart-item-price{font-size:var(--text-sm);color:var(--gold);}
+.cart-remove{background:none;border:none;font-size:var(--text-lg);color:var(--pale);cursor:pointer;padding:4px;}
+.cart-foot{padding:20px 28px;border-top:1px solid var(--border);}
+.cart-row{display:flex;justify-content:space-between;font-size:var(--text-sm);margin-bottom:8px;}
+.cart-row.vat{font-size:var(--text-xs);color:var(--soft);}
+.cart-row.total{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:20px;padding-top:12px;border-top:1px solid var(--border);}
+.cart-empty{text-align:center;padding:60px 20px;color:var(--pale);}
+.modal-close{background:none;border:none;font-size:var(--text-h3);color:var(--pale);cursor:pointer;line-height:1;padding:4px;}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:14px 28px;border-radius:60px;font-size:var(--text-sm);letter-spacing:.06em;opacity:0;transition:all .35s;z-index:999;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* === RIGHT ZONE: Account dropdown + Basket === */
+.right-zone{display:flex;align-items:center;gap:18px;}
+/* Account state (signed-out / signed-in containers, mutually exclusive) */
+.auth-state{position:relative;display:none;align-items:center;}
+.auth-state.active{display:flex;}
+/* Account trigger button */
+.acct-trigger{display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:none;padding:6px 4px;font-family:inherit;}
+.acct-icon{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--soft);flex-shrink:0;transition:all .2s;}
+.acct-icon svg{width:14px;height:14px;}
+.acct-icon.signedin{background:var(--cream);border-color:var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);text-transform:uppercase;}
+.acct-trigger:hover .acct-icon,.acct-trigger.open .acct-icon{background:var(--gold);border-color:var(--gold);color:var(--white);}
+.acct-label{font-size:var(--text-body);letter-spacing:.04em;text-transform:none;color:var(--soft);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.acct-trigger:hover .acct-label,.acct-trigger.open .acct-label{color:var(--gold);}
+.acct-chevron{font-size:var(--text-xs);transition:transform .25s;}
+.acct-trigger.open .acct-chevron{transform:rotate(180deg);}
+/* Account dropdown menu */
+.acct-dropdown{position:absolute;top:calc(100% + 14px);right:0;background:var(--white);min-width:240px;box-shadow:0 16px 40px -16px rgba(61,46,36,.25);border-radius:8px;overflow:hidden;display:none;border-top:2px solid var(--gold);z-index:250;}
+.acct-dropdown.open{display:block;animation:fadeUp .25s ease;}
+.dd-email{padding:16px 20px 14px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-body);color:var(--gold);word-break:break-all;line-height:1.4;}
+.acct-dropdown a,.acct-dropdown button{display:block;width:100%;padding:13px 20px;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;border:none;background:none;text-align:left;cursor:pointer;transition:background .2s,color .2s;}
+.acct-dropdown a:hover,.acct-dropdown button:hover{background:var(--cream);color:var(--gold);}
+.dd-divider{height:1px;background:var(--border);margin:0 20px;}
+.nav-toggle{display:none;background:none;border:none;cursor:pointer;color:var(--text);padding:6px;}
+.nav-toggle svg{width:26px;height:26px;}
+@media(max-width:768px){
+.nav-toggle{display:block;order:-1;}
+.hinner{position:relative;}
+.hinner nav{display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);flex-direction:column;align-items:stretch;gap:0;padding:8px 0;border-bottom:1px solid var(--border);box-shadow:0 16px 32px -18px rgba(61,46,36,.25);}
+.hinner nav.open{display:flex;}
+.hinner nav a{padding:15px 32px;font-size:var(--text-body);border-bottom:1px solid var(--border);}
+.hinner nav a:last-child{border-bottom:none;}
+.footer-top{grid-template-columns:1fr 1fr;gap:32px;}
+/* Mega-menu on mobile: show panel inline, stacked, not as a floating dropdown */
+.megamenu{width:100%;height:auto;display:block;}
+.megamenu-trigger{padding:15px 32px;border-bottom:1px solid var(--border);width:100%;height:auto;}
+.megamenu-panel{position:static;display:block !important;box-shadow:none;border:none;padding:0 0 8px;background:var(--cream);}
+.mega-col{padding:14px 32px 6px;}
+.mega-cat{font-size:1.1rem;margin-bottom:4px;}
+.megamenu-panel a{padding:9px 0;font-size:var(--text-body);}
+.mega-chev{display:none;}
+}
+@media(max-width:480px){.footer-top{grid-template-columns:1fr;}}
+</style>
+<header>
+<div class="hinner">
+<a class="logo" href="/">forever<span>print</span></a>
+<button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" onclick="toggleMobileNav()">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+</button>
+<nav id="mainNav">
+<div class="megamenu" id="megamenu">
+  <a href="/products.html" class="megamenu-trigger" id="megaTrigger" aria-haspopup="true" aria-expanded="false">All Products <span class="mega-chev">▾</span></a>
+  <div class="megamenu-panel" id="megaPanel">
+    <div class="mega-col">
+      <div class="mega-cat">Weddings</div>
+      <div class="mega-rule"></div>
+      <a href="/save-the-dates">Save the Date</a>
+      <a href="/wedding-invitations">Wedding Invitations</a>
+      <a href="/rsvp-cards">RSVP Cards</a>
+      <a href="/order-of-service">Order of Service</a>
+      <a href="/welcome-signs">Welcome Signs</a>
+      <a href="/signage">Signage</a>
+      <a href="/table-plans">Table Plans</a>
+      <a href="/table-numbers">Table Numbers</a>
+      <a href="/menu-cards">Menu Cards</a>
+      <a href="/thank-you-cards">Thank You Cards</a>
+      <a href="/products.html?cat=weddings" class="mega-viewall">View all →</a>
+    </div>
+    <div class="mega-col">
+      <div class="mega-cat">Celebrations</div>
+      <div class="mega-rule"></div>
+      <a href="/party-invitations">Party Invitations</a>
+      <a href="/birthday-invitations">Birthday Invitations</a>
+      <a href="/engagement-party-invitations">Engagement Party Invitations</a>
+      <a href="/baby-shower-invitations">Baby Shower Invitations</a>
+      <a href="/products.html?cat=celebrations" class="mega-viewall">View all →</a>
+    </div>
+    <div class="mega-col">
+      <div class="mega-cat">Announcements</div>
+      <div class="mega-rule"></div>
+      <a href="/new-arrival-cards">New Arrival Cards</a>
+      <a href="/christening-invitations">Christening Invitations</a>
+      <a href="/engagement-cards">Engagement Cards</a>
+      <a href="/moving-cards">Moving Cards</a>
+      <a href="/graduation-cards">Graduation Cards</a>
+      <a href="/products.html?cat=announcements" class="mega-viewall">View all →</a>
+    </div>
+  </div>
 </div>
-
-<!-- HERO -->
-<section class="create-hero">
-  <div class="create-hero-inner">
-    <span class="tag">Design with our tools</span>
-    <h1>Let's design it <em>together.</em></h1>
-    <div class="create-divider"></div>
-    <p>Three quick questions and we'll compose something just for you. Tap your answers — there's no design know-how needed, and you'll be able to change anything later.</p>
-  </div>
-</section>
-
-<!-- QUESTIONS -->
-<main class="create-main">
-
-  <div class="q-block">
-    <div class="q-label">When are you getting married?</div>
-    <div class="q-opts" data-group="season">
-      <button class="q-opt" data-value="spring">Spring</button>
-      <button class="q-opt" data-value="summer">Summer</button>
-      <button class="q-opt" data-value="autumn">Autumn</button>
-      <button class="q-opt" data-value="winter">Winter</button>
-    </div>
-  </div>
-
-  <div class="q-block">
-    <div class="q-label">What should it feel like?</div>
-    <div class="q-opts" data-group="feeling">
-      <button class="q-opt" data-value="classic">Classic &amp; timeless</button>
-      <button class="q-opt" data-value="romantic">Soft &amp; romantic</button>
-      <button class="q-opt" data-value="botanical">Natural &amp; botanical</button>
-      <button class="q-opt" data-value="modern">Modern &amp; understated</button>
-    </div>
-  </div>
-
-  <div class="q-block">
-    <div class="q-label">Any colours you're drawn to?</div>
-    <div class="q-opts" data-group="colour">
-      <button class="q-opt" data-value="soft"><span class="q-dot" style="background:#A8C4B8"></span><span class="q-dot" style="background:#D4A5A5"></span>Soft &amp; muted</button>
-      <button class="q-opt" data-value="warm"><span class="q-dot" style="background:#C97B3A"></span><span class="q-dot" style="background:#B0A088"></span>Warm &amp; natural</button>
-      <button class="q-opt" data-value="deep"><span class="q-dot" style="background:#2C3E50"></span><span class="q-dot" style="background:#8B2942"></span>Rich &amp; deep</button>
-      <button class="q-opt" data-value="light"><span class="q-dot" style="background:#FAF7F2"></span><span class="q-dot" style="background:#4A4A4A"></span>Fresh &amp; light</button>
-      <button class="q-opt on" data-value="auto">Help me choose</button>
-    </div>
-  </div>
-
-  <div class="q-block">
-    <div class="q-label">Anything you'd love to include?<span class="q-optional">optional</span></div>
-    <textarea class="q-notes" id="qNotes" placeholder="e.g. lots of eucalyptus, we met by the sea, her favourite flower is peonies…"></textarea>
-  </div>
-
-  <div class="create-actions">
-    <div class="create-hint" id="createHint">Just pick a season and a feeling and we're away.</div>
-    <button class="create-btn" id="createBtn">
-      <span class="btn-text">Design my invitation</span>
-      <span class="spin"></span>
-    </button>
-    <div class="create-note">We'll compose three designs from your answers — you choose the one you love.</div>
-  </div>
-
-</main>
-
-<div id="site-footer"></div>
-
+<a href="/design-studio.html">Design Studio</a>
+<a href="/how-it-works.html">How We Work</a>
+</nav>
+<div class="right-zone">
+<!-- Signed-out account dropdown -->
+<div class="auth-state active" id="authSignedOut">
+<button class="acct-trigger" onclick="window.invAuth && window.invAuth.toggleAuthDropdown(event)">
+<span class="acct-icon">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="12" cy="8" r="4"/>
+<path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+</svg>
+</span>
+<span class="acct-label">Account <span class="acct-chevron">▾</span></span>
+</button>
+<div class="acct-dropdown">
+<a href="/login.html">Sign In</a>
+<a href="/register.html">Create Account</a>
+<div class="dd-divider"></div>
+<a href="/track-order.html">Track My Order</a>
+<a href="/help-support.html">Help &amp; Support</a>
+</div>
+</div>
+<!-- Signed-in account dropdown -->
+<div class="auth-state" id="authSignedIn">
+<button class="acct-trigger" id="authTrigger" onclick="window.invAuth && window.invAuth.toggleAuthDropdown(event)">
+<span class="acct-icon signedin" id="authAvatar">·</span>
+<span class="acct-label">My Account <span class="acct-chevron">▾</span></span>
+</button>
+<div class="acct-dropdown" id="authDropdown">
+<div class="dd-email" id="authDropdownEmail">—</div>
+<a href="/account.html">My Account</a>
+<a href="/saved-designs.html">My Saved Designs</a>
+<a href="/track-order.html">Track My Order</a>
+<div class="dd-divider"></div>
+<button onclick="window.invAuth && window.invAuth.signOut()">Sign Out</button>
+</div>
+</div>
+<!-- Basket button -->
+<button class="cart-btn" onclick="openCart()">
+Basket <span class="cart-count" id="cartCount">0</span>
+</button>
+</div>
+</div>
+</header>
+<div class="cart-bg" id="cartBg" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+<div class="cart-head">
+<h3 class="serif">Your Basket</h3>
+<button class="modal-close" onclick="closeCart()">✕</button>
+</div>
+<div class="cart-scroll" id="cartScroll"></div>
+<div class="cart-foot" id="cartFoot" style="display:none">
+<div class="cart-row"><span>Subtotal (excl. VAT)</span><span id="cartNet">£0.00</span></div>
+<div class="cart-row vat"><span>VAT (20%)</span><span id="cartVat">£0.00</span></div>
+<div class="cart-row total serif"><span>Total</span><span id="cartTotal">£0.00</span></div>
+<button class="btn" onclick="goToCheckout()" style="width:100%;justify-content:center;">Continue to Checkout</button>
+</div>
+</div>
+<div class="toast" id="toast"></div>
 <script>
-fetch('/header.html').then(r=>r.text()).then(html=>{
-  document.getElementById('site-header').outerHTML=html;
-  if(typeof updateCartBadge==='function') updateCartBadge();
-});
-fetch('/footer.html').then(r=>r.text()).then(html=>{
-  document.getElementById('site-footer').outerHTML=html;
-});
+window.toggleMobileNav = function(){
+  var nav = document.getElementById('mainNav');
+  var btn = document.getElementById('navToggle');
+  if(!nav || !btn) return;
+  var open = nav.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+};
 
-// ─── BRIEF STATE ─────────────────────────────────────────────
-const brief = { season:null, feeling:null, colour:'auto', notes:'' };
-
-// Single-select per question group
-document.querySelectorAll('.q-opts').forEach(group => {
-  const key = group.getAttribute('data-group');
-  group.querySelectorAll('.q-opt').forEach(opt => {
-    opt.addEventListener('click', () => {
-      group.querySelectorAll('.q-opt').forEach(o => o.classList.remove('on'));
-      opt.classList.add('on');
-      brief[key] = opt.getAttribute('data-value');
-      if (brief.season && brief.feeling) {
-        document.getElementById('createHint').classList.remove('show');
+// Mega-menu: on touch/no-hover devices, tap the trigger to open the panel
+(function(){
+  var mega = document.getElementById('megamenu');
+  var trigger = document.getElementById('megaTrigger');
+  if(!mega || !trigger) return;
+  var canHover = window.matchMedia('(hover:hover)').matches;
+  if(!canHover){
+    trigger.addEventListener('click', function(e){
+      if(!mega.classList.contains('open')){
+        e.preventDefault();
+        mega.classList.add('open');
+        trigger.setAttribute('aria-expanded','true');
       }
     });
-  });
-});
+    document.addEventListener('click', function(e){
+      if(!mega.contains(e.target)){ mega.classList.remove('open'); trigger.setAttribute('aria-expanded','false'); }
+    });
+  }
+})();
+</script>
+<!--
+Cart logic lives in /cart.js (loaded by each page).
+The inline <script> that used to be here never executed when this header
+was fetched and injected via innerHTML — that was the bug behind the
+"updateCartBadge is not defined" error.
+-->
 
-// ─── SUBMIT → SAVE BRIEF → NEXT STEP ─────────────────────────
-document.getElementById('createBtn').addEventListener('click', () => {
-  brief.notes = document.getElementById('qNotes').value.trim();
 
-  // Require at least a season and a feeling; colour defaults to "help me choose"
-  if (!brief.season || !brief.feeling) {
-    document.getElementById('createHint').classList.add('show');
-    return;
+<div class="ds-wrap">
+  <div class="ds-hero">
+    <div class="ds-eyebrow">Design your own · Wedding Invitation</div>
+    <h1 class="ds-title">Let's design it together</h1>
+    <p class="ds-sub">We'll take it one step at a time — choose a layout, add your wording, then describe the look. You can change anything as you go.</p>
+  </div>
+
+  <div class="ds-steps" id="ds-steps">
+    <div class="ds-steps-item"><span class="ds-dot active" data-dot="0">1</span><span class="ds-steps-label active" data-lbl="0">Size</span><span class="ds-steps-line"></span></div>
+    <div class="ds-steps-item"><span class="ds-dot" data-dot="1">2</span><span class="ds-steps-label" data-lbl="1">Wording</span><span class="ds-steps-line"></span></div>
+    <div class="ds-steps-item"><span class="ds-dot" data-dot="2">3</span><span class="ds-steps-label" data-lbl="2">The look</span></div>
+  </div>
+  <div class="ds-guide-note">Work through each step — your invitation builds on the right as you go. Nothing is final; edit any time.</div>
+
+  <div class="ds-grid">
+    <div class="ds-acc" id="ds-acc">
+
+      <div class="ds-sec open" data-sec="0">
+        <button class="ds-sec-head" data-head="0"><span><span class="ds-sec-num">1</span>Choose your size</span><span class="ds-chev">▾</span></button>
+        <div class="ds-sec-body">
+          <div class="ds-sec-hint">The size and shape of your invitation. Everything else builds on this.</div>
+          <div class="ds-sizes" id="ds-sizes">
+            <div class="ds-size sel" data-size="a7">
+              <div class="ds-size-icon"><div class="ds-size-card" style="width:32px;height:44px;"></div></div>
+              <div class="ds-size-name">5&times;7&Prime;</div>
+              <div class="ds-size-dim">127 &times; 178mm</div>
+              <div class="ds-size-note">The classic · most popular</div>
+            </div>
+            <div class="ds-size" data-size="a5">
+              <div class="ds-size-icon"><div class="ds-size-card" style="width:35px;height:49px;"></div></div>
+              <div class="ds-size-name">A5</div>
+              <div class="ds-size-dim">148 &times; 210mm</div>
+              <div class="ds-size-note">Larger · a real statement</div>
+            </div>
+            <div class="ds-size" data-size="a6">
+              <div class="ds-size-icon"><div class="ds-size-card" style="width:28px;height:39px;"></div></div>
+              <div class="ds-size-name">A6</div>
+              <div class="ds-size-dim">105 &times; 148mm</div>
+              <div class="ds-size-note">Smaller · intimate</div>
+            </div>
+            <div class="ds-size" data-size="square">
+              <div class="ds-size-icon"><div class="ds-size-card" style="width:42px;height:42px;"></div></div>
+              <div class="ds-size-name">Square</div>
+              <div class="ds-size-dim">148 &times; 148mm</div>
+              <div class="ds-size-note">Distinctive · modern</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ds-sec" data-sec="1">
+        <button class="ds-sec-head" data-head="1"><span><span class="ds-sec-num">2</span>Your wording</span><span class="ds-chev">▾</span></button>
+        <div class="ds-sec-body">
+          <div class="ds-sec-hint">Fill in whatever you'd like — every line is optional, and appears in your invitation as you type.</div>
+          <input class="ds-fld" id="w-names" placeholder="Your names — e.g. Eleanor &amp; Thomas"/>
+          <input class="ds-fld" id="w-host" placeholder="Host line — Together with their families (optional)"/>
+          <input class="ds-fld" id="w-line" placeholder="Invitation line — invite you to celebrate their marriage"/>
+          <input class="ds-fld" id="w-date" placeholder="Date — Saturday, 14th September 2026"/>
+          <input class="ds-fld" id="w-time" placeholder="Time — at half past three in the afternoon"/>
+          <input class="ds-fld" id="w-venue" placeholder="Venue — Cotswold Manor, Oxfordshire"/>
+          <div class="ds-more" id="w-more">
+            <input class="ds-fld" id="w-reception" placeholder="Reception — dinner &amp; dancing to follow (optional)"/>
+            <input class="ds-fld" id="w-dress" placeholder="Dress code — black tie (optional)"/>
+            <input class="ds-fld" id="w-rsvp" placeholder="RSVP — by 1st August · your website (optional)"/>
+            <input class="ds-fld" id="w-custom" placeholder="Add your own line — a quote, a note… (optional)"/>
+          </div>
+          <button class="ds-addmore" id="w-addbtn">+ add reception, dress code, RSVP, your own line…</button>
+        </div>
+      </div>
+
+      <div class="ds-sec" data-sec="2">
+        <button class="ds-sec-head" data-head="2"><span><span class="ds-sec-num">3</span>Describe the look</span><span class="ds-chev">▾</span></button>
+        <div class="ds-sec-body">
+          <div class="ds-sec-hint">Tap the ideas you love — the more you choose, the richer the brief we send our design AI.</div>
+
+          <div class="ds-label">Style</div>
+          <div class="ds-chips" data-group="style">
+            <button class="ds-chip on" data-v="soft watercolour florals">watercolour</button>
+            <button class="ds-chip" data-v="fine botanical linework">botanical linework</button>
+            <button class="ds-chip" data-v="hand-painted florals">hand-painted</button>
+            <button class="ds-chip" data-v="pressed and dried flowers">pressed flowers</button>
+            <button class="ds-chip" data-v="elegant and minimalist">minimalist</button>
+            <button class="ds-chip" data-v="classic engraved">classic engraved</button>
+            <button class="ds-chip" data-v="art deco geometric">art deco</button>
+            <button class="ds-chip" data-v="vintage romantic">vintage</button>
+            <button class="ds-chip" data-v="modern editorial">modern</button>
+          </div>
+
+          <div class="ds-label">Decorative touches</div>
+          <div class="ds-chips" data-group="touch">
+            <button class="ds-chip on" data-v="trailing eucalyptus">eucalyptus</button>
+            <button class="ds-chip on" data-v="soft blush roses">blush roses</button>
+            <button class="ds-chip" data-v="delicate wildflowers">wildflowers</button>
+            <button class="ds-chip" data-v="greenery and foliage">greenery</button>
+            <button class="ds-chip" data-v="a botanical wreath">a wreath</button>
+            <button class="ds-chip" data-v="gold foliage">gold foliage</button>
+            <button class="ds-chip" data-v="a monogram crest">a monogram</button>
+            <button class="ds-chip" data-v="fine gold foil detailing">gold foil</button>
+            <button class="ds-chip" data-v="deckled edges">deckled edges</button>
+          </div>
+
+          <div class="ds-label">Mood</div>
+          <div class="ds-chips" data-group="mood">
+            <button class="ds-chip on" data-v="warm and romantic">warm &amp; romantic</button>
+            <button class="ds-chip" data-v="soft and airy">soft &amp; airy</button>
+            <button class="ds-chip" data-v="candlelit and intimate">candlelit</button>
+            <button class="ds-chip" data-v="bright and fresh">bright &amp; fresh</button>
+            <button class="ds-chip" data-v="timeless and refined">timeless</button>
+            <button class="ds-chip" data-v="grand and opulent">grand</button>
+          </div>
+
+          <div class="ds-label">Light &amp; finish</div>
+          <div class="ds-chips" data-group="finish">
+            <button class="ds-chip on" data-v="soft natural light">soft natural light</button>
+            <button class="ds-chip" data-v="warm glowing light">warm glow</button>
+            <button class="ds-chip" data-v="bright airy daylight">airy daylight</button>
+            <button class="ds-chip" data-v="on textured cotton paper">textured paper</button>
+            <button class="ds-chip" data-v="a subtle painterly wash">painterly wash</button>
+          </div>
+
+          <div class="ds-label">Colours</div>
+          <div class="ds-chips" data-group="colour" style="gap:9px;">
+            <span class="ds-sw on" data-v="sage green" style="background:#DDE3D3;"></span>
+            <span class="ds-sw on" data-v="cream" style="background:#E8DDD8;"></span>
+            <span class="ds-sw on" data-v="gold" style="background:#B8976A;"></span>
+            <span class="ds-sw" data-v="blush" style="background:#F0DDD8;"></span>
+            <span class="ds-sw" data-v="dusty blue" style="background:#B7C4CE;"></span>
+            <span class="ds-sw" data-v="terracotta" style="background:#C97B5A;"></span>
+            <span class="ds-sw" data-v="burgundy" style="background:#7A4E4E;"></span>
+            <span class="ds-sw" data-v="navy" style="background:#2F3E4E;"></span>
+            <span class="ds-sw" data-v="emerald" style="background:#3E5641;"></span>
+            <span class="ds-sw" data-v="champagne" style="background:#C9B79E;"></span>
+            <span class="ds-sw" data-v="mauve" style="background:#D8B7C4;"></span>
+            <span class="ds-sw" data-v="olive" style="background:#8A9A7B;"></span>
+          </div>
+
+          <div class="ds-label">Anything else? <span style="text-transform:none;letter-spacing:0;color:var(--pale);">(optional)</span></div>
+          <textarea class="ds-freetext" id="w-story" placeholder="we met in Italy · grandmother's garden roses · a summer evening feel…"></textarea>
+
+          <div class="ds-brief">
+            <div class="ds-brief-label">The brief we'll send</div>
+            <div class="ds-brief-text" id="ds-brief-text"></div>
+          </div>
+
+          <button class="ds-generate" id="ds-generate">✦ Generate my design</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="ds-preview-col">
+      <div class="ds-preview">
+        <div class="ds-preview-label">Your invitation</div>
+        <div class="ds-canvas" id="ds-canvas">
+          <div class="ds-art" id="art-a"></div>
+          <div class="ds-art" id="art-b"></div>
+          <div class="ds-safe">
+            <div class="ds-stack" id="ds-stack">
+              <div class="ds-empty" id="ds-empty">Your invitation will appear here as you add your wording.</div>
+              <div class="ln host"   id="pv-host"></div>
+              <div class="ln request" id="pv-request"></div>
+              <div class="ln names"  id="pv-names"></div>
+              <div class="ln date"   id="pv-date"></div>
+              <div class="ln time"   id="pv-time"></div>
+              <div class="ln venue"  id="pv-venue"></div>
+              <div class="ln reception" id="pv-reception"></div>
+              <div class="ln dress"  id="pv-dress"></div>
+              <div class="ln rsvp"   id="pv-rsvp"></div>
+              <div class="ln custom" id="pv-custom"></div>
+            </div>
+          </div>
+        </div>
+        <div class="ds-drag-hint" id="ds-drag-hint" style="display:none;">Drag your wording to position it in the clear space · use − / + to resize</div>
+        <div class="ds-resize" id="ds-resize" style="display:none;">
+          <button type="button" id="ds-smaller" aria-label="Smaller text">−</button>
+          <span>Text size</span>
+          <button type="button" id="ds-bigger" aria-label="Bigger text">+</button>
+        </div>
+        <div class="ds-actions" id="ds-actions" style="display:none;">
+          <button class="ds-act-primary" id="ds-love">Love it — choose paper &amp; order →</button>
+          <button class="ds-act-secondary" id="ds-adjust">Make adjustments to the design</button>
+        </div>
+        <div class="ds-preview-hint" id="ds-prehint">Add your wording, describe the look, then generate your design.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
+.footer-inner{max-width:1180px;margin:0 auto;padding:0 32px;}
+.footer-top{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:#fff;margin-bottom:12px;}
+.footer-logo span{color:var(--gold);}
+.footer-tagline{font-size:var(--text-sm);line-height:1.8;color:rgba(255,255,255,.5);}
+.footer-col h5{font-size:var(--text-xs);letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;font-weight:500;}
+.footer-col a{display:block;font-size:var(--text-sm);color:rgba(255,255,255,.5);text-decoration:none;margin-bottom:8px;transition:color .2s;}
+.footer-col a:hover{color:var(--gold-lt);}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:var(--text-xs);}
+#hw-btn{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--gold);border:none;color:#fff;font-family:'Cormorant Garamond',serif;font-size:1.1rem;cursor:pointer;box-shadow:0 4px 18px rgba(184,151,106,.4);z-index:300;transition:all .25s;display:flex;align-items:center;justify-content:center;}
+#hw-btn:hover{background:var(--brown);transform:scale(1.05);}
+#hw-panel{position:fixed;bottom:78px;right:24px;width:280px;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 48px rgba(61,46,36,.14);z-index:300;display:flex;flex-direction:column;max-height:420px;overflow:hidden;opacity:0;transform:translateY(10px) scale(.97);pointer-events:none;transition:all .25s;}
+#hw-panel.open{opacity:1;transform:none;pointer-events:auto;}
+#hw-head{padding:10px 12px;border-bottom:1px solid var(--border);background:var(--cream);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.hw-head-left{display:flex;align-items:center;gap:8px;}
+.hw-avatar{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:.85rem;color:#fff;flex-shrink:0;}
+.hw-head-name{font-size:var(--text-xs);font-weight:500;color:var(--text);}
+.hw-head-status{font-size:var(--text-xs);color:var(--ok);}
+.hw-close-btn{background:none;border:none;font-size:var(--text-body);color:var(--pale);cursor:pointer;padding:2px;line-height:1;}
+#hw-messages{flex:1;overflow-y:auto;padding:10px 10px 6px;scroll-behavior:smooth;}
+.hw-msg{margin-bottom:10px;}
+.hw-sender{font-size:var(--text-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--pale);margin-bottom:3px;}
+.hw-msg.user .hw-sender{text-align:right;}
+.hw-bubble{font-size:var(--text-xs);line-height:1.65;color:var(--text);background:var(--cream);border-radius:2px 10px 10px 10px;padding:7px 10px;border:1px solid var(--border);display:inline-block;max-width:220px;}
+.hw-msg.user .hw-bubble{background:var(--gold);color:#fff;border-color:var(--gold);border-radius:10px 2px 10px 10px;float:right;}
+.hw-msg.user::after{content:'';display:block;clear:both;}
+.hw-prompts{display:flex;flex-direction:column;gap:3px;margin-top:5px;}
+.hw-prompt{background:var(--white);border:1px solid var(--border);border-radius:60px;padding:4px 8px;font-size:var(--text-xs);color:var(--soft);cursor:pointer;text-align:left;font-family:'Jost',sans-serif;transition:all .2s;width:100%;}
+.hw-prompt:hover{border-color:var(--gold);color:var(--gold);}
+.hw-typing{display:flex;gap:3px;padding:6px 9px;background:var(--cream);border-radius:2px 10px 10px 10px;border:1px solid var(--border);width:fit-content;}
+.hw-dot{width:3px;height:3px;border-radius:50%;background:var(--pale);animation:hwdot 1.2s infinite;}
+.hw-dot:nth-child(2){animation-delay:.2s;}
+.hw-dot:nth-child(3){animation-delay:.4s;}
+@keyframes hwdot{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-3px);}}
+.hw-contact-btn{display:inline-flex;align-items:center;gap:3px;margin-top:5px;padding:3px 8px;background:transparent;border:1px solid var(--gold);border-radius:60px;font-size:var(--text-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);cursor:pointer;font-family:'Jost',sans-serif;transition:all .2s;}
+.hw-contact-btn:hover{background:var(--gold);color:#fff;}
+#hw-contact-form{padding:9px;border-top:1px solid var(--border);background:var(--cream);flex-shrink:0;display:none;}
+.hw-cf-title{font-family:'Cormorant Garamond',serif;font-size:.78rem;color:var(--text);margin-bottom:7px;}
+#hw-contact-form input,#hw-contact-form textarea{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Jost',sans-serif;font-size:var(--text-xs);color:var(--text);background:var(--white);outline:none;margin-bottom:4px;}
+#hw-contact-form textarea{resize:none;height:40px;line-height:1.6;}
+.hw-cf-row{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.hw-cf-btns{display:flex;gap:4px;margin-top:2px;}
+.hw-cf-submit{flex:1;padding:5px;background:var(--gold);color:#fff;border:none;border-radius:60px;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
+.hw-cf-cancel{padding:5px 9px;background:transparent;color:var(--soft);border:1px solid var(--border);border-radius:60px;font-family:'Jost',sans-serif;font-size:var(--text-xs);cursor:pointer;}
+#hw-input-area{padding:7px;border-top:1px solid var(--border);display:flex;gap:5px;align-items:center;flex-shrink:0;}
+#hw-input{flex:1;padding:5px 10px;border:1px solid var(--border);border-radius:60px;font-family:'Jost',sans-serif;font-size:var(--text-xs);color:var(--text);background:var(--cream);outline:none;}
+#hw-send{width:22px;height:22px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+</style>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">forever<span>print</span></div>
+        <p class="footer-tagline">Luxury wedding stationery crafted with care for couples who believe every detail matters.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Get Started</h5>
+        <a href="/upload-and-print.html">Upload &amp; Print</a>
+        <a href="/design-studio.html">Design Studio</a>
+        <a href="/products.html">All Products</a>
+      </div>
+      <div class="footer-col">
+        <h5>Help</h5>
+        <a href="/how-it-works.html">How We Work</a>
+        <a href="/how-it-works.html#faq">FAQs</a>
+        <a href="mailto:hello@foreverprint.com">Contact Us</a>
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <a href="/privacy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms of Service</a>
+        <a href="/returns.html">Returns Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Foreverprint. All rights reserved.</span>
+      <span>Made with love in the UK 🇬🇧</span>
+    </div>
+  </div>
+</footer>
+
+<button id="hw-btn" onclick="hwToggle()">?</button>
+<div id="hw-panel">
+  <div id="hw-head">
+    <div class="hw-head-left">
+      <div class="hw-avatar">L</div>
+      <div><div class="hw-head-name">Lily — Foreverprint</div><div class="hw-head-status">● Online now</div></div>
+    </div>
+    <button class="hw-close-btn" onclick="hwToggle()">✕</button>
+  </div>
+  <div id="hw-messages">
+    <div class="hw-msg bot">
+      <div class="hw-sender">Lily</div>
+      <div class="hw-bubble">Hi! I'm Lily. How can I help you today?
+        <div class="hw-prompts">
+          <button class="hw-prompt" onclick="hwPrompt('What paper stocks do you offer?')">What paper stocks do you offer?</button>
+          <button class="hw-prompt" onclick="hwPrompt('How long does delivery take?')">How long does delivery take?</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="hw-contact-form">
+    <div class="hw-cf-title">Get in touch</div>
+    <div class="hw-cf-row">
+      <input id="hw-cf-name" placeholder="Name" type="text">
+      <input id="hw-cf-email" placeholder="Email" type="email">
+    </div>
+    <input id="hw-cf-order" placeholder="Order number (optional)" type="text">
+    <textarea id="hw-cf-msg" placeholder="How can we help?"></textarea>
+    <div class="hw-cf-btns">
+      <button class="hw-cf-cancel" onclick="hwHideContact()">Cancel</button>
+      <button class="hw-cf-submit" onclick="hwSubmitContact()">Send</button>
+    </div>
+  </div>
+  <div id="hw-input-area">
+    <input id="hw-input" placeholder="Ask us anything..." onkeydown="if(event.key==='Enter')hwSend()">
+    <button id="hw-send" onclick="hwSend()">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+var hwHistory=[],hwOpen=false;
+function hwToggle(){hwOpen=!hwOpen;document.getElementById('hw-panel').classList.toggle('open',hwOpen);if(hwOpen)setTimeout(()=>document.getElementById('hw-input').focus(),300);}
+function hwPrompt(t){document.getElementById('hw-input').value=t;hwSend();}
+function hwAddMsg(role,text,contact){var msgs=document.getElementById('hw-messages'),div=document.createElement('div');div.className='hw-msg '+role;var s=role==='bot'?'Lily':'You',cb=contact&&role==='bot'?'<br><button class="hw-contact-btn" onclick="hwShowContact()">✉ Contact the team</button>':'';div.innerHTML='<div class="hw-sender">'+s+'</div><div class="hw-bubble">'+text.replace(/\n/g,'<br>')+cb+'</div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
+function hwShowTyping(){var msgs=document.getElementById('hw-messages'),div=document.createElement('div');div.id='hw-typing-indicator';div.className='hw-msg bot';div.innerHTML='<div class="hw-sender">Lily</div><div class="hw-typing"><div class="hw-dot"></div><div class="hw-dot"></div><div class="hw-dot"></div></div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
+function hwRemoveTyping(){var el=document.getElementById('hw-typing-indicator');if(el)el.remove();}
+async function hwSend(){var input=document.getElementById('hw-input'),text=input.value.trim();if(!text)return;input.value='';input.disabled=true;document.getElementById('hw-send').disabled=true;hwAddMsg('user',text);hwHistory.push({role:'user',content:text});hwShowTyping();try{var res=await fetch('/.netlify/functions/help-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hwHistory})}),data=await res.json();hwRemoveTyping();var reply=data.text||'Sorry, something went wrong — please email hello@foreverprint.com';hwHistory.push({role:'assistant',content:reply});hwAddMsg('bot',reply,/contact|problem|issue|wrong|damaged|missing|refund/i.test(text+reply));}catch(e){hwRemoveTyping();hwAddMsg('bot','Sorry, I\'m having trouble connecting. Please email hello@foreverprint.com',false);}input.disabled=false;document.getElementById('hw-send').disabled=false;input.focus();}
+function hwShowContact(){document.getElementById('hw-contact-form').style.display='block';document.getElementById('hw-input-area').style.display='none';}
+function hwHideContact(){document.getElementById('hw-contact-form').style.display='none';document.getElementById('hw-input-area').style.display='flex';}
+function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.trim(),email=document.getElementById('hw-cf-email').value.trim(),order=document.getElementById('hw-cf-order').value.trim(),msg=document.getElementById('hw-cf-msg').value.trim();if(!name||!email||!msg){alert('Please fill in your name, email and message.');return;}window.location.href='mailto:hello@foreverprint.com?subject='+encodeURIComponent('Customer Enquiry'+(order?' — Order '+order:''))+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+(order?'\nOrder: '+order:'')+'\n\n'+msg);hwHideContact();hwAddMsg('bot','Your email client should have opened — we\'ll get back to you within one working day.',false);}
+</script>
+
+
+<script>
+(function(){
+  var sel = { style:[], touch:[], mood:[], finish:[], colour:[] };
+  var size = 'a7';
+
+  // ---- size definitions: aspect ratio (width/height) per size ----
+  var SIZES = {
+    a7:     { ratio: 5/7,    desc: 'a 5x7 inch portrait invitation' },
+    a5:     { ratio: 148/210, desc: 'an A5 portrait invitation' },
+    a6:     { ratio: 105/148, desc: 'an A6 portrait invitation' },
+    square: { ratio: 1,      desc: 'a square invitation' }
+  };
+
+  function applySize(){
+    var S = SIZES[size];
+    var canvas = document.getElementById('ds-canvas');
+    // set the preview canvas to the chosen proportions with a smooth transition
+    canvas.style.transition = 'aspect-ratio .3s ease, max-width .3s ease';
+    canvas.style.aspectRatio = S.ratio;
+    // square needs a smaller max-width so it doesn't tower; portraits taller
+    canvas.style.maxWidth = (size==='square') ? '340px' : '380px';
+    canvas.style.margin = '0 auto';
+    canvas.classList.toggle('is-square', size==='square');
+    setTimeout(function(){ if(typeof autofit==='function') autofit(); }, 320);
   }
 
-  // Save the brief for the next page (the three-design suggestions screen)
-  sessionStorage.setItem('foreverprint_brief', JSON.stringify(brief));
+  function buildBrief(){
+    var parts=[];
+    var lead=(sel.mood[0]?sel.mood[0]+', ':'')+(sel.style[0]||'elegant');
+    parts.push('A '+lead+' wedding invitation design for '+(SIZES[size].desc));
+    if(sel.touch.length) parts.push('with '+sel.touch.join(', '));
+    if(sel.colour.length) parts.push('in '+sel.colour.join(', '));
+    if(sel.finish.length) parts.push(sel.finish.join(', '));
+    var ft=document.getElementById('w-story').value.trim();
+    var s = parts.join(', ')+'. A decorative design only, with generous clear empty space in the centre for text — no lettering or words in the image. Flat, straight-on, fills the frame, on a soft cream background, print quality.';
+    if(ft) s += ' '+ft.charAt(0).toUpperCase()+ft.slice(1)+'.';
+    document.getElementById('ds-brief-text').textContent = '"'+s+'"';
+    return s;
+  }
 
-  // Show a brief composing state, then hand off
-  const btn = document.getElementById('createBtn');
-  btn.disabled = true;
-  btn.querySelector('.btn-text').textContent = 'Composing your designs';
-  btn.querySelector('.spin').style.display = 'inline-block';
+  var heads=document.querySelectorAll('.ds-sec-head'), secs=document.querySelectorAll('.ds-sec');
+  function setStep(n){
+    secs.forEach(function(s){ s.classList.toggle('open', +s.dataset.sec===n); });
+    document.querySelectorAll('.ds-dot').forEach(function(d){var i=+d.dataset.dot;d.classList.toggle('active',i===n);d.classList.toggle('done',i<n);});
+    document.querySelectorAll('.ds-steps-label').forEach(function(l){l.classList.toggle('active',+l.dataset.lbl===n);});
+    secs.forEach(function(s){ s.classList.toggle('ds-sec-done', +s.dataset.sec < n); });
+  }
+  heads.forEach(function(h){ h.addEventListener('click', function(){ setStep(+h.dataset.head); }); });
 
-  setTimeout(() => {
-    window.location.href = '/design-studio-suggestions.html';
-  }, 1200);
-});
+  document.getElementById('w-addbtn').addEventListener('click', function(){ document.getElementById('w-more').classList.add('show'); this.style.display='none'; });
+
+  document.querySelectorAll('.ds-size').forEach(function(f){
+    f.addEventListener('click', function(){
+      document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');});
+      f.classList.add('sel'); size=f.dataset.size; applySize(); buildBrief();
+    });
+  });
+
+  document.querySelectorAll('.ds-chips').forEach(function(g){
+    var cat=g.dataset.group;
+    g.querySelectorAll('.ds-chip, .ds-sw').forEach(function(c){
+      c.addEventListener('click', function(){
+        c.classList.toggle('on');
+        var v=c.dataset.v, i=sel[cat].indexOf(v);
+        if(i>-1) sel[cat].splice(i,1); else sel[cat].push(v);
+        buildBrief();
+      });
+    });
+  });
+  document.getElementById('w-story').addEventListener('input', buildBrief);
+
+  // --- live preview: map every wording field to its template line ---
+  var FIELD_MAP = [
+    ['w-host','pv-host'],
+    ['w-line','pv-request'],
+    ['w-names','pv-names'],
+    ['w-date','pv-date'],
+    ['w-time','pv-time'],
+    ['w-venue','pv-venue'],
+    ['w-reception','pv-reception'],
+    ['w-dress','pv-dress'],
+    ['w-rsvp','pv-rsvp'],
+    ['w-custom','pv-custom']
+  ];
+  function refreshPreview(){
+    var anyFilled = false;
+    FIELD_MAP.forEach(function(pair){
+      var input = document.getElementById(pair[0]);
+      var line  = document.getElementById(pair[1]);
+      if(!input || !line) return;
+      var v = input.value.trim();
+      if(v){ line.textContent = v; line.classList.add('show'); anyFilled = true; }
+      else { line.textContent = ''; line.classList.remove('show'); }
+    });
+    document.getElementById('ds-empty').style.display = anyFilled ? 'none' : 'block';
+    autofit();
+  }
+
+  // --- auto-fit: shrink the stack to stay within the safe area ---
+  function autofit(){
+    var stack = document.getElementById('ds-stack');
+    var safe = stack.parentElement;
+    stack.style.transform = 'scale(1)';
+    var avail = safe.clientHeight, need = stack.scrollHeight;
+    if(need > avail){ stack.style.transform = 'scale(' + Math.max(0.4, avail/need) + ')'; }
+  }
+
+  FIELD_MAP.forEach(function(pair){
+    var el = document.getElementById(pair[0]);
+    if(el) el.addEventListener('input', refreshPreview);
+  });
+
+  document.getElementById('ds-generate').addEventListener('click', function(){
+    var self=this;
+    var brief = buildBrief();
+    self.textContent='Creating your design…';
+    self.disabled=true;
+    fetch('/.netlify/functions/studio-nano', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ brief: brief })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      self.disabled=false;
+      if(data.image){
+        // drop the real Nano design in as the full-frame background
+        var canvas=document.getElementById('ds-canvas');
+        var bg=document.getElementById('ds-nano-bg');
+        if(!bg){ bg=document.createElement('img'); bg.id='ds-nano-bg'; bg.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;'; canvas.insertBefore(bg, canvas.firstChild); }
+        bg.src=data.image;
+        // keep text above the generated art
+        var ta=document.getElementById('art-a'); if(ta) ta.style.display='none';
+        var tb=document.getElementById('art-b'); if(tb) tb.style.display='none';
+        var safe=document.querySelector('.ds-safe'); if(safe) safe.style.zIndex='2';
+        // enter "generated" mode: draggable text, resize, two action buttons
+        canvas.classList.add('is-generated');
+        document.getElementById('ds-drag-hint').style.display='block';
+        document.getElementById('ds-resize').style.display='flex';
+        document.getElementById('ds-actions').style.display='flex';
+        document.getElementById('ds-prehint').style.display='none';
+        enableDrag();
+        self.textContent='↻ Generate again';
+      } else {
+        self.textContent='↻ Try again';
+        alert('Design generation had a problem: ' + (data.error || 'unknown error'));
+      }
+    })
+    .catch(function(err){
+      self.disabled=false;
+      self.textContent='↻ Try again';
+      alert('Could not reach the design service: ' + err.message);
+    });
+  });
+
+  // --- drag & resize the text over the generated design ---
+  var textScale = 1;
+  function enableDrag(){
+    var stack = document.getElementById('ds-stack');
+    var canvas = document.getElementById('ds-canvas');
+    // start roughly centred
+    stack.style.left = '50%'; stack.style.top = '50%';
+    stack.style.transform = 'translate(-50%,-50%) scale('+textScale+')';
+    var dragging=false, sx=0, sy=0, ox=0, oy=0;
+    function down(e){
+      dragging=true;
+      var p = e.touches ? e.touches[0] : e;
+      sx=p.clientX; sy=p.clientY;
+      var r=stack.getBoundingClientRect(), c=canvas.getBoundingClientRect();
+      ox = r.left + r.width/2 - c.left;
+      oy = r.top + r.height/2 - c.top;
+      e.preventDefault();
+    }
+    function move(e){
+      if(!dragging) return;
+      var p = e.touches ? e.touches[0] : e;
+      var c=canvas.getBoundingClientRect();
+      var nx = ox + (p.clientX - sx);
+      var ny = oy + (p.clientY - sy);
+      // keep within canvas
+      nx = Math.max(0, Math.min(c.width, nx));
+      ny = Math.max(0, Math.min(c.height, ny));
+      stack.style.left = (nx/c.width*100)+'%';
+      stack.style.top  = (ny/c.height*100)+'%';
+      stack.style.transform = 'translate(-50%,-50%) scale('+textScale+')';
+    }
+    function up(){ dragging=false; }
+    stack.addEventListener('mousedown',down); document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+    stack.addEventListener('touchstart',down,{passive:false}); document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
+  }
+  function rescale(delta){
+    textScale = Math.max(0.5, Math.min(1.8, textScale + delta));
+    var stack = document.getElementById('ds-stack');
+    var cur = stack.style.transform || 'translate(-50%,-50%) scale(1)';
+    stack.style.transform = cur.replace(/scale\([^)]*\)/, 'scale('+textScale+')');
+  }
+  document.getElementById('ds-bigger').addEventListener('click', function(){ rescale(0.1); });
+  document.getElementById('ds-smaller').addEventListener('click', function(){ rescale(-0.1); });
+
+  // --- flatten the design (Flux image + positioned text) to a print-res file ---
+  function flattenToPrintFile(callback){
+    var bg = document.getElementById('ds-nano-bg');
+    if(!bg || !bg.src){ callback(null); return; }
+
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function(){
+      // print canvas at the Flux image's native (print) resolution
+      var PW = img.naturalWidth, PH = img.naturalHeight;
+      var cv = document.createElement('canvas');
+      cv.width = PW; cv.height = PH;
+      var ctx = cv.getContext('2d');
+      // 1. draw the decorative background at full print resolution
+      ctx.drawImage(img, 0, 0, PW, PH);
+
+      // 2. draw the text, mapping the on-screen preview positions to print pixels
+      var preview = document.getElementById('ds-canvas');
+      var pr = preview.getBoundingClientRect();
+      var scaleX = PW / pr.width, scaleY = PH / pr.height;
+
+      var stack = document.getElementById('ds-stack');
+      // where the stack centre sits within the preview (percentages -> px)
+      var stackLeftPct = parseFloat(stack.style.left) || 50;
+      var stackTopPct  = parseFloat(stack.style.top)  || 50;
+      var centreX = (stackLeftPct/100) * PW;
+      var centreY = (stackTopPct/100)  * PH;
+
+      // gather visible lines with their computed font sizes, scaled to print
+      var lines = [];
+      stack.querySelectorAll('.ln.show').forEach(function(el){
+        var cs = window.getComputedStyle(el);
+        lines.push({
+          text: el.textContent,
+          px: parseFloat(cs.fontSize) * scaleY * textScale,
+          italic: cs.fontStyle === 'italic',
+          weight: cs.fontWeight,
+          colour: cs.color,
+          spacing: parseFloat(cs.letterSpacing) || 0,
+          upper: cs.textTransform === 'uppercase',
+          mb: parseFloat(cs.marginBottom||0)*scaleY,
+          mt: parseFloat(cs.marginTop||0)*scaleY
+        });
+      });
+
+      // measure total block height
+      var total = 0;
+      lines.forEach(function(l){ total += l.mt + l.px*1.32 + l.mb; });
+      var y = centreY - total/2;
+
+      ctx.textAlign = 'center';
+      lines.forEach(function(l){
+        y += l.mt;
+        var fam = l.italic ? "italic " : "";
+        fam += (l.weight>=500?'500 ':'') + l.px + "px 'Cormorant Garamond', Georgia, serif";
+        ctx.font = fam;
+        ctx.fillStyle = l.colour;
+        var txt = l.upper ? l.text.toUpperCase() : l.text;
+        ctx.fillText(txt, centreX, y + l.px);
+        y += l.px*1.32 + l.mb;
+      });
+
+      // export as JPEG data URL (high quality)
+      var dataUrl = cv.toDataURL('image/jpeg', 0.95);
+      callback(dataUrl);
+    };
+    img.onerror = function(){ callback(null); };
+    img.src = bg.src;
+  }
+
+  // Supabase (same project/bucket the order flow already uses)
+  var SB_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+
+  // make a small thumbnail (data URL) from a full canvas
+  function makeThumb(fullDataUrl, cb){
+    var im = new Image();
+    im.onload = function(){
+      var tw = 400, th = Math.round(400 * im.naturalHeight / im.naturalWidth);
+      var c = document.createElement('canvas'); c.width = tw; c.height = th;
+      c.getContext('2d').drawImage(im, 0, 0, tw, th);
+      cb(c.toDataURL('image/jpeg', 0.8));
+    };
+    im.onerror = function(){ cb(null); };
+    im.src = fullDataUrl;
+  }
+
+  // dataURL -> Blob
+  function dataUrlToBlob(dataUrl){
+    var parts = dataUrl.split(','), mime = parts[0].match(/:(.*?);/)[1];
+    var bin = atob(parts[1]), n = bin.length, arr = new Uint8Array(n);
+    while(n--) arr[n] = bin.charCodeAt(n);
+    return new Blob([arr], { type: mime });
+  }
+
+  // the two post-generation actions
+  document.getElementById('ds-love').addEventListener('click', function(){
+    var btn = this;
+    btn.textContent = 'Preparing your design…';
+    btn.disabled = true;
+
+    flattenToPrintFile(function(printImage){
+      if(!printImage){ btn.textContent = '↻ Try again'; btn.disabled=false; return; }
+
+      var names = (document.getElementById('w-names') || {}).value || '';
+      var parts = names.split(/\s*&\s*|\s+and\s+/i);
+      var sizeMap = { a7:'5x7', a5:'A5', a6:'A6', square:'Square' };
+      var fileName = 'ai-design-' + Date.now() + '.jpg';
+
+      // 1. upload the FULL print-res file to Supabase (the real print artwork)
+      var blob = dataUrlToBlob(printImage);
+      fetch(SB_URL + '/storage/v1/object/artwork/' + fileName, {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'image/jpeg', 'x-upsert': 'false' },
+        body: blob
+      })
+      .then(function(r){
+        var artworkUrl = r.ok ? (SB_URL + '/storage/v1/object/artwork/' + fileName) : null;
+        // 2. make a small thumbnail for display on the order pages
+        makeThumb(printImage, function(thumb){
+          var design = {
+            source: 'ai-studio',
+            templateName: 'Your bespoke design',
+            templateId: 'ai-' + Date.now(),
+            size: sizeMap[size] || 'A5',
+            artworkUrl: artworkUrl,       // full print file lives here (for printing)
+            thumbnail: thumb,             // small image for display only
+            text: {
+              name1: (parts[0]||'').trim(),
+              name2: (parts[1]||'').trim(),
+              host: (document.getElementById('w-host')||{}).value||'',
+              line: (document.getElementById('w-line')||{}).value||'',
+              date: (document.getElementById('w-date')||{}).value||'',
+              time: (document.getElementById('w-time')||{}).value||'',
+              venue: (document.getElementById('w-venue')||{}).value||''
+            }
+          };
+          try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
+          window.location.href = '/upload-and-print.html?product=wedding-invitations&design=1';
+        });
+      })
+      .catch(function(){
+        // if upload fails, still proceed with just the thumbnail (order can't print without artwork, but flow continues)
+        makeThumb(printImage, function(thumb){
+          var design = { source:'ai-studio', templateName:'Your bespoke design', templateId:'ai-'+Date.now(), size: sizeMap[size]||'A5', artworkUrl:null, thumbnail:thumb, text:{ name1:(parts[0]||'').trim(), name2:(parts[1]||'').trim() } };
+          try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
+          window.location.href = '/upload-and-print.html?product=wedding-invitations&design=1';
+        });
+      });
+    });
+  });
+
+  document.getElementById('ds-adjust').addEventListener('click', function(){
+    try {
+      var design = { image: document.getElementById('ds-nano-bg') ? document.getElementById('ds-nano-bg').src : '', size: size, brief: buildBrief() };
+      sessionStorage.setItem('fp_design_refine', JSON.stringify(design));
+    } catch(e){}
+    window.location.href = '/design-studio-refine.html';
+  });
+
+  // init
+  applySize(); buildBrief(); refreshPreview();
+  setStep(0);
+})();
+
+
 </script>
 
 </body>
