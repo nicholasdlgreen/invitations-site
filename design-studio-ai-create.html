@@ -831,6 +831,10 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
   // --- auto-fit: shrink the stack to stay within the safe area ---
   function autofit(){
+    var canvas = document.getElementById('ds-canvas');
+    // in generated mode the text is positioned/scaled manually (drag + resize),
+    // so autofit must NOT touch the transform or it wipes the position.
+    if(canvas && canvas.classList.contains('is-generated')) return;
     var stack = document.getElementById('ds-stack');
     var safe = stack.parentElement;
     stack.style.transform = 'scale(1)';
@@ -1157,24 +1161,24 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         var el=document.getElementById(pair[0]);
         if(el && restore.wording[i]) el.value = restore.wording[i];
       });
-      refreshPreview();
     }
     if(restore.size){
       var szBtn = document.querySelector('.ds-size[data-size="'+restore.size+'"]');
       if(szBtn){ document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');}); szBtn.classList.add('sel'); size=restore.size; applySize(); }
     }
     setTimeout(function(){
-      enterGeneratedMode(restore.image);
-      // restore the exact text position they left it in (not re-centred)
+      enterGeneratedMode(restore.image);   // this calls enableDrag (sets 50/50)
+      refreshPreview();                     // make the text lines visible/updated
+      // now restore the EXACT position they left it in (overrides the 50/50)
       var tp = restore.textPos;
+      var stack = document.getElementById('ds-stack');
       if(tp){
-        var stack = document.getElementById('ds-stack');
         textScale = tp.scale || 1;
         stack.style.left = tp.left || '50%';
         stack.style.top = tp.top || '50%';
         stack.style.transform = 'translate(-50%,-50%) scale('+textScale+')';
       }
-    }, 100);
+    }, 120);
     try { sessionStorage.removeItem('fp_design_tweak_result'); } catch(e){}
 
     // Returned from the tweak page with an updated design → invite them to
