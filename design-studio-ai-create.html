@@ -922,8 +922,13 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         if(el) el.addEventListener('input', refreshPreview);
       });
       refreshPreview();
+      // fields are now ready — safe to reinstate a returning tweaked design
+      if(typeof reinstateTweaked === 'function') reinstateTweaked();
     })
-    .catch(function(){ /* silent — hardcoded fields remain */ });
+    .catch(function(){
+      // config failed — hardcoded fields remain; reinstate against those
+      if(typeof reinstateTweaked === 'function') reinstateTweaked();
+    });
   }
   // loadStudioFields() is called at the end of the script (after refreshPreview + FIELD_MAP exist)
 
@@ -1270,7 +1275,9 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // Only do this when we came back via an explicit return (the ?tweaked flag or
   // a fresh tweak-result). A plain fresh visit must start blank — so we ignore
   // (and clear) any stale fp_design_tweak left over from a previous session.
-  (function reinstateTweaked(){
+  // Called by loadStudioFields() once the config fields exist (avoids a race
+  // where fields get rebuilt AFTER we restore the wording, wiping it).
+  function reinstateTweaked(){
     var params = new URLSearchParams(window.location.search);
     var isReturn = params.get('tweaked') === '1' || params.get('back') === '1';
 
@@ -1318,7 +1325,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     if(params.get('tweaked') === '1'){
       setTimeout(function(){ showTweakedCheck(); }, 500);
     }
-  })();
+  }
 
   // popup: design updated, check your layout, then continue to order
   function showTweakedCheck(){
