@@ -1112,12 +1112,14 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   document.getElementById('ds-tweak').addEventListener('click', function(){
     try {
       var bg = document.getElementById('ds-nano-bg');
+      var stack = document.getElementById('ds-stack');
       var tweakState = {
         image: bg ? bg.src : '',
         size: size,
         brief: buildBrief(),
         wording: FIELD_MAP.map(function(p){ var el=document.getElementById(p[0]); return el?el.value:''; }),
-        sel: sel
+        sel: sel,
+        textPos: { left: stack.style.left || '50%', top: stack.style.top || '50%', scale: textScale }
       };
       sessionStorage.setItem('fp_design_tweak', JSON.stringify(tweakState));
     } catch(e){}
@@ -1161,7 +1163,18 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       var szBtn = document.querySelector('.ds-size[data-size="'+restore.size+'"]');
       if(szBtn){ document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');}); szBtn.classList.add('sel'); size=restore.size; applySize(); }
     }
-    setTimeout(function(){ enterGeneratedMode(restore.image); }, 100);
+    setTimeout(function(){
+      enterGeneratedMode(restore.image);
+      // restore the exact text position they left it in (not re-centred)
+      var tp = restore.textPos;
+      if(tp){
+        var stack = document.getElementById('ds-stack');
+        textScale = tp.scale || 1;
+        stack.style.left = tp.left || '50%';
+        stack.style.top = tp.top || '50%';
+        stack.style.transform = 'translate(-50%,-50%) scale('+textScale+')';
+      }
+    }, 100);
     try { sessionStorage.removeItem('fp_design_tweak_result'); } catch(e){}
 
     // Returned from the tweak page with an updated design → invite them to
