@@ -56,7 +56,7 @@ exports.handler = async (event) => {
     imageUrl = (b.imageUrl || '').toString();   // data URL or http URL of current design
     tweak = (b.tweak || '').toString().trim();
     brief = (b.brief || '').toString().trim();
-    if (typeof b.strength === 'number') strength = Math.max(0.4, Math.min(0.85, b.strength));
+    if (typeof b.strength === 'number') strength = Math.max(0.25, Math.min(0.85, b.strength));
   } catch (e) {
     return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Invalid request body' }) };
   }
