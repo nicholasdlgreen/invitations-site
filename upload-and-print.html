@@ -689,8 +689,8 @@ function saveCart()       { localStorage.setItem('inv_cart',JSON.stringify(cart)
 function updateCartBadge(){ document.querySelectorAll('#cartCount').forEach(el=>el.textContent=cart.length); }
 function addToCart(item)  { cart.push(item); saveCart(); updateCartBadge(); }
 function removeCartItem(i){ cart.splice(i,1); saveCart(); updateCartBadge(); renderCartDrawer(); }
-function openCart()       { renderCartDrawer(); document.getElementById('cartBg').classList.add('open'); document.getElementById('cartDrawer').classList.add('open'); }
-function closeCart()      { document.getElementById('cartBg').classList.remove('open'); document.getElementById('cartDrawer').classList.remove('open'); }
+function openCart()       { renderCartDrawer(); var bg=document.getElementById('cartBg'); var dr=document.getElementById('cartDrawer'); if(bg)bg.classList.add('open'); if(dr)dr.classList.add('open'); }
+function closeCart()      { var bg=document.getElementById('cartBg'); var dr=document.getElementById('cartDrawer'); if(bg)bg.classList.remove('open'); if(dr)dr.classList.remove('open'); }
 function showToast(msg)   { const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800); }
 function renderCartDrawer(){
   const scroll=document.getElementById('cartScroll'),foot=document.getElementById('cartFoot');
