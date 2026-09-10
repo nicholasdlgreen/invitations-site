@@ -49,7 +49,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { cart, customer, successUrl, cancelUrl, artworkUrl } = JSON.parse(event.body);
+    const { cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl } = JSON.parse(event.body);
 
     if (!cart?.length) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Cart is empty' }) };
@@ -77,6 +77,7 @@ exports.handler = async (event) => {
           total:            +total.toFixed(2),
           status:           'pending',
           artwork_url:      artworkUrl || null,
+          print_ready_url:  printReadyUrl || null,
         });
         orderId = row?.id;
       } catch (e) {
@@ -109,6 +110,7 @@ exports.handler = async (event) => {
         customer_name:    customer?.name     || '',
         delivery_address: customer?.address  || '',
         artwork_url:      artworkUrl || '',
+        print_ready_url:  printReadyUrl || '',
         notes:            customer?.notes    || '',
       },
       shipping_address_collection: { allowed_countries: ['GB'] },
