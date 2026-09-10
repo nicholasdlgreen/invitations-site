@@ -744,7 +744,17 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     'A5':    { ratio: 148/210, desc: 'an A5 portrait invitation',       label: 'A5',    dim: '148 × 210mm', note: 'Larger · a statement' },
     'A6':    { ratio: 105/148, desc: 'an A6 portrait invitation',       label: 'A6',    dim: '105 × 148mm', note: 'Smaller · intimate' },
     'DL':    { ratio: 99/210,  desc: 'a slim DL portrait invitation',   label: 'DL',    dim: '99 × 210mm',  note: 'Slim' },
-    'Square':{ ratio: 1,       desc: 'a square invitation',             label: 'Square',dim: '148 × 148mm', note: 'Distinctive' }
+    'Square':{ ratio: 1,       desc: 'a square invitation',             label: 'Square',dim: '148 × 148mm', note: 'Distinctive' },
+    // large formats — for signs, table plans, order of service etc.
+    'A4':    { ratio: 210/297, desc: 'an A4 portrait design',           label: 'A4',    dim: '210 × 297mm', note: 'Standard' },
+    'A3':    { ratio: 297/420, desc: 'an A3 portrait sign',             label: 'A3',    dim: '297 × 420mm', note: 'Large sign' },
+    'A2':    { ratio: 420/594, desc: 'an A2 portrait sign',             label: 'A2',    dim: '420 × 594mm', note: 'Statement sign' },
+    'A1':    { ratio: 594/841, desc: 'an A1 portrait sign',             label: 'A1',    dim: '594 × 841mm', note: 'Grand sign' },
+    // landscape variants — signs and table plans are often landscape
+    'A4-L':  { ratio: 297/210, desc: 'an A4 landscape design',          label: 'A4 Landscape', dim: '297 × 210mm', note: 'Landscape' },
+    'A3-L':  { ratio: 420/297, desc: 'an A3 landscape sign',            label: 'A3 Landscape', dim: '420 × 297mm', note: 'Landscape sign' },
+    'A2-L':  { ratio: 594/420, desc: 'an A2 landscape sign',            label: 'A2 Landscape', dim: '594 × 420mm', note: 'Landscape sign' },
+    'A1-L':  { ratio: 841/594, desc: 'an A1 landscape sign',            label: 'A1 Landscape', dim: '841 × 594mm', note: 'Landscape sign' }
   };
 
   function applySize(){
