@@ -1276,7 +1276,7 @@ function updatePrice(){
   document.getElementById('priceTotal').textContent='£'+total.toFixed(2);
 }
 
-function addToCartUpload(){
+async function addToCartUpload(){
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
 
   // Same lookup chain as updatePrice() so cart total matches displayed price.
@@ -1309,6 +1309,25 @@ function addToCartUpload(){
   let paperLabel = paper.name;
   if (selectedFinish && selectedFinish !== 'None') paperLabel += ' · ' + selectedFinish;
   paperLabel += envLabel;
+
+  // Upload the artwork to storage NOW, while currentFile is still in memory.
+  // (Going to checkout navigates to a fresh page where currentFile is lost —
+  //  that's why the artwork was coming through NULL. Uploading here and storing
+  //  the URL in the cart item means it survives navigation, like the AI route.)
+  var uploadedArtworkUrl = null;
+  if (currentFile) {
+    try {
+      const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+      const fileName=Date.now()+'_'+currentFile.name.replace(/\s+/g,'_');
+      const uploadRes=await fetch(`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`,{method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':currentFile.type||'application/octet-stream','x-upsert':'true'},body:currentFile});
+      if(uploadRes.ok){
+        uploadedArtworkUrl=`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/public/artwork/${fileName}`;
+      } else {
+        console.error('Artwork upload failed:', uploadRes.status, await uploadRes.text().catch(()=> ''));
+      }
+    } catch(e){ console.error('Artwork upload error:', e.message); }
+  }
+
   addToCart({
     name: designMode && designState ? (designState.templateName + ' — ' + (designState.text.name1 || '') + ' & ' + (designState.text.name2 || '')) : (currentFile?currentFile.name.replace(/\.[^.]+$/,''):'Custom Design'),
     qty: uploadQty,
@@ -1316,6 +1335,7 @@ function addToCartUpload(){
     paper: paperLabel,
     total: total,
     icon:'✦',
+    artworkUrl: uploadedArtworkUrl,
     // Design-studio extras (only present when in design mode)
     source: designMode ? 'design-studio' : 'upload',
     templateId: designMode && designState ? designState.templateId : null,
@@ -1366,6 +1386,16 @@ async function proceedToStripe(){
   if (designMode && designState && designState.aiArtworkUrl) {
     artworkUrl = designState.aiArtworkUrl;
   }
+  // Upload-route: the file was uploaded to storage at add-to-basket time and the
+  // URL stored on the cart item (currentFile is gone after navigating here).
+  if(!artworkUrl){
+    try{
+      var lc = JSON.parse(localStorage.getItem('inv_cart')||'[]');
+      var withArt = lc.find(function(it){ return it && it.artworkUrl; });
+      if(withArt) artworkUrl = withArt.artworkUrl;
+    }catch(e){}
+  }
+  // Fallback: if somehow currentFile is still here and no URL yet, upload it.
   if(!artworkUrl && currentFile){
     try{
       const fileName=Date.now()+'_'+currentFile.name.replace(/\s+/g,'_');
