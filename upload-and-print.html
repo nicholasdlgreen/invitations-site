@@ -1327,6 +1327,8 @@ function addToCartUpload(){
 
 // ── CHECKOUT ─────────────────────────────────────────────
 function openCheckout(){
+  // re-sync from localStorage (source of truth) in case another script's copy differs
+  try { var lc = JSON.parse(localStorage.getItem('inv_cart')||'[]'); if(Array.isArray(lc)) cart = lc; } catch(e){}
   if(!cart.length){showToast('Your basket is empty');return;}
   closeCart();
   const sub=cart.reduce((s,i)=>s+i.total,0);
