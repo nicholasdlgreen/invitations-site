@@ -104,7 +104,11 @@
   // (no navigation, preserves any design-mode context). Otherwise navigate to
   // /upload-and-print.html with ?action=checkout so it auto-opens on arrival.
   function goToCheckout() {
-    if (cart.length === 0) {
+    // Re-read the cart from localStorage (the source of truth) — the page may
+    // have its own cart variable that added items after cart.js first loaded.
+    var liveCart = [];
+    try { liveCart = JSON.parse(localStorage.getItem('inv_cart') || '[]'); } catch (e) { liveCart = []; }
+    if (liveCart.length === 0) {
       showToast('Your basket is empty');
       return;
     }
