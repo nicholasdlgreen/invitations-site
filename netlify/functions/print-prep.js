@@ -45,7 +45,7 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) };
   }
 
-  const { fileUrl, outputType = 'PDF/X-1a', inputType = 'pdf', bleedMm = 0 } = payload;
+  const { fileUrl, outputType = 'PDF/X-1a', inputType = 'pdf', bleedMm = 0, bleedBakedIn = false } = payload;
   if (!fileUrl) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing fileUrl in request body' }) };
   }
@@ -135,13 +135,18 @@ exports.handler = async (event) => {
     if (bleedMm && bleedMm > 0 && boxedId) {
       try {
         const bleedPt = (bleedMm / 25.4) * 72;  // mm → PDF points
+        // If bleed is baked into the artwork (AI designs): the page IS trim+bleed,
+        //   so the TrimBox sits inset by bleedMm, BleedBox = full page.
+        // If NOT baked in (customer uploads at trim size): the page IS the trim,
+        //   so TrimBox = full page (no inset), BleedBox = full page. The printer
+        //   then knows the whole file is the trim size. (Marks still drawn.)
+        const trimInset = bleedBakedIn ? bleedPt : 0;
         const boxResp = await fetch(`${PDFREST_BASE}/set-page-boxes`, {
           method: 'POST',
           headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: boxedId,
-            // TrimBox inset by the bleed on every side; BleedBox = whole page.
-            trim_box: { left: bleedPt, bottom: bleedPt, right: bleedPt, top: bleedPt, unit: 'inset' },
+            trim_box: { left: trimInset, bottom: trimInset, right: trimInset, top: trimInset, unit: 'inset' },
             bleed_box: { left: 0, bottom: 0, right: 0, top: 0, unit: 'inset' },
             output: 'foreverprint_boxed'
           })
@@ -157,6 +162,36 @@ exports.handler = async (event) => {
         }
       } catch(e) {
         console.warn('[print-prep] set-page-boxes error, proceeding:', e.message);
+      }
+    }
+
+    // ─── Step 2c: draw VISIBLE crop marks (printer's marks) based on the
+    //     TrimBox/BleedBox. PrintedEasy require visible marks over the bleed. ───
+    if (bleedMm && bleedMm > 0 && boxedId) {
+      try {
+        const cmResp = await fetch(`${PDFREST_BASE}/printers-marks`, {
+          method: 'POST',
+          headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: boxedId,
+            crop_marks: 'true',
+            bleed_marks: 'false',
+            registration_marks: 'false',
+            color_bars: 'false',
+            page_information: 'false',
+            output: 'foreverprint_marks'
+          })
+        });
+        const cmResult = await cmResp.json();
+        if (cmResp.ok && (cmResult.outputId || cmResult.outputUrl)) {
+          boxedId = cmResult.outputId || boxedId;
+          if (cmResult.outputUrl) pdfxResult.outputUrl = cmResult.outputUrl;
+          console.log('[print-prep] Crop marks added.');
+        } else {
+          console.warn('[print-prep] printers-marks failed, proceeding without visible marks:', cmResult);
+        }
+      } catch(e) {
+        console.warn('[print-prep] printers-marks error, proceeding:', e.message);
       }
     }
 
