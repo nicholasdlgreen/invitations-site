@@ -45,7 +45,7 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) };
   }
 
-  const { fileUrl, outputType = 'PDF/X-1a' } = payload;
+  const { fileUrl, outputType = 'PDF/X-1a', inputType = 'pdf', bleedMm = 0 } = payload;
   if (!fileUrl) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing fileUrl in request body' }) };
   }
@@ -76,8 +76,28 @@ exports.handler = async (event) => {
       };
     }
 
-    const fileId = uploadResult.files[0].id;
+    let fileId = uploadResult.files[0].id;
     console.log('[print-prep] Uploaded to pdfRest, fileId:', fileId);
+
+    // ─── Step 1b: if the input is an IMAGE (e.g. an AI-studio JPEG), convert
+    //     it to a standard PDF first. Uploaded PDFs skip this step. ───
+    if (inputType === 'image') {
+      const toPdfResp = await fetch(`${PDFREST_BASE}/pdf`, {
+        method: 'POST',
+        headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: fileId, output: 'foreverprint_from_image' })
+      });
+      const toPdfResult = await toPdfResp.json();
+      if (!toPdfResp.ok || !(toPdfResult.outputId || (toPdfResult.files && toPdfResult.files[0] && toPdfResult.files[0].id))) {
+        return {
+          statusCode: 502,
+          body: JSON.stringify({ error: 'pdfRest image-to-PDF (/pdf) failed', status: toPdfResp.status, result: toPdfResult })
+        };
+      }
+      // chain the resulting PDF's id into the pdfx step
+      fileId = toPdfResult.outputId || toPdfResult.files[0].id;
+      console.log('[print-prep] Converted image to PDF, fileId:', fileId);
+    }
 
     // ─── Step 2: Convert to PDF/X-1a ───
     const pdfxResp = await fetch(`${PDFREST_BASE}/pdfx`, {
@@ -106,6 +126,39 @@ exports.handler = async (event) => {
     }
 
     console.log('[print-prep] PDF/X-1a created, outputId:', pdfxResult.outputId);
+
+    // ─── Step 2b: if the file has bleed, define the TrimBox/BleedBox so the
+    //     printer knows exactly where to cut. The artwork already extends into
+    //     the bleed (baked in at flatten). We inset the TrimBox by bleedMm on
+    //     all sides; the BleedBox is the full page. ───
+    let boxedId = pdfxResult.outputId;
+    if (bleedMm && bleedMm > 0 && boxedId) {
+      try {
+        const bleedPt = (bleedMm / 25.4) * 72;  // mm → PDF points
+        const boxResp = await fetch(`${PDFREST_BASE}/set-page-boxes`, {
+          method: 'POST',
+          headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: boxedId,
+            // TrimBox inset by the bleed on every side; BleedBox = whole page.
+            trim_box: { left: bleedPt, bottom: bleedPt, right: bleedPt, top: bleedPt, unit: 'inset' },
+            bleed_box: { left: 0, bottom: 0, right: 0, top: 0, unit: 'inset' },
+            output: 'foreverprint_boxed'
+          })
+        });
+        const boxResult = await boxResp.json();
+        if (boxResp.ok && (boxResult.outputId || boxResult.outputUrl)) {
+          boxedId = boxResult.outputId || boxedId;
+          // if it returned a fresh URL, use it downstream
+          if (boxResult.outputUrl) pdfxResult.outputUrl = boxResult.outputUrl;
+          console.log('[print-prep] TrimBox/BleedBox set for', bleedMm + 'mm bleed');
+        } else {
+          console.warn('[print-prep] set-page-boxes failed, proceeding without explicit boxes:', boxResult);
+        }
+      } catch(e) {
+        console.warn('[print-prep] set-page-boxes error, proceeding:', e.message);
+      }
+    }
 
     // ─── Step 3: Download the print-ready PDF from pdfRest ───
     // pdfRest URLs expire after 30 minutes, so we need to persist the file
