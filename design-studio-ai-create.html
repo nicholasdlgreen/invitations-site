@@ -1180,25 +1180,41 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     var img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function(){
-      // print canvas at the Flux image's native (print) resolution
-      var PW = img.naturalWidth, PH = img.naturalHeight;
+      // The Flux image represents the customer's design at TRIM size (what they
+      // saw on screen). For print we add a 3mm bleed all around: the canvas is
+      // trim + bleed, the decorative background is scaled up to fill the whole
+      // bleed canvas (so decoration extends past the trim edge — no white),
+      // and the text stays in the same relative position within the TRIM area
+      // so it matches the screen exactly.
+      var TW = img.naturalWidth, TH = img.naturalHeight;   // trim-size pixels
+      // 3mm bleed in pixels: derive DPI from this size's known mm dimensions
+      var spec = SIZES[size] || { dim: '' };
+      var mmMatch = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
+      var trimMmW = mmMatch ? parseInt(mmMatch[1],10) : 148;   // fallback A5
+      var dpi = TW / (trimMmW / 25.4);
+      var bleedPx = Math.round(3 * dpi / 25.4);                // 3mm each side
+
+      var PW = TW + bleedPx*2, PH = TH + bleedPx*2;            // full bleed canvas
       var cv = document.createElement('canvas');
       cv.width = PW; cv.height = PH;
       var ctx = cv.getContext('2d');
-      // 1. draw the decorative background at full print resolution
+
+      // 1. draw the decorative background scaled to fill the FULL bleed canvas
+      //    (so the decoration reaches the very edge — bleed has artwork, not white)
       ctx.drawImage(img, 0, 0, PW, PH);
 
-      // 2. draw the text, mapping the on-screen preview positions to print pixels
+      // 2. draw the text, mapping on-screen positions into the TRIM area
+      //    (the trim area is inset by bleedPx inside the canvas)
       var preview = document.getElementById('ds-canvas');
       var pr = preview.getBoundingClientRect();
-      var scaleX = PW / pr.width, scaleY = PH / pr.height;
+      var scaleY = TH / pr.height;   // scale relative to the trim (screen) size
 
       var stack = document.getElementById('ds-stack');
-      // where the stack centre sits within the preview (percentages -> px)
       var stackLeftPct = parseFloat(stack.style.left) || 50;
       var stackTopPct  = parseFloat(stack.style.top)  || 50;
-      var centreX = (stackLeftPct/100) * PW;
-      var centreY = (stackTopPct/100)  * PH;
+      // centre within the trim area, then offset by the bleed margin
+      var centreX = bleedPx + (stackLeftPct/100) * TW;
+      var centreY = bleedPx + (stackTopPct/100)  * TH;
 
       // gather visible lines with their computed font sizes, scaled to print
       var lines = [];
