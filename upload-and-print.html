@@ -1369,8 +1369,15 @@ async function proceedToStripe(){
   if(!artworkUrl && currentFile){
     try{
       const fileName=Date.now()+'_'+currentFile.name.replace(/\s+/g,'_');
-      const uploadRes=await fetch(`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`,{method:'POST',headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Content-Type':currentFile.type||'application/octet-stream','x-upsert':'false'},body:currentFile});
-      if(uploadRes.ok)artworkUrl=`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`;
+      const uploadRes=await fetch(`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`,{method:'POST',headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Content-Type':currentFile.type||'application/octet-stream','x-upsert':'true'},body:currentFile});
+      // Supabase Storage returns 200 on success. Public bucket, deterministic
+      // path — if the POST didn't throw AND returned ok, the file is stored.
+      if(uploadRes.ok){
+        artworkUrl=`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/public/artwork/${fileName}`;
+      } else {
+        const errTxt = await uploadRes.text().catch(()=> '');
+        console.error('Artwork upload failed:', uploadRes.status, errTxt);
+      }
     }catch(e){console.warn('Artwork upload error:',e.message);}
   }
   // ── PRINT-PREP: convert PDFs to PDF/X-1a via pdfRest before Stripe ──
