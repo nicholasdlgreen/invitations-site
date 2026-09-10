@@ -1375,10 +1375,13 @@ async function proceedToStripe(){
   // fails, we proceed with just the original artwork — the order still goes
   // through and prepress catches it.
   let printReadyUrl=null;
-  if(artworkUrl && currentFile && currentFile.type==='application/pdf'){
+  // Run print-prep for: uploaded PDFs, OR AI-studio designs (which are JPEGs).
+  var isAiOrder = (designMode && designState && designState.aiArtworkUrl);
+  var isPdfUpload = (currentFile && currentFile.type==='application/pdf');
+  if(artworkUrl && (isPdfUpload || isAiOrder)){
     document.getElementById('coPayBtnText').textContent='Preparing print-ready file…';
     try{
-      const ppRes=await fetch('/.netlify/functions/print-prep',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileUrl:artworkUrl,outputType:'PDF/X-1a'})});
+      const ppRes=await fetch('/.netlify/functions/print-prep',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileUrl:artworkUrl,outputType:'PDF/X-1a',inputType: isAiOrder ? 'image' : 'pdf', bleedMm: isAiOrder ? 3 : 0})});
       const ppData=await ppRes.json();
       if(ppRes.ok && ppData.success && ppData.printReadyUrl){
         printReadyUrl=ppData.printReadyUrl;
