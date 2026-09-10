@@ -1416,13 +1416,22 @@ async function proceedToStripe(){
   // fails, we proceed with just the original artwork — the order still goes
   // through and prepress catches it.
   let printReadyUrl=null;
-  // Run print-prep for: uploaded PDFs, OR AI-studio designs (which are JPEGs).
+  // Run print-prep for EVERY order that has artwork: PDF uploads, image uploads
+  // (JPEG/PNG), and AI-studio designs. All get converted to print-ready PDF/X-1a
+  // with bleed + visible crop marks.
   var isAiOrder = (designMode && designState && designState.aiArtworkUrl);
   var isPdfUpload = (currentFile && currentFile.type==='application/pdf');
-  if(artworkUrl && (isPdfUpload || isAiOrder)){
+  var isImageUpload = false;
+  // detect an image upload from the stored artwork URL extension (currentFile may be gone)
+  try {
+    var artExt = (artworkUrl||'').split('?')[0].split('.').pop().toLowerCase();
+    isImageUpload = ['jpg','jpeg','png','tif','tiff'].indexOf(artExt) > -1;
+  } catch(e){}
+  var ppInputType = (isPdfUpload) ? 'pdf' : 'image';
+  if(artworkUrl && (isPdfUpload || isImageUpload || isAiOrder)){
     document.getElementById('coPayBtnText').textContent='Preparing print-ready file…';
     try{
-      const ppRes=await fetch('/.netlify/functions/print-prep',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileUrl:artworkUrl,outputType:'PDF/X-1a',inputType: isAiOrder ? 'image' : 'pdf', bleedMm: isAiOrder ? 3 : 0})});
+      const ppRes=await fetch('/.netlify/functions/print-prep',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileUrl:artworkUrl,outputType:'PDF/X-1a',inputType: ppInputType, bleedMm: 3, bleedBakedIn: isAiOrder ? true : false})});
       const ppData=await ppRes.json();
       if(ppRes.ok && ppData.success && ppData.printReadyUrl){
         printReadyUrl=ppData.printReadyUrl;
