@@ -297,13 +297,25 @@
   var msg = document.getElementById('hero-message');
   var sub = document.getElementById('hero-sub');
   if(!msg || !sub) return;
+  // wrap for fade: apply a transition to both message and sub
+  msg.style.transition = 'opacity .6s ease';
+  sub.style.transition = 'opacity .6s ease';
   var i = 0, timer = null;
   function show(n){
-    i = (n + COPY.length) % COPY.length;
-    msg.innerHTML = COPY[i].m;
-    sub.textContent = COPY[i].s;
+    var next = (n + COPY.length) % COPY.length;
+    if(next === i) return;
+    // fade out, swap text, fade back in
+    msg.style.opacity = '0';
+    sub.style.opacity = '0';
+    setTimeout(function(){
+      i = next;
+      msg.innerHTML = COPY[i].m;
+      sub.textContent = COPY[i].s;
+      msg.style.opacity = '1';
+      sub.style.opacity = '1';
+    }, 600);
   }
-  function start(){ stop(); timer = setInterval(function(){ show(i+1); }, 6000); }
+  function start(){ stop(); timer = setInterval(function(){ show(i+1); }, 5000); }
   function stop(){ if(timer){ clearInterval(timer); timer = null; } }
   var nextBtn = document.getElementById('heroNext');
   var prevBtn = document.getElementById('heroPrev');
