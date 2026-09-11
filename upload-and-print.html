@@ -85,6 +85,21 @@
 .weight-pop{background:var(--gold);color:#fff;font-size:10px;letter-spacing:.06em;padding:2px 8px;border-radius:20px;margin-left:6px;}
 .weight-sample{margin-top:14px;font-size:var(--text-xs);color:var(--soft);display:flex;align-items:center;gap:6px;}
 .weight-q{border:1px solid var(--gold-lt);border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.finish-type{margin-bottom:20px;}
+.finish-type:last-child{margin-bottom:0;}
+.finish-type-head{display:flex;align-items:center;gap:8px;margin-bottom:2px;}
+.finish-type-name{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--text);}
+.finish-luxe{font-size:10px;letter-spacing:.06em;color:var(--gold);background:rgba(184,151,106,.12);padding:2px 8px;border-radius:20px;}
+.finish-type-desc{font-size:var(--text-xs);color:var(--soft);margin-bottom:10px;}
+.finish-opts{display:flex;gap:8px;flex-wrap:wrap;}
+.finish-opt{border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:var(--text-sm);color:var(--soft);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px;}
+.finish-opt:hover{border-color:var(--gold-lt);}
+.finish-opt.sel{border-color:var(--gold);background:rgba(184,151,106,.06);color:var(--text);}
+.finish-swatch{width:16px;height:6px;border-radius:3px;display:inline-block;}
+.finish-sw-gold{background:linear-gradient(90deg,#D9B65C,#F0D98A,#C9A140);}
+.finish-sw-silver{background:linear-gradient(90deg,#B8BCC2,#E2E5E9,#A9AEB5);}
+.finish-sw-rosegold{background:linear-gradient(90deg,#D6A48C,#EAC6B4,#C68E76);}
+.finish-helper{font-size:var(--text-xs);color:var(--pale);margin-top:6px;}
 .qty-chip{display:inline-flex;align-items:center;justify-content:center;min-width:56px;padding:10px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:var(--text-body);font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--text);cursor:pointer;transition:all .2s;background:var(--white);}
 .qty-chip:hover{border-color:var(--gold-lt);}
 .qty-chip.selected{border-color:var(--gold);background:rgba(184,151,106,.06);color:var(--gold);}
@@ -436,6 +451,7 @@ const PRODUCT = (function() {
 
 // ── CONFIG ────────────────────────────────────────────────
 const CONFIG = {
+  finishTypes: [],
   papers: [
     { id:'smooth', name:'Smooth White', description:'Crisp & classic. Colours print vivid and sharp.', finishLabel:'Silk finish', priceExtra:0, weights:[
       { id:'sm300', gsm:300, name:'Classic', feel:'A lovely everyday weight', popular:false },
@@ -482,12 +498,13 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 async function loadSiteData() {
   try {
     const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
-    const [paperRes, configRes, pricesRes, envRes, ptRes] = await Promise.all([
+    const [paperRes, configRes, pricesRes, envRes, ptRes, finishTypesRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra,description,finish_label,weights&active=eq.true&order=display_order`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/envelopes?select=id,name,hex_color,border_color,price_each&active=eq.true&order=display_order`, { headers }),
-      fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers })
+      fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/finish_types?select=*&active=eq.true&order=display_order`, { headers })
     ]);
     if (paperRes.ok) {
       const rows = await paperRes.json();
@@ -569,6 +586,19 @@ async function loadSiteData() {
         // Refresh visible heading to use curated name
         const sizeTitle = document.getElementById('size-selector-title');
         if (sizeTitle) sizeTitle.textContent = `Choose your ${PRODUCT.name} size`;
+      }
+    }
+    // Load finish types (Lamination, Foiling, Spot UV...) from the database.
+    if (finishTypesRes && finishTypesRes.ok) {
+      const rows = await finishTypesRes.json();
+      if (Array.isArray(rows)) {
+        CONFIG.finishTypes = rows.map(ft => ({
+          id: ft.id,
+          name: ft.name,
+          description: ft.description || '',
+          isLuxe: !!ft.is_luxe,
+          options: Array.isArray(ft.options) ? ft.options : []
+        }));
       }
     }
     // Filter visible sizes/papers based on what admin has published specs for.
@@ -713,7 +743,7 @@ loadSiteData();
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('inv_cart')||'[]'); } catch(e){ cart=[]; }
 let currentFile=null, currentStep=1, selectedSize=null;
-let selectedPaper='smooth', selectedWeight=null, selectedFinish='None', uploadQty=25, checksPassed=true;
+let selectedPaper='smooth', selectedWeight=null, selectedFinish='None', selectedFinishes={}, uploadQty=25, checksPassed=true;
 let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
 // Design-studio mode: set in the IIFE near the bottom of this script if
 // the user came from /design-studio-customise. When true, steps 1 & 2 are
@@ -1172,40 +1202,64 @@ function initStep3(){
 }
 
 // Render the finishing options card. Only shown if this product has finish
-// options other than "None" available (admin's available_finishes for this product).
+// Render finish types (Lamination, Foiling, Spot UV...) from the database.
+// Each type is a block with its options. A product can limit which TYPES it
+// shows via available_finishes (matching the type name); empty = show all.
 function renderFinishGrid() {
   const card = document.getElementById('finishCard');
   const grid = document.getElementById('finishGrid');
   if (!card || !grid) return;
-  const finishes = (currentProduct && Array.isArray(currentProduct.available_finishes))
-    ? currentProduct.available_finishes
-    : [];
-  // Hide the whole card if there are 0 or 1 finishes (just "None" is meaningless to show)
-  const hasRealOptions = finishes.filter(f => f && f !== 'None').length > 0;
-  if (!hasRealOptions) {
-    card.style.display = 'none';
-    selectedFinish = 'None';
-    return;
+
+  let types = Array.isArray(CONFIG.finishTypes) ? CONFIG.finishTypes : [];
+  // filter to the types this product offers (if admin has set available_finishes)
+  const allowed = (currentProduct && Array.isArray(currentProduct.available_finishes))
+    ? currentProduct.available_finishes.map(f => (f||'').toLowerCase().trim())
+    : null;
+  if (allowed && allowed.length) {
+    types = types.filter(t => allowed.includes((t.name||'').toLowerCase().trim()));
   }
+  // only show types that have real options (more than just "None")
+  types = types.filter(t => (t.options||[]).filter(o => o.name && o.name.toLowerCase() !== 'none').length > 0);
+
+  if (!types.length) { card.style.display = 'none'; return; }
   card.style.display = '';
-  // Make sure selectedFinish is valid for this product
-  if (!finishes.includes(selectedFinish)) {
-    selectedFinish = finishes.includes('None') ? 'None' : finishes[0];
-  }
-  grid.innerHTML = finishes.map(name => {
-    const sell = lookupFinishSell(name);
-    const label = (sell > 0) ? `+£${sell.toFixed(2)}` : 'Included';
-    return `<div class="paper-opt${name === selectedFinish ? ' selected' : ''}" onclick="selectFinish('${(name||'').replace(/'/g,'&#39;')}')" style="flex:1;min-width:140px;">
-      <div class="paper-name">${name}</div>
-      <div class="paper-price">${label}</div>
+
+  // default each type's selection to its popular option (or "None")
+  types.forEach(t => {
+    if (!(t.name in selectedFinishes)) {
+      const pop = (t.options||[]).find(o => o.popular);
+      selectedFinishes[t.name] = pop ? pop.name : ((t.options[0]||{}).name || 'None');
+    }
+  });
+
+  grid.style.display = 'block';
+  grid.innerHTML = types.map(t => {
+    const opts = t.options || [];
+    const sel = selectedFinishes[t.name];
+    const luxe = t.isLuxe ? `<span class="finish-luxe">LUXE</span>` : '';
+    const optsHtml = opts.map(o => {
+      const isSel = o.name === sel;
+      const swatch = o.swatch ? `<span class="finish-swatch finish-sw-${o.swatch}"></span>` : '';
+      return `<span class="finish-opt${isSel?' sel':''}" onclick="selectFinishOpt('${t.name.replace(/'/g,'&#39;')}','${(o.name||'').replace(/'/g,'&#39;')}')">${swatch}${o.name}</span>`;
+    }).join('');
+    // helper text: show the description of the selected option if it has one
+    const selOpt = opts.find(o => o.name === sel);
+    const helper = (selOpt && selOpt.description) ? `<div class="finish-helper">${selOpt.name} — ${selOpt.description}</div>` : '';
+    return `<div class="finish-type">
+      <div class="finish-type-head"><span class="finish-type-name">${t.name}</span>${luxe}</div>
+      ${t.description?`<div class="finish-type-desc">${t.description}</div>`:''}
+      <div class="finish-opts">${optsHtml}</div>
+      ${helper}
     </div>`;
   }).join('');
 }
 
-function selectFinish(name) {
-  selectedFinish = name;
-  document.querySelectorAll('#finishGrid .paper-opt').forEach(el => el.classList.remove('selected'));
-  if (event && event.currentTarget) event.currentTarget.classList.add('selected');
+function selectFinishOpt(typeName, optName){
+  selectedFinishes[typeName] = optName;
+  // keep legacy selectedFinish in sync with the FIRST non-None finish (for pricing)
+  const firstReal = Object.keys(selectedFinishes).map(k=>selectedFinishes[k]).find(v => v && v.toLowerCase() !== 'none');
+  selectedFinish = firstReal || 'None';
+  renderFinishGrid();
   updatePrice();
 }
 
