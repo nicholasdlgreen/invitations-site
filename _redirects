@@ -38,4 +38,20 @@
 # Adding "Order of Service" in admin → publishing → /order-of-service just works
 # AND so does /order-of-service/order automatically.
 
+# ─── Real files serve directly (never rewritten to product.html) ───
+# Without these, the /* catch-all below rewrites image/asset requests to
+# product.html, so images come back as HTML and render blank.
+/*.jpg   /:splat.jpg   200
+/*.jpeg  /:splat.jpeg  200
+/*.png   /:splat.png   200
+/*.svg   /:splat.svg   200
+/*.webp  /:splat.webp  200
+/*.gif   /:splat.gif   200
+/*.css   /:splat.css   200
+/*.js    /:splat.js    200
+/*.ico   /:splat.ico   200
+/*.woff  /:splat.woff  200
+/*.woff2 /:splat.woff2 200
+/*.pdf   /:splat.pdf   200
+
 /*  /product.html?product=:splat  200
