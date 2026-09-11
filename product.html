@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="preconnect" href="https://jvcpzmumkyjdyibmwlsd.supabase.co" crossorigin/>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Wedding Stationery | Foreverprint</title>
@@ -445,7 +444,7 @@ function renderHero() {
   document.getElementById('path-modal-tag').textContent = name;
   const wrap = document.getElementById('lp-hero-img-wrap');
   if (productData.hero_image_url) {
-    wrap.innerHTML = `<img class="lp-hero-img" src="${escapeHtml(productData.hero_image_url)}" alt="${escapeHtml(name)}" decoding="async" fetchpriority="high"/>`;
+    wrap.innerHTML = `<img class="lp-hero-img" src="${escapeHtml(productData.hero_image_url)}" alt="${escapeHtml(name)}"/>`;
   } else {
     wrap.innerHTML = `<div class="lp-hero-img-placeholder">✦</div>`;
   }
