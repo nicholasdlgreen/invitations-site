@@ -809,15 +809,23 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 
 <div class="modal-overlay" id="finishModal">
   <div class="pz-modal">
-    <div class="modal-title">Add Finish Option</div>
-    <div class="field"><label>Name</label><input type="text" id="fin_name" placeholder="e.g. Foil, Spot UV, Embossed"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="field"><label>Cost Modifier (£ per order, your printer cost)</label><div class="pfx"><span class="px">£</span><input type="number" id="fin_cost" placeholder="0.00" step="0.01" min="0"></div></div>
-      <div class="field"><label>Display Order</label><input type="number" id="fin_order" placeholder="1" step="1" min="0"></div>
+    <div class="modal-title">Add Finish Type</div>
+    <div class="field"><label>Type name</label><input type="text" id="fin_name" placeholder="e.g. Lamination, Foiling, Spot UV"></div>
+    <div class="field"><label>Description (shown to customer)</label><input type="text" id="fin_desc" placeholder="e.g. A coating that changes the feel."></div>
+    <label style="font-size:13px;color:rgba(250,247,242,.8);display:flex;align-items:center;gap:6px;margin-bottom:14px;cursor:pointer;"><input type="checkbox" id="fin_luxe"> Show a "LUXE" tag (for premium types like Foiling)</label>
+
+    <div class="field">
+      <label>Options (the choices customers pick)</label>
+      <div id="fin_options"></div>
+      <button type="button" class="btn btn-outline btn-sm" onclick="addFinishOptRow()" style="margin-top:8px;">+ Add an option</button>
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:8px 0 0;line-height:1.6;">Each option: a name (Soft Touch), a short description, an optional swatch (gold/silver/rosegold for foil), whether it's the default (popular), and a hidden printer spec (the instruction sent to your printer — the customer never sees it).</p>
     </div>
+
+    <div class="field"><label>Display Order</label><input type="number" id="fin_order" placeholder="1" step="1" min="0" style="max-width:120px;"></div>
+    <input type="hidden" id="fin_cost">
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeFinishModal()">Cancel</button>
-      <button class="btn btn-gold btn-sm" onclick="saveFinish()">Save Finish</button>
+      <button class="btn btn-gold btn-sm" onclick="saveFinish()">Save Finish Type</button>
     </div>
     <input type="hidden" id="fin_editId">
   </div>
@@ -1146,6 +1154,7 @@ function pricingLoad() {
   loadPapersFromSupabase();
   loadProductTypesFromSupabase();
   loadFinishOptionsFromSupabase();
+  loadFinishTypesFromSupabase();
   loadSheetRatesFromSupabase();
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
 loadPricingSettings();
@@ -2143,6 +2152,18 @@ function renderProductTypeList() {
 // ═══════════════════════════════════════════════════════
 
 let finishOptions = [];
+let finishTypes = [];
+
+async function loadFinishTypesFromSupabase() {
+  try {
+    finishTypes = await sbFetch('finish_types?select=*&order=display_order');
+    if (!Array.isArray(finishTypes)) finishTypes = [];
+  } catch (err) {
+    console.warn('Could not load finish types:', err.message);
+    finishTypes = [];
+  }
+  renderFinishOptionList();
+}
 
 async function loadFinishOptionsFromSupabase() {
   try {
@@ -2155,18 +2176,64 @@ async function loadFinishOptionsFromSupabase() {
   }
 }
 
+// --- option rows in the finish-type modal ---
+function addFinishOptRow(o){
+  o = o || {};
+  const wrap = document.getElementById('fin_options');
+  const row = document.createElement('div');
+  row.className = 'fin-opt-row';
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1.3fr 90px 1.3fr 60px 26px;gap:7px;align-items:center;margin-bottom:8px;';
+  row.innerHTML =
+    `<input type="text" placeholder="Name (Soft Touch)" value="${(o.name||'').replace(/"/g,'&quot;')}" class="fo-name" style="width:100%;">
+     <input type="text" placeholder="Description" value="${(o.description||'').replace(/"/g,'&quot;')}" class="fo-desc" style="width:100%;">
+     <select class="fo-swatch" style="width:100%;">
+       <option value="">— swatch —</option>
+       <option value="gold" ${o.swatch==='gold'?'selected':''}>Gold</option>
+       <option value="silver" ${o.swatch==='silver'?'selected':''}>Silver</option>
+       <option value="rosegold" ${o.swatch==='rosegold'?'selected':''}>Rose gold</option>
+     </select>
+     <input type="text" placeholder="Printer spec (hidden)" value="${(o.spec||'').replace(/"/g,'&quot;')}" class="fo-spec" style="width:100%;">
+     <label style="font-size:11px;color:rgba(250,247,242,.7);display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="checkbox" class="fo-pop" ${o.popular?'checked':''}>Def</label>
+     <button type="button" onclick="this.closest('.fin-opt-row').remove()" style="background:none;border:none;color:rgba(250,247,242,.5);cursor:pointer;font-size:15px;">✕</button>`;
+  wrap.appendChild(row);
+}
+function collectFinishOptions(){
+  const rows = document.querySelectorAll('#fin_options .fin-opt-row');
+  const out = []; let popSet = false;
+  rows.forEach(function(r){
+    const name = r.querySelector('.fo-name').value.trim();
+    if(!name) return;
+    let popular = r.querySelector('.fo-pop').checked;
+    if (popular && popSet) popular = false;
+    if (popular) popSet = true;
+    out.push({
+      name: name,
+      description: r.querySelector('.fo-desc').value.trim(),
+      swatch: r.querySelector('.fo-swatch').value || null,
+      spec: r.querySelector('.fo-spec').value.trim(),
+      popular: popular
+    });
+  });
+  return out;
+}
+
 function openFinishModal(editId) {
-  ['fin_name','fin_cost','fin_order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['fin_name','fin_desc','fin_order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('fin_luxe').checked = false;
+  document.getElementById('fin_options').innerHTML = '';
   document.getElementById('fin_editId').value = '';
   if (editId) {
-    const f = finishOptions.find(x => x.id === editId);
+    const f = (finishTypes||[]).find(x => x.id === editId);
     if (f) {
       document.getElementById('fin_name').value  = f.name || '';
-      document.getElementById('fin_cost').value  = f.cost_modifier != null ? f.cost_modifier : '';
+      document.getElementById('fin_desc').value  = f.description || '';
+      document.getElementById('fin_luxe').checked = !!f.is_luxe;
       document.getElementById('fin_order').value = f.display_order != null ? f.display_order : '';
       document.getElementById('fin_editId').value = editId;
+      (Array.isArray(f.options)?f.options:[]).forEach(o => addFinishOptRow(o));
     }
   }
+  if (!editId) { addFinishOptRow({name:'None', popular:true}); addFinishOptRow(); }
   document.getElementById('finishModal').classList.add('open');
   setTimeout(() => document.getElementById('fin_name').focus(), 100);
 }
@@ -2175,50 +2242,48 @@ function closeFinishModal() { document.getElementById('finishModal').classList.r
 
 async function saveFinish() {
   const name = document.getElementById('fin_name').value.trim();
-  if (!name) { toast('Finish name required'); return; }
+  if (!name) { toast('Finish type name required'); return; }
   const editId = document.getElementById('fin_editId').value;
   const payload = {
     name,
-    cost_modifier: parseFloat(document.getElementById('fin_cost').value) || 0,
+    description:   document.getElementById('fin_desc').value.trim(),
+    is_luxe:       document.getElementById('fin_luxe').checked,
+    options:       collectFinishOptions(),
     display_order: parseInt(document.getElementById('fin_order').value, 10) || 0,
-    active:        true,
-    updated_at:    new Date().toISOString()
+    active:        true
   };
   try {
     if (editId) {
-      await sbFetch(`finish_options?id=eq.${editId}`, {
+      await sbFetch(`finish_types?id=eq.${editId}`, {
         method: 'PATCH',
         headers: { 'Prefer': 'return=representation' },
         body: JSON.stringify(payload)
       });
-      const i = finishOptions.findIndex(x => x.id === editId);
-      if (i >= 0) finishOptions[i] = { ...finishOptions[i], ...payload };
+      const i = finishTypes.findIndex(x => x.id === editId);
+      if (i >= 0) finishTypes[i] = { ...finishTypes[i], ...payload };
     } else {
-      const result = await sbFetch('finish_options', {
+      const result = await sbFetch('finish_types', {
         method: 'POST',
         headers: { 'Prefer': 'return=representation' },
         body: JSON.stringify(payload)
       });
       const newRow = Array.isArray(result) ? result[0] : result;
-      finishOptions.push(newRow);
+      finishTypes.push(newRow);
     }
     renderFinishOptionList();
     closeFinishModal();
-    toast(editId ? 'Updated ✓' : 'Finish added ✓');
+    toast(editId ? 'Updated ✓' : 'Finish type added ✓');
   } catch (err) {
-    if (err.message && err.message.includes('23505')) {
-      toast('Save failed: a finish with that name already exists.');
-    } else {
-      toast('Save failed: ' + err.message);
-    }
+    toast('Save failed: ' + err.message);
   }
 }
 
+
 async function deleteFinish(id) {
-  if (!confirm('Delete this finish option? Products that have it ticked will lose it.')) return;
+  if (!confirm('Delete this finish type? Products that offer it will lose it.')) return;
   try {
-    await sbFetch(`finish_options?id=eq.${id}`, { method: 'DELETE' });
-    finishOptions = finishOptions.filter(f => f.id !== id);
+    await sbFetch(`finish_types?id=eq.${id}`, { method: 'DELETE' });
+    finishTypes = finishTypes.filter(f => f.id !== id);
     renderFinishOptionList();
     toast('Deleted ✓');
   } catch (err) {
@@ -2227,6 +2292,31 @@ async function deleteFinish(id) {
 }
 
 function renderFinishOptionList() {
+  const container = document.getElementById('finishOptionList');
+  if (!container) return;
+  if (!finishTypes.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">✨</span><div class="empty-text">No finish types yet</div></div>';
+    return;
+  }
+  container.innerHTML = finishTypes.map(f => {
+    const optCount = Array.isArray(f.options) ? f.options.length : 0;
+    const optNames = Array.isArray(f.options) ? f.options.map(o=>o.name).filter(Boolean).join(', ') : '';
+    return `
+    <div class="supplier-card">
+      <div>
+        <div style="font-weight:500;font-size:13px">${f.name}${f.is_luxe?' <span style="font-size:9px;letter-spacing:.06em;color:#B8976A;background:rgba(184,151,106,.15);padding:1px 6px;border-radius:20px;">LUXE</span>':''}</div>
+        <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
+          ${optCount} option${optCount===1?'':'s'}: ${optNames} · order ${f.display_order||0}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-xs" onclick="openFinishModal('${f.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteFinish('${f.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function _oldRenderFinishOptionList() {
   const container = document.getElementById('finishOptionList');
   if (!container) return;
   if (!finishOptions.length) {
