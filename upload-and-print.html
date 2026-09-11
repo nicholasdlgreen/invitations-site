@@ -70,6 +70,21 @@
 .paper-opt .paper-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:400;margin-bottom:4px;color:var(--text);}
 .paper-opt .paper-sub{font-size:var(--text-xs);color:var(--soft);line-height:1.6;margin-bottom:8px;}
 .paper-opt .paper-price{font-size:var(--text-sm);color:var(--gold);}
+.paper-opt .paper-finish{font-size:var(--text-xs);color:var(--pale);margin-top:6px;}
+.weight-hint{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);margin-bottom:2px;}
+.weight-sub{font-size:var(--text-xs);color:var(--soft);margin-bottom:12px;line-height:1.5;}
+.weight-list{display:flex;flex-direction:column;gap:8px;}
+.weight-opt{border:1.5px solid var(--border);background:var(--white);border-radius:12px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s;}
+.weight-opt:hover{border-color:var(--gold-lt);}
+.weight-opt.sel{border-color:var(--gold);background:rgba(184,151,106,.06);}
+.weight-left{display:flex;align-items:center;gap:14px;}
+.weight-bar{background:#DDD3C4;border-radius:3px;flex-shrink:0;}
+.weight-name{font-size:var(--text-sm);color:var(--text);}
+.weight-gsm{color:var(--pale);font-size:var(--text-xs);}
+.weight-feel{font-size:var(--text-xs);color:var(--soft);margin-top:1px;}
+.weight-pop{background:var(--gold);color:#fff;font-size:10px;letter-spacing:.06em;padding:2px 8px;border-radius:20px;margin-left:6px;}
+.weight-sample{margin-top:14px;font-size:var(--text-xs);color:var(--soft);display:flex;align-items:center;gap:6px;}
+.weight-q{border:1px solid var(--gold-lt);border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
 .qty-chip{display:inline-flex;align-items:center;justify-content:center;min-width:56px;padding:10px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:var(--text-body);font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--text);cursor:pointer;transition:all .2s;background:var(--white);}
 .qty-chip:hover{border-color:var(--gold-lt);}
 .qty-chip.selected{border-color:var(--gold);background:rgba(184,151,106,.06);color:var(--gold);}
@@ -271,6 +286,7 @@
       <div class="check-card">
         <h3>Paper stock</h3>
         <div class="paper-grid" id="paperGrid"></div>
+        <div id="weightPicker" style="margin-top:18px;"></div>
       </div>
 
       <div class="check-card" id="finishCard" style="display:none;">
@@ -421,9 +437,18 @@ const PRODUCT = (function() {
 // ── CONFIG ────────────────────────────────────────────────
 const CONFIG = {
   papers: [
-    { id:'smooth', name:'Smooth White',  subtitle:'300gsm · Crisp & classic',  priceExtra:0  },
-    { id:'cotton', name:'Cotton Rag',    subtitle:'400gsm · Luxury feel',       priceExtra:20 },
-    { id:'vellum', name:'Vellum Overlay',subtitle:'Translucent · Ethereal',     priceExtra:35 },
+    { id:'smooth', name:'Smooth White', description:'Crisp & classic. Colours print vivid and sharp.', finishLabel:'Silk finish', priceExtra:0, weights:[
+      { id:'sm300', gsm:300, name:'Classic', feel:'A lovely everyday weight', popular:false },
+      { id:'sm350', gsm:350, name:'Premium', feel:'Thick & substantial in the hand', popular:true },
+      { id:'sm400', gsm:400, name:'Luxe', feel:'Our thickest — a real statement', popular:false }
+    ]},
+    { id:'natural', name:'Natural', description:'Soft, tactile & easy to write on.', finishLabel:'Uncoated', priceExtra:0, weights:[
+      { id:'na300', gsm:300, name:'Classic', feel:'A lovely everyday weight', popular:true },
+      { id:'na350', gsm:350, name:'Premium', feel:'Thick & substantial in the hand', popular:false }
+    ]},
+    { id:'pearl', name:'Pearl Shimmer', description:'A subtle pearlescent sheen. Our most luxurious.', finishLabel:'Premium', priceExtra:15, weights:[
+      { id:'pe300', gsm:300, name:'Luxe', feel:'Beautifully weighted & elegant', popular:true }
+    ]},
   ],
   pricing: { basePerFifty:150, vatRate:0.20, minQty:25, qtyStep:25 },
 };
@@ -458,7 +483,7 @@ async function loadSiteData() {
   try {
     const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
     const [paperRes, configRes, pricesRes, envRes, ptRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra&active=eq.true&order=display_order`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra,description,finish_label,weights&active=eq.true&order=display_order`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/envelopes?select=id,name,hex_color,border_color,price_each&active=eq.true&order=display_order`, { headers }),
@@ -467,12 +492,23 @@ async function loadSiteData() {
     if (paperRes.ok) {
       const rows = await paperRes.json();
       if (rows && rows.length) {
-        CONFIG.papers = rows.map(p => ({
-          id: p.id,
-          name: p.name,
-          subtitle: p.subtitle || '',
-          priceExtra: parseFloat(p.price_extra) || 0
-        }));
+        CONFIG.papers = rows.map(p => {
+          // weights: a JSON array on the stock. If none defined, treat the stock
+          // as a single implicit weight (so older data without weights still works).
+          let weights = Array.isArray(p.weights) ? p.weights : [];
+          if (!weights.length) {
+            weights = [{ id: p.id + '-default', gsm: null, name: '', feel: p.subtitle || '', popular: true }];
+          }
+          return {
+            id: p.id,
+            name: p.name,
+            subtitle: p.subtitle || '',
+            description: p.description || p.subtitle || '',
+            finishLabel: p.finish_label || '',
+            weights: weights,
+            priceExtra: parseFloat(p.price_extra) || 0
+          };
+        });
       }
     }
     if (configRes.ok) {
@@ -677,7 +713,7 @@ loadSiteData();
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('inv_cart')||'[]'); } catch(e){ cart=[]; }
 let currentFile=null, currentStep=1, selectedSize=null;
-let selectedPaper='smooth', selectedFinish='None', uploadQty=25, checksPassed=true;
+let selectedPaper='smooth', selectedWeight=null, selectedFinish='None', uploadQty=25, checksPassed=true;
 let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
 // Design-studio mode: set in the IIFE near the bottom of this script if
 // the user came from /design-studio-customise. When true, steps 1 & 2 are
@@ -1115,12 +1151,14 @@ function initStep3(){
     selectedPaper = papersToShow[0].id;
   }
   const grid=document.getElementById('paperGrid');
-  grid.innerHTML=papersToShow.map(p=>`
+  // Stock cards (no pricing — selection only)
+  grid.innerHTML = papersToShow.map(p=>`
     <div class="paper-opt${p.id===selectedPaper?' selected':''}" onclick="selectPaperOpt('${p.id}')">
       <div class="paper-name">${p.name}</div>
-      <div class="paper-sub">${p.subtitle}</div>
-      <div class="paper-price">${p.priceExtra?'+£'+p.priceExtra:'Included'}</div>
+      <div class="paper-sub">${p.description||p.subtitle||''}</div>
+      ${p.finishLabel?`<div class="paper-finish">${p.finishLabel}</div>`:''}
     </div>`).join('');
+  renderWeightPicker();
   // Finish grid — show only if product has more than one finish (i.e. options beyond just "None")
   renderFinishGrid();
   // Envelope picker
@@ -1173,8 +1211,56 @@ function selectFinish(name) {
 
 function selectPaperOpt(id){
   selectedPaper=id;
+  selectedWeight=null;   // reset — will default to the popular weight for this stock
   document.querySelectorAll('.paper-opt').forEach(el=>el.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
+  if(event&&event.currentTarget) event.currentTarget.classList.add('selected');
+  renderWeightPicker();
+  updatePrice();
+}
+
+// Render the weight options for the currently-selected stock (no pricing shown).
+function renderWeightPicker(){
+  const wrap = document.getElementById('weightPicker');
+  if(!wrap) return;
+  const stock = CONFIG.papers.find(p=>p.id===selectedPaper);
+  if(!stock || !stock.weights || !stock.weights.length){ wrap.innerHTML=''; return; }
+  const weights = stock.weights;
+  // default to the popular weight, or the first
+  if(!selectedWeight || !weights.find(w=>w.id===selectedWeight)){
+    const pop = weights.find(w=>w.popular);
+    selectedWeight = (pop||weights[0]).id;
+  }
+  // if there's only one implicit weight (no gsm/name), don't show the picker at all
+  const single = weights.length===1 && !weights[0].gsm && !weights[0].name;
+  if(single){ wrap.innerHTML=''; return; }
+
+  const maxGsm = Math.max.apply(null, weights.map(w=>w.gsm||0)) || 1;
+  const hint = weights.length>1
+    ? `${stock.name} comes in ${weights.length} weights — the heavier, the more substantial it feels.`
+    : `${stock.name} — a single beautiful weight.`;
+  wrap.innerHTML =
+    `<div class="weight-hint">Choose your thickness</div>
+     <div class="weight-sub">${hint}</div>
+     <div class="weight-list">` +
+    weights.map(w=>{
+      const barH = 18 + Math.round(((w.gsm||maxGsm)/maxGsm)*14);
+      const barW = 6 + Math.round(((w.gsm||maxGsm)/maxGsm)*6);
+      return `<div class="weight-opt${w.id===selectedWeight?' sel':''}" onclick="selectWeightOpt('${w.id}')">
+        <div class="weight-left">
+          <div class="weight-bar" style="width:${barW}px;height:${barH}px;"></div>
+          <div>
+            <div class="weight-name">${w.name||''}${w.gsm?` <span class="weight-gsm">· ${w.gsm}gsm</span>`:''}${w.popular?'<span class="weight-pop">POPULAR</span>':''}</div>
+            ${w.feel?`<div class="weight-feel">${w.feel}</div>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('') +
+    `</div>
+     <div class="weight-sample"><span class="weight-q">?</span> Not sure? Order a free sample pack to feel each one.</div>`;
+}
+function selectWeightOpt(id){
+  selectedWeight=id;
+  renderWeightPicker();
   updatePrice();
 }
 
@@ -1307,6 +1393,13 @@ async function addToCartUpload(){
   const envLabel=envelopesEnabled&&selectedEnvColour?` + ${ENVELOPES.find(e=>e.id===selectedEnvColour)?.name} envelopes`:'';
   // Build paper label including finish if it's not "None"
   let paperLabel = paper.name;
+  // include the chosen weight (name + gsm) so it's recorded on the order
+  if (paper.weights && selectedWeight) {
+    var w = paper.weights.find(function(x){ return x.id === selectedWeight; });
+    if (w && (w.name || w.gsm)) {
+      paperLabel += ' · ' + (w.name || '') + (w.gsm ? ' ' + w.gsm + 'gsm' : '');
+    }
+  }
   if (selectedFinish && selectedFinish !== 'None') paperLabel += ' · ' + selectedFinish;
   paperLabel += envLabel;
 
