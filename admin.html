@@ -722,12 +722,21 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
   <div class="pz-modal">
     <div class="modal-title">Add Paper Stock</div>
     <div class="field"><label>Name</label><input type="text" id="pap_name" placeholder="e.g. Smooth White"></div>
-    <div class="field"><label>Subtitle (description shown to customer)</label><input type="text" id="pap_subtitle" placeholder="e.g. 300gsm · Crisp & classic"></div>
+    <div class="field"><label>Description (shown to customer)</label><input type="text" id="pap_desc" placeholder="e.g. Crisp & classic. Colours print vivid and sharp."></div>
+    <div class="field"><label>Finish label (small text under the name)</label><input type="text" id="pap_finish" placeholder="e.g. Silk finish"></div>
+
+    <div class="field">
+      <label>Weights (thickness options for this stock)</label>
+      <div id="pap_weights"></div>
+      <button type="button" class="btn btn-outline btn-sm" onclick="addWeightRow()" style="margin-top:8px;">+ Add a weight</button>
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:8px 0 0;line-height:1.6;">Each weight has a gsm, a plain name (Classic / Premium / Luxe), a short feel description, and one can be marked "popular" (pre-selected for the customer).</p>
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="field"><label>Cost Modifier (£ per order, your printer cost)</label><div class="pfx"><span class="px">£</span><input type="number" id="pap_costMod" placeholder="0.00" step="0.01" min="0"></div></div>
       <div class="field"><label>Display Order</label><input type="number" id="pap_order" placeholder="1" step="1" min="0"></div>
     </div>
-    <p style="font-size:11px;color:rgba(250,247,242,.5);margin:0 0 14px;line-height:1.6;">Sell modifier is computed at publish time using each product's margin (so Cotton on a 60% margin product sells at +£32, on a 40% margin product at +£28, both from the same £20 cost).</p>
+    <input type="hidden" id="pap_subtitle">
     <input type="hidden" id="pap_extra">
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closePaperModal()">Cancel</button>
@@ -1761,33 +1770,77 @@ async function loadPapersFromSupabase() {
 }
 
 function openPaperModal(editId) {
-  ['pap_name','pap_subtitle','pap_costMod','pap_order'].forEach(id=>document.getElementById(id).value='');
+  ['pap_name','pap_desc','pap_finish','pap_costMod','pap_order'].forEach(id=>{ var el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('pap_editId').value='';
+  document.getElementById('pap_weights').innerHTML='';
   if (editId) {
     const p = papers.find(x => x.id === editId);
     if (p) {
-      document.getElementById('pap_name').value     = p.name || '';
-      document.getElementById('pap_subtitle').value = p.subtitle || '';
-      document.getElementById('pap_costMod').value  = p.cost_modifier != null ? p.cost_modifier : '';
-      document.getElementById('pap_order').value    = p.display_order != null ? p.display_order : '';
-      document.getElementById('pap_editId').value   = editId;
+      document.getElementById('pap_name').value    = p.name || '';
+      document.getElementById('pap_desc').value    = p.description || p.subtitle || '';
+      document.getElementById('pap_finish').value  = p.finish_label || '';
+      document.getElementById('pap_costMod').value = p.cost_modifier != null ? p.cost_modifier : '';
+      document.getElementById('pap_order').value   = p.display_order != null ? p.display_order : '';
+      document.getElementById('pap_editId').value  = editId;
+      // populate weight rows
+      const ws = Array.isArray(p.weights) ? p.weights : [];
+      ws.forEach(w => addWeightRow(w));
     }
   }
+  // always start a new stock with one blank weight row
+  if (!editId) addWeightRow();
   document.getElementById('paperModal').classList.add('open');
   setTimeout(()=>document.getElementById('pap_name').focus(),100);
 }
 
 function closePaperModal() { document.getElementById('paperModal').classList.remove('open'); }
 
+// --- weight rows in the paper modal ---
+function addWeightRow(w){
+  w = w || {};
+  const wrap = document.getElementById('pap_weights');
+  const row = document.createElement('div');
+  row.className = 'pap-weight-row';
+  row.style.cssText = 'display:grid;grid-template-columns:70px 1fr 1.4fr 70px 28px;gap:8px;align-items:center;margin-bottom:8px;';
+  row.innerHTML =
+    `<input type="number" placeholder="gsm" value="${w.gsm||''}" class="pw-gsm" style="width:100%;">
+     <input type="text" placeholder="Name (Premium)" value="${(w.name||'').replace(/"/g,'&quot;')}" class="pw-name" style="width:100%;">
+     <input type="text" placeholder="Feel (thick & substantial)" value="${(w.feel||'').replace(/"/g,'&quot;')}" class="pw-feel" style="width:100%;">
+     <label style="font-size:11px;color:rgba(250,247,242,.7);display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="pw-pop" ${w.popular?'checked':''}> Popular</label>
+     <button type="button" onclick="this.closest('.pap-weight-row').remove()" style="background:none;border:none;color:rgba(250,247,242,.5);cursor:pointer;font-size:16px;">✕</button>`;
+  wrap.appendChild(row);
+}
+function collectWeights(){
+  const rows = document.querySelectorAll('#pap_weights .pap-weight-row');
+  const out = [];
+  let popSet = false;
+  rows.forEach(function(r, i){
+    const gsm = parseInt(r.querySelector('.pw-gsm').value, 10);
+    const name = r.querySelector('.pw-name').value.trim();
+    const feel = r.querySelector('.pw-feel').value.trim();
+    let popular = r.querySelector('.pw-pop').checked;
+    if (popular && popSet) popular = false;  // only one popular
+    if (popular) popSet = true;
+    if (gsm || name) {
+      out.push({ id: 'w' + (gsm||i) + '-' + Math.random().toString(36).slice(2,6), gsm: gsm||null, name: name, feel: feel, popular: popular });
+    }
+  });
+  return out;
+}
+
 async function savePaper() {
   const name = document.getElementById('pap_name').value.trim();
   if (!name) { toast('Paper name required'); return; }
   const editId = document.getElementById('pap_editId').value;
+  const weights = collectWeights();
   const payload = {
     name,
-    subtitle:      document.getElementById('pap_subtitle').value.trim(),
+    description:   document.getElementById('pap_desc').value.trim(),
+    finish_label:  document.getElementById('pap_finish').value.trim(),
+    subtitle:      document.getElementById('pap_desc').value.trim(),  // keep legacy subtitle in sync
+    weights:       weights,
     cost_modifier: parseFloat(document.getElementById('pap_costMod').value) || 0,
-    price_extra:   0, // legacy field — kept at 0 to satisfy NOT NULL until column is removed
+    price_extra:   0,
     display_order: parseInt(document.getElementById('pap_order').value, 10) || 0,
     active:        true
   };
