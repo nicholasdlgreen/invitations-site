@@ -2000,7 +2000,7 @@ function openProductTypeModal(editId) {
   // Source data for the chip grids
   const sizeOptions   = (lists && Array.isArray(lists.sizes)) ? lists.sizes : [];
   const paperOptions  = (Array.isArray(papers) ? papers : []).filter(p => p.active !== false).map(p => p.name);
-  const finishOpts    = (Array.isArray(finishOptions) ? finishOptions : []).filter(f => f.active !== false).map(f => f.name);
+  const finishOpts    = (Array.isArray(finishTypes) ? finishTypes : []).filter(f => f.active !== false).map(f => f.name);
 
   let selectedSizes = [], selectedPapers = [], selectedFinishes = [], marginPct = 50;
 
