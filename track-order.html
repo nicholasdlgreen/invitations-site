@@ -89,39 +89,41 @@ async function trackOrder() {
 }
 
 async function lookupLiveOrder(orderNum, email) {
+  // The lookup runs on the server now. It used to fetch the whole order row
+  // with the public key and compare the email here, which meant the customer's
+  // full record reached the browser before anything was checked — and the same
+  // key could read every other order.
   try {
-    const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/orders?order_number=eq.${encodeURIComponent(orderNum)}&select=*`,
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-    );
+    const res = await fetch('/.netlify/functions/track-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderNumber: orderNum, email: email })
+    });
     if (!res.ok) return null;
-    const rows = await res.json();
-    if (!rows.length) return null;
-    const row = rows[0];
-    if ((row.customer_email || '').toLowerCase() !== email) return null;
+    const o = await res.json();
 
     const statusStages = ['new','proof','printing','dispatched','delivered'];
-    const curIdx = statusStages.indexOf(row.status);
+    const curIdx = statusStages.indexOf(o.status);
+    const first = (o.items && o.items[0]) || {};
+    const dt = o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
 
     return {
-      name: row.customer_name || 'Customer',
-      suite: row.design_name || row.paper_stock || 'Custom Design',
-      qty: row.quantity || '—',
-      total: row.total_inc_vat ? '£' + parseFloat(row.total_inc_vat).toFixed(2) : '—',
-      date: row.created_at ? new Date(row.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—',
-      status: row.status,
-      dpd: row.tracking_number || null,
+      name: o.name || 'Customer',
+      suite: first.name || o.paper || 'Custom Design',
+      qty: first.qty || '—',
+      total: o.total != null ? '£' + parseFloat(o.total).toFixed(2) : '—',
+      date: dt,
+      status: o.status,
+      dpd: o.tracking || null,
       stages: [
-        { name:'Order Received', desc:'Your order was received and payment confirmed.', date: row.created_at ? new Date(row.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—', done: curIdx >= 0 },
+        { name:'Order Received', desc:'Your order was received and payment confirmed.', date: dt, done: true },
         { name:'Design Approved', desc:'Your digital proof was approved.', date:'—', done: curIdx >= 2 },
         { name:'Printing', desc:'Your invitations are being printed.', date:'—', done: curIdx >= 3 },
-        { name:'Dispatched', desc: row.tracking_number ? 'Dispatched via courier. Tracking: ' + row.tracking_number : 'Dispatched via courier.', date:'—', done: curIdx >= 3, active: curIdx === 3 },
-        { name:'Delivered', desc:'Your invitations have been delivered.', date:'—', done: curIdx >= 4 },
+        { name:'Dispatched', desc: o.tracking ? 'Dispatched via courier. Tracking: ' + o.tracking : 'Dispatched via courier.', date:'—', done: curIdx >= 4 },
+        { name:'Delivered', desc:'Your order has arrived.', date:'—', done: curIdx >= 5 }
       ]
     };
-  } catch(e) {
+  } catch (e) {
     return null;
   }
 }

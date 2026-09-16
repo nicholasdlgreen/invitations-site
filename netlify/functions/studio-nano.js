@@ -62,7 +62,64 @@ function fetchImage(url) {
   });
 }
 
+
+// ── ABUSE GUARD ───────────────────────────────────────────
+// These endpoints spend real money on every call (image generation, AI
+// replies) and were open to anyone: no sign-in, no limit, CORS wide open.
+// Two cheap defences: only accept calls that came from our own site, and cap
+// how many one caller can make per hour.
+const ALLOWED_ORIGINS = [
+  'https://foreverprint.com',
+  'https://www.foreverprint.com',
+  'https://lighthearted-sunburst-4f0ba2.netlify.app',
+  'http://localhost:8081'
+];
+
+function originAllowed(event) {
+  const origin = event.headers.origin || event.headers.Origin || '';
+  const referer = event.headers.referer || event.headers.Referer || '';
+  if (!origin && !referer) return false;                 // direct curl, no browser
+  return ALLOWED_ORIGINS.some(o => origin === o || referer.startsWith(o));
+}
+
+function callerId(event) {
+  return (event.headers['x-nf-client-connection-ip']
+       || event.headers['client-ip']
+       || (event.headers['x-forwarded-for'] || '').split(',')[0].trim()
+       || 'unknown');
+}
+
+// Returns null when the call may proceed, or a response to return immediately.
+async function abuseGuard(event, name, perHour) {
+  if (!originAllowed(event)) {
+    console.warn(`[${name}] blocked: request did not come from the site`);
+    return { statusCode: 403, headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ error: 'Not available from here' }) };
+  }
+  const key = process.env.SUPABASE_SERVICE_KEY;
+  if (!key) return null;                                  // cannot count; allow
+  const bucket = `${name}:${callerId(event)}:${new Date().toISOString().slice(0, 13)}`;
+  try {
+    const res = await fetch(`${process.env.SUPABASE_URL || 'https://jvcpzmumkyjdyibmwlsd.supabase.co'}/rest/v1/rpc/bump_rate_limit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ p_bucket: bucket, p_limit: perHour })
+    });
+    if (res.ok && (await res.json()) === false) {
+      console.warn(`[${name}] rate limit hit for ${bucket}`);
+      return { statusCode: 429, headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ error: 'You have made a lot of requests. Please wait a little and try again.' }) };
+    }
+  } catch (e) {
+    console.warn(`[${name}] rate limit check failed, allowing:`, e.message);
+  }
+  return null;
+}
+
 exports.handler = async (event) => {
+  const blocked = await abuseGuard(event, 'studio-nano', 30);
+  if (blocked) return blocked;
+
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors(), body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: cors(), body: JSON.stringify({ error: 'Method not allowed' }) };
 

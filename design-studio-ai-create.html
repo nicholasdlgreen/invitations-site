@@ -1393,6 +1393,15 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     });
   }
 
+
+// Storage is public-read, so filenames must not be guessable: a name based on
+// the clock can be walked to find other customers' artwork. Random ids cannot.
+function artworkFileName(prefix, ext){
+  var id = (self.crypto && crypto.randomUUID) ? crypto.randomUUID()
+         : (Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+  return prefix + '-' + id + '.' + ext;
+}
+
   // dataURL -> Blob
   function dataUrlToBlob(dataUrl){
     var parts = dataUrl.split(','), mime = parts[0].match(/:(.*?);/)[1];
@@ -1413,7 +1422,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
       var names = (document.getElementById('w-names') || {}).value || '';
       var parts = names.split(/\s*&\s*|\s+and\s+/i);
-      var fileName = 'ai-design-' + Date.now() + '.jpg';
+      var fileName = artworkFileName('ai-design', 'jpg');
 
       // 1. upload the FULL print-res file to Supabase (the real print artwork)
       var blob = dataUrlToBlob(printImage);
@@ -1428,7 +1437,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         //    the artwork, vector crop marks, TrimBox/BleedBox set.
         return buildAiPrintPdf(printImage, size).then(function(built){
           if (!built) return { artworkUrl: artworkUrl, printUrl: null };
-          var pdfName = 'print-ai-' + Date.now() + '.pdf';
+          var pdfName = artworkFileName('print-ai', 'pdf');
           return fetch(SB_URL + '/storage/v1/object/artwork/' + pdfName, {
             method: 'POST',
             headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/pdf', 'x-upsert': 'false' },

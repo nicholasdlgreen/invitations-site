@@ -9,14 +9,20 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const SUPABASE_URL      = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+// Writing the order needs the service key once orders are no longer publicly
+// writable. Reads of published pricing still work with either key.
+const SUPABASE_WRITE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+if (!process.env.SUPABASE_SERVICE_KEY) {
+  console.warn('[create-checkout] SUPABASE_SERVICE_KEY not set — orders may fail to save once tables are locked');
+}
 
 async function supabaseInsert(table, data) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_WRITE_KEY,
+      'Authorization': `Bearer ${SUPABASE_WRITE_KEY}`,
       'Prefer': 'return=representation',
     },
     body: JSON.stringify(data),
@@ -31,8 +37,8 @@ async function supabasePatch(table, match, data) {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_WRITE_KEY,
+      'Authorization': `Bearer ${SUPABASE_WRITE_KEY}`,
     },
     body: JSON.stringify(data),
   });

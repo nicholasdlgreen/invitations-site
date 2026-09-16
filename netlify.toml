@@ -1,2 +1,23 @@
 [build]
   publish = "."
+
+# Security headers. The site had none: no clickjacking protection, no
+# content-type protection, and nothing limiting where scripts may be loaded
+# from. 'unsafe-inline' is unavoidable for now because the pages carry inline
+# scripts and styles, but naming the allowed hosts still blocks an injected
+# <script src="https://somewhere-else"> from running.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(self)"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://jvcpzmumkyjdyibmwlsd.supabase.co https://*.supabase.co; connect-src 'self' https://jvcpzmumkyjdyibmwlsd.supabase.co https://*.supabase.co https://api.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com"
+
+# The admin holds orders and financials — keep it out of search results.
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

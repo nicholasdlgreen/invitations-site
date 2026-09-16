@@ -20,7 +20,14 @@ const fetch = require('node-fetch');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+// Service key: this function updates orders, and once row-level rules are
+// tightened the public key can no longer do that. Falls back to the anon key so
+// a missing env var degrades rather than breaking payments outright — the
+// warning below is the signal to set it.
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+if (!process.env.SUPABASE_SERVICE_KEY) {
+  console.warn('[stripe-webhook] SUPABASE_SERVICE_KEY not set — falling back to the public key, which cannot update locked tables');
+}
 
 // ── SUPABASE ──────────────────────────────────────────────────────────────────
 async function updateOrderStatus(sessionId, status) {

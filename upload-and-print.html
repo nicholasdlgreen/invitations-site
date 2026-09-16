@@ -1702,7 +1702,7 @@ async function addToCartUpload(){
   if (currentFile) {
     try {
       const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
-      const fileName=Date.now()+'_'+currentFile.name.replace(/\s+/g,'_');
+      const fileName=artworkFileName('artwork', (currentFile.name.split('.').pop()||'dat').replace(/[^a-zA-Z0-9]/g,'').toLowerCase());
       const uploadRes=await fetch(`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`,{method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':currentFile.type||'application/octet-stream','x-upsert':'true'},body:currentFile});
       if(uploadRes.ok){
         uploadedArtworkUrl=`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/public/artwork/${fileName}`;
@@ -1720,7 +1720,7 @@ async function addToCartUpload(){
       const built = await buildPrintReadyPdf(currentFile, selectedSize);
       if (built) {
         const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
-        const pName = 'print-' + Date.now() + '.pdf';
+        const pName = artworkFileName('print', 'pdf');
         const pRes = await fetch('https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/' + pName, {method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/pdf','x-upsert':'true'},body:built.blob});
         if (pRes.ok) {
           uploadedPrintUrl = 'https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/public/artwork/' + pName;
@@ -1777,6 +1777,15 @@ async function addToCartUpload(){
 // The resulting page is trim + 3mm bleed + 5mm marks margin on every side,
 // which is exactly what print-prep.js then places on a PDF page of that size.
 const PRINT_DPI = 300, PRINT_BLEED_MM = 3, PRINT_MARKS_MM = 5;
+
+// Storage is public-read, so filenames must not be guessable: a name based on
+// the clock can be walked to find other customers' artwork. Random ids cannot.
+function artworkFileName(prefix, ext){
+  var id = (self.crypto && crypto.randomUUID) ? crypto.randomUUID()
+         : (Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+  return prefix + '-' + id + '.' + ext;
+}
+
 
 // Colour conversion is OFF on the printer's own advice (PrintedEasy, 16 Sep
 // 2026): "for what you're producing, RGB will be fine and as our RIPS do a good
@@ -2350,7 +2359,7 @@ async function proceedToStripe(){
   // Fallback: if somehow currentFile is still here and no URL yet, upload it.
   if(!artworkUrl && currentFile){
     try{
-      const fileName=Date.now()+'_'+currentFile.name.replace(/\s+/g,'_');
+      const fileName=artworkFileName('artwork', (currentFile.name.split('.').pop()||'dat').replace(/[^a-zA-Z0-9]/g,'').toLowerCase());
       const uploadRes=await fetch(`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`,{method:'POST',headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE','Content-Type':currentFile.type||'application/octet-stream','x-upsert':'true'},body:currentFile});
       // Supabase Storage returns 200 on success. Public bucket, deterministic
       // path — if the POST didn't throw AND returned ok, the file is stored.
