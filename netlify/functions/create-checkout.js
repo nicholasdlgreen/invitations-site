@@ -134,7 +134,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl, delivery } = JSON.parse(event.body);
+    const { cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl, delivery, marketing } = JSON.parse(event.body);
 
     if (!cart?.length) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Cart is empty' }) };
@@ -192,11 +192,38 @@ exports.handler = async (event) => {
           delivery:         delivery
                               ? `${delivery.name}${delivery.arrival ? ' · estimated ' + delivery.arrival : ''}`
                               : null,
+          marketing_consent:      !!(marketing && marketing.granted),
+          marketing_consent_text: marketing && marketing.granted ? marketing.text : null,
+          marketing_consent_at:   marketing && marketing.granted ? new Date().toISOString() : null,
         });
         orderId = row?.id;
       } catch (e) {
         console.error('Supabase order save failed:', e.message);
         // Don't block checkout — order still goes through Stripe
+      }
+    }
+
+    // ── Add them to the customer list ───────────────────
+    // Every customer gets a row (we need it to fulfil the order); the consent
+    // flag decides whether they can be marketed to. Never blocks checkout.
+    if (SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY && customer?.email) {
+      try {
+        const key = process.env.SUPABASE_SERVICE_KEY;
+        await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_contact_from_order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+          body: JSON.stringify({
+            p_email: customer.email,
+            p_name: customer.name || null,
+            p_consent: !!(marketing && marketing.granted),
+            p_consent_text: marketing?.text || null,
+            p_source: marketing?.source || 'checkout',
+            p_total: +total.toFixed(2),
+            p_products: cart.map(i => i.name).filter(Boolean)
+          })
+        });
+      } catch (e) {
+        console.warn('[contacts] could not record the customer:', e.message);
       }
     }
 

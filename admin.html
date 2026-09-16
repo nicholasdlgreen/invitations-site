@@ -440,6 +440,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="finishes" onclick="showPricingPanel(this)">✨ Finish Options</button>
           <button class="pz-tab" data-pz="publish" onclick="showPricingPanel(this)">🚀 Publish</button>
           <button class="pz-tab" data-pz="reconcile" onclick="showPricingPanel(this)">🔁 Reconciliation</button>
+          <button class="pz-tab" data-pz="contacts" onclick="showPricingPanel(this)">👥 Customers</button>
           <button class="pz-tab" data-pz="costs" onclick="showPricingPanel(this)">💷 Costs</button>
           <button class="pz-tab" data-pz="pl" onclick="showPricingPanel(this)">📈 Monthly P&amp;L</button>
           <button class="pz-tab" data-pz="mgmt" onclick="showPricingPanel(this)">📊 Management Accounts</button>
@@ -480,6 +481,19 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               <button class="btn btn-gold" onclick="openPaperModal()">＋ Add Paper</button>
             </div>
             <div id="paperList"><div class="empty"><span class="empty-icon">📃</span><div class="empty-text">No paper stocks yet</div></div></div>
+          </div>
+
+          <!-- PANEL: CUSTOMERS -->
+          <div class="pz-panel" id="pz-contacts">
+            <div class="section-header">
+              <div><div class="section-title">Customers</div><div class="section-sub">Everyone who has ordered, and who has agreed to be emailed. Owned here, so whichever marketing tool you choose later is an export rather than a place your list lives.</div></div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-sm" onclick="exportContacts(true)">⬇ Consented only</button>
+                <button class="btn btn-outline btn-sm" onclick="exportContacts(false)">⬇ All customers</button>
+              </div>
+            </div>
+            <div id="contactStats" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;"></div>
+            <div id="contactList"><div class="empty"><span class="empty-icon">👥</span><div class="empty-text">No customers yet</div></div></div>
           </div>
 
           <!-- PANEL: DELIVERY -->
@@ -1429,6 +1443,7 @@ function pricingLoad() {
   loadSizesFromSupabase();
   loadMoneyData();
   loadDeliveryServices();
+  loadContacts();
   loadProductTypesFromSupabase();
   loadFinishOptionsFromSupabase();
   loadFinishTypesFromSupabase();
@@ -2191,6 +2206,88 @@ function renderPaperList() {
     </div>`).join('');
 }
 
+
+// ═══════════════════════════════════════════════════════
+// CUSTOMERS — the list, owned here
+// A row exists for everyone who orders, because we need it to fulfil the order.
+// marketing_consent decides who may be emailed; consent_text records what they
+// actually agreed to, which is the bit that matters if it is ever questioned.
+// ═══════════════════════════════════════════════════════
+
+let contacts = [];
+
+async function loadContacts() {
+  try {
+    contacts = await sbFetch('contacts?select=*&order=last_order_at.desc');
+  } catch (err) {
+    console.warn('Could not load customers:', err.message);
+    contacts = [];
+  }
+  renderContacts();
+}
+
+function renderContacts() {
+  const box = document.getElementById('contactList');
+  const stats = document.getElementById('contactStats');
+  if (!box) return;
+
+  const consented = contacts.filter(c => c.marketing_consent && !c.unsubscribed_at);
+  const unsubbed  = contacts.filter(c => c.unsubscribed_at);
+  const spend     = contacts.reduce((t, c) => t + (+c.total_spent || 0), 0);
+  const repeat    = contacts.filter(c => (c.orders_count || 0) > 1).length;
+
+  if (stats) {
+    const tile = (label, value, tone) => `
+      <div style="flex:1;min-width:130px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:19px;color:${tone || '#faf7f2'};font-family:Georgia,serif;">${value}</div>
+        <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px;letter-spacing:.04em;">${label}</div>
+      </div>`;
+    stats.innerHTML =
+      tile('Customers', contacts.length) +
+      tile('Can be emailed', consented.length, '#8fb996') +
+      tile('Repeat buyers', repeat) +
+      tile('Total spent', '£' + spend.toFixed(2)) +
+      (unsubbed.length ? tile('Unsubscribed', unsubbed.length, '#c49a6a') : '');
+  }
+
+  if (!contacts.length) {
+    box.innerHTML = '<div class="empty"><span class="empty-icon">👥</span><div class="empty-text">No customers yet — they appear here as orders come in</div></div>';
+    return;
+  }
+  box.innerHTML = contacts.map(c => {
+    const state = c.unsubscribed_at ? '<span style="font-size:10px;color:#c49a6a;">UNSUBSCRIBED</span>'
+                : c.marketing_consent ? '<span style="font-size:10px;color:#8fb996;">CAN EMAIL</span>'
+                : '<span style="font-size:10px;color:rgba(250,247,242,.35);">ORDER EMAILS ONLY</span>';
+    const last = c.last_order_at ? new Date(c.last_order_at).toLocaleDateString('en-GB') : '—';
+    return `
+      <div class="supplier-card">
+        <div>
+          <div style="font-weight:500;font-size:13px">${c.name || c.email} ${state}</div>
+          <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
+            ${c.email} · ${c.orders_count || 0} order${(c.orders_count||0)===1?'':'s'} · £${(+c.total_spent||0).toFixed(2)} · last ${last}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// Export for whichever tool gets chosen. Consent columns travel with it, so the
+// evidence stays attached to the address rather than being left behind here.
+function exportContacts(consentedOnly) {
+  const rows = consentedOnly
+    ? contacts.filter(c => c.marketing_consent && !c.unsubscribed_at)
+    : contacts;
+  if (!rows.length) { toast(consentedOnly ? 'Nobody has opted in yet' : 'No customers yet'); return; }
+  const head = ['email','name','marketing_consent','consent_text','consent_at','consent_source','orders_count','total_spent','first_order_at','last_order_at'];
+  const csv = [head.join(',')].concat(rows.map(c =>
+    head.map(k => `"${String(c[k] == null ? '' : c[k]).replace(/"/g,'""')}"`).join(',')
+  )).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
+  a.download = `foreverprint-customers-${consentedOnly ? 'consented' : 'all'}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast(`Exported ${rows.length} customer${rows.length===1?'':'s'} ✓`);
+}
 
 // ═══════════════════════════════════════════════════════
 // DELIVERY — services offered at checkout
