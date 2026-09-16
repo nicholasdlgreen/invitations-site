@@ -1302,6 +1302,10 @@ function renderRow(o) {
 }
 
 async function updateStatus(id, status) {
+  // Marking an order dispatched is the moment the customer wants to hear from
+  // us, so it asks for the tracking number and sends the email rather than
+  // quietly changing a dropdown.
+  if (status === 'dispatched') { await dispatchOrder(id); return; }
   try {
     await sbFetch(`orders?id=eq.${id}`, {
       method:'PATCH',
@@ -1313,6 +1317,33 @@ async function updateStatus(id, status) {
     updateOrderStats();
   } catch(err) {
     alert('Failed to update status: ' + err.message);
+  }
+}
+
+async function dispatchOrder(id) {
+  const order = allOrders.find(o => o.id === id) || {};
+  const already = order.dispatch_email_sent_at;
+  if (already && !confirm(`The "on its way" email already went to this customer on ${new Date(already).toLocaleDateString('en-GB')}.\n\nSend it again?`)) {
+    loadOrders();
+    return;
+  }
+  const tracking = prompt('Tracking number for ' + (order.order_number || 'this order') + '\n\n(Leave blank to send without one — the email simply omits the tracking section.)', order.dpd_tracking || '');
+  if (tracking === null) { loadOrders(); return; }          // cancelled
+  const carrier = prompt('Carrier?', order.carrier || 'DPD') || '';
+
+  try {
+    const res = await fetch('/.netlify/functions/send-dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ADMIN_TOKEN || ''}` },
+      body: JSON.stringify({ orderId: id, tracking: tracking.trim(), carrier: carrier.trim(), resend: !!already })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert('Could not send the dispatch email: ' + (data.error || res.status)); loadOrders(); return; }
+    toast('Dispatched — customer emailed ✓');
+    loadOrders();
+  } catch (err) {
+    alert('Could not send the dispatch email: ' + err.message);
+    loadOrders();
   }
 }
 
