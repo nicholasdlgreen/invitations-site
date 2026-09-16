@@ -30,6 +30,24 @@ if (!process.env.SUPABASE_SERVICE_KEY) {
 }
 
 // ── SUPABASE ──────────────────────────────────────────────────────────────────
+// The full order — line items, paper, sizes — lives in Supabase. Stripe
+// metadata caps each value at 500 characters, so a cart does not fit there.
+async function fetchOrderBySession(sessionId) {
+  if (!SUPABASE_KEY) return null;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/orders?stripe_session_id=eq.${encodeURIComponent(sessionId)}&select=*`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows && rows[0] ? rows[0] : null;
+  } catch (err) {
+    console.warn('Could not read the order back:', err.message);
+    return null;
+  }
+}
+
 async function updateOrderStatus(sessionId, status) {
   if (!SUPABASE_KEY) return;
   try {
@@ -73,8 +91,92 @@ async function sendEmail({ to, subject, html }) {
 }
 
 // ── JOB TICKET EMAIL ─────────────────────────────────────────────────────────
+
+// ── CUSTOMER ORDER CONFIRMATION ───────────────────────────
+// Until now the customer received nothing at all: the printer got a job ticket,
+// the office got a notification, and the person who had just paid heard silence
+// until the cards arrived. This is the email they actually want — proof it
+// worked, what is coming, and when.
+//
+// No VAT line: the business is not VAT registered, so the total is simply the
+// total. Add the breakdown back when registration comes through.
+function buildCustomerConfirmationHtml(o) {
+  const items = Array.isArray(o.items) ? o.items : [];
+  const firstName = String(o.customerName || '').trim().split(' ')[0] || 'there';
+  const itemRows = items.length
+    ? items.map(i => `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #EFE9E1;font-family:Arial,sans-serif;font-size:13px;color:#3D2E24;">
+            ${i.name || 'Your design'}${i.size ? ` &middot; ${i.size}` : ''}${i.paper ? `<br><span style="color:#7A6558;font-size:12px;">${i.paper}</span>` : ''}
+          </td>
+          <td style="padding:10px 0;border-bottom:1px solid #EFE9E1;text-align:right;font-family:Arial,sans-serif;font-size:13px;color:#3D2E24;white-space:nowrap;">
+            ${i.qty ? i.qty + ' cards' : ''}
+          </td>
+        </tr>`).join('')
+    : `<tr><td style="padding:10px 0;font-family:Arial,sans-serif;font-size:13px;color:#3D2E24;">Your order</td><td></td></tr>`;
+
+  return `
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <div style="background:#FAF7F2;padding:32px 16px;font-family:Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #EFE9E1;border-radius:14px;overflow:hidden;">
+
+      <div style="background:#3D2E24;padding:26px 28px;">
+        <div style="font-family:Georgia,serif;font-size:21px;color:#fff;letter-spacing:.04em;">foreverprint</div>
+      </div>
+
+      <div style="padding:30px 28px 8px;">
+        <div style="font-family:Georgia,serif;font-size:23px;color:#3D2E24;margin-bottom:12px;">Thank you, ${firstName}.</div>
+        <p style="font-size:14px;line-height:1.75;color:#5C4A3D;margin:0 0 6px;">
+          Your order is confirmed and already with our print team. Here is everything for your records.
+        </p>
+      </div>
+
+      <div style="padding:18px 28px 0;">
+        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#B8976A;margin-bottom:10px;">Order ${o.orderNumber}</div>
+        <table style="width:100%;border-collapse:collapse;">${itemRows}</table>
+        <table style="width:100%;border-collapse:collapse;margin-top:6px;">
+          <tr>
+            <td style="padding:14px 0 0;font-family:Arial,sans-serif;font-size:14px;color:#3D2E24;font-weight:bold;">Total paid</td>
+            <td style="padding:14px 0 0;text-align:right;font-family:Georgia,serif;font-size:19px;color:#3D2E24;">&pound;${Number(o.total || 0).toFixed(2)}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="padding:22px 28px 0;">
+        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#B8976A;margin-bottom:10px;">What happens now</div>
+        <div style="font-size:14px;line-height:1.8;color:#5C4A3D;">
+          <div style="margin-bottom:7px;">1. We prepare your artwork for press and print it &mdash; usually 3&ndash;5 working days.</div>
+          <div style="margin-bottom:7px;">2. We email you as soon as it is on its way, with tracking.</div>
+          <div>3. Delivery is normally 1&ndash;2 working days after that.</div>
+        </div>
+      </div>
+
+      ${o.deliveryAddress && o.deliveryAddress !== 'Not provided' ? `
+      <div style="padding:22px 28px 0;">
+        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#B8976A;margin-bottom:8px;">Delivering to</div>
+        <div style="font-size:14px;line-height:1.7;color:#5C4A3D;">${o.deliveryAddress}</div>
+        <div style="font-size:12px;color:#8C7B6E;margin-top:8px;">Not right? Reply to this email today and we will fix it before printing.</div>
+      </div>` : ''}
+
+      <div style="padding:24px 28px 30px;">
+        <div style="border-top:1px solid #EFE9E1;padding-top:18px;font-size:13px;line-height:1.8;color:#5C4A3D;">
+          Any questions at all, just reply to this email or write to
+          <a href="mailto:hello@foreverprint.com" style="color:#B8976A;">hello@foreverprint.com</a> &mdash; a real person will answer.
+          <br>You can also check progress any time at
+          <a href="https://foreverprint.com/track-order" style="color:#B8976A;">foreverprint.com/track-order</a>
+          using order ${o.orderNumber}.
+        </div>
+      </div>
+
+      <div style="background:#FAF7F2;padding:16px 28px;text-align:center;font-size:11px;color:#8C7B6E;">
+        Foreverprint &middot; Printed with care in the UK
+      </div>
+    </div>
+  </div>`;
+}
+
 function buildJobTicketHtml(o) {
-  const fmt = v => `£${parseFloat(v || 0).toFixed(2)}`;
+  const fmt = v => `&pound;${parseFloat(v || 0).toFixed(2)}`;
   const subtotal = o.total / 1.2;
   const vat      = o.total - subtotal;
 
@@ -83,7 +185,7 @@ function buildJobTicketHtml(o) {
       <td style="padding:8px 14px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
                  color:#B0A098;font-family:Arial,sans-serif;vertical-align:top;width:160px;">${label}</td>
       <td style="padding:8px 14px;font-size:13px;color:#3D2E24;font-family:Arial,sans-serif;
-                 line-height:1.6;">${value || '—'}</td>
+                 line-height:1.6;">${value || '&mdash;'}</td>
     </tr>`;
 
   const checks = [
@@ -136,9 +238,9 @@ function buildJobTicketHtml(o) {
     <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#B8976A;
                 padding:0 14px;margin-bottom:8px;font-family:Arial,sans-serif;">Print Specification</div>
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF7F2;border-radius:6px;">
-      ${row('Quantity',   o.quantity ? `${o.quantity} invitations` : '—')}
+      ${row('Quantity',   o.quantity ? `${o.quantity} invitations` : '&mdash;')}
       ${row('Paper Stock', o.paper || 'Smooth White 300gsm')}
-      ${row('Size',       o.size  || '<strong style="color:#B00020;">NOT RECORDED — check the order before printing</strong>')}
+      ${row('Size',       o.size  || '<strong style="color:#B00020;">NOT RECORDED &mdash; check the order before printing</strong>')}
       ${row('Finish',     'Matt laminate')}
       ${row('Bleed',      '3mm all sides')}
       ${row('Colour Mode','CMYK')}
@@ -154,7 +256,7 @@ function buildJobTicketHtml(o) {
         ${o.printReadyUrl
           ? `<div style="font-size:12px;color:#7A6558;margin-bottom:8px;font-family:Arial,sans-serif;">
                <strong>Print this file.</strong> Built to the ordered size with 3mm bleed
-               and crop marks, trim box set. Supplied in RGB — your RIP handles
+               and crop marks, trim box set. Supplied in RGB &mdash; your RIP handles
                the colour conversion.
              </div>
              <a href="${o.printReadyUrl}"
@@ -162,12 +264,12 @@ function buildJobTicketHtml(o) {
                &#128196; Download PRINT-READY file
              </a>
              <div style="font-size:11px;color:#B0A098;margin:10px 0 4px;font-family:Arial,sans-serif;">
-               Customer's original upload (reference only — do not print):
+               Customer's original upload (reference only &mdash; do not print):
              </div>
              ${o.artworkUrl ? `<a href="${o.artworkUrl}" style="color:#B0A098;font-size:11px;word-break:break-all;font-family:Arial,sans-serif;">&#128206; Original artwork</a>` : ''}`
           : o.artworkUrl
           ? `<div style="font-size:12px;color:#B00020;margin-bottom:8px;font-family:Arial,sans-serif;">
-               <strong>No print-ready file was produced — prepress must prepare this
+               <strong>No print-ready file was produced &mdash; prepress must prepare this
                before printing.</strong> Only the customer's original upload is available:
              </div>
              <a href="${o.artworkUrl}"
@@ -175,7 +277,7 @@ function buildJobTicketHtml(o) {
                &#128206; Download Artwork File
              </a>`
           : `<div style="font-size:12px;color:#B0A098;font-family:Arial,sans-serif;">
-               No artwork file uploaded — check the admin dashboard
+               No artwork file uploaded &mdash; check the admin dashboard
              </div>`}
       </td></tr>
     </table>
@@ -213,10 +315,10 @@ function buildJobTicketHtml(o) {
   <tr><td style="padding:20px 24px;background:#FAF7F2;border-top:1px solid #E8DDD8;margin-top:20px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td style="font-size:10px;color:#B0A098;font-family:Arial,sans-serif;">
-        hello@invitations.co.uk · invitations.co.uk
+        hello@invitations.co.uk &middot; invitations.co.uk
       </td>
       <td style="text-align:right;font-size:10px;color:#B0A098;font-family:Arial,sans-serif;">
-        Ref: ${o.orderNumber} · Generated ${new Date().toLocaleDateString('en-GB')}
+        Ref: ${o.orderNumber} &middot; Generated ${new Date().toLocaleDateString('en-GB')}
       </td>
     </tr></table>
   </td></tr>
@@ -238,7 +340,7 @@ function buildAdminNotificationHtml(o) {
   </td></tr>
   <tr><td style="padding:28px 24px;">
     <h2 style="font-family:Georgia,serif;font-size:20px;color:#3D2E24;margin:0 0 20px;">
-      New order — £${parseFloat(o.total||0).toFixed(2)}
+      New order &mdash; &pound;${parseFloat(o.total||0).toFixed(2)}
     </h2>
     <table width="100%" cellpadding="0" cellspacing="0"
            style="border:1px solid #E8DDD8;border-radius:6px;overflow:hidden;font-family:Arial,sans-serif;">
@@ -257,13 +359,13 @@ function buildAdminNotificationHtml(o) {
       <tr>
         <td style="padding:10px 14px;font-size:11px;color:#B0A098;">Product</td>
         <td style="padding:10px 14px;font-size:13px;color:#3D2E24;">
-          ${o.quantity || '—'} invitations · ${o.paper || 'Smooth White'}
+          ${o.quantity || '&mdash;'} invitations &middot; ${o.paper || 'Smooth White'}
         </td>
       </tr>
       <tr style="background:#FAF7F2;">
         <td style="padding:10px 14px;font-size:11px;color:#B0A098;">Total Paid</td>
         <td style="padding:10px 14px;font-size:15px;color:#B8976A;font-weight:bold;">
-          £${parseFloat(o.total||0).toFixed(2)}
+          &pound;${parseFloat(o.total||0).toFixed(2)}
         </td>
       </tr>
     </table>
@@ -317,6 +419,7 @@ exports.handler = async (event) => {
       size:            metadata?.size       || null,
       artworkUrl:      metadata?.artwork_url || null,
       printReadyUrl:   metadata?.print_ready_url || null,
+      items:           [],   // filled from Supabase below
       notes:           metadata?.notes      || null,
       total,
       orderDate:       new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }),
@@ -325,7 +428,41 @@ exports.handler = async (event) => {
     // 1. Update Supabase order status → printing
     await updateOrderStatus(sessionId, 'printing');
 
-    // 2. Send job ticket to printer
+    // Enrich from the stored order: line items, paper and quantity for the
+    // emails, and the print-ready file for the job ticket.
+    const stored = await fetchOrderBySession(sessionId);
+    if (stored) {
+      order.items         = Array.isArray(stored.items) ? stored.items : [];
+      order.paper         = order.paper       || stored.paper       || null;
+      order.size          = order.size        || stored.size        || null;
+      order.quantity      = order.quantity    || (order.items[0] && order.items[0].qty) || null;
+      order.artworkUrl    = order.artworkUrl  || stored.artwork_url || null;
+      order.printReadyUrl = order.printReadyUrl || stored.print_ready_url || null;
+      order.customerEmail = (order.customerEmail && order.customerEmail !== 'Unknown')
+        ? order.customerEmail : (stored.customer_email || order.customerEmail);
+      if (!order.total) order.total = Number(stored.total) || 0;
+    } else {
+      console.warn(`Order ${order.orderNumber} not found in Supabase — emails will be sparse`);
+    }
+
+    // 2. Confirm to the customer. Sent before the internal emails: if anything
+    //    fails, the person who paid should still have heard from us.
+    try {
+      if (order.customerEmail && order.customerEmail !== 'Unknown') {
+        await sendEmail({
+          to:      order.customerEmail,
+          subject: `Your Foreverprint order ${order.orderNumber} is confirmed`,
+          html:    buildCustomerConfirmationHtml(order),
+        });
+        console.log(`Confirmation sent to customer for ${order.orderNumber}`);
+      } else {
+        console.warn(`No customer email on ${order.orderNumber} — confirmation not sent`);
+      }
+    } catch (err) {
+      console.error('Customer confirmation failed (non-fatal):', err.message);
+    }
+
+    // 3. Send job ticket to printer
     try {
       await sendEmail({
         to:      process.env.PRINTER_EMAIL || 'printer@placeholder.com',
@@ -337,7 +474,7 @@ exports.handler = async (event) => {
       console.error('Printer email failed (non-fatal):', err.message);
     }
 
-    // 3. Send notification to admin
+    // 4. Send notification to admin
     try {
       await sendEmail({
         to:      process.env.NOTIFY_EMAIL || 'hello@invitations.co.uk',
