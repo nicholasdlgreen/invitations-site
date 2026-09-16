@@ -432,6 +432,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="suppliers" onclick="showPricingPanel(this)">🏭 Suppliers</button>
           <button class="pz-tab" data-pz="envelopes" onclick="showPricingPanel(this)">✉️ Envelopes</button>
           <button class="pz-tab" data-pz="papers" onclick="showPricingPanel(this)">📃 Paper Stocks</button>
+          <button class="pz-tab" data-pz="sizes" onclick="showPricingPanel(this)">📐 Sizes</button>
           <button class="pz-tab active" data-pz="producttypes" onclick="showPricingPanel(this)">🎴 Product Types</button>
           <button class="pz-tab" data-pz="sheetrates" onclick="showPricingPanel(this)">📊 Sheet Rates</button>
           <button class="pz-tab" data-pz="finishes" onclick="showPricingPanel(this)">✨ Finish Options</button>
@@ -475,6 +476,15 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               <button class="btn btn-gold" onclick="openPaperModal()">＋ Add Paper</button>
             </div>
             <div id="paperList"><div class="empty"><span class="empty-icon">📃</span><div class="empty-text">No paper stocks yet</div></div></div>
+          </div>
+
+          <!-- PANEL: SIZES -->
+          <div class="pz-panel" id="pz-sizes">
+            <div class="section-header">
+              <div><div class="section-title">Sizes</div><div class="section-sub">Every size the site can offer. Switch one on here, then tick it on a Product Type to sell it. Dimensions are the finished (trimmed) size — bleed and crop marks are added automatically.</div></div>
+              <button class="btn btn-gold" onclick="openSizeModal()">＋ Add Size</button>
+            </div>
+            <div id="sizeList"><div class="empty"><span class="empty-icon">📐</span><div class="empty-text">No sizes yet</div></div></div>
           </div>
 
           <!-- PANEL: PRODUCT TYPES -->
@@ -715,6 +725,42 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <button class="btn btn-gold btn-sm" onclick="saveEnvelope()">Save Envelope</button>
     </div>
     <input type="hidden" id="env_editId">
+  </div>
+</div>
+
+<div class="modal-overlay" id="sizeModal">
+  <div class="pz-modal">
+    <div class="modal-title" id="siz_modalTitle">Add Size</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Key (used by the site — no spaces)</label><input type="text" id="siz_id" placeholder="e.g. A5 or Square-210"></div>
+      <div class="field"><label>Name shown to customers</label><input type="text" id="siz_name" placeholder="e.g. A5"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Width (mm, trimmed size)</label><input type="number" id="siz_w" placeholder="148" step="1" min="1"></div>
+      <div class="field"><label>Height (mm, trimmed size)</label><input type="number" id="siz_h" placeholder="210" step="1" min="1"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Category</label>
+        <select id="siz_cat" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;">
+          <option value="card">Card / small format</option>
+          <option value="large-format">Large format (signs, plans)</option>
+          <option value="folded">Folded (flat size)</option>
+          <option value="trade">Trade sheet (not customer-facing)</option>
+        </select>
+      </div>
+      <div class="field"><label>Display Order</label><input type="number" id="siz_order" placeholder="10" step="10" min="0"></div>
+    </div>
+    <div class="field">
+      <label><input type="checkbox" id="siz_preset" checked style="margin-right:8px;">PrintedEasy standard size</label>
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;line-height:1.6;">Untick if the printer treats this as a custom size — it may cost more or take longer, and the job ticket will say so.</p>
+    </div>
+    <div class="field"><label>Note (internal only)</label><input type="text" id="siz_note" placeholder="e.g. Traditional invitation size"></div>
+    <div class="field"><label><input type="checkbox" id="siz_active" checked style="margin-right:8px;">Available to use on products</label></div>
+    <input type="hidden" id="siz_editId">
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeSizeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveSize()">Save Size</button>
+    </div>
   </div>
 </div>
 
@@ -1158,6 +1204,7 @@ function pricingLoad() {
   loadListsFromSupabase();
   loadEnvelopesFromSupabase();
   loadPapersFromSupabase();
+  loadSizesFromSupabase();
   loadProductTypesFromSupabase();
   loadFinishOptionsFromSupabase();
   loadFinishTypesFromSupabase();
@@ -1918,6 +1965,180 @@ function renderPaperList() {
         <button class="btn btn-danger btn-xs" onclick="deletePaper('${p.id}')">✕</button>
       </div>
     </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// SIZES — manage rows in `print_sizes` Supabase table
+// These drive the size options on the customer site, so a size added
+// here becomes available to products without a code change.
+// ═══════════════════════════════════════════════════════
+
+let printSizes = [];
+
+async function loadSizesFromSupabase() {
+  try {
+    printSizes = await sbFetch('print_sizes?select=*&order=display_order');
+    syncSizeLists();
+    renderSizeList();
+  } catch (err) {
+    console.warn('Could not load sizes from Supabase:', err.message);
+    printSizes = [];
+    renderSizeList();
+  }
+}
+
+// Feed the live sizes into the rest of admin: the size tickboxes on Product
+// Types and the Sheet Rates columns both read lists.sizes. Legacy keys that are
+// still referenced (e.g. an old size with rates against it) are kept on the end
+// so nothing silently loses its data.
+function syncSizeLists() {
+  if (!lists) return;
+  const live = printSizes.filter(z => z.active).map(z => z.id);
+  const legacy = (Array.isArray(lists.sizes) ? lists.sizes : []).filter(k => !live.includes(k));
+  lists.sizes = live.concat(legacy);
+}
+
+const SIZE_CAT_LABEL = {
+  'card':'Card / small format', 'large-format':'Large format',
+  'folded':'Folded (flat size)', 'trade':'Trade sheet'
+};
+
+function renderSizeList() {
+  const container = document.getElementById('sizeList');
+  if (!container) return;
+  if (!printSizes.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">📐</span><div class="empty-text">No sizes yet</div></div>';
+    return;
+  }
+  const cats = ['card','large-format','folded','trade'];
+  container.innerHTML = cats.map(cat => {
+    const rows = printSizes.filter(z => (z.category||'card') === cat);
+    if (!rows.length) return '';
+    return `
+      <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(250,247,242,.4);margin:18px 0 8px;">${SIZE_CAT_LABEL[cat]||cat}</div>
+      ${rows.map(z => `
+        <div class="supplier-card" style="${z.active ? '' : 'opacity:.5;'}">
+          <div>
+            <div style="font-weight:500;font-size:13px">
+              ${z.name}
+              ${z.active ? '' : '<span style="font-size:10px;color:rgba(250,247,242,.45);margin-left:8px;">OFF</span>'}
+              ${z.printer_preset === false ? '<span style="font-size:10px;color:#e0a458;margin-left:8px;" title="Printer treats this as a custom size">CUSTOM SIZE</span>' : ''}
+            </div>
+            <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
+              ${z.width_mm} × ${z.height_mm} mm · key <code>${z.id}</code>${z.note ? ' · ' + z.note : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-xs" onclick="toggleSizeActive('${z.id}')">${z.active ? 'Turn off' : 'Turn on'}</button>
+            <button class="btn btn-outline btn-xs" onclick="openSizeModal('${z.id}')">Edit</button>
+            <button class="btn btn-danger btn-xs" onclick="deleteSize('${z.id}')">✕</button>
+          </div>
+        </div>`).join('')}`;
+  }).join('');
+}
+
+function openSizeModal(editId) {
+  ['siz_id','siz_name','siz_w','siz_h','siz_order','siz_note'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('siz_editId').value = '';
+  document.getElementById('siz_cat').value = 'card';
+  document.getElementById('siz_preset').checked = true;
+  document.getElementById('siz_active').checked = true;
+  document.getElementById('siz_modalTitle').textContent = 'Add Size';
+  document.getElementById('siz_id').disabled = false;
+  if (editId) {
+    const z = printSizes.find(x => x.id === editId);
+    if (z) {
+      document.getElementById('siz_id').value = z.id;
+      document.getElementById('siz_id').disabled = true;   // key is referenced by products
+      document.getElementById('siz_name').value = z.name || '';
+      document.getElementById('siz_w').value = z.width_mm;
+      document.getElementById('siz_h').value = z.height_mm;
+      document.getElementById('siz_cat').value = z.category || 'card';
+      document.getElementById('siz_order').value = z.display_order != null ? z.display_order : '';
+      document.getElementById('siz_note').value = z.note || '';
+      document.getElementById('siz_preset').checked = z.printer_preset !== false;
+      document.getElementById('siz_active').checked = !!z.active;
+      document.getElementById('siz_editId').value = editId;
+      document.getElementById('siz_modalTitle').textContent = 'Edit Size';
+    }
+  }
+  document.getElementById('sizeModal').classList.add('open');
+}
+function closeSizeModal() { document.getElementById('sizeModal').classList.remove('open'); }
+
+async function saveSize() {
+  const editId = document.getElementById('siz_editId').value;
+  const id = (document.getElementById('siz_id').value || '').trim();
+  const name = document.getElementById('siz_name').value.trim();
+  const w = parseFloat(document.getElementById('siz_w').value);
+  const h = parseFloat(document.getElementById('siz_h').value);
+  if (!id)   { toast('Key is required'); return; }
+  if (/\s/.test(id)) { toast('Key cannot contain spaces'); return; }
+  if (!name) { toast('Name is required'); return; }
+  if (!(w > 0) || !(h > 0)) { toast('Width and height must be numbers in mm'); return; }
+
+  const payload = {
+    name,
+    width_mm: w,
+    height_mm: h,
+    category: document.getElementById('siz_cat').value,
+    printer_preset: document.getElementById('siz_preset').checked,
+    note: document.getElementById('siz_note').value.trim() || null,
+    display_order: parseInt(document.getElementById('siz_order').value, 10) || 0,
+    active: document.getElementById('siz_active').checked,
+    updated_at: new Date().toISOString()
+  };
+  try {
+    if (editId) {
+      await sbFetch(`print_sizes?id=eq.${encodeURIComponent(editId)}`, {
+        method: 'PATCH', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify(payload)
+      });
+      const i = printSizes.findIndex(x => x.id === editId);
+      if (i >= 0) printSizes[i] = { ...printSizes[i], ...payload };
+    } else {
+      if (printSizes.some(x => x.id === id)) { toast('That key already exists'); return; }
+      const result = await sbFetch('print_sizes', {
+        method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify({ id, ...payload })
+      });
+      printSizes.push(Array.isArray(result) ? result[0] : result);
+    }
+    printSizes.sort((a,b) => (a.display_order||0) - (b.display_order||0));
+    renderSizeList();
+    closeSizeModal();
+    toast(editId ? 'Updated ✓' : 'Size added ✓');
+  } catch (err) {
+    toast('Save failed: ' + err.message);
+  }
+}
+
+async function toggleSizeActive(id) {
+  const z = printSizes.find(x => x.id === id);
+  if (!z) return;
+  try {
+    await sbFetch(`print_sizes?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH', headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({ active: !z.active, updated_at: new Date().toISOString() })
+    });
+    z.active = !z.active;
+    renderSizeList();
+    toast(z.active ? 'Turned on ✓' : 'Turned off ✓');
+  } catch (err) { toast('Update failed: ' + err.message); }
+}
+
+async function deleteSize(id) {
+  const used = (typeof productTypes !== 'undefined' && Array.isArray(productTypes))
+    ? productTypes.filter(pt => Array.isArray(pt.available_sizes) && pt.available_sizes.includes(id)).map(pt => pt.name || pt.slug)
+    : [];
+  const warning = used.length
+    ? `\n\nWARNING: ${used.length} product(s) still offer this size:\n· ${used.join('\n· ')}\n\nThey will lose it.`
+    : '';
+  if (!confirm(`Delete the size "${id}"?${warning}\n\nIf an old order used it, turning it off instead keeps the record readable.`)) return;
+  try {
+    await sbFetch(`print_sizes?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+    printSizes = printSizes.filter(z => z.id !== id);
+    renderSizeList();
+    toast('Deleted ✓');
+  } catch (err) { toast('Delete failed: ' + err.message); }
 }
 
 // ═══════════════════════════════════════════════════════

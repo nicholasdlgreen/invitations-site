@@ -233,13 +233,9 @@
       <div id="size-selector" style="margin-bottom:32px;">
         <div id="size-selector-title" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:6px;">Choose your invitation size</div>
         <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:20px;line-height:1.8;">Select a size first — this helps us check your file is set up correctly for print.</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;">
-          <div id="size-opt-A5" onclick="selectSize('A5')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A5" style="width:26px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A5" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">A5</div><div style="font-size:var(--text-xs);color:var(--pale);">148×210mm</div><div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Most popular</div></div>
-          <div id="size-opt-A6" onclick="selectSize('A6')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-A6" style="width:26px;height:28px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-A6" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">A6</div><div style="font-size:var(--text-xs);color:var(--pale);">105×148mm</div></div>
-          <div id="size-opt-5x7" onclick="selectSize('5x7')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-5x7" style="width:22px;height:36px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-5x7" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">5"×7"</div><div style="font-size:var(--text-xs);color:var(--pale);">127×178mm</div><div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Traditional</div></div>
-          <div id="size-opt-DL" onclick="selectSize('DL')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-DL" style="width:16px;height:40px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-DL" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">DL</div><div style="font-size:var(--text-xs);color:var(--pale);">99×210mm</div><div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">Slim</div></div>
-          <div id="size-opt-Square" onclick="selectSize('Square')" style="display:none;border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;"><div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;"><div id="size-rect-Square" style="width:30px;height:30px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div></div><div id="size-name-Square" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">Square</div><div style="font-size:var(--text-xs);color:var(--pale);">148×148mm</div></div>
-        </div>
+        <!-- Size cards are built at runtime from the print_sizes table, so a size
+             added in admin appears here without a code change. -->
+        <div id="size-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;"></div>
         <p id="sizeNote" style="font-size:var(--text-sm);color:var(--pale);margin-top:14px;text-align:center;">↑ Select a size above to unlock the upload</p>
       </div>
 
@@ -520,7 +516,10 @@ let ENVELOPES = [
   { id:'black',    name:'Matte Black',     hex:'#1C1C1C', border:'#000',     priceEach:0.55 },
   { id:'gold',     name:'Champagne Gold',  hex:'#D4B896', border:'#b89870',  priceEach:0.60 },
 ];
-const SIZE_SPECS = {
+// Sizes come from the print_sizes table (managed in admin). These defaults are
+// only a safety net for the first paint and for the rare case where Supabase is
+// unreachable — the live list replaces them as soon as it loads.
+let SIZE_SPECS = {
   'A5':    {label:'A5 (148×210mm)',    mmW:148,mmH:210,minPx:1748},
   'A6':    {label:'A6 (105×148mm)',    mmW:105,mmH:148,minPx:1240},
   '5x7':   {label:'5"×7" (127×178mm)',mmW:127,mmH:178,minPx:1500},
@@ -622,6 +621,21 @@ async function loadSiteData() {
         // Override slug-derived display name with the curated name from admin
         // (e.g. "Save the Dates" with proper lowercase 't' instead of "Save The Dates")
         if (pt.name) PRODUCT.name = pt.name;
+
+        // WHICH sizes/papers/finishes a product offers comes from the live
+        // product_types row, so a change in admin shows up straight away (the
+        // Design Studio already reads it live — this keeps the two in step).
+        // PRICES still come from the published snapshot below: a size with no
+        // published sheet rate falls back to the default price formula, so
+        // publish after adding a size.
+        const liveLists = {};
+        if (Array.isArray(pt.available_sizes)    && pt.available_sizes.length)    liveLists.available_sizes    = pt.available_sizes;
+        if (Array.isArray(pt.available_papers)   && pt.available_papers.length)   liveLists.available_papers   = pt.available_papers;
+        if (Array.isArray(pt.available_finishes) && pt.available_finishes.length) liveLists.available_finishes = pt.available_finishes;
+        if (Object.keys(liveLists).length) {
+          currentProduct = Object.assign({}, currentProduct || {}, liveLists);
+          if (typeof renderSizeCards === 'function') renderSizeCards();
+        }
         // Override page title and meta tags if admin has set them
         const titleText = pt.meta_title || `Upload & Print ${PRODUCT.name} | Foreverprint`;
         document.title = titleText;
@@ -775,17 +789,77 @@ function getAvailablePapers() {
   return { set, hasWildcard };
 }
 
-// Hide size cards that aren't available for this product.
-function applySizeFilter() {
-  const available = getAvailableSizes();
-  if (!available.size) return; // nothing published, keep all visible
-  ['A5','A6','5x7','DL','Square'].forEach(size => {
-    const card = document.getElementById('size-opt-' + size);
-    if (card) card.style.display = available.has(size) ? '' : 'none';
-  });
+// ── SIZES FROM THE DATABASE ─────────────────────────────
+// One source of truth: admin → print_sizes → here. Dimensions are the finished
+// trimmed size; bleed and crop marks are added on top when we build the file.
+let printSizesLoaded = false;
+
+async function loadPrintSizes() {
+  try {
+    const rows = await fetch(
+      `${SUPABASE_URL}/rest/v1/print_sizes?select=*&active=eq.true&order=display_order`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } }
+    ).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)));
+
+    if (Array.isArray(rows) && rows.length) {
+      const live = {};
+      rows.forEach(z => {
+        const w = parseFloat(z.width_mm), h = parseFloat(z.height_mm);
+        if (!(w > 0) || !(h > 0)) return;              // never trust a broken size
+        live[z.id] = {
+          label: `${z.name} (${Math.round(w)}×${Math.round(h)}mm)`,
+          shortLabel: z.name,
+          mmW: w, mmH: h,
+          minPx: Math.round(w / 25.4 * 300),
+          badge: z.badge || '',
+          printerPreset: z.printer_preset !== false
+        };
+      });
+      if (Object.keys(live).length) { SIZE_SPECS = live; printSizesLoaded = true; }
+    }
+  } catch (err) {
+    console.warn('[sizes] could not load from database, using built-in defaults:', err.message);
+  }
+  renderSizeCards();
 }
 
+// Build the size cards for this product: sizes it offers, that are switched on.
+function renderSizeCards() {
+  const grid = document.getElementById('size-grid');
+  if (!grid) return;
+  const available = getAvailableSizes();
+  let keys = Object.keys(SIZE_SPECS);
+  if (available.size) keys = keys.filter(k => available.has(k));
+  if (!keys.length) keys = Object.keys(SIZE_SPECS);      // never show an empty step
+
+  // Scale the little preview rectangles against the largest size on offer.
+  const maxMm = Math.max(...keys.map(k => Math.max(SIZE_SPECS[k].mmW, SIZE_SPECS[k].mmH)));
+  grid.innerHTML = keys.map(k => {
+    const z = SIZE_SPECS[k];
+    const scale = 42 / maxMm;
+    const w = Math.max(12, Math.round(z.mmW * scale));
+    const h = Math.max(12, Math.round(z.mmH * scale));
+    const esc = String(k).replace(/"/g, '&quot;');
+    return `<div id="size-opt-${esc}" onclick="selectSize('${esc}')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;">
+      <div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;">
+        <div id="size-rect-${esc}" style="width:${w}px;height:${h}px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div>
+      </div>
+      <div id="size-name-${esc}" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">${z.shortLabel || k}</div>
+      <div style="font-size:var(--text-xs);color:var(--pale);">${Math.round(z.mmW)}×${Math.round(z.mmH)}mm</div>
+      ${z.badge ? `<div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">${z.badge}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Keep any existing choice highlighted; drop it if it is no longer offered.
+  if (selectedSize && !keys.includes(selectedSize)) selectedSize = null;
+  if (selectedSize) selectSize(selectedSize);
+}
+
+// Kept for older call sites — the renderer does the filtering now.
+function applySizeFilter() { renderSizeCards(); }
+
 loadSiteData();
+loadPrintSizes();
   
 // ── STATE ─────────────────────────────────────────────────
 let cart = [];
@@ -821,7 +895,7 @@ function renderCartDrawer(){
 // ── SIZE SELECTION ────────────────────────────────────────
 function selectSize(id){
   selectedSize=id;
-  ['A5','A6','5x7','DL','Square'].forEach(s=>{
+  Object.keys(SIZE_SPECS).forEach(s=>{
     const el=document.getElementById('size-opt-'+s); if(!el)return;
     const sel=s===id;
     el.style.borderColor=sel?'var(--gold)':'var(--border)';
@@ -1690,6 +1764,17 @@ async function addToCartUpload(){
 // which is exactly what print-prep.js then places on a PDF page of that size.
 const PRINT_DPI = 300, PRINT_BLEED_MM = 3, PRINT_MARKS_MM = 5;
 
+// Resolution to build at, by finished size. Cards are held in the hand and get
+// the full 300 DPI. Large signage is viewed from a distance and the trade
+// prints it lower — and a 300 DPI A1 is a 71-megapixel canvas, which a phone
+// will simply fail to allocate.
+function printDpiFor(spec){
+  const longest = Math.max(spec.mmW, spec.mmH);
+  if (longest <= 450) return 300;   // up to A3: full quality
+  if (longest <= 900) return 200;   // A2 / A1: large format
+  return 150;                       // A0 and bigger: viewed from across a room
+}
+
 function mmToPx(mm){ return Math.round(mm * PRINT_DPI / 25.4); }
 
 // ── PROOF VIEW + ARTWORK ADJUSTMENT ───────────────────────
@@ -1819,27 +1904,29 @@ function renderProof(){
 // otherwise a customer can zoom to 300% and still be told it prints at 300 DPI.
 function effectiveDpi(spec){
   if (!proofImage) return null;
-  const g = proofGeometry(PRINT_DPI / 25.4, spec, false);
+  const dpi = printDpiFor(spec);
+  const g = proofGeometry(dpi / 25.4, spec, false);
   const rot = ((artworkAdjust.rot % 360) + 360) % 360;
   const swap = (rot === 90 || rot === 270);
   const iw = swap ? proofImage.naturalHeight : proofImage.naturalWidth;
   const ih = swap ? proofImage.naturalWidth  : proofImage.naturalHeight;
   const base = (artworkAdjust.mode === 'fit') ? Math.min(g.tw/iw, g.th/ih) : Math.max(g.tw/iw, g.th/ih);
   const s = base * (artworkAdjust.zoom || 1);      // print pixels per source pixel
-  return s > 0 ? Math.round(PRINT_DPI / s) : null;
+  return s > 0 ? Math.round(dpi / s) : null;
 }
 
 function updateProofMeta(spec){
   const el = document.getElementById('previewMeta');
   if (!el || !proofImage) return;
   const dpi = effectiveDpi(spec);
+  const target = printDpiFor(spec);
   const px = proofImage.naturalWidth + ' × ' + proofImage.naturalHeight + ' px';
   if (dpi == null){ el.textContent = px; return; }
-  const warn = dpi < 300;
-  const bad = dpi < 200;
+  const warn = dpi < target;
+  const bad = dpi < target * 0.67;
   const colour = bad ? '#b00020' : warn ? '#9a6b1f' : 'var(--soft)';
   const msg = bad ? ' — too low for a crisp print at this size'
-            : warn ? ' — below our 300 DPI recommendation, may look slightly soft'
+            : warn ? ' — below the ' + target + ' DPI we recommend at this size, may look slightly soft'
             : ' — good for print';
   el.innerHTML = px + ' · <span style="color:' + colour + '">~' + dpi + ' DPI as positioned' + msg + '</span>';
 }
@@ -1971,7 +2058,7 @@ function buildPrintReadyRaster(file, sizeKey, opts){
     img.onerror = function(){ URL.revokeObjectURL(url); resolve(null); };
     img.onload = function(){
       try {
-        const g = proofGeometry(PRINT_DPI / 25.4, spec, false);
+        const g = proofGeometry(printDpiFor(spec) / 25.4, spec, false);
         const cv = document.createElement('canvas');
         cv.width = Math.round(g.W); cv.height = Math.round(g.H);
         const ctx = cv.getContext('2d');

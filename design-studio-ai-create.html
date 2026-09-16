@@ -864,12 +864,41 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
   // ---- sizes: read the product's available_sizes from product_types ----
   // (same field your admin sets and upload-and-print uses — one source of truth)
-  function loadStudioSizes(){
-    fetch(CFG_SB_URL + '/rest/v1/product_types?slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&select=available_sizes', {
+  // Pull the size definitions from print_sizes (managed in admin) so a size
+  // added there works here too, not just on the order page. The hardcoded SIZES
+  // above stay as a fallback if the table can't be reached.
+  function loadSizeDefinitions(){
+    return fetch(CFG_SB_URL + '/rest/v1/print_sizes?select=*&active=eq.true&order=display_order', {
       headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY }
     })
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(rows){
+      if(!Array.isArray(rows) || !rows.length) return;
+      rows.forEach(function(z){
+        var w = parseFloat(z.width_mm), h = parseFloat(z.height_mm);
+        if(!(w > 0) || !(h > 0)) return;
+        var portrait = h >= w;
+        SIZES[z.id] = {
+          ratio: w / h,
+          desc:  'a ' + z.name + ' ' + (portrait ? 'portrait' : 'landscape') + ' design, ' + Math.round(w) + ' by ' + Math.round(h) + 'mm',
+          label: z.name,
+          dim:   Math.round(w) + ' × ' + Math.round(h) + 'mm',
+          note:  z.badge || ''
+        };
+      });
+    })
+    .catch(function(e){ console.warn('[studio] size definitions unavailable, using built-ins:', e.message); });
+  }
+
+  function loadStudioSizes(){
+    Promise.all([
+      loadSizeDefinitions(),
+      fetch(CFG_SB_URL + '/rest/v1/product_types?slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&select=available_sizes', {
+        headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY }
+      }).then(function(r){ return r.ok ? r.json() : null; })
+    ])
+    .then(function(res){
+      var rows = res[1];
       var avail = (rows && rows[0] && Array.isArray(rows[0].available_sizes) && rows[0].available_sizes.length)
         ? rows[0].available_sizes : null;
       if(!avail) return;   // keep hardcoded fallback sizes
