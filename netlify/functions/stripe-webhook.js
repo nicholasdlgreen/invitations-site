@@ -92,6 +92,132 @@ async function sendEmail({ to, subject, html }) {
 
 // ── JOB TICKET EMAIL ─────────────────────────────────────────────────────────
 
+
+// ── WELCOME EMAIL ─────────────────────────────────────────
+// Sent once, only to customers who ticked the box at checkout, and only after
+// they have actually paid — so nobody is welcomed for an abandoned basket.
+//
+// ⚠ THE PARTS IN [SQUARE BRACKETS] ARE PLACEHOLDERS. They are the bits only
+// you know — who started it, when, where you print, who is on the team. Fill
+// them in before this goes out; an invented history is worse than none.
+function buildWelcomeHtml(contact, unsubscribeUrl) {
+  const firstName = String(contact.name || '').trim().split(' ')[0] || 'there';
+  return `
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <div style="background:#FAF7F2;padding:32px 16px;font-family:Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #EFE9E1;border-radius:14px;overflow:hidden;">
+
+      <div style="background:#3D2E24;padding:30px 28px;">
+        <div style="font-family:Georgia,serif;font-size:22px;color:#fff;letter-spacing:.04em;">foreverprint</div>
+        <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-top:6px;">Printed in the UK</div>
+      </div>
+
+      <div style="padding:32px 28px 8px;">
+        <div style="font-family:Georgia,serif;font-size:24px;color:#3D2E24;margin-bottom:14px;">Welcome, ${firstName}.</div>
+        <p style="font-size:14px;line-height:1.8;color:#5C4A3D;margin:0;">
+          Thank you for letting us stay in touch. We will not fill your inbox &mdash; a few times a year,
+          when there is something genuinely worth showing you.
+        </p>
+      </div>
+
+      <!-- WHO WE ARE -->
+      <div style="padding:26px 28px 0;">
+        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#B8976A;margin-bottom:10px;">Who we are</div>
+        <p style="font-size:14px;line-height:1.8;color:#5C4A3D;margin:0 0 12px;">
+          Foreverprint is a British printer making personalised stationery for the days people keep.
+          [ONE OR TWO LINES ON HOW IT STARTED &mdash; the year, the reason, who began it.]
+        </p>
+        <p style="font-size:14px;line-height:1.8;color:#5C4A3D;margin:0;">
+          Everything is printed here in the UK, on paper chosen for how it feels in the hand as much as
+          how it looks. [WHERE YOU PRINT, AND ANYTHING TRUE ABOUT THE PRESSES OR PAPER YOU ARE PROUD OF.]
+        </p>
+      </div>
+
+      <!-- THE TEAM -->
+      <div style="padding:26px 28px 0;">
+        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#B8976A;margin-bottom:10px;">The people behind it</div>
+        <p style="font-size:14px;line-height:1.8;color:#5C4A3D;margin:0;">
+          [WHO IS ON THE TEAM AND WHAT THEY BRING &mdash; years in print, a name or two, what they care about.
+          This is the part customers remember, so it is worth writing yourself rather than keeping it vague.]
+        </p>
+      </div>
+
+      <!-- WHAT WE MAKE -->
+      <div style="padding:26px 28px 0;">
+        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#B8976A;margin-bottom:10px;">What we make</div>
+        <p style="font-size:14px;line-height:1.8;color:#5C4A3D;margin:0 0 14px;">
+          Invitations and save the dates, RSVP and thank you cards, menus, order of service, table plans,
+          table numbers and welcome signs &mdash; for weddings, christenings, new arrivals and birthdays.
+        </p>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:14px 16px;background:#FAF7F2;border-radius:10px;vertical-align:top;width:50%;">
+              <div style="font-family:Georgia,serif;font-size:15px;color:#3D2E24;margin-bottom:5px;">Bring your own design</div>
+              <div style="font-size:13px;line-height:1.7;color:#5C4A3D;">Upload your artwork and we check the size, resolution and bleed before anything is printed.</div>
+            </td>
+            <td style="width:12px;"></td>
+            <td style="padding:14px 16px;background:#FAF7F2;border-radius:10px;vertical-align:top;width:50%;">
+              <div style="font-family:Georgia,serif;font-size:15px;color:#3D2E24;margin-bottom:5px;">Design it with us</div>
+              <div style="font-size:13px;line-height:1.7;color:#5C4A3D;">Describe the look you want in our Design Studio, see it on screen, and adjust until it is right.</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- HELP -->
+      <div style="padding:26px 28px 0;">
+        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#B8976A;margin-bottom:10px;">A little help, while you are here</div>
+        <div style="font-size:14px;line-height:1.8;color:#5C4A3D;">
+          <div style="margin-bottom:8px;"><strong>Send invitations 6&ndash;8 weeks ahead</strong> &mdash; or three months for a destination wedding, or anything near Christmas.</div>
+          <div style="margin-bottom:8px;"><strong>Order about 10% more than you need.</strong> Guest lists grow, and a reprint of ten costs far more per card than ten extra now.</div>
+          <div style="margin-bottom:8px;"><strong>One card per household</strong>, not per guest &mdash; the most common way people over-order.</div>
+          <div><strong>Not sure your artwork will print well?</strong> Upload it and our checks will tell you before you pay a penny.</div>
+        </div>
+      </div>
+
+      <div style="padding:26px 28px 32px;">
+        <div style="border-top:1px solid #EFE9E1;padding-top:20px;font-size:13px;line-height:1.8;color:#5C4A3D;">
+          Any questions, just reply to this email, or ask Amy on the website &mdash; she is the little
+          question mark in the corner. A real person is always at
+          <a href="mailto:hello@foreverprint.com" style="color:#B8976A;">hello@foreverprint.com</a>.
+        </div>
+      </div>
+
+      <div style="background:#FAF7F2;padding:18px 28px;text-align:center;font-size:11px;color:#8C7B6E;line-height:1.7;">
+        Foreverprint &middot; Printed with care in the UK<br>
+        You are receiving this because you asked us to keep in touch when you ordered.<br>
+        <a href="${unsubscribeUrl}" style="color:#8C7B6E;text-decoration:underline;">Unsubscribe</a>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Claim-and-send: the database hands back the contact only if they may be
+// welcomed, and marks them welcomed in the same step, so two orders arriving at
+// once cannot both send one.
+async function sendWelcomeIfDue(email) {
+  if (!email || !SUPABASE_KEY) return;
+  try {
+    const rows = await fetch(`${SUPABASE_URL}/rest/v1/rpc/claim_welcome_email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ p_email: email })
+    }).then(r => r.ok ? r.json() : []);
+    const contact = Array.isArray(rows) ? rows[0] : null;
+    if (!contact) return;                       // no consent, unsubscribed, or already welcomed
+
+    const unsubscribeUrl = `https://foreverprint.com/.netlify/functions/unsubscribe?token=${contact.unsubscribe_token}`;
+    await sendEmail({
+      to: contact.email,
+      subject: 'Welcome to Foreverprint',
+      html: buildWelcomeHtml(contact, unsubscribeUrl)
+    });
+    console.log(`Welcome email sent to ${contact.email}`);
+  } catch (err) {
+    console.error('Welcome email failed (non-fatal):', err.message);
+  }
+}
+
 // ── CUSTOMER ORDER CONFIRMATION ───────────────────────────
 // Until now the customer received nothing at all: the printer got a job ticket,
 // the office got a notification, and the person who had just paid heard silence
@@ -478,7 +604,11 @@ exports.handler = async (event) => {
       console.error('Printer email failed (non-fatal):', err.message);
     }
 
-    // 4. Send notification to admin
+    // 4. Welcome them, if they asked to be kept in touch. After payment, not
+    //    at checkout, so an abandoned basket never triggers it.
+    await sendWelcomeIfDue(order.customerEmail);
+
+    // 5. Send notification to admin
     try {
       await sendEmail({
         to:      process.env.NOTIFY_EMAIL || 'hello@invitations.co.uk',
