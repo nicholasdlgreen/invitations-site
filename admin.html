@@ -3736,7 +3736,7 @@ function addOverheadRow(desc, amount) {
 
 function loadDefaultOverheads() {
   document.querySelectorAll('.oh-row').forEach(r=>r.remove());
-  [{desc:'Netlify Hosting',amount:19},{desc:'Supabase (Pro)',amount:25},{desc:'Domain Renewal (amortised)',amount:2},{desc:'Claude API — Lily widget',amount:15},{desc:'Design Software',amount:10},{desc:'Accountancy (amortised)',amount:50},{desc:'Packaging Supplies',amount:20}].forEach(d=>addOverheadRow(d.desc,d.amount));
+  [{desc:'Netlify Hosting',amount:19},{desc:'Supabase (Pro)',amount:25},{desc:'Domain Renewal (amortised)',amount:2},{desc:'Claude API — Amy widget',amount:15},{desc:'Design Software',amount:10},{desc:'Accountancy (amortised)',amount:50},{desc:'Packaging Supplies',amount:20}].forEach(d=>addOverheadRow(d.desc,d.amount));
   calcPL(); toast('Defaults loaded');
 }
 
