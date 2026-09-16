@@ -31,7 +31,11 @@
 .check-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:16px;}
 .check-card h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:20px;color:var(--text);}
 /* FILE CHECK GRID — preview + checks side-by-side */
-.check-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:16px;margin-bottom:16px;}
+/* The file-check step breaks out of the 760px column: the proof is the whole
+   point of this screen, so it gets the room. */
+#step2:not(.hidden){width:min(1180px,calc(100vw - 48px));margin-left:50%;transform:translateX(-50%);}
+@media (max-width:900px){#step2:not(.hidden){width:auto;margin-left:0;transform:none;}}
+.check-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:16px;align-items:start;}
 @media (max-width:760px){.check-grid{grid-template-columns:1fr}}
 .preview-card{display:flex;flex-direction:column;}
 .preview-wrap{position:relative;background:var(--cream);border:1px solid var(--border);border-radius:14px;aspect-ratio:1/1.414;display:flex;align-items:center;justify-content:center;overflow:hidden;}
@@ -46,6 +50,26 @@
 .bleed-bleed{border:1px dashed rgba(200,60,60,.85);}
 .bleed-trim{border:1px solid rgba(60,60,60,.85);}
 .bleed-safe{border:1px dashed rgba(80,140,90,.85);}
+/* INTERACTIVE PROOF */
+.proof-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.proof-head h3{margin-bottom:0;}
+.proof-stage{position:relative;background:#6e6a66;border:1px solid var(--border);border-radius:14px;min-height:360px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:16px;}
+.proof-canvas{max-width:100%;box-shadow:0 8px 30px rgba(0,0,0,.28);touch-action:none;cursor:grab;display:block;}
+.proof-canvas.dragging{cursor:grabbing;}
+.proof-canvas.locked{cursor:default;}
+.proof-tools{margin-top:14px;display:flex;flex-direction:column;gap:12px;}
+.tool-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.seg{border:1px solid var(--border);background:var(--white);padding:8px 16px;border-radius:999px;font-family:inherit;font-size:var(--text-xs);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:var(--soft);transition:all .15s;}
+.seg.on{background:var(--text);color:#fff;border-color:var(--text);}
+.tool-btn{border:1px solid var(--border);background:var(--white);padding:8px 16px;border-radius:999px;font-size:var(--text-xs);cursor:pointer;color:var(--text);font-family:inherit;letter-spacing:.04em;}
+.tool-btn:hover{border-color:var(--gold);color:var(--gold);}
+.tool-hint{font-size:var(--text-xs);color:var(--pale);margin-left:auto;}
+.zoom-row{display:flex;align-items:center;gap:12px;font-size:var(--text-xs);color:var(--soft);letter-spacing:.06em;text-transform:uppercase;}
+.zoom-row input[type=range]{flex:1;accent-color:var(--gold);}
+.proof-chip{border:1px solid var(--border);background:var(--white);padding:6px 14px;border-radius:999px;font-size:var(--text-xs);cursor:pointer;color:var(--soft);font-family:inherit;letter-spacing:.06em;text-transform:uppercase;}
+.proof-chip.on{background:var(--gold);border-color:var(--gold);color:#fff;}
+.check-summary{font-size:var(--text-xs);color:var(--soft);letter-spacing:.04em;}
+.checks-toggle{margin-top:14px;font-size:var(--text-xs);color:var(--gold);background:none;border:none;cursor:pointer;padding:0;letter-spacing:.08em;text-transform:uppercase;font-family:inherit;}
 /* Legend */
 .bleed-legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:10px;padding-top:12px;border-top:1px dashed var(--border);font-size:var(--text-xs);color:var(--soft);letter-spacing:.02em;}
 .legend-item{display:flex;align-items:center;gap:6px;}
@@ -253,34 +277,47 @@
     <!-- STEP 2: FILE CHECK -->
     <div id="step2" class="hidden">
       <div class="check-grid">
-        <!-- LEFT: visual proof -->
+        <!-- LEFT: interactive proof of the actual print file -->
         <div class="check-card preview-card">
-          <h3>Your artwork</h3>
-          <div id="previewWrap" class="preview-wrap">
+          <div class="proof-head">
+            <h3>Your artwork</h3>
+            <button type="button" class="proof-chip on" id="guidesBtn" onclick="toggleGuides()">Print guides</button>
+          </div>
+          <div id="proofStage" class="proof-stage">
+            <canvas id="proofCanvas" class="proof-canvas" style="display:none"></canvas>
             <div id="previewPlaceholder" class="preview-placeholder">
               <div class="preview-spinner"></div>
               <div class="preview-status" id="previewStatus">Preparing your preview…</div>
             </div>
+            <!-- kept for the PDF renderer and image loader; the proof canvas is what customers see -->
             <img id="previewImg" class="preview-img" style="display:none" alt="Artwork preview"/>
             <canvas id="previewCanvas" class="preview-canvas" style="display:none"></canvas>
-            <!-- Bleed/trim/safe guides — positioned over the preview by drawBleedOverlay() -->
-            <div id="bleedOverlay" class="bleed-overlay" style="display:none">
-              <div class="bleed-line bleed-bleed" id="bleedBleedLine"></div>
-              <div class="bleed-line bleed-trim" id="bleedTrimLine"></div>
-              <div class="bleed-line bleed-safe" id="bleedSafeLine"></div>
+          </div>
+          <div id="proofTools" class="proof-tools hidden">
+            <div class="tool-row">
+              <button type="button" class="seg on" id="segFill" onclick="setAdjustMode('fill')">Fill the card</button>
+              <button type="button" class="seg" id="segFit" onclick="setAdjustMode('fit')">Fit it all in</button>
+            </div>
+            <label class="zoom-row"><span>Zoom</span><input id="zoomRange" type="range" min="100" max="300" step="1" value="100" oninput="setZoom(this.value)"><span id="zoomVal">100%</span></label>
+            <div class="tool-row">
+              <button type="button" class="tool-btn" onclick="rotateArtwork()">⟳ Rotate</button>
+              <button type="button" class="tool-btn" onclick="resetAdjust()">Reset</button>
+              <span class="tool-hint">Drag the artwork to reposition</span>
             </div>
           </div>
           <div id="previewMeta" class="preview-meta"></div>
-          <!-- Legend explaining the overlay colours -->
-          <div id="bleedLegend" class="bleed-legend" style="display:none">
-            <div class="legend-item"><span class="legend-swatch swatch-bleed"></span>Bleed — extend background to here</div>
+          <div id="bleedLegend" class="bleed-legend">
+            <div class="legend-item"><span class="legend-swatch swatch-bleed"></span>Bleed — printed, then trimmed away</div>
             <div class="legend-item"><span class="legend-swatch swatch-trim"></span>Trim — where it's cut</div>
             <div class="legend-item"><span class="legend-swatch swatch-safe"></span>Safe zone — keep text inside</div>
           </div>
         </div>
-        <!-- RIGHT: real checks -->
+        <!-- RIGHT: the report, condensed -->
         <div class="check-card">
-          <h3>File quality report</h3>
+          <div class="proof-head">
+            <h3>File quality report</h3>
+            <div id="checkSummary" class="check-summary"></div>
+          </div>
           <div id="checkResults"></div>
         </div>
       </div>
@@ -939,8 +976,14 @@ async function buildAndRunChecks(file, info){
       const previewMeta = document.getElementById('previewMeta');
       if (previewMeta) previewMeta.textContent = `${dimText} · ${pdfInfo.numPages} page${pdfInfo.numPages===1?'':'s'}`;
 
-      // Draw bleed/trim/safe overlay
-      drawBleedOverlay(pdfInfo.widthMm, pdfInfo.heightMm, spec);
+      // Show the proof. A file already at trim+bleed is passed through as
+      // vector, so it is shown as-is; anything else we re-render, and the
+      // customer can reposition it.
+      try {
+        const proofSrc = await rasterisePdfPage(file, selectedSize, 150);
+        if (proofSrc) await initProof(proofSrc.file, !hasBleed);
+        else setPreviewStatus('Preview unavailable — our team will check your file manually.');
+      } catch(e){ console.warn('[proof] pdf proof failed:', e.message); }
     } catch (err){
       checks.push({status:'warn', label:'Preview', val:'Could not preview', note:'We couldn\'t render this PDF in your browser. Our prepress team will check it manually.'});
       setPreviewStatus('Preview unavailable — file received OK, our team will check it manually.');
@@ -990,9 +1033,8 @@ async function buildAndRunChecks(file, info){
 
       checks.push({status:'ok', label:'Bleed', val:'Added automatically', note:'We extend your artwork 3mm beyond the cut line by mirroring its edges, so the print reaches the edge of the card with no white borders.'});
 
-      // Draw bleed/trim/safe overlay. For raster images we assume the file
-      // is at trim size (no bleed), so we pass the selected size dimensions.
-      drawBleedOverlay(spec.mmW, spec.mmH, spec);
+      // Show the proof — the customer can drag, zoom and rotate from here.
+      await initProof(file, true);
     } catch (err){
       checks.push({status:'warn', label:'Preview', val:'Could not read image', note:'We couldn\'t inspect this image in your browser. Our prepress team will check it manually.'});
       setPreviewStatus('Preview unavailable — file received OK, our team will check it manually.');
@@ -1221,12 +1263,45 @@ function drawBleedOverlay(fileWidthMm, fileHeightMm, sizeSpec){
   });
 }
 
-function renderChecks(checks){
-  document.getElementById('checkResults').innerHTML=checks.map(c=>`
-    <div class="check-row">
-      <div class="check-icon ${c.status}">${c.status==='ok'?'✓':c.status==='warn'?'!':c.status==='err'?'✕':'i'}</div>
+let _passedChecksOpen = false;
+function _checkRow(c){
+  const icon = c.status==='ok'?'✓':c.status==='warn'?'!':c.status==='err'?'✕':'i';
+  return `<div class="check-row">
+      <div class="check-icon ${c.status}">${icon}</div>
       <div><div class="check-label">${c.label}</div><div class="check-val">${c.val}</div>${c.note?`<div class="check-note">${c.note}</div>`:''}</div>
-    </div>`).join('');
+    </div>`;
+}
+// Problems and things worth knowing stay visible; everything that simply passed
+// is folded away, so the report never buries the artwork.
+function renderChecks(checks){
+  const needsEye = checks.filter(c => c.status==='err' || c.status==='warn');
+  const passed   = checks.filter(c => c.status==='ok' || c.status==='info');
+  const errs = checks.filter(c=>c.status==='err').length;
+  const warns = checks.filter(c=>c.status==='warn').length;
+
+  const summaryEl = document.getElementById('checkSummary');
+  if (summaryEl){
+    summaryEl.textContent = errs ? `${errs} to fix${warns?` · ${warns} to check`:''}`
+                          : warns ? `${warns} to check · ${passed.length} passed`
+                          : `All ${passed.length} checks passed`;
+  }
+  const head = needsEye.length
+    ? ''
+    : `<div class="check-note" style="padding:4px 0 10px;">Your file looks good — nothing needs your attention.</div>`;
+  const passedBlock = passed.length
+    ? `<button type="button" class="checks-toggle" onclick="togglePassedChecks()">${_passedChecksOpen?'Hide':'Show'} ${passed.length} more ${_passedChecksOpen?'':'▾'}</button>
+       <div id="passedChecks" style="${_passedChecksOpen?'':'display:none'}">${passed.map(_checkRow).join('')}</div>`
+    : '';
+  document.getElementById('checkResults').innerHTML = head + needsEye.map(_checkRow).join('') + passedBlock;
+}
+function togglePassedChecks(){
+  _passedChecksOpen = !_passedChecksOpen;
+  const el = document.getElementById('passedChecks');
+  if (el){
+    el.style.display = _passedChecksOpen ? 'block' : 'none';
+    const btn = document.querySelector('.checks-toggle');
+    if (btn) btn.textContent = (_passedChecksOpen?'Hide':'Show') + ' ' + el.children.length + ' more' + (_passedChecksOpen?'':' ▾');
+  }
 }
 
 // ── STEP NAVIGATION ───────────────────────────────────────
@@ -1238,7 +1313,17 @@ function goStep(n){
   });
   currentStep=n;
   if(n===3)initStep3();
-  window.scrollTo({top:0,behavior:'smooth'});
+  // On the file-check step, put the artwork itself at the top of the screen —
+  // the customer wants to see their design, not the page heading again.
+  if(n===2){
+    requestAnimationFrame(function(){
+      const grid = document.querySelector('#step2 .check-grid');
+      if (grid){
+        const y = grid.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({top: Math.max(0, y), behavior:'smooth'});
+      } else window.scrollTo({top:0,behavior:'smooth'});
+    });
+  } else window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function initStep3(){
@@ -1607,13 +1692,247 @@ const PRINT_DPI = 300, PRINT_BLEED_MM = 3, PRINT_MARKS_MM = 5;
 
 function mmToPx(mm){ return Math.round(mm * PRINT_DPI / 25.4); }
 
+// ── PROOF VIEW + ARTWORK ADJUSTMENT ───────────────────────
+// One set of maths drives both the on-screen proof and the actual print file,
+// so what the customer positions here is exactly what comes off the press.
+let artworkAdjust = { mode:'fill', zoom:1, dx:0, dy:0, rot:0 };
+let proofImage = null;        // the artwork, as an Image
+let proofEditable = false;    // false for vector PDFs, which we pass through untouched
+let showGuides = true;
+
+// Geometry of the press sheet in whatever unit pxPerMm is given in.
+function proofGeometry(pxPerMm, spec, includeMarks){
+  const b = PRINT_BLEED_MM * pxPerMm;
+  const m = includeMarks ? PRINT_MARKS_MM * pxPerMm : 0;
+  const tw = spec.mmW * pxPerMm, th = spec.mmH * pxPerMm;
+  return { b, m, tw, th, tx: m + b, ty: m + b, W: tw + 2*b + 2*m, H: th + 2*b + 2*m, pxPerMm };
+}
+
+// Mirror the artwork's edges outward to fill the bleed.
+function mirrorEdges(ctx, g){
+  const cv = ctx.canvas, b = g.b, tx = g.tx, ty = g.ty, tw = g.tw, th = g.th;
+  const d = (sx,sy,sw,sh,dx,dy,fx,fy) => {
+    ctx.save();
+    ctx.translate(dx + (fx ? sw : 0), dy + (fy ? sh : 0));
+    ctx.scale(fx ? -1 : 1, fy ? -1 : 1);
+    ctx.drawImage(cv, sx*_dpr(ctx), sy*_dpr(ctx), sw*_dpr(ctx), sh*_dpr(ctx), 0, 0, sw, sh);
+    ctx.restore();
+  };
+  d(tx, ty, b, th, tx - b, ty, true, false);
+  d(tx + tw - b, ty, b, th, tx + tw, ty, true, false);
+  d(tx, ty, tw, b, tx, ty - b, false, true);
+  d(tx, ty + th - b, tw, b, tx, ty + th, false, true);
+  d(tx, ty, b, b, tx - b, ty - b, true, true);
+  d(tx + tw - b, ty, b, b, tx + tw, ty - b, true, true);
+  d(tx, ty + th - b, b, b, tx - b, ty + th, true, true);
+  d(tx + tw - b, ty + th - b, b, b, tx + tw, ty + th, true, true);
+}
+// Canvases drawn for screen are scaled by devicePixelRatio; print canvases are not.
+function _dpr(ctx){ return ctx.__dpr || 1; }
+
+// Draws the artwork into the trim area under the customer's adjustments, then
+// mirrors the edges outward to create the bleed.
+function composeArtwork(ctx, img, g, adj){
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, g.W, g.H);
+
+  const rot = ((adj.rot % 360) + 360) % 360;
+  const swap = (rot === 90 || rot === 270);
+  const iw = swap ? img.naturalHeight : img.naturalWidth;
+  const ih = swap ? img.naturalWidth  : img.naturalHeight;
+  const base = (adj.mode === 'fit') ? Math.min(g.tw/iw, g.th/ih) : Math.max(g.tw/iw, g.th/ih);
+  const scale = base * (adj.zoom || 1);
+  const cx = g.tx + g.tw/2 + (adj.dx || 0) * g.tw;
+  const cy = g.ty + g.th/2 + (adj.dy || 0) * g.th;
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(g.tx, g.ty, g.tw, g.th); ctx.clip();
+  ctx.translate(cx, cy);
+  ctx.rotate(rot * Math.PI / 180);
+  ctx.drawImage(img, -img.naturalWidth*scale/2, -img.naturalHeight*scale/2,
+                img.naturalWidth*scale, img.naturalHeight*scale);
+  ctx.restore();
+
+  mirrorEdges(ctx, g);
+}
+
+// Bleed / trim / safe guides and crop marks, drawn on the proof only.
+function drawProofGuides(ctx, g){
+  const mm = g.pxPerMm;
+  ctx.save();
+  ctx.lineWidth = 1;
+  // crop marks, exactly where they sit on the real file
+  if (g.m > 0){
+    const gap = g.b, len = 4 * mm;
+    ctx.strokeStyle = 'rgba(20,20,20,.9)';
+    ctx.beginPath();
+    [[g.tx,g.ty],[g.tx+g.tw,g.ty],[g.tx,g.ty+g.th],[g.tx+g.tw,g.ty+g.th]].forEach(function(pt,i){
+      const right = (i===1||i===3), bottom = (i===2||i===3);
+      const hx = right ? pt[0]+gap : pt[0]-gap;
+      ctx.moveTo(hx, pt[1]); ctx.lineTo(right ? hx+len : hx-len, pt[1]);
+      const vy = bottom ? pt[1]+gap : pt[1]-gap;
+      ctx.moveTo(pt[0], vy); ctx.lineTo(pt[0], bottom ? vy+len : vy-len);
+    });
+    ctx.stroke();
+  }
+  ctx.setLineDash([5,4]);
+  ctx.strokeStyle = 'rgba(200,60,60,.9)';                       // bleed edge
+  ctx.strokeRect(g.tx-g.b, g.ty-g.b, g.tw+2*g.b, g.th+2*g.b);
+  ctx.setLineDash([]);
+  ctx.strokeStyle = 'rgba(30,30,30,.9)';                        // trim (the cut)
+  ctx.strokeRect(g.tx, g.ty, g.tw, g.th);
+  ctx.setLineDash([4,4]);
+  ctx.strokeStyle = 'rgba(80,140,90,.95)';                      // safe zone, 5mm in
+  ctx.strokeRect(g.tx + 5*mm, g.ty + 5*mm, g.tw - 10*mm, g.th - 10*mm);
+  ctx.restore();
+}
+
+function renderProof(){
+  const cv = document.getElementById('proofCanvas');
+  if (!cv || !proofImage) return;
+  const spec = SIZE_SPECS[selectedSize] || SIZE_SPECS['A5'];
+  const stage = document.getElementById('proofStage');
+  const maxW = Math.max(240, (stage ? stage.clientWidth : 520) - 32);
+  const maxH = Math.min(window.innerHeight * 0.62, 620);
+  const pageMmW = spec.mmW + 2*PRINT_BLEED_MM + 2*PRINT_MARKS_MM;
+  const pageMmH = spec.mmH + 2*PRINT_BLEED_MM + 2*PRINT_MARKS_MM;
+  const pxPerMm = Math.min(maxW / pageMmW, maxH / pageMmH);
+  const g = proofGeometry(pxPerMm, spec, true);
+  const dpr = window.devicePixelRatio || 1;
+
+  cv.width = Math.round(g.W * dpr);
+  cv.height = Math.round(g.H * dpr);
+  cv.style.width = g.W + 'px';
+  cv.style.height = g.H + 'px';
+  cv.style.display = 'block';
+
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.__dpr = dpr;
+  composeArtwork(ctx, proofImage, g, artworkAdjust);
+  if (showGuides) drawProofGuides(ctx, g);
+}
+
+// Load the artwork into the proof. editable=false for vector PDFs, which we
+// pass through untouched, so offering adjustments there would be a lie.
+function initProof(file, editable){
+  return new Promise(function(resolve){
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = function(){
+      proofImage = img;
+      proofEditable = !!editable;
+      artworkAdjust = { mode:'fill', zoom:1, dx:0, dy:0, rot:0 };
+      const ph = document.getElementById('previewPlaceholder');
+      if (ph) ph.style.display = 'none';
+      // The old preview elements are only used to load/render the file; the
+      // proof canvas is what the customer sees, so keep them out of the way.
+      const oldImg = document.getElementById('previewImg');
+      if (oldImg) oldImg.style.display = 'none';
+      const oldCv = document.getElementById('previewCanvas');
+      if (oldCv) oldCv.style.display = 'none';
+      const tools = document.getElementById('proofTools');
+      if (tools) tools.classList.toggle('hidden', !editable);
+      const cv = document.getElementById('proofCanvas');
+      if (cv) cv.classList.toggle('locked', !editable);
+      const zr = document.getElementById('zoomRange'); if (zr) zr.value = 100;
+      const zv = document.getElementById('zoomVal'); if (zv) zv.textContent = '100%';
+      document.getElementById('segFill')?.classList.add('on');
+      document.getElementById('segFit')?.classList.remove('on');
+      renderProof();
+      // Now the artwork is actually on screen, put it in view. Doing this on
+      // step change alone lands in the wrong place, because the layout is still
+      // growing while the file loads — on a phone that dropped the customer
+      // half way down the quality report instead of on their design.
+      scrollProofIntoView();
+      resolve(true);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); resolve(false); };
+    img.src = url;
+  });
+}
+
+function scrollProofIntoView(){
+  if (currentStep !== 2) return;
+  requestAnimationFrame(function(){
+    const card = document.querySelector('#step2 .preview-card');
+    if (!card) return;
+    const y = card.getBoundingClientRect().top + window.scrollY - 70;
+    window.scrollTo({ top: Math.max(0, y), behavior:'smooth' });
+  });
+}
+
+function setAdjustMode(mode){
+  if (!proofEditable) return;
+  artworkAdjust.mode = mode;
+  artworkAdjust.dx = 0; artworkAdjust.dy = 0;
+  document.getElementById('segFill')?.classList.toggle('on', mode==='fill');
+  document.getElementById('segFit')?.classList.toggle('on', mode==='fit');
+  renderProof();
+}
+function setZoom(v){
+  if (!proofEditable) return;
+  artworkAdjust.zoom = Math.max(1, Math.min(3, (+v)/100));
+  const zv = document.getElementById('zoomVal');
+  if (zv) zv.textContent = Math.round(artworkAdjust.zoom*100) + '%';
+  renderProof();
+}
+function rotateArtwork(){
+  if (!proofEditable) return;
+  artworkAdjust.rot = (artworkAdjust.rot + 90) % 360;
+  artworkAdjust.dx = 0; artworkAdjust.dy = 0;
+  renderProof();
+}
+function resetAdjust(){
+  if (!proofEditable) return;
+  artworkAdjust = { mode: artworkAdjust.mode, zoom:1, dx:0, dy:0, rot:0 };
+  const zr = document.getElementById('zoomRange'); if (zr) zr.value = 100;
+  const zv = document.getElementById('zoomVal'); if (zv) zv.textContent = '100%';
+  renderProof();
+}
+function toggleGuides(){
+  showGuides = !showGuides;
+  document.getElementById('guidesBtn')?.classList.toggle('on', showGuides);
+  renderProof();
+}
+
+// Drag to reposition
+(function initProofDrag(){
+  let dragging = false, lastX = 0, lastY = 0;
+  document.addEventListener('pointerdown', function(e){
+    const cv = document.getElementById('proofCanvas');
+    if (!cv || e.target !== cv || !proofEditable || !proofImage) return;
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    cv.classList.add('dragging');
+    cv.setPointerCapture?.(e.pointerId);
+  });
+  document.addEventListener('pointermove', function(e){
+    if (!dragging) return;
+    const cv = document.getElementById('proofCanvas');
+    const rect = cv.getBoundingClientRect();
+    artworkAdjust.dx += (e.clientX - lastX) / rect.width;
+    artworkAdjust.dy += (e.clientY - lastY) / rect.height;
+    const lim = 0.5;
+    artworkAdjust.dx = Math.max(-lim, Math.min(lim, artworkAdjust.dx));
+    artworkAdjust.dy = Math.max(-lim, Math.min(lim, artworkAdjust.dy));
+    lastX = e.clientX; lastY = e.clientY;
+    renderProof();
+  });
+  document.addEventListener('pointerup', function(){
+    dragging = false;
+    document.getElementById('proofCanvas')?.classList.remove('dragging');
+  });
+  window.addEventListener('resize', function(){ if (proofImage) renderProof(); });
+})();
+
+// ── PRINT-READY RASTER ────────────────────────────────────
+// Same composition as the proof, at 300 DPI, without the marks margin —
+// pdf-lib draws the crop marks as vectors on the page itself.
 function buildPrintReadyRaster(file, sizeKey, opts){
   opts = opts || {};
-  const includeMarks = !!opts.includeMarks;   // false when pdf-lib draws them as vectors
   return new Promise(function(resolve){
     const spec = SIZE_SPECS[sizeKey] || SIZE_SPECS['A5'];
     const type = (file.type || '').toLowerCase();
-    // Browsers can't decode TIFF/AI/EPS — those still go to prepress manually.
     if (!/^image\/(jpeg|jpg|png|webp)$/.test(type)) { resolve(null); return; }
 
     const url = URL.createObjectURL(file);
@@ -1621,66 +1940,21 @@ function buildPrintReadyRaster(file, sizeKey, opts){
     img.onerror = function(){ URL.revokeObjectURL(url); resolve(null); };
     img.onload = function(){
       try {
-        const b = mmToPx(PRINT_BLEED_MM), m = includeMarks ? mmToPx(PRINT_MARKS_MM) : 0;
-        const tw = mmToPx(spec.mmW), th = mmToPx(spec.mmH);
-        const pageW = tw + 2*b + 2*m, pageH = th + 2*b + 2*m;
-        const tx = m + b, ty = m + b;            // top-left of the TRIM area
-
+        const g = proofGeometry(PRINT_DPI / 25.4, spec, false);
         const cv = document.createElement('canvas');
-        cv.width = pageW; cv.height = pageH;
+        cv.width = Math.round(g.W); cv.height = Math.round(g.H);
         const ctx = cv.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, pageW, pageH);
-
-        // 1. Draw the artwork to FILL the trim area, cropping the overflow
-        //    (the upload checks already warn when the shape doesn't match).
-        const scale = Math.max(tw / img.naturalWidth, th / img.naturalHeight);
-        const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
-        ctx.save();
-        ctx.beginPath(); ctx.rect(tx, ty, tw, th); ctx.clip();
-        ctx.drawImage(img, tx + (tw - dw)/2, ty + (th - dh)/2, dw, dh);
-        ctx.restore();
-
-        // 2. Mirror the edge strips outward to create the 3mm bleed.
-        function mirror(sx, sy, sw, sh, dx, dy, flipX, flipY){
-          ctx.save();
-          ctx.translate(dx + (flipX ? sw : 0), dy + (flipY ? sh : 0));
-          ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
-          ctx.drawImage(cv, sx, sy, sw, sh, 0, 0, sw, sh);
-          ctx.restore();
-        }
-        mirror(tx, ty, b, th, tx - b, ty, true, false);            // left
-        mirror(tx + tw - b, ty, b, th, tx + tw, ty, true, false);  // right
-        mirror(tx, ty, tw, b, tx, ty - b, false, true);            // top
-        mirror(tx, ty + th - b, tw, b, tx, ty + th, false, true);  // bottom
-        mirror(tx, ty, b, b, tx - b, ty - b, true, true);                       // TL
-        mirror(tx + tw - b, ty, b, b, tx + tw, ty - b, true, true);             // TR
-        mirror(tx, ty + th - b, b, b, tx - b, ty + th, true, true);             // BL
-        mirror(tx + tw - b, ty + th - b, b, b, tx + tw, ty + th, true, true);   // BR
-
-        // 3. Raster crop marks only if nothing else will draw them.
-        if (includeMarks) {
-          const gap = b, len = mmToPx(4);
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = Math.max(1, mmToPx(0.25));
-          ctx.beginPath();
-          [[tx, ty], [tx + tw, ty], [tx, ty + th], [tx + tw, ty + th]].forEach(function(pt, i){
-            const right = (i === 1 || i === 3), bottom = (i === 2 || i === 3);
-            const hx = right ? pt[0] + gap : pt[0] - gap;
-            ctx.moveTo(hx, pt[1]); ctx.lineTo(right ? hx + len : hx - len, pt[1]);
-            const vy = bottom ? pt[1] + gap : pt[1] - gap;
-            ctx.moveTo(pt[0], vy); ctx.lineTo(pt[0], bottom ? vy + len : vy - len);
-          });
-          ctx.stroke();
-        }
-
+        ctx.__dpr = 1;
+        // Use the customer's adjustments when they are adjusting this same file.
+        const adj = opts.adjust || artworkAdjust;
+        composeArtwork(ctx, img, g, adj);
         URL.revokeObjectURL(url);
         cv.toBlob(function(blob){
           resolve(blob ? {
             blob: blob,
             trimMm: { w: spec.mmW, h: spec.mmH },
             artMm:  { w: spec.mmW + 2*PRINT_BLEED_MM, h: spec.mmH + 2*PRINT_BLEED_MM },
-            px: { w: pageW, h: pageH }
+            px: { w: cv.width, h: cv.height }
           } : null);
         }, 'image/jpeg', 0.95);
       } catch(e){
