@@ -1043,7 +1043,7 @@ async function buildAndRunChecks(file, info){
 
   // 5. OTHER PRINT FORMATS (AI, INDD, EPS, TIFF) — no in-browser preview, defer to prepress
   else if (isProFormat){
-    checks.push({status:'info', label:'Dimensions', val:'Will be checked by our team', note:`${ext.toUpperCase()} files can't be previewed in your browser. Our prepress team will verify your file matches the ${spec.label} size before printing.`});
+    checks.push({status:'info', label:'Dimensions', val:'Will be checked by our team', note:`${ext.toUpperCase()} files can't be previewed in your browser, so we can't show you a proof or prepare the file automatically. Our prepress team will check it matches ${spec.label}, and will add the 3mm bleed and crop marks by hand before printing. Supplying a print-ready PDF gets you an instant proof instead.`});
     setPreviewStatus(`${ext.toUpperCase()} preview unavailable — our prepress team will review your file manually before press.`);
   }
 
@@ -1811,6 +1811,37 @@ function renderProof(){
   ctx.__dpr = dpr;
   composeArtwork(ctx, proofImage, g, artworkAdjust);
   if (showGuides) drawProofGuides(ctx, g);
+  updateProofMeta(spec);
+}
+
+// Effective print resolution of the artwork AS POSITIONED. Zooming in spreads
+// the same pixels over more paper, so the number has to move with the slider —
+// otherwise a customer can zoom to 300% and still be told it prints at 300 DPI.
+function effectiveDpi(spec){
+  if (!proofImage) return null;
+  const g = proofGeometry(PRINT_DPI / 25.4, spec, false);
+  const rot = ((artworkAdjust.rot % 360) + 360) % 360;
+  const swap = (rot === 90 || rot === 270);
+  const iw = swap ? proofImage.naturalHeight : proofImage.naturalWidth;
+  const ih = swap ? proofImage.naturalWidth  : proofImage.naturalHeight;
+  const base = (artworkAdjust.mode === 'fit') ? Math.min(g.tw/iw, g.th/ih) : Math.max(g.tw/iw, g.th/ih);
+  const s = base * (artworkAdjust.zoom || 1);      // print pixels per source pixel
+  return s > 0 ? Math.round(PRINT_DPI / s) : null;
+}
+
+function updateProofMeta(spec){
+  const el = document.getElementById('previewMeta');
+  if (!el || !proofImage) return;
+  const dpi = effectiveDpi(spec);
+  const px = proofImage.naturalWidth + ' × ' + proofImage.naturalHeight + ' px';
+  if (dpi == null){ el.textContent = px; return; }
+  const warn = dpi < 300;
+  const bad = dpi < 200;
+  const colour = bad ? '#b00020' : warn ? '#9a6b1f' : 'var(--soft)';
+  const msg = bad ? ' — too low for a crisp print at this size'
+            : warn ? ' — below our 300 DPI recommendation, may look slightly soft'
+            : ' — good for print';
+  el.innerHTML = px + ' · <span style="color:' + colour + '">~' + dpi + ' DPI as positioned' + msg + '</span>';
 }
 
 // Load the artwork into the proof. editable=false for vector PDFs, which we

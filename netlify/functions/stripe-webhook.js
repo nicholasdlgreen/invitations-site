@@ -131,7 +131,7 @@ function buildJobTicketHtml(o) {
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF7F2;border-radius:6px;">
       ${row('Quantity',   o.quantity ? `${o.quantity} invitations` : '—')}
       ${row('Paper Stock', o.paper || 'Smooth White 300gsm')}
-      ${row('Size',       o.size  || 'A5 · 148 × 210mm')}
+      ${row('Size',       o.size  || '<strong style="color:#B00020;">NOT RECORDED — check the order before printing</strong>')}
       ${row('Finish',     'Matt laminate')}
       ${row('Bleed',      '3mm all sides')}
       ${row('Colour Mode','CMYK')}
@@ -144,9 +144,23 @@ function buildJobTicketHtml(o) {
     <table width="100%" cellpadding="0" cellspacing="0"
            style="background:#FAF7F2;border-radius:6px;border:2px dashed #E8DDD8;">
       <tr><td style="padding:16px;text-align:center;">
-        ${o.artworkUrl
+        ${o.printReadyUrl
           ? `<div style="font-size:12px;color:#7A6558;margin-bottom:8px;font-family:Arial,sans-serif;">
-               Click to download the customer artwork file:
+               <strong>Print this file.</strong> Built to the ordered size with 3mm bleed
+               and crop marks, trim box set.
+             </div>
+             <a href="${o.printReadyUrl}"
+                style="color:#B8976A;font-size:13px;word-break:break-all;font-family:Arial,sans-serif;">
+               &#128196; Download PRINT-READY file
+             </a>
+             <div style="font-size:11px;color:#B0A098;margin:10px 0 4px;font-family:Arial,sans-serif;">
+               Customer's original upload (reference only — do not print):
+             </div>
+             ${o.artworkUrl ? `<a href="${o.artworkUrl}" style="color:#B0A098;font-size:11px;word-break:break-all;font-family:Arial,sans-serif;">&#128206; Original artwork</a>` : ''}`
+          : o.artworkUrl
+          ? `<div style="font-size:12px;color:#B00020;margin-bottom:8px;font-family:Arial,sans-serif;">
+               <strong>No print-ready file was produced — prepress must prepare this
+               before printing.</strong> Only the customer's original upload is available:
              </div>
              <a href="${o.artworkUrl}"
                 style="color:#B8976A;font-size:13px;word-break:break-all;font-family:Arial,sans-serif;">
@@ -294,6 +308,7 @@ exports.handler = async (event) => {
       paper:           metadata?.paper      || null,
       size:            metadata?.size       || null,
       artworkUrl:      metadata?.artwork_url || null,
+      printReadyUrl:   metadata?.print_ready_url || null,
       notes:           metadata?.notes      || null,
       total,
       orderDate:       new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }),
