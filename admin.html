@@ -438,6 +438,8 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="finishes" onclick="showPricingPanel(this)">✨ Finish Options</button>
           <button class="pz-tab" data-pz="publish" onclick="showPricingPanel(this)">🚀 Publish</button>
           <button class="pz-tab" data-pz="reconcile" onclick="showPricingPanel(this)">🔁 Reconciliation</button>
+          <button class="pz-tab" data-pz="costs" onclick="showPricingPanel(this)">💷 Costs</button>
+          <button class="pz-tab" data-pz="pl" onclick="showPricingPanel(this)">📈 Monthly P&amp;L</button>
           <button class="pz-tab" data-pz="mgmt" onclick="showPricingPanel(this)">📊 Management Accounts</button>
           <button class="pz-tab" data-pz="settings" onclick="showPricingPanel(this)">⚙️ Settings &amp; Export</button>
         </div>
@@ -476,6 +478,40 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               <button class="btn btn-gold" onclick="openPaperModal()">＋ Add Paper</button>
             </div>
             <div id="paperList"><div class="empty"><span class="empty-icon">📃</span><div class="empty-text">No paper stocks yet</div></div></div>
+          </div>
+
+          <!-- PANEL: COSTS (money out) -->
+          <div class="pz-panel" id="pz-costs">
+            <div class="section-header">
+              <div><div class="section-title">Costs</div><div class="section-sub">Every pound the business spends. Cost of sales rises with orders; overheads are your fixed running costs. The split is what shows whether the product makes money separately from whether the business does.</div></div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-sm" onclick="openRecurringModal()">↻ Recurring</button>
+                <button class="btn btn-gold" onclick="openExpenseModal()">＋ Add Cost</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:16px;">
+              <div class="field" style="margin:0;"><label>Month</label>
+                <select id="exp_monthFilter" onchange="renderExpenses()" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;min-width:170px;"></select>
+              </div>
+              <div class="field" style="margin:0;"><label>Category</label>
+                <select id="exp_catFilter" onchange="renderExpenses()" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;min-width:190px;"></select>
+              </div>
+              <div id="exp_totals" style="margin-left:auto;font-size:12px;color:rgba(250,247,242,.6);"></div>
+            </div>
+            <div id="recurringSummary"></div>
+            <div id="expenseList"><div class="empty"><span class="empty-icon">💷</span><div class="empty-text">No costs recorded yet</div></div></div>
+          </div>
+
+          <!-- PANEL: MONTHLY P&L -->
+          <div class="pz-panel" id="pz-pl">
+            <div class="section-header">
+              <div><div class="section-title">Monthly P&amp;L</div><div class="section-sub">Revenue comes straight from your orders; costs from the Costs tab. Nothing is typed twice.</div></div>
+              <div style="display:flex;gap:8px;align-items:end;">
+                <select id="pl_month" onchange="renderPL()" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;min-width:170px;"></select>
+                <button class="btn btn-outline btn-sm" onclick="exportPLCsv()">⬇ CSV</button>
+              </div>
+            </div>
+            <div id="plBody"><div class="empty"><span class="empty-icon">📈</span><div class="empty-text">Loading…</div></div></div>
           </div>
 
           <!-- PANEL: SIZES -->
@@ -725,6 +761,71 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <button class="btn btn-gold btn-sm" onclick="saveEnvelope()">Save Envelope</button>
     </div>
     <input type="hidden" id="env_editId">
+  </div>
+</div>
+
+<div class="modal-overlay" id="expenseModal">
+  <div class="pz-modal">
+    <div class="modal-title" id="exp_modalTitle">Add Cost</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Date</label><input type="date" id="exp_date"></div>
+      <div class="field"><label>Paid to</label><input type="text" id="exp_payee" placeholder="e.g. PrintedEasy"></div>
+    </div>
+    <div class="field"><label>Category</label>
+      <select id="exp_category" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"></select>
+      <p id="exp_catHelp" style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;line-height:1.6;"></p>
+    </div>
+    <div class="field"><label>What was it for</label><input type="text" id="exp_desc" placeholder="e.g. Invoice 10432 — 3 wedding orders"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <div class="field"><label>Amount before VAT</label><div class="pfx"><span class="px">£</span><input type="number" id="exp_net" step="0.01" min="0" placeholder="0.00" oninput="expCalcGross()"></div></div>
+      <div class="field"><label>VAT</label><div class="pfx"><span class="px">£</span><input type="number" id="exp_vat" step="0.01" min="0" placeholder="0.00" oninput="expCalcGross()"></div></div>
+      <div class="field"><label>Total paid</label><div class="pfx"><span class="px">£</span><input type="number" id="exp_gross" step="0.01" min="0" placeholder="0.00" oninput="expCalcNet()"></div></div>
+    </div>
+    <p style="font-size:11px;color:rgba(250,247,242,.5);margin:-6px 0 14px;line-height:1.6;">Enter the total and the VAT fills in at 20%, or type them yourself. VAT is recorded now even though you are not registered yet, so nothing needs re-entering when you are.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Paid by</label>
+        <select id="exp_method" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;">
+          <option value="">—</option><option>Business card</option><option>Bank transfer</option><option>Direct debit</option><option>PayPal</option><option>Personal (to reclaim)</option><option>Cash</option>
+        </select>
+      </div>
+      <div class="field"><label>Receipt link (optional)</label><input type="text" id="exp_receipt" placeholder="Drive/Dropbox link"></div>
+    </div>
+    <div class="field"><label>Notes</label><input type="text" id="exp_notes" placeholder="Anything worth remembering at year end"></div>
+    <input type="hidden" id="exp_editId">
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeExpenseModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveExpense()">Save Cost</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="recurringModal">
+  <div class="pz-modal">
+    <div class="modal-title">Recurring costs</div>
+    <p style="font-size:12px;color:rgba(250,247,242,.6);margin:0 0 16px;line-height:1.7;">Things you pay every month or year — hosting, subscriptions, your accountant. Added here once, they are counted in every month's P&amp;L automatically, so you never retype them.</p>
+    <div id="recurringList" style="margin-bottom:18px;"></div>
+    <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="field"><label>Name</label><input type="text" id="rec_name" placeholder="e.g. Netlify Pro"></div>
+        <div class="field"><label>Paid to</label><input type="text" id="rec_payee" placeholder="e.g. Netlify"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div class="field"><label>Category</label>
+          <select id="rec_category" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"></select>
+        </div>
+        <div class="field"><label>Amount before VAT</label><div class="pfx"><span class="px">£</span><input type="number" id="rec_net" step="0.01" min="0" placeholder="0.00"></div></div>
+        <div class="field"><label>How often</label>
+          <select id="rec_freq" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;">
+            <option value="monthly">Every month</option><option value="quarterly">Every quarter</option><option value="annual">Once a year</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Started</label><input type="date" id="rec_start"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeRecurringModal()">Close</button>
+        <button class="btn btn-gold" onclick="saveRecurring()">Add Recurring Cost</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1205,6 +1306,7 @@ function pricingLoad() {
   loadEnvelopesFromSupabase();
   loadPapersFromSupabase();
   loadSizesFromSupabase();
+  loadMoneyData();
   loadProductTypesFromSupabase();
   loadFinishOptionsFromSupabase();
   loadFinishTypesFromSupabase();
@@ -1965,6 +2067,395 @@ function renderPaperList() {
         <button class="btn btn-danger btn-xs" onclick="deletePaper('${p.id}')">✕</button>
       </div>
     </div>`).join('');
+}
+
+
+// ═══════════════════════════════════════════════════════
+// MONEY — costs, recurring costs, and a P&L built from real data
+// Revenue comes from the orders table; costs from `expenses` plus anything
+// due from `recurring_costs`. Nothing here is typed twice, and nothing lives
+// in this browser: the old Management Accounts tab kept everything in
+// localStorage, which is lost the moment site data is cleared.
+// ═══════════════════════════════════════════════════════
+
+let expenseCats = [], expenses = [], recurringCosts = [], plOrders = [];
+const VAT_REGISTERED = false;   // flip when HMRC registration comes through
+const money = n => '£' + (Math.round((+n || 0) * 100) / 100).toFixed(2);
+const monthKey = d => String(d).slice(0, 7);                    // YYYY-MM
+function monthLabel(k){
+  const [y, m] = k.split('-');
+  return new Date(+y, +m - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+
+async function loadMoneyData(){
+  try {
+    const [cats, exps, recs] = await Promise.all([
+      sbFetch('expense_categories?select=*&active=eq.true&order=display_order'),
+      sbFetch('expenses?select=*&order=spent_on.desc'),
+      sbFetch('recurring_costs?select=*&order=name')
+    ]);
+    expenseCats = cats || []; expenses = exps || []; recurringCosts = recs || [];
+  } catch (err) {
+    console.warn('Could not load costs:', err.message);
+  }
+  try {
+    plOrders = await sbFetch('orders?select=order_number,created_at,status,total,subtotal,vat,items&order=created_at.desc');
+  } catch (err) {
+    console.warn('Could not load orders for the P&L:', err.message);
+    plOrders = [];
+  }
+  fillMoneySelects();
+  renderExpenses();
+  renderRecurringList();
+  renderPL();
+}
+
+// Every month that has either an order or a cost in it, newest first.
+function knownMonths(){
+  const set = new Set();
+  expenses.forEach(e => e.spent_on && set.add(monthKey(e.spent_on)));
+  plOrders.forEach(o => o.created_at && set.add(monthKey(o.created_at)));
+  set.add(monthKey(new Date().toISOString()));
+  return [...set].sort().reverse();
+}
+
+function fillMoneySelects(){
+  const months = knownMonths();
+  const mSel = document.getElementById('exp_monthFilter');
+  if (mSel){
+    const cur = mSel.value;
+    mSel.innerHTML = '<option value="">All months</option>' + months.map(m => `<option value="${m}">${monthLabel(m)}</option>`).join('');
+    mSel.value = cur || '';
+  }
+  const plSel = document.getElementById('pl_month');
+  if (plSel){
+    const cur = plSel.value;
+    plSel.innerHTML = months.map(m => `<option value="${m}">${monthLabel(m)}</option>`).join('');
+    plSel.value = cur || months[0] || '';
+  }
+  const catOpts = expenseCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  const cSel = document.getElementById('exp_catFilter');
+  if (cSel){ const cur = cSel.value; cSel.innerHTML = '<option value="">All categories</option>' + catOpts; cSel.value = cur || ''; }
+  ['exp_category','rec_category'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.options.length) el.innerHTML = catOpts;
+  });
+}
+
+// ── Costs list ───────────────────────────────────────────
+function renderExpenses(){
+  const box = document.getElementById('expenseList');
+  if (!box) return;
+  const m = (document.getElementById('exp_monthFilter') || {}).value || '';
+  const c = (document.getElementById('exp_catFilter') || {}).value || '';
+  let rows = expenses.filter(e => (!m || monthKey(e.spent_on) === m) && (!c || e.category_id === c));
+
+  const totEl = document.getElementById('exp_totals');
+  if (totEl){
+    const net = rows.reduce((t, e) => t + (+e.net || 0), 0);
+    const vat = rows.reduce((t, e) => t + (+e.vat || 0), 0);
+    totEl.innerHTML = `${rows.length} cost${rows.length === 1 ? '' : 's'} · <strong style="color:#faf7f2">${money(net)}</strong> before VAT${vat ? ` · ${money(vat)} VAT` : ''}`;
+  }
+  if (!rows.length){
+    box.innerHTML = '<div class="empty"><span class="empty-icon">💷</span><div class="empty-text">No costs recorded for this view</div></div>';
+    return;
+  }
+  const catName = id => (expenseCats.find(c => c.id === id) || {}).name || '—';
+  const catKind = id => (expenseCats.find(c => c.id === id) || {}).kind;
+  box.innerHTML = rows.map(e => `
+    <div class="supplier-card">
+      <div>
+        <div style="font-weight:500;font-size:13px">
+          ${e.payee || catName(e.category_id)}
+          <span style="font-size:10px;margin-left:8px;color:${catKind(e.category_id) === 'cogs' ? '#e0a458' : 'rgba(250,247,242,.45)'}">${catName(e.category_id)}</span>
+        </div>
+        <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
+          ${new Date(e.spent_on).toLocaleDateString('en-GB')} · ${money(e.net)} before VAT${(+e.vat) ? ` · ${money(e.vat)} VAT` : ''}${e.description ? ' · ' + e.description : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div style="font-size:14px;font-weight:500;margin-right:6px">${money(e.gross || (+e.net + +e.vat))}</div>
+        <button class="btn btn-outline btn-xs" onclick="openExpenseModal('${e.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteExpense('${e.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function expCalcGross(){
+  const net = parseFloat(document.getElementById('exp_net').value) || 0;
+  const vat = parseFloat(document.getElementById('exp_vat').value) || 0;
+  document.getElementById('exp_gross').value = (net + vat).toFixed(2);
+}
+function expCalcNet(){
+  const gross = parseFloat(document.getElementById('exp_gross').value) || 0;
+  const net = gross / 1.2;                       // assume standard-rated
+  document.getElementById('exp_net').value = net.toFixed(2);
+  document.getElementById('exp_vat').value = (gross - net).toFixed(2);
+}
+
+function openExpenseModal(editId){
+  fillMoneySelects();
+  ['exp_payee','exp_desc','exp_net','exp_vat','exp_gross','exp_receipt','exp_notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('exp_editId').value = '';
+  document.getElementById('exp_date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('exp_modalTitle').textContent = 'Add Cost';
+  const catSel = document.getElementById('exp_category');
+  catSel.onchange = function(){
+    const c = expenseCats.find(x => x.id === catSel.value);
+    document.getElementById('exp_catHelp').textContent = c ? (c.help || '') + (c.kind === 'cogs' ? ' (counts against gross margin)' : '') : '';
+  };
+  if (editId){
+    const e = expenses.find(x => x.id === editId);
+    if (e){
+      document.getElementById('exp_date').value = e.spent_on || '';
+      document.getElementById('exp_payee').value = e.payee || '';
+      catSel.value = e.category_id || '';
+      document.getElementById('exp_desc').value = e.description || '';
+      document.getElementById('exp_net').value = e.net;
+      document.getElementById('exp_vat').value = e.vat;
+      document.getElementById('exp_gross').value = e.gross;
+      document.getElementById('exp_method').value = e.payment_method || '';
+      document.getElementById('exp_receipt').value = e.receipt_url || '';
+      document.getElementById('exp_notes').value = e.notes || '';
+      document.getElementById('exp_editId').value = editId;
+      document.getElementById('exp_modalTitle').textContent = 'Edit Cost';
+    }
+  }
+  catSel.onchange();
+  document.getElementById('expenseModal').classList.add('open');
+}
+function closeExpenseModal(){ document.getElementById('expenseModal').classList.remove('open'); }
+
+async function saveExpense(){
+  const net = parseFloat(document.getElementById('exp_net').value) || 0;
+  const vat = parseFloat(document.getElementById('exp_vat').value) || 0;
+  const spent_on = document.getElementById('exp_date').value;
+  if (!spent_on) { toast('Date is required'); return; }
+  if (!(net + vat > 0)) { toast('Enter an amount'); return; }
+  const payload = {
+    spent_on,
+    payee: document.getElementById('exp_payee').value.trim() || null,
+    category_id: document.getElementById('exp_category').value || null,
+    description: document.getElementById('exp_desc').value.trim() || null,
+    net, vat, gross: Math.round((net + vat) * 100) / 100,
+    payment_method: document.getElementById('exp_method').value || null,
+    receipt_url: document.getElementById('exp_receipt').value.trim() || null,
+    notes: document.getElementById('exp_notes').value.trim() || null,
+    updated_at: new Date().toISOString()
+  };
+  const editId = document.getElementById('exp_editId').value;
+  try {
+    if (editId){
+      await sbFetch(`expenses?id=eq.${editId}`, { method:'PATCH', headers:{'Prefer':'return=representation'}, body: JSON.stringify(payload) });
+      const i = expenses.findIndex(x => x.id === editId);
+      if (i >= 0) expenses[i] = { ...expenses[i], ...payload };
+    } else {
+      const r = await sbFetch('expenses', { method:'POST', headers:{'Prefer':'return=representation'}, body: JSON.stringify(payload) });
+      expenses.unshift(Array.isArray(r) ? r[0] : r);
+    }
+    expenses.sort((a,b) => (a.spent_on < b.spent_on ? 1 : -1));
+    fillMoneySelects(); renderExpenses(); renderPL(); closeExpenseModal();
+    toast(editId ? 'Updated ✓' : 'Cost added ✓');
+  } catch (err){ toast('Save failed: ' + err.message); }
+}
+
+async function deleteExpense(id){
+  if (!confirm('Delete this cost? It will no longer appear in your P&L.')) return;
+  try {
+    await sbFetch(`expenses?id=eq.${id}`, { method:'DELETE' });
+    expenses = expenses.filter(e => e.id !== id);
+    renderExpenses(); renderPL(); toast('Deleted ✓');
+  } catch (err){ toast('Delete failed: ' + err.message); }
+}
+
+// ── Recurring costs ──────────────────────────────────────
+function openRecurringModal(){
+  fillMoneySelects();
+  document.getElementById('rec_start').value = new Date().toISOString().slice(0, 10);
+  renderRecurringList();
+  document.getElementById('recurringModal').classList.add('open');
+}
+function closeRecurringModal(){ document.getElementById('recurringModal').classList.remove('open'); }
+
+function renderRecurringList(){
+  const box = document.getElementById('recurringList');
+  const summary = document.getElementById('recurringSummary');
+  const catName = id => (expenseCats.find(c => c.id === id) || {}).name || '—';
+  const active = recurringCosts.filter(r => r.active !== false);
+  if (box){
+    box.innerHTML = active.length ? active.map(r => `
+      <div class="supplier-card">
+        <div><div style="font-weight:500;font-size:13px">${r.name}</div>
+        <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">${catName(r.category_id)} · ${money(r.net)} ${r.frequency === 'monthly' ? 'a month' : r.frequency === 'quarterly' ? 'a quarter' : 'a year'}</div></div>
+        <button class="btn btn-danger btn-xs" onclick="deleteRecurring('${r.id}')">✕</button>
+      </div>`).join('') : '<div style="font-size:12px;color:rgba(250,247,242,.45);">Nothing recurring yet.</div>';
+  }
+  if (summary){
+    const perMonth = active.reduce((t, r) => t + monthlyShare(r), 0);
+    summary.innerHTML = active.length
+      ? `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:rgba(250,247,242,.6);">
+           ↻ ${active.length} recurring cost${active.length === 1 ? '' : 's'} — <strong style="color:#faf7f2">${money(perMonth)}</strong> a month, counted automatically in every P&amp;L.</div>`
+      : '';
+  }
+}
+// What a recurring cost works out at per month, so quarterly and annual
+// items don't distort a single month.
+function monthlyShare(r){
+  const n = +r.net || 0;
+  return r.frequency === 'annual' ? n / 12 : r.frequency === 'quarterly' ? n / 3 : n;
+}
+function recurringAppliesTo(r, mKey){
+  if (r.active === false) return false;
+  if (r.start_date && monthKey(r.start_date) > mKey) return false;
+  if (r.end_date && monthKey(r.end_date) < mKey) return false;
+  return true;
+}
+
+async function saveRecurring(){
+  const name = document.getElementById('rec_name').value.trim();
+  const net = parseFloat(document.getElementById('rec_net').value) || 0;
+  if (!name) { toast('Name is required'); return; }
+  if (!(net > 0)) { toast('Enter an amount'); return; }
+  const payload = {
+    name,
+    payee: document.getElementById('rec_payee').value.trim() || null,
+    category_id: document.getElementById('rec_category').value || null,
+    net, vat: Math.round(net * 0.2 * 100) / 100,
+    frequency: document.getElementById('rec_freq').value,
+    start_date: document.getElementById('rec_start').value || new Date().toISOString().slice(0,10),
+    active: true
+  };
+  try {
+    const r = await sbFetch('recurring_costs', { method:'POST', headers:{'Prefer':'return=representation'}, body: JSON.stringify(payload) });
+    recurringCosts.push(Array.isArray(r) ? r[0] : r);
+    ['rec_name','rec_payee','rec_net'].forEach(id => document.getElementById(id).value = '');
+    renderRecurringList(); renderPL(); toast('Recurring cost added ✓');
+  } catch (err){ toast('Save failed: ' + err.message); }
+}
+
+async function deleteRecurring(id){
+  if (!confirm('Remove this recurring cost from future months?')) return;
+  try {
+    await sbFetch(`recurring_costs?id=eq.${id}`, { method:'DELETE' });
+    recurringCosts = recurringCosts.filter(r => r.id !== id);
+    renderRecurringList(); renderPL(); toast('Removed ✓');
+  } catch (err){ toast('Delete failed: ' + err.message); }
+}
+
+// ── The P&L ──────────────────────────────────────────────
+// Counts an order as revenue once it is paid (anything past 'pending'),
+// which for a small shop is close enough to cash accounting.
+const COUNTS_AS_SALE = ['paid','printing','dispatched','delivered','complete'];
+
+function plFigures(mKey){
+  const orders = plOrders.filter(o => monthKey(o.created_at) === mKey && COUNTS_AS_SALE.includes(String(o.status || '').toLowerCase()));
+  const revenueGross = orders.reduce((t, o) => t + (+o.total || 0), 0);
+  const revenueNet = orders.reduce((t, o) => t + (+o.subtotal || (+o.total || 0) / 1.2), 0);
+
+  const mExp = expenses.filter(e => monthKey(e.spent_on) === mKey);
+  const kindOf = id => (expenseCats.find(c => c.id === id) || {}).kind || 'overhead';
+  const byCat = {};
+  mExp.forEach(e => {
+    const k = e.category_id || 'other';
+    byCat[k] = (byCat[k] || 0) + (+e.net || 0);
+  });
+  recurringCosts.filter(r => recurringAppliesTo(r, mKey)).forEach(r => {
+    const k = r.category_id || 'other';
+    byCat[k] = (byCat[k] || 0) + monthlyShare(r);
+  });
+
+  let cogs = 0, overheads = 0;
+  Object.entries(byCat).forEach(([k, v]) => { kindOf(k) === 'cogs' ? cogs += v : overheads += v; });
+
+  const grossProfit = revenueNet - cogs;
+  return {
+    orders: orders.length, revenueGross, revenueNet, cogs, overheads, byCat,
+    grossProfit, grossMargin: revenueNet ? (grossProfit / revenueNet) * 100 : 0,
+    netProfit: grossProfit - overheads,
+    avgOrder: orders.length ? revenueNet / orders.length : 0,
+    marketing: byCat['marketing'] || 0
+  };
+}
+
+function renderPL(){
+  const box = document.getElementById('plBody');
+  if (!box) return;
+  const mKey = (document.getElementById('pl_month') || {}).value;
+  if (!mKey){ box.innerHTML = '<div class="empty"><span class="empty-icon">📈</span><div class="empty-text">No data yet</div></div>'; return; }
+  const f = plFigures(mKey);
+  const months = knownMonths();
+  const prevKey = months[months.indexOf(mKey) + 1];
+  const prev = prevKey ? plFigures(prevKey) : null;
+
+  const delta = (now, before) => {
+    if (!prev || !before) return '';
+    const d = now - before;
+    const c = d >= 0 ? '#5a9367' : '#c46a5e';
+    return `<span style="font-size:11px;color:${c};margin-left:8px">${d >= 0 ? '▲' : '▼'} ${money(Math.abs(d))} vs ${monthLabel(prevKey).split(' ')[0]}</span>`;
+  };
+  const catName = id => (expenseCats.find(c => c.id === id) || {}).name || id;
+  const kindOf = id => (expenseCats.find(c => c.id === id) || {}).kind || 'overhead';
+  const lines = kind => Object.entries(f.byCat).filter(([k, v]) => kindOf(k) === kind && v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => `<div class="pl-row"><span class="pl-label">${catName(k)}</span><span>${money(v)}</span></div>`).join('')
+    || '<div class="pl-row"><span class="pl-label" style="opacity:.5">Nothing recorded</span><span style="opacity:.5">£0.00</span></div>';
+
+  const profitColour = f.netProfit >= 0 ? '#5a9367' : '#c46a5e';
+  box.innerHTML = `
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Money in</div>
+        <div class="pl-row"><span class="pl-label">Orders</span><span>${f.orders}</span></div>
+        <div class="pl-row"><span class="pl-label">Average order</span><span>${money(f.avgOrder)}</span></div>
+        <hr class="pl-divider">
+        <div class="pl-row"><span class="pl-label">Revenue${VAT_REGISTERED ? ' (excl. VAT)' : ''}</span><span style="font-size:15px;font-weight:500">${money(VAT_REGISTERED ? f.revenueNet : f.revenueGross)}${delta(f.revenueGross, prev && prev.revenueGross)}</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Is it making money?</div>
+        <div class="pl-row"><span class="pl-label">Gross profit</span><span>${money(f.grossProfit)}</span></div>
+        <div class="pl-row"><span class="pl-label">Gross margin</span><span>${f.grossMargin.toFixed(1)}%</span></div>
+        <hr class="pl-divider">
+        <div class="pl-row"><span class="pl-label" style="font-size:13px">Profit after all costs</span>
+          <span style="font-size:19px;font-weight:600;color:${profitColour}">${money(f.netProfit)}${delta(f.netProfit, prev && prev.netProfit)}</span></div>
+        ${f.marketing > 0 ? `<div style="font-size:11px;color:rgba(250,247,242,.5);margin-top:10px;line-height:1.6;">Marketing: ${money(f.marketing)} for ${f.orders} order${f.orders === 1 ? '' : 's'}${f.orders ? ` — ${money(f.marketing / f.orders)} per order won` : ''}.</div>` : ''}
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-title">Cost of sales <span style="font-size:10px;opacity:.55;text-transform:none;letter-spacing:0">rises with orders</span></div>
+        ${lines('cogs')}
+        <hr class="pl-divider">
+        <div class="pl-row"><span class="pl-label">Total</span><span>${money(f.cogs)}</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Overheads <span style="font-size:10px;opacity:.55;text-transform:none;letter-spacing:0">you pay these anyway</span></div>
+        ${lines('overhead')}
+        <hr class="pl-divider">
+        <div class="pl-row"><span class="pl-label">Total</span><span>${money(f.overheads)}</span></div>
+      </div>
+    </div>
+    ${!VAT_REGISTERED ? '<p style="font-size:11px;color:rgba(250,247,242,.45);margin-top:14px;line-height:1.6;">Figures shown gross — you are not VAT registered yet. VAT is being recorded on costs, so nothing needs re-entering when you register.</p>' : ''}`;
+}
+
+function exportPLCsv(){
+  const mKey = (document.getElementById('pl_month') || {}).value;
+  if (!mKey) return;
+  const f = plFigures(mKey);
+  const catName = id => (expenseCats.find(c => c.id === id) || {}).name || id;
+  const rows = [['Foreverprint — ' + monthLabel(mKey)], [],
+    ['Orders', f.orders], ['Revenue', f.revenueGross.toFixed(2)],
+    ['Revenue excl VAT', f.revenueNet.toFixed(2)], [],
+    ['COST OF SALES','']];
+  Object.entries(f.byCat).forEach(([k,v]) => rows.push([catName(k), v.toFixed(2)]));
+  rows.push([], ['Cost of sales total', f.cogs.toFixed(2)],
+    ['Gross profit', f.grossProfit.toFixed(2)], ['Gross margin %', f.grossMargin.toFixed(1)],
+    ['Overheads total', f.overheads.toFixed(2)], ['Profit after all costs', f.netProfit.toFixed(2)]);
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
+  a.download = `foreverprint-pl-${mKey}.csv`;
+  a.click();
+  toast('Exported ✓');
 }
 
 // ═══════════════════════════════════════════════════════
