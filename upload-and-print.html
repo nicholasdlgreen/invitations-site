@@ -488,7 +488,18 @@ const SIZE_SPECS = {
   'A6':    {label:'A6 (105×148mm)',    mmW:105,mmH:148,minPx:1240},
   '5x7':   {label:'5"×7" (127×178mm)',mmW:127,mmH:178,minPx:1500},
   'DL':    {label:'DL (99×210mm)',     mmW:99, mmH:210,minPx:1169},
-  'Square':{label:'Square (148×148mm)',mmW:148,mmH:148,minPx:1748}
+  'Square':{label:'Square (148×148mm)',mmW:148,mmH:148,minPx:1748},
+  // Large formats — offered by the Design Studio for signage, table plans and
+  // order of service. They have no card on this page, but the millimetres must
+  // exist here or checkout skips print-prep rather than guess a size.
+  'A4':    {label:'A4 (210×297mm)',    mmW:210,mmH:297,minPx:2480},
+  'A3':    {label:'A3 (297×420mm)',    mmW:297,mmH:420,minPx:3508},
+  'A2':    {label:'A2 (420×594mm)',    mmW:420,mmH:594,minPx:4961},
+  'A1':    {label:'A1 (594×841mm)',    mmW:594,mmH:841,minPx:7016},
+  'A4-L':  {label:'A4 landscape (297×210mm)', mmW:297,mmH:210,minPx:3508},
+  'A3-L':  {label:'A3 landscape (420×297mm)', mmW:420,mmH:297,minPx:4961},
+  'A2-L':  {label:'A2 landscape (594×420mm)', mmW:594,mmH:420,minPx:7016},
+  'A1-L':  {label:'A1 landscape (841×594mm)', mmW:841,mmH:594,minPx:9933}
 };
 
 // ── SUPABASE DATA LOADER ──────────────────────────────────
@@ -921,7 +932,7 @@ async function buildAndRunChecks(file, info){
       if (hasBleed){
         checks.push({status:'ok', label:'Bleed', val:'3mm bleed detected', note:'Your file includes the 3mm bleed margin — your background will print right to the edge.'});
       } else if (atTrim){
-        checks.push({status:'warn', label:'Bleed', val:'No bleed', note:'Your file is at exact trim size with no 3mm bleed. If your background extends to the edge, you may see thin white borders after cutting. Our team will check this manually before press.'});
+        checks.push({status:'warn', label:'Bleed', val:'No bleed — we\'ll add it', note:'Your file is at exact trim size with no 3mm bleed. We\'ll extend your background outwards by 3mm automatically so there are no white edges after cutting. For complete control, re-export your PDF with 3mm bleed and crop marks.'});
       }
 
       // Update preview meta + show the rendered canvas
@@ -967,8 +978,17 @@ async function buildAndRunChecks(file, info){
         checks.push({status:'warn', label:'Dimensions', val: dimText, note:`Aspect ratio doesn't match ${spec.label} (${spec.mmW} × ${spec.mmH} mm). Your image will be cropped or scaled — please confirm this is what you want.`});
       }
 
+      // Colour mode — RGB files are converted for press, so say so up front.
+      try {
+        const cs = await readColourSpace(file);
+        const cn = COLOUR_NOTES[cs.space] || COLOUR_NOTES.unknown;
+        checks.push({status:cn.status, label:'Colour mode', val:cn.val, note:cn.note});
+      } catch(e){}
+
       const previewMeta = document.getElementById('previewMeta');
       if (previewMeta) previewMeta.textContent = `${dimText} · ${dpiRounded} DPI at ${spec.label}`;
+
+      checks.push({status:'ok', label:'Bleed', val:'Added automatically', note:'We extend your artwork 3mm beyond the cut line by mirroring its edges, so the print reaches the edge of the card with no white borders.'});
 
       // Draw bleed/trim/safe overlay. For raster images we assume the file
       // is at trim size (no bleed), so we pass the selected size dimensions.
@@ -1031,6 +1051,64 @@ async function readPdfMeta(file){
 
   return { numPages, widthMm, heightMm };
 }
+
+// ── COLOUR MODE DETECTION ─────────────────────────────────
+// Customers are told if their file is RGB, because we convert to CMYK for the
+// press and that can shift vivid colours. This logic existed in the unused
+// preflight function; this is the browser version so it actually reaches them.
+async function readColourSpace(file){
+  try {
+    const head = new Uint8Array(await file.slice(0, 2 * 1024 * 1024).arrayBuffer());
+    const name = (file.name || '').toLowerCase();
+
+    // PNG is always RGB — no CMYK in the format at all.
+    if (head[0] === 0x89 && head[1] === 0x50) return { space: 'srgb' };
+
+    if (head[0] === 0xFF && head[1] === 0xD8) {          // JPEG
+      // ASCII scan for an embedded ICC profile description
+      let ascii = '';
+      for (let i = 0; i < Math.min(head.length, 300000); i++){
+        const ch = head[i];
+        ascii += (ch >= 32 && ch < 127) ? String.fromCharCode(ch) : '\u0000';
+      }
+      if (/Display P3/i.test(ascii)) return { space: 'p3' };
+      if (/Adobe RGB/i.test(ascii))  return { space: 'adobergb' };
+
+      // Walk the markers to the frame header, which states the component count
+      let i = 2;
+      while (i < head.length - 9){
+        if (head[i] !== 0xFF) { i++; continue; }
+        const mk = head[i+1];
+        if (mk === 0xD8 || mk === 0x01 || (mk >= 0xD0 && mk <= 0xD7)) { i += 2; continue; }
+        if (mk === 0xDA || mk === 0xD9) break;
+        const len = (head[i+2] << 8) | head[i+3];
+        const isSOF = (mk >= 0xC0 && mk <= 0xCF) && mk !== 0xC4 && mk !== 0xC8 && mk !== 0xCC;
+        if (isSOF){
+          const components = head[i + 9];
+          if (components === 4) return { space: 'cmyk' };
+          if (components === 1) return { space: 'grey' };
+          return { space: /sRGB/i.test(ascii) ? 'srgb' : 'rgb' };
+        }
+        i += 2 + len;
+      }
+      return { space: 'rgb' };
+    }
+    if (/\.tiff?$/.test(name)) return { space: 'unknown' };
+    return { space: 'unknown' };
+  } catch(e){
+    return { space: 'unknown' };
+  }
+}
+
+const COLOUR_NOTES = {
+  cmyk:     {status:'ok',   val:'CMYK',        note:'CMYK — exactly what the press wants. Your colours will reproduce accurately.'},
+  grey:     {status:'ok',   val:'Greyscale',   note:'Greyscale — correct for black and white designs.'},
+  srgb:     {status:'warn', val:'RGB (sRGB)',  note:'RGB artwork. We convert to CMYK for printing, which can shift vivid colours slightly — particularly bright greens, oranges and blues. Supplying CMYK gives you exact control.'},
+  rgb:      {status:'warn', val:'RGB',         note:'RGB artwork. We convert to CMYK for printing, which can shift vivid colours slightly. Supplying CMYK gives you exact control.'},
+  adobergb: {status:'warn', val:'Adobe RGB',   note:'Adobe RGB is a wide colour space. Converting to CMYK for print may shift saturated colours noticeably.'},
+  p3:       {status:'warn', val:'Display P3',  note:'Display P3 is a wide screen colour space. Some vivid colours cannot be reproduced in print and will shift when converted to CMYK.'},
+  unknown:  {status:'info', val:'Will be checked', note:'We could not read the colour profile in your browser. Our studio team will check it before press.'}
+};
 
 // ── RASTER IMAGE PARSING ──────────────────────────────────
 // Reads pixel dimensions + shows the image directly as preview.
@@ -1640,7 +1718,124 @@ function loadPdfLib(){
 //           exactly where to trim rather than having to be told
 // Every dimension here is set explicitly — nothing is left for another tool
 // to infer, which is what produced the 496mm and 2015mm pages.
+// Renders page 1 of a PDF to a JPEG at a given DPI, so a vector file with no
+// bleed can go down the same mirror-the-edges path as an uploaded image.
+// Cheap: page 1's size in mm, without rendering anything.
+async function readPdfPageMm(file){
+  if (!window.pdfjsLib) return null;
+  try {
+    const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    const vp = (await pdf.getPage(1)).getViewport({ scale: 1.0 });
+    return { w: vp.width * 25.4 / 72, h: vp.height * 25.4 / 72 };
+  } catch(e){
+    console.warn('[print-pdf] could not read PDF size:', e.message);
+    return null;
+  }
+}
+
+async function rasterisePdfPage(file, sizeKey, dpi){
+  if (!window.pdfjsLib) return null;
+  try {
+    const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    const page = await pdf.getPage(1);
+    const base = page.getViewport({ scale: 1.0 });          // 72 dpi
+    // Keep the canvas within browser limits — an A1 sign at 400 DPI would be
+    // ~13,000px wide and would simply fail to allocate.
+    const MAX_PX = 10000;
+    const wantScale = dpi / 72;
+    const scale = Math.min(wantScale, MAX_PX / Math.max(base.width, base.height));
+    if (scale < wantScale) console.log('[print-pdf] capped render to', Math.round(scale*72), 'DPI for a large page');
+    const vp = page.getViewport({ scale: scale });
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);  // PDFs are transparent by default
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    const blob = await new Promise(function(r){ cv.toBlob(r, 'image/jpeg', 0.95); });
+    if (!blob) return null;
+    console.log('[print-pdf] rasterised PDF at', dpi, 'DPI →', cv.width + 'x' + cv.height + 'px');
+    return { file: new File([blob], 'rasterised.jpg', { type: 'image/jpeg' }),
+             srcMm: { w: base.width * 25.4 / 72, h: base.height * 25.4 / 72 } };
+  } catch(e){
+    console.warn('[print-pdf] could not rasterise PDF:', e.message);
+    return null;
+  }
+}
+
+// Customer PDF that ALREADY has 3mm bleed: keep it as vector (no quality loss),
+// just place it on a correctly-sized page and add crop marks and boxes.
+async function buildPrintReadyPdfFromVector(file, sizeKey){
+  const spec = SIZE_SPECS[sizeKey];
+  if (!spec) return null;
+  try {
+    const PDFLibRef = await loadPdfLib();
+    const { PDFDocument, rgb } = PDFLibRef;
+    const MM = 72 / 25.4, b = PRINT_BLEED_MM, m = PRINT_MARKS_MM;
+    const pageW = (spec.mmW + 2*b + 2*m) * MM, pageH = (spec.mmH + 2*b + 2*m) * MM;
+    const artW  = (spec.mmW + 2*b) * MM,       artH  = (spec.mmH + 2*b) * MM;
+    const trimX = (m + b) * MM, trimY = (m + b) * MM;
+    const trimW = spec.mmW * MM, trimH = spec.mmH * MM;
+
+    const doc = await PDFDocument.create();
+    const page = doc.addPage([pageW, pageH]);
+    const [embedded] = await doc.embedPdf(await file.arrayBuffer(), [0]);
+    page.drawPage(embedded, { x: m * MM, y: m * MM, width: artW, height: artH });
+
+    const gap = b * MM, len = 4 * MM;
+    [[trimX,trimY],[trimX+trimW,trimY],[trimX,trimY+trimH],[trimX+trimW,trimY+trimH]]
+      .forEach(function(pt,i){
+        const right = (i===1||i===3), top = (i===2||i===3);
+        page.drawLine({ start:{x: right?pt[0]+gap:pt[0]-gap, y: pt[1]},
+                        end:{x: right?pt[0]+gap+len:pt[0]-gap-len, y: pt[1]},
+                        thickness:0.25, color: rgb(0,0,0) });
+        page.drawLine({ start:{x: pt[0], y: top?pt[1]+gap:pt[1]-gap},
+                        end:{x: pt[0], y: top?pt[1]+gap+len:pt[1]-gap-len},
+                        thickness:0.25, color: rgb(0,0,0) });
+      });
+    page.setTrimBox(trimX, trimY, trimW, trimH);
+    page.setBleedBox(m * MM, m * MM, artW, artH);
+    const bytes = await doc.save();
+    console.log('[print-pdf] vector passthrough — customer PDF kept as vector');
+    return { blob: new Blob([bytes], { type:'application/pdf' }),
+             trimMm: { w: spec.mmW, h: spec.mmH },
+             pageMm: { w: spec.mmW + 2*b + 2*m, h: spec.mmH + 2*b + 2*m },
+             route: 'vector' };
+  } catch(e){
+    console.warn('[print-pdf] vector passthrough failed:', e.message);
+    return null;
+  }
+}
+
+// Entry point: works out the right route for whatever the customer supplied.
+//   PDF already at trim+bleed  → kept as vector, nothing re-rendered
+//   any other PDF              → rendered at 400 DPI, then mirrored like an image
+//   image                      → filled to the card, bleed mirrored
 async function buildPrintReadyPdf(file, sizeKey){
+  const spec = SIZE_SPECS[sizeKey];
+  if (!spec) { console.warn('[print-pdf] no mm spec for size:', sizeKey); return null; }
+
+  if ((file.type || '').toLowerCase() === 'application/pdf') {
+    const srcMm = await readPdfPageMm(file);
+    if (!srcMm) return null;
+    const tol = 2;
+    const hasBleed = Math.abs(srcMm.w - (spec.mmW + 2*PRINT_BLEED_MM)) <= tol &&
+                     Math.abs(srcMm.h - (spec.mmH + 2*PRINT_BLEED_MM)) <= tol;
+    if (hasBleed) {
+      // Already the right size with bleed: keep every vector and embedded font.
+      const vec = await buildPrintReadyPdfFromVector(file, sizeKey);
+      if (vec) return vec;     // falls through to the raster route if it fails
+    }
+    // No bleed (or the wrong size): render it so the edges can be mirrored.
+    const probe = await rasterisePdfPage(file, sizeKey, 400);
+    if (!probe) return null;
+    const built = await buildPrintReadyPdfFromImage(probe.file, sizeKey);
+    if (built) built.route = 'rasterised';
+    return built;
+  }
+  return buildPrintReadyPdfFromImage(file, sizeKey);
+}
+
+async function buildPrintReadyPdfFromImage(file, sizeKey){
   const spec = SIZE_SPECS[sizeKey];
   if (!spec) { console.warn('[print-pdf] no mm spec for size:', sizeKey); return null; }
 
@@ -1683,7 +1878,8 @@ async function buildPrintReadyPdf(file, sizeKey){
     blob: new Blob([bytes], { type: 'application/pdf' }),
     trimMm: { w: spec.mmW, h: spec.mmH },
     pageMm: { w: spec.mmW + 2*b + 2*m, h: spec.mmH + 2*b + 2*m },
-    rasterPx: raster.px
+    rasterPx: raster.px,
+    route: 'image'
   };
 }
 
