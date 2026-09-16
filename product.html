@@ -454,7 +454,9 @@ function updateModalLinks() {
   const upload = document.getElementById('path-upload');
   const design = document.getElementById('path-design');
   if (upload) upload.href = `/${PRODUCT.slug}/order`;
-  if (design) design.href = `/design-studio?product=${PRODUCT.slug}`;
+  // Straight into the studio for THIS product — the customer has already told
+  // us what they are making by being on this page, so asking again is friction.
+  if (design) design.href = `/design-studio-ai-create.html?product=${PRODUCT.slug}`;
 }
 
 function pickAnchorQtys(qtys) {

@@ -151,12 +151,21 @@
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
+  // Someone may arrive with a product already chosen (an old link, a shared
+  // URL, a bookmark). Send them where they were going instead of making them
+  // pick again — but only if that product is actually set up in the studio.
+  var wanted = new URLSearchParams(location.search).get('product');
+
   Promise.all([
     fetch(SB + '/rest/v1/studio_config?select=product_slug', { headers }).then(function(r){ return r.ok ? r.json() : []; }),
     fetch(SB + '/rest/v1/product_types?select=slug,name,tagline,hero_image_url,display_order&active=eq.true&order=display_order', { headers }).then(function(r){ return r.ok ? r.json() : []; })
   ]).then(function(res){
     var ready = {};
     (res[0] || []).forEach(function(c){ ready[c.product_slug] = true; });
+    if (wanted && ready[wanted]) {
+      location.replace('/design-studio-ai-create.html?product=' + encodeURIComponent(wanted));
+      return;
+    }
     var list = (res[1] || []).filter(function(p){ return ready[p.slug]; });
     if (!list.length){
       el.innerHTML = '<div class="sp-loading">Our studio is being set up — <a href="/products.html">browse our products</a> in the meantime.</div>';
