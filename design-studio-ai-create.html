@@ -1186,22 +1186,29 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       // bleed canvas (so decoration extends past the trim edge — no white),
       // and the text stays in the same relative position within the TRIM area
       // so it matches the screen exactly.
-      var TW = img.naturalWidth, TH = img.naturalHeight;   // trim-size pixels
-      // 3mm bleed in pixels: derive DPI from this size's known mm dimensions
-      var spec = SIZES[size] || { dim: '' };
+      // Work at a fixed 300 DPI from the ORDERED size — never from whatever
+      // proportions the AI happened to return. The old code used the AI image's
+      // own pixel dimensions, so an A5 design came out ~159 x 208mm: the wrong
+      // shape, which the press then had to crop or stretch to fit the card.
+      var spec = SIZES[size] || { dim: '148 × 210mm' };
       var mmMatch = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
       var trimMmW = mmMatch ? parseInt(mmMatch[1],10) : 148;   // fallback A5
-      var dpi = TW / (trimMmW / 25.4);
-      var bleedPx = Math.round(3 * dpi / 25.4);                // 3mm each side
+      var trimMmH = mmMatch ? parseInt(mmMatch[2],10) : 210;
+      var PRINT_DPI = 300;
+      var mmPx = function(mm){ return Math.round(mm * PRINT_DPI / 25.4); };
+      var TW = mmPx(trimMmW), TH = mmPx(trimMmH);              // trim, in pixels
+      var bleedPx = mmPx(3);                                   // 3mm each side
 
       var PW = TW + bleedPx*2, PH = TH + bleedPx*2;            // full bleed canvas
       var cv = document.createElement('canvas');
       cv.width = PW; cv.height = PH;
       var ctx = cv.getContext('2d');
 
-      // 1. draw the decorative background scaled to fill the FULL bleed canvas
-      //    (so the decoration reaches the very edge — bleed has artwork, not white)
-      ctx.drawImage(img, 0, 0, PW, PH);
+      // 1. draw the decorative background so it COVERS the full bleed canvas —
+      //    scaled proportionally and centre-cropped, never squashed to fit.
+      var coverScale = Math.max(PW / img.naturalWidth, PH / img.naturalHeight);
+      var bgW = img.naturalWidth * coverScale, bgH = img.naturalHeight * coverScale;
+      ctx.drawImage(img, (PW - bgW)/2, (PH - bgH)/2, bgW, bgH);
 
       // 2. draw the text, mapping on-screen positions into the TRIM area
       //    (the trim area is inset by bleedPx inside the canvas)
@@ -1275,6 +1282,71 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     im.src = fullDataUrl;
   }
 
+  // pdf-lib, loaded only when a design is actually ordered
+  var PDFLIB_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
+  var _pdfLibPromise = null;
+  function loadPdfLib(){
+    if (window.PDFLib) return Promise.resolve(window.PDFLib);
+    if (_pdfLibPromise) return _pdfLibPromise;
+    _pdfLibPromise = new Promise(function(resolve, reject){
+      var sc = document.createElement('script');
+      sc.src = PDFLIB_SRC;
+      sc.onload = function(){ resolve(window.PDFLib); };
+      sc.onerror = function(){ reject(new Error('pdf-lib failed to load')); };
+      document.head.appendChild(sc);
+    });
+    return _pdfLibPromise;
+  }
+
+  // ── PRESS-READY PDF (AI track) ──────────────────────────
+  // The flattened image is already trim + 3mm bleed at 300 DPI. This wraps it
+  // in a PDF page of exactly that size plus a 5mm margin carrying vector crop
+  // marks, and records TrimBox/BleedBox so the press knows where to cut.
+  function buildAiPrintPdf(printImageDataUrl, sizeKey){
+    var spec = SIZES[sizeKey] || SIZES['A5'] || { dim: '148 × 210mm' };
+    var mm = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
+    if (!mm) return Promise.resolve(null);
+    var trimMmW = parseInt(mm[1],10), trimMmH = parseInt(mm[2],10);
+    var MM = 72/25.4, b = 3, m = 5;
+
+    return loadPdfLib().then(function(PDFLibRef){
+      var PDFDocument = PDFLibRef.PDFDocument, rgb = PDFLibRef.rgb;
+      return dataUrlToBlob(printImageDataUrl).arrayBuffer().then(function(buf){
+        return PDFDocument.create().then(function(doc){
+          var pageW = (trimMmW + 2*b + 2*m) * MM, pageH = (trimMmH + 2*b + 2*m) * MM;
+          var artW  = (trimMmW + 2*b) * MM,       artH  = (trimMmH + 2*b) * MM;
+          var trimX = (m + b) * MM,               trimY = (m + b) * MM;
+          var trimW = trimMmW * MM,               trimH = trimMmH * MM;
+          var page = doc.addPage([pageW, pageH]);
+          return doc.embedJpg(buf).then(function(img){
+            page.drawImage(img, { x: m*MM, y: m*MM, width: artW, height: artH });
+            var gap = b*MM, len = 4*MM;
+            [[trimX,trimY],[trimX+trimW,trimY],[trimX,trimY+trimH],[trimX+trimW,trimY+trimH]]
+              .forEach(function(pt,i){
+                var right = (i===1||i===3), top = (i===2||i===3);
+                page.drawLine({ start:{x: right?pt[0]+gap:pt[0]-gap, y: pt[1]},
+                                end:{x: right?pt[0]+gap+len:pt[0]-gap-len, y: pt[1]},
+                                thickness:0.25, color: rgb(0,0,0) });
+                page.drawLine({ start:{x: pt[0], y: top?pt[1]+gap:pt[1]-gap},
+                                end:{x: pt[0], y: top?pt[1]+gap+len:pt[1]-gap-len},
+                                thickness:0.25, color: rgb(0,0,0) });
+              });
+            page.setTrimBox(trimX, trimY, trimW, trimH);
+            page.setBleedBox(m*MM, m*MM, artW, artH);
+            return doc.save().then(function(bytes){
+              return { blob: new Blob([bytes], {type:'application/pdf'}),
+                       trimMm: { w: trimMmW, h: trimMmH },
+                       pageMm: { w: trimMmW+2*b+2*m, h: trimMmH+2*b+2*m } };
+            });
+          });
+        });
+      });
+    }).catch(function(e){
+      console.warn('[ai-print-pdf] failed:', e.message);
+      return null;   // order still proceeds; prepress picks it up
+    });
+  }
+
   // dataURL -> Blob
   function dataUrlToBlob(dataUrl){
     var parts = dataUrl.split(','), mime = parts[0].match(/:(.*?);/)[1];
@@ -1306,15 +1378,35 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       })
       .then(function(r){
         var artworkUrl = r.ok ? (SB_URL + '/storage/v1/object/artwork/' + fileName) : null;
-        // 2. make a small thumbnail for display on the order pages
+        // 2. build the press-ready PDF: exact ordered size, 3mm bleed already in
+        //    the artwork, vector crop marks, TrimBox/BleedBox set.
+        return buildAiPrintPdf(printImage, size).then(function(built){
+          if (!built) return { artworkUrl: artworkUrl, printUrl: null };
+          var pdfName = 'print-ai-' + Date.now() + '.pdf';
+          return fetch(SB_URL + '/storage/v1/object/artwork/' + pdfName, {
+            method: 'POST',
+            headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/pdf', 'x-upsert': 'false' },
+            body: built.blob
+          })
+          .then(function(pr){
+            if (pr.ok) console.log('[ai-print-pdf]', built.pageMm.w + 'x' + built.pageMm.h + 'mm page, trim ' + built.trimMm.w + 'x' + built.trimMm.h + 'mm');
+            else console.warn('[ai-print-pdf] upload failed:', pr.status);
+            return { artworkUrl: artworkUrl, printUrl: pr.ok ? (SB_URL + '/storage/v1/object/public/artwork/' + pdfName) : null };
+          })
+          .catch(function(e){ console.warn('[ai-print-pdf] upload error:', e.message); return { artworkUrl: artworkUrl, printUrl: null }; });
+        });
+      })
+      .then(function(res){
+        // 3. make a small thumbnail for display on the order pages
         makeThumb(printImage, function(thumb){
           var design = {
             source: 'ai-studio',
             templateName: 'Your bespoke design',
             templateId: 'ai-' + Date.now(),
             size: size || 'A5',
-            artworkUrl: artworkUrl,       // full print file lives here (for printing)
-            thumbnail: thumb,             // small image for display only
+            artworkUrl: res.artworkUrl,        // flattened artwork (trim + bleed)
+            printArtworkUrl: res.printUrl,     // press-ready PDF at the exact size
+            thumbnail: thumb,                  // small image for display only
             text: {
               name1: (parts[0]||'').trim(),
               name2: (parts[1]||'').trim(),

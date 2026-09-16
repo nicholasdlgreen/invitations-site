@@ -1,213 +1,220 @@
 // /netlify/functions/print-prep.js
 //
-// Converts an uploaded artwork file to a print-ready PDF/X-1a using pdfRest,
-// then stores the result back in Supabase Storage. Called from the browser
-// (upload-and-print proceedToStripe flow) just before Stripe redirect, so the
-// print-ready file exists by the time the order is captured.
+// Converts artwork to a print-ready PDF/X-1a (CMYK) at the EXACT physical size
+// the customer ordered, then stores the result in Supabase Storage.
 //
-// Architecture:
-//   1. Browser uploads original file to Supabase → gets `artworkUrl`
-//   2. Browser POSTs { fileUrl: artworkUrl } to this function
-//   3. This function asks pdfRest to fetch the file by URL (no proxy upload)
-//   4. pdfRest converts to PDF/X-1a (CMYK, embedded fonts, etc.)
-//   5. This function downloads the result, uploads to Supabase as print-ready
-//   6. Returns the Supabase URL of the print-ready PDF
+// WHY THIS EXISTS / WHAT WENT WRONG BEFORE:
+//   The old version handed the image to pdfRest's /pdf tool and let it choose
+//   the page size. That tool has no page-size option for images, so it fell
+//   back to placing them at 72-96 DPI: an A5 card came out 496 x 649mm and an
+//   uploaded photo came out 2015 x 1511mm. The printer then scaled those down,
+//   which is why prints were the wrong size AND looked low-resolution.
+//   It also called /set-page-boxes and /printers-marks, which are not real
+//   pdfRest endpoints (correct path: /pdf-with-page-boxes-set; printer's marks
+//   does not exist as a tool), so trim boxes and crop marks silently never
+//   applied.
+//
+// HOW IT WORKS NOW:
+//   We build the page ourselves at an exact size and place the artwork on it.
+//     page = trim + bleed on all sides + a margin that holds the crop marks
+//   1. /upload           — pdfRest fetches the artwork by URL
+//   2. /blank-pdf        — a blank page at the exact custom size (PDF units)
+//   3. /pdf-with-added-image — artwork placed at exact position and size
+//   4. /pdfx             — convert to PDF/X-1a (this is what forces CMYK)
+//   5. /pdf-with-page-boxes-set — TrimBox (the cut line) and BleedBox
+//   Customer-supplied PDFs skip steps 2-3: their own page is kept.
+//
+//   Crop marks are drawn into the artwork itself by the browser before upload
+//   (see buildPrintReadyRaster in upload-and-print.html), because pdfRest has
+//   no printer's-marks tool.
+//
+// PDF units: 1 unit = 1/72 inch. mm -> units = mm / 25.4 * 72.
 //
 // Env vars required:
-//   PDFREST_API_KEY  — your pdfRest API key (already set in Netlify)
+//   PDFREST_API_KEY  — set in Netlify site settings
 //
 // Notes:
-//   - We use the EU endpoint (eu-api.pdfrest.com) for GDPR compliance.
-//   - Free pdfRest tier outputs WATERMARKED PDFs. Upgrade to remove the
-//     watermark before going live with real orders.
-//   - Supabase anon key is hardcoded to match the existing pattern in
-//     upload-and-print.html. Long-term we should move it to env vars.
+//   - EU endpoint (eu-api.pdfrest.com) for GDPR.
+//   - Free pdfRest tier WATERMARKS output. Upgrade before real orders.
 
 const PDFREST_BASE = 'https://eu-api.pdfrest.com';
 const SUPABASE_URL = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
 // Anon key — same as in upload-and-print.html. Public by design (used by browser).
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
 
+const MM = 72 / 25.4;            // millimetres -> PDF units
+const round2 = n => Math.round(n * 100) / 100;
+
+function cors() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
+}
+
+// Every pdfRest call goes through here so a failure is never swallowed.
+async function pdfRest(path, apiKey, body) {
+  const resp = await fetch(`${PDFREST_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  let result;
+  const text = await resp.text();
+  try { result = JSON.parse(text); }
+  catch (e) { throw new Error(`${path} returned non-JSON (status ${resp.status}): ${text.slice(0, 200)}`); }
+  if (!resp.ok) {
+    throw new Error(`${path} failed (status ${resp.status}): ${JSON.stringify(result).slice(0, 300)}`);
+  }
+  const id = result.outputId || (result.files && result.files[0] && result.files[0].id);
+  if (!id && !result.outputUrl) {
+    throw new Error(`${path} returned no output id: ${JSON.stringify(result).slice(0, 300)}`);
+  }
+  return { id, url: result.outputUrl, raw: result };
+}
+
 exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: cors(), body: '' };
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers: cors(), body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   const apiKey = process.env.PDFREST_API_KEY;
   if (!apiKey) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'PDFREST_API_KEY not configured in Netlify env vars' }) };
+    return { statusCode: 500, headers: cors(), body: JSON.stringify({ error: 'PDFREST_API_KEY not configured in Netlify env vars' }) };
   }
 
   let payload;
-  try {
-    payload = JSON.parse(event.body || '{}');
-  } catch (e) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) };
-  }
+  try { payload = JSON.parse(event.body || '{}'); }
+  catch (e) { return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Invalid JSON body' }) }; }
 
-  const { fileUrl, outputType = 'PDF/X-1a', inputType = 'pdf', bleedMm = 0, bleedBakedIn = false } = payload;
+  const {
+    fileUrl,
+    outputType = 'PDF/X-1a',
+    inputType = 'pdf',              // 'image' | 'pdf'
+    bleedMm = 3,                    // PrintedEasy require 3mm
+    marksMm = 5,                    // margin outside the bleed holding crop marks
+    trimMmW = null,                 // the ordered card size, e.g. 148
+    trimMmH = null,                 // e.g. 210
+    artworkIncludesMarks = false,   // legacy: raster spans the whole page
+    pressReady = false,             // PDF we built ourselves: size/boxes/marks already correct
+    bleedBakedIn = false            // customer PDF already includes bleed
+  } = payload;
+
   if (!fileUrl) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Missing fileUrl in request body' }) };
+    return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Missing fileUrl in request body' }) };
+  }
+  // Images MUST come with a target size now — without it we cannot build a
+  // correctly-sized page, and guessing is exactly the bug we are fixing.
+  if (inputType === 'image' && (!trimMmW || !trimMmH)) {
+    return {
+      statusCode: 400,
+      headers: cors(),
+      body: JSON.stringify({ error: 'Missing trimMmW/trimMmH — required to build an image at the correct print size' })
+    };
   }
 
+  const warnings = [];
+
   try {
-    // ─── Step 1: Tell pdfRest to fetch the file from Supabase ───
-    // /upload supports url parameter — pdfRest downloads it directly. This
-    // means our Netlify Function doesn't need to proxy file bytes (avoids
-    // the 6MB request body limit).
-    const uploadResp = await fetch(`${PDFREST_BASE}/upload`, {
-      method: 'POST',
-      headers: {
-        'Api-Key': apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ url: fileUrl })
-    });
+    // ─── Step 1: pdfRest fetches the artwork by URL (no 6MB proxy limit) ───
+    const uploaded = await pdfRest('/upload', apiKey, { url: fileUrl });
+    let fileId = uploaded.id;
+    console.log('[print-prep] uploaded to pdfRest:', fileId);
 
-    const uploadResult = await uploadResp.json();
-    if (!uploadResp.ok || !uploadResult.files || !uploadResult.files[0] || !uploadResult.files[0].id) {
-      return {
-        statusCode: 502,
-        body: JSON.stringify({
-          error: 'pdfRest /upload failed',
-          status: uploadResp.status,
-          result: uploadResult
-        })
-      };
-    }
+    let pageWmm = null, pageHmm = null, trimInsetMm = null, bleedInsetMm = null;
 
-    let fileId = uploadResult.files[0].id;
-    console.log('[print-prep] Uploaded to pdfRest, fileId:', fileId);
-
-    // ─── Step 1b: if the input is an IMAGE (e.g. an AI-studio JPEG), convert
-    //     it to a standard PDF first. Uploaded PDFs skip this step. ───
     if (inputType === 'image') {
-      const toPdfResp = await fetch(`${PDFREST_BASE}/pdf`, {
-        method: 'POST',
-        headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: fileId, output: 'foreverprint_from_image' })
+      // ─── Steps 2-3: build the page at the exact ordered size ───
+      // Artwork we generate spans the full page (marks margin included).
+      // A bare image (no marks drawn in) is treated as trim+bleed only.
+      pageWmm = trimMmW + 2 * bleedMm + 2 * marksMm;
+      pageHmm = trimMmH + 2 * bleedMm + 2 * marksMm;
+
+      const imgWmm = artworkIncludesMarks ? pageWmm : trimMmW + 2 * bleedMm;
+      const imgHmm = artworkIncludesMarks ? pageHmm : trimMmH + 2 * bleedMm;
+      const imgXmm = artworkIncludesMarks ? 0 : marksMm;
+      const imgYmm = artworkIncludesMarks ? 0 : marksMm;
+
+      const blank = await pdfRest('/blank-pdf', apiKey, {
+        page_count: 1,
+        page_size: 'custom',
+        custom_width: round2(pageWmm * MM),
+        custom_height: round2(pageHmm * MM),
+        output: 'foreverprint_page'
       });
-      const toPdfResult = await toPdfResp.json();
-      if (!toPdfResp.ok || !(toPdfResult.outputId || (toPdfResult.files && toPdfResult.files[0] && toPdfResult.files[0].id))) {
-        return {
-          statusCode: 502,
-          body: JSON.stringify({ error: 'pdfRest image-to-PDF (/pdf) failed', status: toPdfResp.status, result: toPdfResult })
-        };
+      console.log('[print-prep] blank page created:', pageWmm, 'x', pageHmm, 'mm');
+
+      const placed = await pdfRest('/pdf-with-added-image', apiKey, {
+        id: blank.id,
+        image_id: fileId,
+        page: 1,
+        x: round2(imgXmm * MM),
+        y: round2(imgYmm * MM),
+        width: round2(imgWmm * MM),
+        height: round2(imgHmm * MM),
+        output: 'foreverprint_placed'
+      });
+      fileId = placed.id;
+      console.log('[print-prep] artwork placed at exact size');
+
+      trimInsetMm = marksMm + bleedMm;   // from page edge in to the cut line
+      bleedInsetMm = marksMm;            // from page edge in to the bleed edge
+    } else {
+      // A PDF we built ourselves already has the right page size, TrimBox,
+      // BleedBox and crop marks — we only re-assert the boxes in case the
+      // PDF/X conversion drops them. Otherwise it's a customer PDF: if they
+      // supplied bleed the cut line sits bleedMm inside the page, if not the
+      // page IS the trim size.
+      if (pressReady) {
+        trimInsetMm = marksMm + bleedMm;
+        bleedInsetMm = marksMm;
+      } else {
+        trimInsetMm = bleedBakedIn ? bleedMm : 0;
+        bleedInsetMm = 0;
       }
-      // chain the resulting PDF's id into the pdfx step
-      fileId = toPdfResult.outputId || toPdfResult.files[0].id;
-      console.log('[print-prep] Converted image to PDF, fileId:', fileId);
     }
 
-    // ─── Step 2: Convert to PDF/X-1a ───
-    const pdfxResp = await fetch(`${PDFREST_BASE}/pdfx`, {
-      method: 'POST',
-      headers: {
-        'Api-Key': apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        id: fileId,
-        output_type: outputType,
-        output: 'foreverprint_print_ready'
-      })
+    // ─── Step 4: PDF/X-1a — this is the step that enforces CMYK ───
+    const pdfx = await pdfRest('/pdfx', apiKey, {
+      id: fileId,
+      output_type: outputType,
+      output: 'foreverprint_print_ready'
     });
+    let finalId = pdfx.id;
+    let finalUrl = pdfx.url;
+    console.log('[print-prep] converted to', outputType);
 
-    const pdfxResult = await pdfxResp.json();
-    if (!pdfxResp.ok || !pdfxResult.outputUrl) {
-      return {
-        statusCode: 502,
-        body: JSON.stringify({
-          error: 'pdfRest /pdfx conversion failed',
-          status: pdfxResp.status,
-          result: pdfxResult
-        })
-      };
+    // ─── Step 5: TrimBox + BleedBox so the printer knows where to cut ───
+    // Real endpoint is /pdf-with-page-boxes-set and it takes inset margins.
+    try {
+      const boxes = [
+        { box: 'trim',  pages: [{ range: '1', left: round2(trimInsetMm * MM),  right: round2(trimInsetMm * MM),  top: round2(trimInsetMm * MM),  bottom: round2(trimInsetMm * MM) }] },
+        { box: 'bleed', pages: [{ range: '1', left: round2(bleedInsetMm * MM), right: round2(bleedInsetMm * MM), top: round2(bleedInsetMm * MM), bottom: round2(bleedInsetMm * MM) }] }
+      ];
+      const boxed = await pdfRest('/pdf-with-page-boxes-set', apiKey, {
+        id: finalId,
+        boxes: JSON.stringify(boxes),
+        output: 'foreverprint_boxed'
+      });
+      finalId = boxed.id || finalId;
+      if (boxed.url) finalUrl = boxed.url;
+      console.log('[print-prep] TrimBox/BleedBox set');
+    } catch (e) {
+      // Report it — do NOT pretend the file is fully print-ready.
+      warnings.push('Page boxes not set: ' + e.message);
+      console.warn('[print-prep] page boxes failed:', e.message);
     }
 
-    console.log('[print-prep] PDF/X-1a created, outputId:', pdfxResult.outputId);
+    if (!finalUrl) throw new Error('No output URL from pdfRest after processing');
 
-    // ─── Step 2b: if the file has bleed, define the TrimBox/BleedBox so the
-    //     printer knows exactly where to cut. The artwork already extends into
-    //     the bleed (baked in at flatten). We inset the TrimBox by bleedMm on
-    //     all sides; the BleedBox is the full page. ───
-    let boxedId = pdfxResult.outputId;
-    if (bleedMm && bleedMm > 0 && boxedId) {
-      try {
-        const bleedPt = (bleedMm / 25.4) * 72;  // mm → PDF points
-        // If bleed is baked into the artwork (AI designs): the page IS trim+bleed,
-        //   so the TrimBox sits inset by bleedMm, BleedBox = full page.
-        // If NOT baked in (customer uploads at trim size): the page IS the trim,
-        //   so TrimBox = full page (no inset), BleedBox = full page. The printer
-        //   then knows the whole file is the trim size. (Marks still drawn.)
-        const trimInset = bleedBakedIn ? bleedPt : 0;
-        const boxResp = await fetch(`${PDFREST_BASE}/set-page-boxes`, {
-          method: 'POST',
-          headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: boxedId,
-            trim_box: { left: trimInset, bottom: trimInset, right: trimInset, top: trimInset, unit: 'inset' },
-            bleed_box: { left: 0, bottom: 0, right: 0, top: 0, unit: 'inset' },
-            output: 'foreverprint_boxed'
-          })
-        });
-        const boxResult = await boxResp.json();
-        if (boxResp.ok && (boxResult.outputId || boxResult.outputUrl)) {
-          boxedId = boxResult.outputId || boxedId;
-          // if it returned a fresh URL, use it downstream
-          if (boxResult.outputUrl) pdfxResult.outputUrl = boxResult.outputUrl;
-          console.log('[print-prep] TrimBox/BleedBox set for', bleedMm + 'mm bleed');
-        } else {
-          console.warn('[print-prep] set-page-boxes failed, proceeding without explicit boxes:', boxResult);
-        }
-      } catch(e) {
-        console.warn('[print-prep] set-page-boxes error, proceeding:', e.message);
-      }
-    }
-
-    // ─── Step 2c: draw VISIBLE crop marks (printer's marks) based on the
-    //     TrimBox/BleedBox. PrintedEasy require visible marks over the bleed. ───
-    if (bleedMm && bleedMm > 0 && boxedId) {
-      try {
-        const cmResp = await fetch(`${PDFREST_BASE}/printers-marks`, {
-          method: 'POST',
-          headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: boxedId,
-            crop_marks: 'true',
-            bleed_marks: 'false',
-            registration_marks: 'false',
-            color_bars: 'false',
-            page_information: 'false',
-            output: 'foreverprint_marks'
-          })
-        });
-        const cmResult = await cmResp.json();
-        if (cmResp.ok && (cmResult.outputId || cmResult.outputUrl)) {
-          boxedId = cmResult.outputId || boxedId;
-          if (cmResult.outputUrl) pdfxResult.outputUrl = cmResult.outputUrl;
-          console.log('[print-prep] Crop marks added.');
-        } else {
-          console.warn('[print-prep] printers-marks failed, proceeding without visible marks:', cmResult);
-        }
-      } catch(e) {
-        console.warn('[print-prep] printers-marks error, proceeding:', e.message);
-      }
-    }
-
-    // ─── Step 3: Download the print-ready PDF from pdfRest ───
-    // pdfRest URLs expire after 30 minutes, so we need to persist the file
-    // to our own storage immediately.
-    const fileResp = await fetch(pdfxResult.outputUrl);
-    if (!fileResp.ok) {
-      return {
-        statusCode: 502,
-        body: JSON.stringify({ error: 'Could not download converted file from pdfRest', status: fileResp.status })
-      };
-    }
+    // ─── Step 6: persist (pdfRest URLs expire after ~30 minutes) ───
+    const fileResp = await fetch(finalUrl);
+    if (!fileResp.ok) throw new Error('Could not download converted file from pdfRest, status ' + fileResp.status);
     const fileBuffer = Buffer.from(await fileResp.arrayBuffer());
 
-    // ─── Step 4: Upload print-ready PDF to Supabase Storage ───
     const fileName = `print_ready_${Date.now()}.pdf`;
     const storagePath = `print-ready/${fileName}`;
     const supabaseResp = await fetch(`${SUPABASE_URL}/storage/v1/object/artwork/${storagePath}`, {
@@ -220,37 +227,33 @@ exports.handler = async (event) => {
       },
       body: fileBuffer
     });
-
     if (!supabaseResp.ok) {
       const errText = await supabaseResp.text();
-      return {
-        statusCode: 502,
-        body: JSON.stringify({
-          error: 'Supabase upload failed',
-          status: supabaseResp.status,
-          details: errText
-        })
-      };
+      throw new Error('Supabase upload failed, status ' + supabaseResp.status + ': ' + errText.slice(0, 200));
     }
 
-    const printReadyUrl = `${SUPABASE_URL}/storage/v1/object/artwork/${storagePath}`;
-    console.log('[print-prep] Print-ready PDF stored at:', printReadyUrl);
+    const printReadyUrl = `${SUPABASE_URL}/storage/v1/object/public/artwork/${storagePath}`;
+    console.log('[print-prep] stored:', printReadyUrl);
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: cors(),
       body: JSON.stringify({
         success: true,
-        printReadyUrl: printReadyUrl,
-        outputType: outputType,
-        pdfRestOutputId: pdfxResult.outputId
+        printReadyUrl,
+        outputType,
+        pageSizeMm: pageWmm ? { width: round2(pageWmm), height: round2(pageHmm) } : null,
+        trimSizeMm: trimMmW ? { width: trimMmW, height: trimMmH } : null,
+        bleedMm,
+        warnings
       })
     };
   } catch (err) {
-    console.error('[print-prep] Unexpected error:', err);
+    console.error('[print-prep] failed:', err.message);
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message })
+      statusCode: 502,
+      headers: cors(),
+      body: JSON.stringify({ error: err.message, warnings })
     };
   }
 };

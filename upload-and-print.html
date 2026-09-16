@@ -1475,6 +1475,27 @@ async function addToCartUpload(){
     } catch(e){ console.error('Artwork upload error:', e.message); }
   }
 
+  // Build the press-ready version now, while the file is still in memory:
+  // correct size, mirrored 3mm bleed, crop marks, 300 DPI.
+  var uploadedPrintUrl = null, printSpec = null;
+  if (currentFile && !designMode) {
+    try {
+      const built = await buildPrintReadyPdf(currentFile, selectedSize);
+      if (built) {
+        const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+        const pName = 'print-' + Date.now() + '.pdf';
+        const pRes = await fetch('https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/' + pName, {method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/pdf','x-upsert':'true'},body:built.blob});
+        if (pRes.ok) {
+          uploadedPrintUrl = 'https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/public/artwork/' + pName;
+          printSpec = { trimMm: built.trimMm, pageMm: built.pageMm, rasterPx: built.rasterPx };
+          console.log('[print-pdf] built', built.pageMm.w + 'x' + built.pageMm.h + 'mm page for', selectedSize);
+        } else {
+          console.error('[print-raster] upload failed:', pRes.status);
+        }
+      }
+    } catch(e){ console.error('[print-raster] error:', e.message); }
+  }
+
   addToCart({
     name: designMode && designState ? (designState.templateName + ' — ' + (designState.text.name1 || '') + ' & ' + (designState.text.name2 || '')) : (currentFile?currentFile.name.replace(/\.[^.]+$/,''):'Custom Design'),
     qty: uploadQty,
@@ -1483,6 +1504,8 @@ async function addToCartUpload(){
     total: total,
     icon:'✦',
     artworkUrl: uploadedArtworkUrl,
+    printArtworkUrl: uploadedPrintUrl,
+    printSpec: printSpec,
     // Design-studio extras (only present when in design mode)
     source: designMode ? 'design-studio' : 'upload',
     templateId: designMode && designState ? designState.templateId : null,
@@ -1490,6 +1513,178 @@ async function addToCartUpload(){
   });
   showToast('Added to your basket ✓');
   goStep(4);
+}
+
+// ── PRINT-READY RASTER BUILDER ────────────────────────────
+// Turns a customer's uploaded image into a file the press can use:
+//   • scaled to fill the ordered card size exactly (overflow cropped)
+//   • 3mm bleed created by MIRRORING the edge pixels outward — the method
+//     PrintedEasy and the wider trade use, so nothing is lost or distorted
+//   • crop marks drawn in a 5mm margin outside the bleed, so the guillotine
+//     operator can see where to cut (pdfRest has no printer's-marks tool)
+//   • rendered at 300 DPI for the chosen size
+// The resulting page is trim + 3mm bleed + 5mm marks margin on every side,
+// which is exactly what print-prep.js then places on a PDF page of that size.
+const PRINT_DPI = 300, PRINT_BLEED_MM = 3, PRINT_MARKS_MM = 5;
+
+function mmToPx(mm){ return Math.round(mm * PRINT_DPI / 25.4); }
+
+function buildPrintReadyRaster(file, sizeKey, opts){
+  opts = opts || {};
+  const includeMarks = !!opts.includeMarks;   // false when pdf-lib draws them as vectors
+  return new Promise(function(resolve){
+    const spec = SIZE_SPECS[sizeKey] || SIZE_SPECS['A5'];
+    const type = (file.type || '').toLowerCase();
+    // Browsers can't decode TIFF/AI/EPS — those still go to prepress manually.
+    if (!/^image\/(jpeg|jpg|png|webp)$/.test(type)) { resolve(null); return; }
+
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onerror = function(){ URL.revokeObjectURL(url); resolve(null); };
+    img.onload = function(){
+      try {
+        const b = mmToPx(PRINT_BLEED_MM), m = includeMarks ? mmToPx(PRINT_MARKS_MM) : 0;
+        const tw = mmToPx(spec.mmW), th = mmToPx(spec.mmH);
+        const pageW = tw + 2*b + 2*m, pageH = th + 2*b + 2*m;
+        const tx = m + b, ty = m + b;            // top-left of the TRIM area
+
+        const cv = document.createElement('canvas');
+        cv.width = pageW; cv.height = pageH;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, pageW, pageH);
+
+        // 1. Draw the artwork to FILL the trim area, cropping the overflow
+        //    (the upload checks already warn when the shape doesn't match).
+        const scale = Math.max(tw / img.naturalWidth, th / img.naturalHeight);
+        const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
+        ctx.save();
+        ctx.beginPath(); ctx.rect(tx, ty, tw, th); ctx.clip();
+        ctx.drawImage(img, tx + (tw - dw)/2, ty + (th - dh)/2, dw, dh);
+        ctx.restore();
+
+        // 2. Mirror the edge strips outward to create the 3mm bleed.
+        function mirror(sx, sy, sw, sh, dx, dy, flipX, flipY){
+          ctx.save();
+          ctx.translate(dx + (flipX ? sw : 0), dy + (flipY ? sh : 0));
+          ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+          ctx.drawImage(cv, sx, sy, sw, sh, 0, 0, sw, sh);
+          ctx.restore();
+        }
+        mirror(tx, ty, b, th, tx - b, ty, true, false);            // left
+        mirror(tx + tw - b, ty, b, th, tx + tw, ty, true, false);  // right
+        mirror(tx, ty, tw, b, tx, ty - b, false, true);            // top
+        mirror(tx, ty + th - b, tw, b, tx, ty + th, false, true);  // bottom
+        mirror(tx, ty, b, b, tx - b, ty - b, true, true);                       // TL
+        mirror(tx + tw - b, ty, b, b, tx + tw, ty - b, true, true);             // TR
+        mirror(tx, ty + th - b, b, b, tx - b, ty + th, true, true);             // BL
+        mirror(tx + tw - b, ty + th - b, b, b, tx + tw, ty + th, true, true);   // BR
+
+        // 3. Raster crop marks only if nothing else will draw them.
+        if (includeMarks) {
+          const gap = b, len = mmToPx(4);
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = Math.max(1, mmToPx(0.25));
+          ctx.beginPath();
+          [[tx, ty], [tx + tw, ty], [tx, ty + th], [tx + tw, ty + th]].forEach(function(pt, i){
+            const right = (i === 1 || i === 3), bottom = (i === 2 || i === 3);
+            const hx = right ? pt[0] + gap : pt[0] - gap;
+            ctx.moveTo(hx, pt[1]); ctx.lineTo(right ? hx + len : hx - len, pt[1]);
+            const vy = bottom ? pt[1] + gap : pt[1] - gap;
+            ctx.moveTo(pt[0], vy); ctx.lineTo(pt[0], bottom ? vy + len : vy - len);
+          });
+          ctx.stroke();
+        }
+
+        URL.revokeObjectURL(url);
+        cv.toBlob(function(blob){
+          resolve(blob ? {
+            blob: blob,
+            trimMm: { w: spec.mmW, h: spec.mmH },
+            artMm:  { w: spec.mmW + 2*PRINT_BLEED_MM, h: spec.mmH + 2*PRINT_BLEED_MM },
+            px: { w: pageW, h: pageH }
+          } : null);
+        }, 'image/jpeg', 0.95);
+      } catch(e){
+        console.warn('[print-raster] failed:', e.message);
+        URL.revokeObjectURL(url);
+        resolve(null);
+      }
+    };
+    img.src = url;
+  });
+}
+
+// pdf-lib is only needed at the moment we build a print file, so load it lazily.
+const PDFLIB_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
+let _pdfLibPromise = null;
+function loadPdfLib(){
+  if (window.PDFLib) return Promise.resolve(window.PDFLib);
+  if (_pdfLibPromise) return _pdfLibPromise;
+  _pdfLibPromise = new Promise(function(resolve, reject){
+    const sc = document.createElement('script');
+    sc.src = PDFLIB_SRC;
+    sc.onload = function(){ resolve(window.PDFLib); };
+    sc.onerror = function(){ reject(new Error('pdf-lib failed to load')); };
+    document.head.appendChild(sc);
+  });
+  return _pdfLibPromise;
+}
+
+// ── PRESS-READY PDF BUILDER ───────────────────────────────
+// Builds the actual file the press receives, at exactly the ordered size:
+//   page  = trim + 3mm bleed + 5mm margin holding the crop marks
+//   image = trim + 3mm bleed (artwork filled to the card, bleed mirrored)
+//   marks = true vector hairlines, aligned to the trim edges
+//   boxes = TrimBox (the cut line) and BleedBox, so the printer's kit knows
+//           exactly where to trim rather than having to be told
+// Every dimension here is set explicitly — nothing is left for another tool
+// to infer, which is what produced the 496mm and 2015mm pages.
+async function buildPrintReadyPdf(file, sizeKey){
+  const spec = SIZE_SPECS[sizeKey];
+  if (!spec) { console.warn('[print-pdf] no mm spec for size:', sizeKey); return null; }
+
+  const raster = await buildPrintReadyRaster(file, sizeKey, { includeMarks: false });
+  if (!raster) return null;
+
+  const PDFLibRef = await loadPdfLib();
+  const { PDFDocument, rgb } = PDFLibRef;
+  const MM = 72 / 25.4;
+  const b = PRINT_BLEED_MM, m = PRINT_MARKS_MM;
+
+  const pageW = (spec.mmW + 2*b + 2*m) * MM, pageH = (spec.mmH + 2*b + 2*m) * MM;
+  const artW  = (spec.mmW + 2*b) * MM,       artH  = (spec.mmH + 2*b) * MM;
+  const trimX = (m + b) * MM,                trimY = (m + b) * MM;
+  const trimW = spec.mmW * MM,               trimH = spec.mmH * MM;
+
+  const doc = await PDFDocument.create();
+  const page = doc.addPage([pageW, pageH]);
+  const img = await doc.embedJpg(await raster.blob.arrayBuffer());
+  page.drawImage(img, { x: m * MM, y: m * MM, width: artW, height: artH });
+
+  // Crop marks: start at the bleed edge, run 4mm outward, hairline black.
+  const gap = b * MM, len = 4 * MM;
+  [[trimX, trimY], [trimX + trimW, trimY], [trimX, trimY + trimH], [trimX + trimW, trimY + trimH]]
+    .forEach(function(pt, i){
+      const right = (i === 1 || i === 3), top = (i === 2 || i === 3);
+      page.drawLine({ start:{ x: right ? pt[0]+gap : pt[0]-gap, y: pt[1] },
+                      end:  { x: right ? pt[0]+gap+len : pt[0]-gap-len, y: pt[1] },
+                      thickness: 0.25, color: rgb(0,0,0) });
+      page.drawLine({ start:{ x: pt[0], y: top ? pt[1]+gap : pt[1]-gap },
+                      end:  { x: pt[0], y: top ? pt[1]+gap+len : pt[1]-gap-len },
+                      thickness: 0.25, color: rgb(0,0,0) });
+    });
+
+  page.setTrimBox(trimX, trimY, trimW, trimH);
+  page.setBleedBox(m * MM, m * MM, artW, artH);
+
+  const bytes = await doc.save();
+  return {
+    blob: new Blob([bytes], { type: 'application/pdf' }),
+    trimMm: { w: spec.mmW, h: spec.mmH },
+    pageMm: { w: spec.mmW + 2*b + 2*m, h: spec.mmH + 2*b + 2*m },
+    rasterPx: raster.px
+  };
 }
 
 // ── CHECKOUT ─────────────────────────────────────────────
@@ -1574,15 +1769,51 @@ async function proceedToStripe(){
     var artExt = (artworkUrl||'').split('?')[0].split('.').pop().toLowerCase();
     isImageUpload = ['jpg','jpeg','png','tif','tiff'].indexOf(artExt) > -1;
   } catch(e){}
-  var ppInputType = (isPdfUpload) ? 'pdf' : 'image';
-  if(artworkUrl && (isPdfUpload || isImageUpload || isAiOrder)){
+
+  // Press-ready raster built at add-to-basket (correct size, mirrored bleed,
+  // crop marks). Prefer it over the customer's original file.
+  var printArtworkUrl = null, orderedSize = selectedSize;
+  try {
+    var lc2 = JSON.parse(localStorage.getItem('inv_cart')||'[]');
+    var withPrint = lc2.find(function(it){ return it && it.printArtworkUrl; });
+    if (withPrint) printArtworkUrl = withPrint.printArtworkUrl;
+    var withSize = lc2.find(function(it){ return it && it.size; });
+    if (withSize && withSize.size) orderedSize = withSize.size;
+  } catch(e){}
+  if (isAiOrder && designState.size) orderedSize = designState.size;
+  // AI designs arrive with their own press-ready PDF built in the studio.
+  if (isAiOrder && designState.aiPrintUrl) printArtworkUrl = designState.aiPrintUrl;
+
+  // The ordered size MUST be one we hold exact millimetres for. If it isn't,
+  // we send no file rather than invent a size — the old code's guesswork is
+  // what produced 496mm and 2015mm pages.
+  var sizeSpec = SIZE_SPECS[orderedSize] || null;
+  var ppFileUrl = printArtworkUrl || artworkUrl;
+  // Our own press-ready file is a PDF with correct page size, boxes and marks,
+   // so print-prep only needs to handle colour for it.
+  var ppInputType = (printArtworkUrl || isPdfUpload) ? 'pdf' : 'image';
+  if (!sizeSpec && ppInputType === 'image') {
+    console.warn('[print-prep] skipped — no millimetre spec for size:', orderedSize);
+  }
+  if(ppFileUrl && sizeSpec && (isPdfUpload || isImageUpload || isAiOrder || printArtworkUrl)){
     document.getElementById('coPayBtnText').textContent='Preparing print-ready file…';
     try{
-      const ppRes=await fetch('/.netlify/functions/print-prep',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileUrl:artworkUrl,outputType:'PDF/X-1a',inputType: ppInputType, bleedMm: 3, bleedBakedIn: isAiOrder ? true : false})});
+      const ppRes=await fetch('/.netlify/functions/print-prep',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        fileUrl: ppFileUrl,
+        outputType: 'PDF/X-1a',
+        inputType: ppInputType,
+        bleedMm: PRINT_BLEED_MM,
+        marksMm: PRINT_MARKS_MM,
+        trimMmW: sizeSpec.mmW,
+        trimMmH: sizeSpec.mmH,
+        pressReady: !!printArtworkUrl,
+        bleedBakedIn: isAiOrder ? true : false
+      })});
       const ppData=await ppRes.json();
       if(ppRes.ok && ppData.success && ppData.printReadyUrl){
         printReadyUrl=ppData.printReadyUrl;
-        console.log('[print-prep] Print-ready PDF/X-1a created:',printReadyUrl);
+        console.log('[print-prep] Print-ready PDF/X-1a created:',printReadyUrl, ppData.pageSizeMm ? ('page '+ppData.pageSizeMm.width+'x'+ppData.pageSizeMm.height+'mm') : '');
+        if (ppData.warnings && ppData.warnings.length) console.warn('[print-prep] warnings:', ppData.warnings);
       }else{
         console.warn('[print-prep] Failed, proceeding with original artwork only:',ppData);
       }
@@ -1727,6 +1958,7 @@ async function proceedToStripe(){
     artworkUrl = saved.artworkUrl || null;      // already-uploaded print file
     currentFile = null;                          // nothing to upload again
     designState.aiArtworkUrl = saved.artworkUrl; // used by checkout below
+    designState.aiPrintUrl = saved.printArtworkUrl || null;  // press-ready PDF
     // show the thumbnail in the step-3 summary bar (replace the ✦ icon)
     if (saved.thumbnail) {
       const summaryBar = document.getElementById('fileSummaryName');
