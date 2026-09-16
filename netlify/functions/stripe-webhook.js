@@ -147,7 +147,8 @@ function buildJobTicketHtml(o) {
         ${o.printReadyUrl
           ? `<div style="font-size:12px;color:#7A6558;margin-bottom:8px;font-family:Arial,sans-serif;">
                <strong>Print this file.</strong> Built to the ordered size with 3mm bleed
-               and crop marks, trim box set.
+               and crop marks, trim box set. Supplied in RGB — your RIP handles
+               the colour conversion.
              </div>
              <a href="${o.printReadyUrl}"
                 style="color:#B8976A;font-size:13px;word-break:break-all;font-family:Arial,sans-serif;">

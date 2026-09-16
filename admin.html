@@ -1127,9 +1127,9 @@ function openJobTicket(orderId) {
           <div class="jt-field"><div class="jt-field-label">Size</div><div class="jt-field-val">${o.size || '<span style="color:#b00020;">Not recorded — check order</span>'}</div></div>
           <div class="jt-field"><div class="jt-field-label">Bleed</div><div class="jt-field-val">${o.print_ready_url ? '3mm all sides, crop marks included' : '<span style="color:#b00020;">Not applied — needs prepress</span>'}</div></div>
           <div class="jt-field"><div class="jt-field-label">Colour Mode</div><div class="jt-field-val">${
-            !o.print_ready_url ? '<span style="color:#b00020;">Not converted</span>'
+            !o.print_ready_url ? '<span style="color:#b00020;">No print file yet</span>'
             : /\/print-ready\//.test(o.print_ready_url) ? 'CMYK (PDF/X-1a)'
-            : '<span style="color:#9a6b1f;">RGB — colour conversion failed, size and bleed are correct</span>'
+            : 'RGB — the press RIP converts (PrintedEasy advice)'
           }</div></div>
         </div>
         <div class="jt-section-title">Artwork</div>

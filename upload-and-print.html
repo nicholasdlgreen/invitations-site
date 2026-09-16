@@ -1219,10 +1219,10 @@ async function readColourSpace(file){
 const COLOUR_NOTES = {
   cmyk:     {status:'ok',   val:'CMYK',        note:'CMYK — exactly what the press wants. Your colours will reproduce accurately.'},
   grey:     {status:'ok',   val:'Greyscale',   note:'Greyscale — correct for black and white designs.'},
-  srgb:     {status:'warn', val:'RGB (sRGB)',  note:'RGB artwork. We convert to CMYK for printing, which can shift vivid colours slightly — particularly bright greens, oranges and blues. Supplying CMYK gives you exact control.'},
-  rgb:      {status:'warn', val:'RGB',         note:'RGB artwork. We convert to CMYK for printing, which can shift vivid colours slightly. Supplying CMYK gives you exact control.'},
-  adobergb: {status:'warn', val:'Adobe RGB',   note:'Adobe RGB is a wide colour space. Converting to CMYK for print may shift saturated colours noticeably.'},
-  p3:       {status:'warn', val:'Display P3',  note:'Display P3 is a wide screen colour space. Some vivid colours cannot be reproduced in print and will shift when converted to CMYK.'},
+  srgb:     {status:'ok',   val:'RGB (sRGB)',  note:'RGB artwork — that\'s fine. Our press converts to print colours as it prints, and handles sRGB well. Very vivid greens, oranges and blues can shift slightly; supply CMYK if you need exact control.'},
+  rgb:      {status:'ok',   val:'RGB',         note:'RGB artwork — that\'s fine. Our press converts to print colours as it prints. Very vivid colours can shift slightly; supply CMYK if you need exact control.'},
+  adobergb: {status:'warn', val:'Adobe RGB',   note:'Adobe RGB is a wide colour space. Print cannot reproduce all of it, so saturated colours may shift noticeably. Converting to CMYK yourself gives you control over how.'},
+  p3:       {status:'warn', val:'Display P3',  note:'Display P3 is a wide screen colour space. Some vivid colours cannot be reproduced in print and will shift. Converting to CMYK yourself gives you control over how.'},
   unknown:  {status:'info', val:'Will be checked', note:'We could not read the colour profile in your browser. Our studio team will check it before press.'}
 };
 
@@ -1763,6 +1763,14 @@ async function addToCartUpload(){
 // The resulting page is trim + 3mm bleed + 5mm marks margin on every side,
 // which is exactly what print-prep.js then places on a PDF page of that size.
 const PRINT_DPI = 300, PRINT_BLEED_MM = 3, PRINT_MARKS_MM = 5;
+
+// Colour conversion is OFF on the printer's own advice (PrintedEasy, 16 Sep
+// 2026): "for what you're producing, RGB will be fine and as our RIPS do a good
+// conversion anyway, so save yourself the money." We build the page geometry,
+// bleed, crop marks and trim boxes ourselves, so pdfRest was only doing the
+// colour step — which is now skipped. Set this back to true and the existing
+// print-prep function will be used again.
+const USE_PDFREST_COLOUR = false;
 
 // Resolution to build at, by finished size. Cards are held in the hand and get
 // the full 300 DPI. Large signage is viewed from a distance and the trade
@@ -2383,7 +2391,13 @@ async function proceedToStripe(){
   if (!sizeSpec && ppInputType === 'image') {
     console.warn('[print-prep] skipped — no millimetre spec for size:', orderedSize);
   }
-  if(ppFileUrl && sizeSpec && (isPdfUpload || isImageUpload || isAiOrder || printArtworkUrl)){
+  // Our own press-ready PDF is already correct: right size, 3mm bleed, crop
+  // marks, trim box. With colour conversion off it needs no further processing.
+  if (printArtworkUrl && !USE_PDFREST_COLOUR) {
+    printReadyUrl = printArtworkUrl;
+    console.log('[print] using press-ready PDF as-is (RGB — the press converts):', printReadyUrl);
+  }
+  else if(ppFileUrl && sizeSpec && (isPdfUpload || isImageUpload || isAiOrder || printArtworkUrl)){
     document.getElementById('coPayBtnText').textContent='Preparing print-ready file…';
     try{
       const ppRes=await fetch('/.netlify/functions/print-prep',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
