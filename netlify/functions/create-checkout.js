@@ -43,6 +43,85 @@ function generateOrderNumber() {
   return `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
+
+// ── PRICE VERIFICATION ────────────────────────────────────
+// The browser used to be the only thing deciding what an order cost: whatever
+// total it posted went straight to Stripe. Anyone could edit that and buy a
+// £150 order for pennies. We now rebuild the price here from published data
+// and refuse anything materially cheaper.
+//
+// We compute a FLOOR — the least an item could legitimately cost — rather than
+// an exact figure, so genuine extras (delivery, options we cannot see) never
+// block a real customer. Paying less than the floor is the attack; paying more
+// is not.
+
+async function supabaseSelect(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+  });
+  if (!res.ok) throw new Error(`Supabase ${path} -> ${res.status}`);
+  return res.json();
+}
+
+async function loadPricingContext() {
+  const ctx = { products: {}, legacyPrices: [], basePerFifty: 150, envelopes: {}, papers: {} };
+  try {
+    const [snapRows, cfgRows, envRows, paperRows] = await Promise.all([
+      supabaseSelect('pricing_config?select=payload&order=published_at.desc&limit=1'),
+      supabaseSelect('site_config?id=eq.pricing&select=data'),
+      supabaseSelect('envelopes?select=id,price_each&active=eq.true'),
+      supabaseSelect('paper_stocks?select=name,price_extra&active=eq.true')
+    ]);
+    const payload = snapRows?.[0]?.payload;
+    if (payload?.schema_version === 2 && Array.isArray(payload.products)) {
+      payload.products.forEach(p => { ctx.products[p.slug] = p; });
+    } else if (Array.isArray(payload?.prices)) {
+      ctx.legacyPrices = payload.prices;
+    }
+    const cfg = cfgRows?.[0]?.data;
+    if (cfg?.basePerFifty != null) ctx.basePerFifty = parseFloat(cfg.basePerFifty);
+    (envRows || []).forEach(e => { ctx.envelopes[e.id] = parseFloat(e.price_each) || 0; });
+    (paperRows || []).forEach(p => { ctx.papers[p.name] = parseFloat(p.price_extra) || 0; });
+  } catch (e) {
+    console.warn('[price-check] could not load pricing data:', e.message);
+    return null;                       // cannot verify — see caller
+  }
+  return ctx;
+}
+
+// The least this item could legitimately cost, mirroring the site's own rules.
+function floorPriceFor(item, ctx) {
+  const b = item.basis || {};
+  const qty = parseInt(b.qty || item.qty, 10);
+  if (!qty || qty < 1) return null;
+
+  const product = ctx.products[b.productSlug];
+  let base = null;
+
+  if (product && Array.isArray(product.sheet_sells)) {
+    const hit = product.sheet_sells.find(s =>
+      s.paper === b.paperName && s.size === b.size && parseInt(s.qty, 10) === qty);
+    if (hit) {
+      const finish = Array.isArray(product.finish_sells)
+        ? (product.finish_sells.find(f => f.name === (b.finish || 'None')) || {}).sell
+        : 0;
+      base = parseFloat(hit.sell) + (parseFloat(finish) || 0);
+    }
+  }
+  if (base == null && ctx.legacyPrices.length) {
+    const hit = ctx.legacyPrices.find(p =>
+      p.size === b.size && parseInt(p.qty, 10) === qty);
+    if (hit) base = parseFloat(hit.sellPrice);
+  }
+  if (base == null) {
+    // Same fallback formula the site uses when nothing is published.
+    base = Math.round((qty / 50) * ctx.basePerFifty) + (ctx.papers[b.paperName] || 0);
+  }
+
+  const envelopes = b.envelopeId ? (ctx.envelopes[b.envelopeId] || 0) * qty : 0;
+  return base + envelopes;             // delivery deliberately excluded
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -53,6 +132,30 @@ exports.handler = async (event) => {
 
     if (!cart?.length) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Cart is empty' }) };
+    }
+
+    // ── Verify what the browser says this costs ──────────
+    const ctx = await loadPricingContext();
+    if (ctx) {
+      for (const item of cart) {
+        const claimed = parseFloat(item.total);
+        if (!(claimed > 0)) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'Invalid item price' }) };
+        }
+        const floor = floorPriceFor(item, ctx);
+        if (floor != null && claimed < floor - 0.01) {
+          console.warn('[price-check] rejected: claimed', claimed, 'floor', floor, 'basis', JSON.stringify(item.basis || {}));
+          return {
+            statusCode: 400,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Prices have changed since this basket was created. Please refresh the page and try again.' })
+          };
+        }
+      }
+    } else {
+      // No pricing data to check against: let the order through rather than
+      // block a real customer, but make it obvious in the logs.
+      console.warn('[price-check] SKIPPED — pricing data unavailable');
     }
 
     const orderNumber = generateOrderNumber();

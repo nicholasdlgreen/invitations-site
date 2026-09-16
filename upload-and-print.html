@@ -1733,6 +1733,19 @@ async function addToCartUpload(){
     } catch(e){ console.error('[print-raster] error:', e.message); }
   }
 
+  // What the price was based on. The server recalculates from this and refuses
+  // anything cheaper than it should be — otherwise a tampered cart could buy a
+  // £150 order for 50p, because the browser was the only thing setting prices.
+  var priceBasis = {
+    productSlug: PRODUCT.slug,
+    size: selectedSize,
+    paperName: paper.name,
+    finish: selectedFinish || 'None',
+    qty: uploadQty,
+    envelopeId: envelopesEnabled ? selectedEnvColour : null,
+    deliveryCost: deliveryCost
+  };
+
   addToCart({
     name: designMode && designState ? (designState.templateName + ' — ' + (designState.text.name1 || '') + ' & ' + (designState.text.name2 || '')) : (currentFile?currentFile.name.replace(/\.[^.]+$/,''):'Custom Design'),
     qty: uploadQty,
@@ -1743,6 +1756,7 @@ async function addToCartUpload(){
     artworkUrl: uploadedArtworkUrl,
     printArtworkUrl: uploadedPrintUrl,
     printSpec: printSpec,
+    basis: priceBasis,
     // Design-studio extras (only present when in design mode)
     source: designMode ? 'design-studio' : 'upload',
     templateId: designMode && designState ? designState.templateId : null,
