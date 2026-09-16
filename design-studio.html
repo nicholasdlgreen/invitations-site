@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Design Studio | Create Your Wedding Invitation | Foreverprint</title>
-<meta name="description" content="Two ways to create your wedding invitation. Browse our considered collection of designed templates and make one your own — or describe your wedding and let us design something just for you."/>
+<title>Design Studio | Create Your Own Invitations &amp; Stationery | Foreverprint</title>
+<meta name="description" content="Create your own invitations, save the dates, signage and stationery in our Design Studio. Describe the look you want, see it designed, then adjust it until it's right."/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://foreverprint.com/design-studio.html"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://foreverprint.com/design-studio.html"/>
-<meta property="og:title" content="Design Studio | Foreverprint"/>
-<meta property="og:description" content="Two ways to create your wedding invitation — browse our designed templates or design from scratch."/>
+<meta property="og:title" content="Design Studio | Create Your Own Invitations & Stationery | Foreverprint"/>
+<meta property="og:description" content="Create your own invitations, save the dates, signage and stationery in our Design Studio. Describe the look you want, see it designed, then adjust it until it's right."/>
 <meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
 <meta property="og:locale" content="en_GB"/>
 <meta property="og:site_name" content="Foreverprint"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Design Studio | Foreverprint"/>
-<meta name="twitter:description" content="Two ways to create your wedding invitation."/>
+<meta name="twitter:description" content="Create your own invitations, save the dates, signage and stationery in our Design Studio. Describe the look you want, see it designed, then adjust it until it's right."/>
 <meta name="twitter:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
 <style>
 /* ── ENTRY SCREEN STYLES ── */
@@ -98,6 +98,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth.js"></script>
   
+<style>
+.studio-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;margin-top:10px;}
+.sp-card{display:block;border:1px solid var(--border,#e8e0d5);border-radius:18px;overflow:hidden;background:var(--white,#fff);text-decoration:none;color:inherit;transition:transform .2s,box-shadow .2s,border-color .2s;}
+.sp-card:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(61,46,36,.10);border-color:var(--gold,#b8976a);}
+.sp-img{aspect-ratio:4/3;background:var(--cream,#f6f1e9);overflow:hidden;}
+.sp-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.sp-body{padding:15px 18px 18px;}
+.sp-name{font-family:'Cormorant Garamond',serif;font-size:1.22rem;font-weight:400;color:var(--text,#3d2e24);margin-bottom:4px;line-height:1.25;}
+.sp-tag{font-size:.82rem;color:var(--soft,#7a6558);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.sp-loading{grid-column:1/-1;text-align:center;padding:44px 0;color:var(--soft,#7a6558);font-size:.92rem;}
+.studio-alt{text-align:center;margin-top:34px;font-size:.92rem;color:var(--soft,#7a6558);}
+.studio-alt a{color:var(--gold,#b8976a);}
+</style>
 </head>
 <body>
 
@@ -108,145 +121,58 @@
 
     <div class="entry-intro">
       <span class="tag">The Design Studio</span>
-      <h1>How would you like to <em>begin?</em></h1>
+      <h1>What would you like to <em>create?</em></h1>
       <div class="entry-divider"></div>
-      <p>Two ways to create your wedding invitation. Browse our considered collection and make one your own — or describe your wedding and let us design something just for you.</p>
+      <p>Choose what you're making and our studio will design it with you — describe the look you want, see it come to life, then adjust until it's right.</p>
     </div>
 
-    <div class="doors">
-
-      <!-- DOOR A: Customise a template -->
-      <a class="door" href="/design-studio-templates.html">
-        <div class="door-visual">
-          <img src="/design-studio-left.jpg" alt="Wedding invitation templates" style="width:100%;height:100%;object-fit:cover;display:block;" />
-          <div class="tpl-mosaic" style="display:none;">
-
-            <div class="tpl-mini">
-              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#F4EFE8">
-                <rect x="14" y="14" width="120" height="182" stroke="#B8976A" stroke-width=".5" fill="none"/>
-                <rect x="18" y="18" width="112" height="174" stroke="#B8976A" stroke-width=".3" fill="none"/>
-                <text x="74" y="92" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#3D2E24" letter-spacing="3">CHARLOTTE</text>
-                <text x="74" y="112" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" font-style="italic" fill="#B8976A">&amp;</text>
-                <text x="74" y="132" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#3D2E24" letter-spacing="3">JAMES</text>
-              </svg>
-            </div>
-
-            <div class="tpl-mini">
-              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#F0F2EC">
-                <g stroke="#7A8B6F" stroke-width=".6" fill="none" opacity=".8">
-                  <path d="M30,40 Q44,52 60,42 Q76,52 88,40"/>
-                  <ellipse cx="42" cy="44" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-                  <ellipse cx="60" cy="46" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-                  <ellipse cx="76" cy="44" rx="2" ry="3.5" fill="#A8C4B8" stroke="none"/>
-                </g>
-                <text x="74" y="100" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#2E3B2A">Charlotte</text>
-                <text x="74" y="118" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" font-style="italic" fill="#5C6B58">&amp;</text>
-                <text x="74" y="138" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#2E3B2A">James</text>
-              </svg>
-            </div>
-
-            <div class="tpl-mini">
-              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#3D2E24">
-                <line x1="20" y1="20" x2="128" y2="20" stroke="#D4B896" stroke-width=".5"/>
-                <line x1="20" y1="190" x2="128" y2="190" stroke="#D4B896" stroke-width=".5"/>
-                <text x="74" y="98" text-anchor="middle" font-family="Jost,sans-serif" font-size="11" font-weight="200" fill="#FAF7F2" letter-spacing="3">CHARLOTTE</text>
-                <text x="74" y="116" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" fill="#D4B896" font-style="italic">and</text>
-                <text x="74" y="134" text-anchor="middle" font-family="Jost,sans-serif" font-size="11" font-weight="200" fill="#FAF7F2" letter-spacing="3">JAMES</text>
-              </svg>
-            </div>
-
-            <div class="tpl-mini">
-              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#FFFFFF">
-                <text x="74" y="86" text-anchor="middle" font-family="Great Vibes,cursive" font-size="22" fill="#B8976A">Charlotte</text>
-                <text x="74" y="112" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" letter-spacing="3" fill="#3D2E24">A N D</text>
-                <text x="74" y="138" text-anchor="middle" font-family="Great Vibes,cursive" font-size="22" fill="#B8976A">James</text>
-              </svg>
-            </div>
-
-            <div class="tpl-mini">
-              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#FAF7F2">
-                <text x="74" y="100" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" font-weight="300" fill="#3D2E24" font-style="italic">Charlotte</text>
-                <text x="74" y="118" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" fill="#7A6558">&amp;</text>
-                <text x="74" y="138" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" font-weight="300" fill="#3D2E24" font-style="italic">James</text>
-              </svg>
-            </div>
-
-            <div class="tpl-mini">
-              <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#F0DDD8">
-                <path d="M30 60 Q30 30 74 30 Q118 30 118 60 L118 170 L30 170 Z" fill="none" stroke="#3D2E24" stroke-width=".5"/>
-                <text x="74" y="100" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="#3D2E24" font-style="italic">Charlotte</text>
-                <text x="74" y="118" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="7" fill="#7A6558">&amp;</text>
-                <text x="74" y="138" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="#3D2E24" font-style="italic">James</text>
-              </svg>
-            </div>
-
-          </div>
-        </div>
-        <div class="door-body">
-          <div class="door-tag">For the customer who knows what they like</div>
-          <div class="door-title">Customise a <em>template</em></div>
-          <div class="door-desc">Browse our collection of considered designs. Pick one you love, then bring it to life with your names, date and venue.</div>
-          <div class="door-points">
-            <div class="door-point">12 designed templates from our studio</div>
-            <div class="door-point">See exactly what you'll receive before you start</div>
-            <div class="door-point">Personalise wording, palette and typography</div>
-          </div>
-          <span class="door-cta">Browse templates</span>
-        </div>
-      </a>
-
-      <!-- DOOR B: Design with our tools (coming soon) -->
-      <a class="door coming-soon" href="#" onclick="openComingSoon(event)">
-        <div class="door-visual">
-          <span class="coming-soon-badge">Coming soon</span>
-          <img src="/design-studio-right.jpg" alt="AI wedding invitation design from your brief" style="width:100%;height:100%;object-fit:cover;display:block;" />
-          <div class="brief-illustration" style="display:none;">
-            <div class="brief-spark s1">✦</div>
-            <div class="brief-spark s2">✧</div>
-            <div class="brief-spark s3">✦</div>
-            <div class="brief-spark s4">✧</div>
-            <div class="brief-prompt-box">
-              <div style="font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:rgba(212,184,150,.7);margin-bottom:10px;">Describe your wedding</div>
-              <div class="brief-prompt-line"></div>
-              <div class="brief-prompt-line"></div>
-              <div class="brief-prompt-line"></div>
-              <div style="margin-top:10px;font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(250,247,242,.7);font-size:var(--text-xs);">Cotswolds · sage greens · soft florals</div>
-            </div>
-          </div>
-        </div>
-        <div class="door-body">
-          <div class="door-tag">For the customer who has a vision</div>
-          <div class="door-title">Design with <em>our tools</em></div>
-          <div class="door-desc">Tell us about your day in your own words. We'll compose four unique designs from your brief — refine until it's perfect.</div>
-          <div class="door-points">
-            <div class="door-point">Describe the feeling of your wedding in plain English</div>
-            <div class="door-point">Receive four unique compositions, each with a rationale</div>
-            <div class="door-point">Refine your brief until you have what you want</div>
-          </div>
-          <span class="door-cta">Notify me when ready</span>
-        </div>
-      </a>
-
+    <div class="studio-picker" id="studio-products">
+      <div class="sp-loading">Loading the studio…</div>
     </div>
+
+    <p class="studio-alt">Already have your own artwork? <a href="/upload-and-print.html">Upload &amp; print it instead</a></p>
 
   </div>
 </main>
 
-<!-- COMING SOON MODAL -->
-<div class="cs-modal-bg" id="csModal" onclick="closeComingSoon(event)">
-  <div class="cs-modal" onclick="event.stopPropagation()">
-    <h3>This service is launching <em>soon.</em></h3>
-    <p>We're putting the finishing touches to our bespoke design service. In the meantime, our considered collection of 12 templates is ready and waiting — each one designed to be a beautiful starting point for your wedding stationery.</p>
-    <div class="cs-actions">
-      <a class="cs-btn" href="/design-studio-templates.html">Browse templates</a>
-      <button class="cs-btn cs-btn-out" onclick="closeComingSoon(event)">Maybe later</button>
-    </div>
-  </div>
-</div>
-
 <div id="site-footer"></div>
 
 <script>
+// ── STUDIO PRODUCT CHOOSER ───────────────────────────────
+// Lists the products the AI studio is actually configured for (studio_config),
+// so a product only appears here once its wording fields and style options are
+// set up in admin.
+(function loadStudioProducts(){
+  var SB = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+  var K  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+  var el = document.getElementById('studio-products');
+  if (!el) return;
+  var headers = { apikey: K, Authorization: 'Bearer ' + K };
+  function esc(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  Promise.all([
+    fetch(SB + '/rest/v1/studio_config?select=product_slug', { headers }).then(function(r){ return r.ok ? r.json() : []; }),
+    fetch(SB + '/rest/v1/product_types?select=slug,name,tagline,hero_image_url,display_order&active=eq.true&order=display_order', { headers }).then(function(r){ return r.ok ? r.json() : []; })
+  ]).then(function(res){
+    var ready = {};
+    (res[0] || []).forEach(function(c){ ready[c.product_slug] = true; });
+    var list = (res[1] || []).filter(function(p){ return ready[p.slug]; });
+    if (!list.length){
+      el.innerHTML = '<div class="sp-loading">Our studio is being set up — <a href="/products.html">browse our products</a> in the meantime.</div>';
+      return;
+    }
+    el.innerHTML = list.map(function(p){
+      return '<a class="sp-card" href="/design-studio-ai-create.html?product=' + encodeURIComponent(p.slug) + '">' +
+        '<div class="sp-img">' + (p.hero_image_url ? '<img src="' + esc(p.hero_image_url) + '" alt="" loading="lazy">' : '') + '</div>' +
+        '<div class="sp-body"><div class="sp-name">' + esc(p.name) + '</div>' +
+        (p.tagline ? '<div class="sp-tag">' + esc(p.tagline) + '</div>' : '') + '</div></a>';
+    }).join('');
+  }).catch(function(){
+    el.innerHTML = '<div class="sp-loading">We could not load the studio just now. <a href="/products.html">Browse our products</a> instead.</div>';
+  });
+})();
+
 fetch('/header.html').then(r=>r.text()).then(html=>{
   document.getElementById('site-header').outerHTML=html;
   if(typeof updateCartBadge==='function') updateCartBadge();
@@ -255,7 +181,7 @@ fetch('/footer.html').then(r=>r.text()).then(html=>{
   document.getElementById('site-footer').outerHTML=html;
 });
 
-function openComingSoon(e){
+function _removedComingSoon(e){
   e.preventDefault();
   document.getElementById('csModal').classList.add('open');
 }

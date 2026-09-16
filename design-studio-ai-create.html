@@ -989,10 +989,27 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       // update the page title + subtitle
       var titleEl=document.getElementById('ds-title-el')||document.querySelector('.ds-title'); if(cfg.intro_title && titleEl) titleEl.textContent=cfg.intro_title;
       if(cfg.intro_sub){ var su=document.querySelector('.ds-sub'); if(su) su.textContent = cfg.intro_sub; }
+      // The studio serves 19 products, so nothing should still say "invitation"
+      // when someone is designing table numbers or a welcome sign.
+      if(cfg.product_noun) CONFIG_PRODUCT_NOUN = cfg.product_noun;
+      applyProductWording();
       buildBrief();
     })
     .catch(function(){ /* silent — hardcoded fallback */ });
   }
+  // Replace the wedding-invitation wording with this product's own.
+  function applyProductWording(){
+    var noun = CONFIG_PRODUCT_NOUN || 'design';
+    var pretty = noun.charAt(0).toUpperCase() + noun.slice(1);
+    var lbl = document.querySelector('.ds-preview-label');
+    if (lbl) lbl.textContent = 'Your ' + noun;
+    var empty = document.getElementById('ds-empty');
+    if (empty) empty.textContent = 'Your ' + noun + ' will appear here as you add your wording.';
+    document.title = 'Design Your Own · ' + pretty + ' | Foreverprint';
+    var md = document.querySelector('meta[name="description"]');
+    if (md) md.setAttribute('content', 'Design your own bespoke ' + noun + '. Choose a size, add your wording, describe the look.');
+  }
+
   loadProductConfig();
 
   // ---- Stage 2 part 2: load wording FIELDS from Supabase config ----
