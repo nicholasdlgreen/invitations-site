@@ -329,9 +329,10 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     <div class="login-logo">Invita<span>tions</span></div>
     <div class="login-sub">Admin Portal</div>
     <label class="login-label">Password</label>
-    <input class="login-input" id="loginPwd" type="password" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <input class="login-input" id="loginEmail" type="email" placeholder="Your email" autocomplete="username" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('loginPwd').focus()"/>
+    <input class="login-input" id="loginPwd" type="password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="login-btn" onclick="doLogin()">Sign In</button>
-    <div class="login-err" id="loginErr">Incorrect password. Please try again.</div>
+    <div class="login-err" id="loginErr">Incorrect email or password. Please try again.</div>
   </div>
 </div>
 
@@ -986,7 +987,12 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 // ADMIN — CONSTANTS & STATE
 // ═══════════════════════════════════════════════════════
 
-const ADMIN_PASSWORD    = 'invitations2025';
+// Admin sign-in uses Supabase Auth — the same system customer accounts use.
+// There is no password in this file: it is served to every visitor and the
+// repository is public, so anything here is public too.
+// Access needs BOTH a valid account AND a row in admin_users.
+let ADMIN_TOKEN = sessionStorage.getItem('inv_admin_token') || null;
+let ADMIN_EMAIL = sessionStorage.getItem('inv_admin_email') || null;
 const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
 
@@ -998,23 +1004,93 @@ let refreshTimer = null;
 // ADMIN — AUTH
 // ═══════════════════════════════════════════════════════
 
-function doLogin() {
-  const pwd = document.getElementById('loginPwd').value;
-  if (pwd === ADMIN_PASSWORD) {
-    sessionStorage.setItem('inv_admin','1');
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('app-shell').classList.add('visible');
-    loadOrders();
-    pricingLoad();
-    refreshTimer = setInterval(loadOrders, 120000);
-  } else {
-    document.getElementById('loginErr').style.display = 'block';
-    document.getElementById('loginPwd').value = '';
-    document.getElementById('loginPwd').focus();
+function loginFailed(msg) {
+  const err = document.getElementById('loginErr');
+  err.textContent = msg || 'Incorrect email or password. Please try again.';
+  err.style.display = 'block';
+  document.getElementById('loginPwd').value = '';
+  document.getElementById('loginPwd').focus();
+}
+
+async function doLogin() {
+  const email = (document.getElementById('loginEmail').value || '').trim();
+  const pwd   = document.getElementById('loginPwd').value;
+  if (!email || !pwd) { loginFailed('Enter your email and password.'); return; }
+
+  const btn = document.querySelector('.login-box .btn, #loginBtn');
+  if (btn) btn.disabled = true;
+  try {
+    // 1. Who are you? (Supabase Auth)
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify({ email, password: pwd })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.access_token) { loginFailed(); return; }
+
+    // 2. Are you allowed in here? A customer account is not enough.
+    const check = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?select=user_id&user_id=eq.${data.user.id}`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${data.access_token}` }
+    });
+    const rows = await check.json().catch(() => []);
+    if (!Array.isArray(rows) || !rows.length) {
+      loginFailed('That account does not have admin access.');
+      return;
+    }
+
+    ADMIN_TOKEN = data.access_token;
+    ADMIN_EMAIL = email;
+    sessionStorage.setItem('inv_admin_token', ADMIN_TOKEN);
+    sessionStorage.setItem('inv_admin_email', ADMIN_EMAIL);
+    enterAdmin();
+  } catch (e) {
+    loginFailed('Could not sign in — check your connection and try again.');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function enterAdmin() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-shell').classList.add('visible');
+  loadOrders();
+  pricingLoad();
+  refreshTimer = setInterval(loadOrders, 120000);
+}
+
+// Come back to a still-valid session without signing in again.
+async function restoreAdminSession() {
+  if (!ADMIN_TOKEN) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${ADMIN_TOKEN}` }
+    });
+    if (!res.ok) throw new Error('expired');
+    const user = await res.json();
+    const check = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?select=user_id&user_id=eq.${user.id}`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${ADMIN_TOKEN}` }
+    });
+    const rows = await check.json().catch(() => []);
+    if (!Array.isArray(rows) || !rows.length) throw new Error('not an admin');
+    enterAdmin();
+  } catch (e) {
+    ADMIN_TOKEN = null;
+    sessionStorage.removeItem('inv_admin_token');
+    sessionStorage.removeItem('inv_admin_email');
   }
 }
 
 function doLogout() {
+  if (ADMIN_TOKEN) {
+    fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${ADMIN_TOKEN}` }
+    }).catch(() => {});
+  }
+  ADMIN_TOKEN = null; ADMIN_EMAIL = null;
+  sessionStorage.removeItem('inv_admin_token');
+  sessionStorage.removeItem('inv_admin_email');
   sessionStorage.removeItem('inv_admin');
   clearInterval(refreshTimer);
   document.getElementById('login-screen').classList.remove('hidden');
@@ -1054,7 +1130,9 @@ async function sbFetch(path, opts = {}) {
     headers: {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      // Travel as the signed-in admin where we can. Once the row-level rules
+      // are tightened, this is what distinguishes admin from the public.
+      'Authorization': `Bearer ${ADMIN_TOKEN || SUPABASE_ANON_KEY}`,
       ...(opts.headers || {}),
     },
   });
@@ -3733,15 +3811,11 @@ function toast(msg) {
 // BOOT
 // ═══════════════════════════════════════════════════════
 
-if (sessionStorage.getItem('inv_admin') === '1') {
-  document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('app-shell').classList.add('visible');
-  loadOrders();
-  pricingLoad();
-  refreshTimer = setInterval(loadOrders, 120000);
-} else {
-  setTimeout(() => document.getElementById('loginPwd').focus(), 100);
-}
+// A browser flag used to be enough to walk straight in — anyone could set
+// inv_admin=1 in their own console. Entry now requires a token that Supabase
+// still recognises, belonging to an account listed in admin_users.
+restoreAdminSession();
+setTimeout(() => { const el = document.getElementById('loginEmail'); if (el && !ADMIN_TOKEN) el.focus(); }, 100);
 
 </script>
 </body>
