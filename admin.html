@@ -434,6 +434,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="envelopes" onclick="showPricingPanel(this)">✉️ Envelopes</button>
           <button class="pz-tab" data-pz="papers" onclick="showPricingPanel(this)">📃 Paper Stocks</button>
           <button class="pz-tab" data-pz="sizes" onclick="showPricingPanel(this)">📐 Sizes</button>
+          <button class="pz-tab" data-pz="delivery" onclick="showPricingPanel(this)">🚚 Delivery</button>
           <button class="pz-tab active" data-pz="producttypes" onclick="showPricingPanel(this)">🎴 Product Types</button>
           <button class="pz-tab" data-pz="sheetrates" onclick="showPricingPanel(this)">📊 Sheet Rates</button>
           <button class="pz-tab" data-pz="finishes" onclick="showPricingPanel(this)">✨ Finish Options</button>
@@ -479,6 +480,15 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               <button class="btn btn-gold" onclick="openPaperModal()">＋ Add Paper</button>
             </div>
             <div id="paperList"><div class="empty"><span class="empty-icon">📃</span><div class="empty-text">No paper stocks yet</div></div></div>
+          </div>
+
+          <!-- PANEL: DELIVERY -->
+          <div class="pz-panel" id="pz-delivery">
+            <div class="section-header">
+              <div><div class="section-title">Delivery</div><div class="section-sub">What customers can choose at checkout. Production and transit are counted in working days from the cut-off, skipping weekends and bank holidays — these are the dates shown on the site and repeated in the confirmation email, so they should match what the printer works to.</div></div>
+              <button class="btn btn-gold" onclick="openDeliveryModal()">＋ Add Service</button>
+            </div>
+            <div id="deliveryList"><div class="empty"><span class="empty-icon">🚚</span><div class="empty-text">No delivery services yet</div></div></div>
           </div>
 
           <!-- PANEL: COSTS (money out) -->
@@ -762,6 +772,39 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <button class="btn btn-gold btn-sm" onclick="saveEnvelope()">Save Envelope</button>
     </div>
     <input type="hidden" id="env_editId">
+  </div>
+</div>
+
+<div class="modal-overlay" id="deliveryModal">
+  <div class="pz-modal">
+    <div class="modal-title" id="dlv_modalTitle">Add Delivery Service</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Key (used by the site — no spaces)</label><input type="text" id="dlv_id" placeholder="e.g. express"></div>
+      <div class="field"><label>Name shown to customers</label><input type="text" id="dlv_name" placeholder="e.g. Express"></div>
+    </div>
+    <div class="field"><label>Description under the name</label><input type="text" id="dlv_blurb" placeholder="e.g. Printed in 2 working days, order by 4pm"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <div class="field"><label>Production (working days)</label><input type="number" id="dlv_prod" min="1" step="1" placeholder="3"></div>
+      <div class="field"><label>Transit (working days)</label><input type="number" id="dlv_transit" min="0" step="1" placeholder="1"></div>
+      <div class="field"><label>Cut-off hour (24h, blank = midnight)</label><input type="number" id="dlv_cutoff" min="0" max="23" step="1" placeholder="16"></div>
+    </div>
+    <p style="font-size:11px;color:rgba(250,247,242,.5);margin:-6px 0 14px;line-height:1.7;">The day a customer orders counts as production day one, provided the cut-off has not passed. Orders after it, or at a weekend, start the next working day.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <div class="field"><label>Flat price (£)</label><div class="pfx"><span class="px">£</span><input type="number" id="dlv_price" step="0.01" min="0" placeholder="0.00"></div></div>
+      <div class="field"><label>Or surcharge (%)</label><input type="number" id="dlv_pct" step="0.1" min="0" placeholder="20"></div>
+      <div class="field"><label>Minimum surcharge (£)</label><div class="pfx"><span class="px">£</span><input type="number" id="dlv_min" step="0.01" min="0" placeholder="20.00"></div></div>
+    </div>
+    <p style="font-size:11px;color:rgba(250,247,242,.5);margin:-6px 0 14px;line-height:1.7;">If a percentage is set it is used instead of the flat price. PrintedEasy charge us 20% (min £20) for Express and 40% (min £40) for Express Plus — charging less means absorbing the difference.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Hide above order value (£, blank = no limit)</label><div class="pfx"><span class="px">£</span><input type="number" id="dlv_max" step="1" min="0" placeholder="3000"></div></div>
+      <div class="field"><label>Display order</label><input type="number" id="dlv_order" step="10" min="0" placeholder="10"></div>
+    </div>
+    <div class="field"><label><input type="checkbox" id="dlv_active" checked style="margin-right:8px;">Offered at checkout</label></div>
+    <input type="hidden" id="dlv_editId">
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeDeliveryModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveDelivery()">Save Service</button>
+    </div>
   </div>
 </div>
 
@@ -1385,6 +1428,7 @@ function pricingLoad() {
   loadPapersFromSupabase();
   loadSizesFromSupabase();
   loadMoneyData();
+  loadDeliveryServices();
   loadProductTypesFromSupabase();
   loadFinishOptionsFromSupabase();
   loadFinishTypesFromSupabase();
@@ -2147,6 +2191,149 @@ function renderPaperList() {
     </div>`).join('');
 }
 
+
+// ═══════════════════════════════════════════════════════
+// DELIVERY — services offered at checkout
+// Production and transit drive the estimated arrival date customers are shown
+// and promised in their confirmation email, so these should mirror what the
+// printer actually works to.
+// ═══════════════════════════════════════════════════════
+
+let deliveryServices = [];
+
+async function loadDeliveryServices() {
+  try {
+    deliveryServices = await sbFetch('delivery_options?select=*&order=display_order');
+  } catch (err) {
+    console.warn('Could not load delivery options:', err.message);
+    deliveryServices = [];
+  }
+  renderDeliveryList();
+}
+
+function renderDeliveryList() {
+  const box = document.getElementById('deliveryList');
+  if (!box) return;
+  if (!deliveryServices.length) {
+    box.innerHTML = '<div class="empty"><span class="empty-icon">🚚</span><div class="empty-text">No delivery services yet</div></div>';
+    return;
+  }
+  box.innerHTML = deliveryServices.map(d => {
+    const charge = (+d.surcharge_pct > 0)
+      ? `${d.surcharge_pct}% (min £${(+d.surcharge_min || 0).toFixed(2)})`
+      : ((+d.price > 0) ? `£${(+d.price).toFixed(2)}` : 'Free');
+    const cut = d.cutoff_hour == null ? 'midnight' : `${String(d.cutoff_hour).padStart(2,'0')}:00`;
+    return `
+    <div class="supplier-card" style="${d.active ? '' : 'opacity:.5;'}">
+      <div>
+        <div style="font-weight:500;font-size:13px">${d.name}${d.active ? '' : ' <span style="font-size:10px;color:rgba(250,247,242,.45);">OFF</span>'}</div>
+        <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:3px">
+          ${d.production_days}d production + ${d.delivery_days}d transit · cut-off ${cut} · ${charge}${d.max_order_value ? ` · hidden above £${(+d.max_order_value).toFixed(0)}` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-xs" onclick="toggleDeliveryActive('${d.id}')">${d.active ? 'Turn off' : 'Turn on'}</button>
+        <button class="btn btn-outline btn-xs" onclick="openDeliveryModal('${d.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteDelivery('${d.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDeliveryModal(editId) {
+  ['dlv_id','dlv_name','dlv_blurb','dlv_prod','dlv_transit','dlv_cutoff','dlv_price','dlv_pct','dlv_min','dlv_max','dlv_order']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('dlv_editId').value = '';
+  document.getElementById('dlv_active').checked = true;
+  document.getElementById('dlv_id').disabled = false;
+  document.getElementById('dlv_modalTitle').textContent = 'Add Delivery Service';
+  if (editId) {
+    const d = deliveryServices.find(x => x.id === editId);
+    if (d) {
+      document.getElementById('dlv_id').value = d.id;
+      document.getElementById('dlv_id').disabled = true;     // orders reference it
+      document.getElementById('dlv_name').value = d.name || '';
+      document.getElementById('dlv_blurb').value = d.blurb || '';
+      document.getElementById('dlv_prod').value = d.production_days;
+      document.getElementById('dlv_transit').value = d.delivery_days;
+      document.getElementById('dlv_cutoff').value = d.cutoff_hour == null ? '' : d.cutoff_hour;
+      document.getElementById('dlv_price').value = d.price || '';
+      document.getElementById('dlv_pct').value = d.surcharge_pct || '';
+      document.getElementById('dlv_min').value = d.surcharge_min || '';
+      document.getElementById('dlv_max').value = d.max_order_value || '';
+      document.getElementById('dlv_order').value = d.display_order || '';
+      document.getElementById('dlv_active').checked = !!d.active;
+      document.getElementById('dlv_editId').value = editId;
+      document.getElementById('dlv_modalTitle').textContent = 'Edit Delivery Service';
+    }
+  }
+  document.getElementById('deliveryModal').classList.add('open');
+}
+function closeDeliveryModal(){ document.getElementById('deliveryModal').classList.remove('open'); }
+
+async function saveDelivery() {
+  const editId = document.getElementById('dlv_editId').value;
+  const id = (document.getElementById('dlv_id').value || '').trim();
+  const name = document.getElementById('dlv_name').value.trim();
+  const prod = parseInt(document.getElementById('dlv_prod').value, 10);
+  if (!id || /\s/.test(id)) { toast('Key is required, with no spaces'); return; }
+  if (!name) { toast('Name is required'); return; }
+  if (!(prod >= 1)) { toast('Production days must be at least 1'); return; }
+  const cutoffRaw = document.getElementById('dlv_cutoff').value;
+  const payload = {
+    name,
+    blurb: document.getElementById('dlv_blurb').value.trim() || null,
+    production_days: prod,
+    delivery_days: parseInt(document.getElementById('dlv_transit').value, 10) || 1,
+    cutoff_hour: cutoffRaw === '' ? null : Math.max(0, Math.min(23, parseInt(cutoffRaw, 10))),
+    price: parseFloat(document.getElementById('dlv_price').value) || 0,
+    surcharge_pct: parseFloat(document.getElementById('dlv_pct').value) || 0,
+    surcharge_min: parseFloat(document.getElementById('dlv_min').value) || 0,
+    max_order_value: parseFloat(document.getElementById('dlv_max').value) || null,
+    display_order: parseInt(document.getElementById('dlv_order').value, 10) || 0,
+    active: document.getElementById('dlv_active').checked,
+    updated_at: new Date().toISOString()
+  };
+  try {
+    if (editId) {
+      await sbFetch(`delivery_options?id=eq.${encodeURIComponent(editId)}`, {
+        method:'PATCH', headers:{'Prefer':'return=representation'}, body: JSON.stringify(payload) });
+      const i = deliveryServices.findIndex(x => x.id === editId);
+      if (i >= 0) deliveryServices[i] = { ...deliveryServices[i], ...payload };
+    } else {
+      if (deliveryServices.some(x => x.id === id)) { toast('That key already exists'); return; }
+      const r = await sbFetch('delivery_options', {
+        method:'POST', headers:{'Prefer':'return=representation'}, body: JSON.stringify({ id, ...payload }) });
+      deliveryServices.push(Array.isArray(r) ? r[0] : r);
+    }
+    deliveryServices.sort((a,b) => (a.display_order||0) - (b.display_order||0));
+    renderDeliveryList(); closeDeliveryModal();
+    toast(editId ? 'Updated ✓' : 'Service added ✓');
+  } catch (err) { toast('Save failed: ' + err.message); }
+}
+
+async function toggleDeliveryActive(id) {
+  const d = deliveryServices.find(x => x.id === id);
+  if (!d) return;
+  try {
+    await sbFetch(`delivery_options?id=eq.${encodeURIComponent(id)}`, {
+      method:'PATCH', headers:{'Prefer':'return=representation'},
+      body: JSON.stringify({ active: !d.active, updated_at: new Date().toISOString() }) });
+    d.active = !d.active;
+    renderDeliveryList();
+    toast(d.active ? 'Now offered at checkout ✓' : 'Hidden from checkout ✓');
+  } catch (err) { toast('Update failed: ' + err.message); }
+}
+
+async function deleteDelivery(id) {
+  if (!confirm(`Delete the "${id}" service?\n\nPast orders that used it keep their record, but it disappears from checkout. Turning it off instead is usually safer.`)) return;
+  try {
+    await sbFetch(`delivery_options?id=eq.${encodeURIComponent(id)}`, { method:'DELETE' });
+    deliveryServices = deliveryServices.filter(d => d.id !== id);
+    renderDeliveryList();
+    toast('Deleted ✓');
+  } catch (err) { toast('Delete failed: ' + err.message); }
+}
 
 // ═══════════════════════════════════════════════════════
 // MONEY — costs, recurring costs, and a P&L built from real data
