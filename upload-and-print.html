@@ -2285,9 +2285,16 @@ async function proceedToStripe(){
         console.log('[print-prep] Print-ready PDF/X-1a created:',printReadyUrl, ppData.pageSizeMm ? ('page '+ppData.pageSizeMm.width+'x'+ppData.pageSizeMm.height+'mm') : '');
         if (ppData.warnings && ppData.warnings.length) console.warn('[print-prep] warnings:', ppData.warnings);
       }else{
-        console.warn('[print-prep] Failed, proceeding with original artwork only:',ppData);
+        // pdfRest only handles colour now — the page geometry is already correct
+        // in the file we built. If colour conversion fails, keep OUR file rather
+        // than losing it: right size, right bleed, right crop marks, still RGB.
+        if (printArtworkUrl) printReadyUrl = printArtworkUrl;
+        console.warn('[print-prep] colour step failed — keeping our press-ready file (RGB, not CMYK):', ppData);
       }
-    }catch(e){console.warn('[print-prep] Error, proceeding with original artwork only:',e.message);}
+    }catch(e){
+      if (printArtworkUrl) printReadyUrl = printArtworkUrl;
+      console.warn('[print-prep] colour step error — keeping our press-ready file (RGB, not CMYK):', e.message);
+    }
   }
   document.getElementById('coPayBtnText').textContent='Redirecting to Stripe…';
   const orderData={cart:JSON.parse(JSON.stringify(cart)),customer,total:cart.reduce((s,i)=>s+i.total,0),date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),timestamp:Date.now(),artworkUrl,printReadyUrl};
