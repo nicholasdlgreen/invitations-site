@@ -1008,9 +1008,12 @@ function renderRow(o) {
     <td>
       <div class="action-btns">
         <button class="action-btn primary" onclick="openJobTicket('${o.id}')">📄 Job Ticket</button>
+        ${o.print_ready_url
+          ? `<a class="action-btn" href="${o.print_ready_url}" target="_blank" title="Correct size, 3mm bleed, crop marks — this is the file to print">🖨 Print file</a>`
+          : `<span style="font-size:10px;color:#b00020;" title="No print-ready file was produced for this order">⚠ No print file</span>`}
         ${o.artwork_url
-          ? `<a class="action-btn" href="${o.artwork_url}" target="_blank">🖼 Artwork</a>`
-          : `<span style="font-size:10px;color:var(--pale);">No artwork</span>`}
+          ? `<a class="action-btn" href="${o.artwork_url}" target="_blank" title="Customer's original upload — reference only" style="opacity:.65;">🖼 Original</a>`
+          : ``}
       </div>
     </td>
   </tr>`;
@@ -1047,11 +1050,11 @@ function openJobTicket(orderId) {
     ? items.map(i=>`
         <div class="jt-field" style="grid-column:1/-1;">
           <div class="jt-field-label">Print Item</div>
-          <div class="jt-field-val">${i.name} — ${i.qty} invitations · ${i.paper||'Smooth White'}</div>
+          <div class="jt-field-val">${i.name} — ${i.qty} invitations · ${i.paper||'<span style="color:#b00020;">paper not recorded</span>'}</div>
         </div>`).join('')
     : `<div class="jt-field" style="grid-column:1/-1;">
         <div class="jt-field-label">Print Item</div>
-        <div class="jt-field-val">${o.quantity||'—'} invitations · ${o.paper||'Smooth White 300gsm'}</div>
+        <div class="jt-field-val">${o.quantity||'—'} invitations · ${o.paper||'<span style="color:#b00020;">paper not recorded</span>'}</div>
        </div>`;
 
   document.getElementById('jobTicketContent').innerHTML = `
@@ -1074,21 +1077,24 @@ function openJobTicket(orderId) {
         <div class="jt-grid">${itemRows}</div>
         <div class="jt-grid-3">
           <div class="jt-field"><div class="jt-field-label">Total Quantity</div><div class="jt-field-val large">${totalQty}</div></div>
-          <div class="jt-field"><div class="jt-field-label">Paper Stock</div><div class="jt-field-val">${items[0]?.paper||o.paper||'Smooth White 300gsm'}</div></div>
-          <div class="jt-field"><div class="jt-field-label">Finish</div><div class="jt-field-val">Matt laminate</div></div>
-          <div class="jt-field"><div class="jt-field-label">Size</div><div class="jt-field-val">${o.size||'A5 · 148 × 210mm'}</div></div>
-          <div class="jt-field"><div class="jt-field-label">Bleed</div><div class="jt-field-val">3mm all sides</div></div>
-          <div class="jt-field"><div class="jt-field-label">Colour Mode</div><div class="jt-field-val">CMYK</div></div>
+          <div class="jt-field"><div class="jt-field-label">Paper Stock</div><div class="jt-field-val">${items[0]?.paper||o.paper||'<span style="color:#b00020;">Not recorded — check order</span>'}</div></div>
+          <div class="jt-field"><div class="jt-field-label">Size</div><div class="jt-field-val">${o.size || '<span style="color:#b00020;">Not recorded — check order</span>'}</div></div>
+          <div class="jt-field"><div class="jt-field-label">Bleed</div><div class="jt-field-val">${o.print_ready_url ? '3mm all sides, crop marks included' : '<span style="color:#b00020;">Not applied — needs prepress</span>'}</div></div>
+          <div class="jt-field"><div class="jt-field-label">Colour Mode</div><div class="jt-field-val">${
+            !o.print_ready_url ? '<span style="color:#b00020;">Not converted</span>'
+            : /\/print-ready\//.test(o.print_ready_url) ? 'CMYK (PDF/X-1a)'
+            : '<span style="color:#9a6b1f;">RGB — colour conversion failed, size and bleed are correct</span>'
+          }</div></div>
         </div>
         <div class="jt-section-title">Artwork</div>
         <div class="jt-artwork">
-          ${o.artwork_url
-            ? `<div style="font-size:11px;color:var(--soft);margin-bottom:8px;">Stored in Supabase Storage:</div><a href="${o.artwork_url}" target="_blank">📎 Download Artwork File</a>`
-            : ``}
           ${o.print_ready_url
-            ? `<div style="font-size:11px;color:var(--soft);margin:10px 0 8px;">Print-ready (PDF/X-1a):</div><a href="${o.print_ready_url}" target="_blank">🖨 Download Print-Ready PDF</a>`
-            : ``}
-            : '<div style="font-size:12px;color:var(--pale);">No artwork uploaded — check email for attachment</div>'}
+            ? `<div style="font-size:11px;color:var(--soft);margin-bottom:8px;"><strong>Print this file</strong> — ordered size, 3mm bleed, crop marks, trim box set:</div>
+               <a href="${o.print_ready_url}" target="_blank">🖨 Download PRINT-READY file</a>`
+            : `<div style="font-size:12px;color:#b00020;margin-bottom:8px;"><strong>No print-ready file was produced for this order.</strong> Do not print the original upload as-is — it needs prepress work first.</div>`}
+          ${o.artwork_url
+            ? `<div style="font-size:11px;color:var(--pale);margin:12px 0 6px;">Customer's original upload (reference only):</div><a href="${o.artwork_url}" target="_blank" style="opacity:.7;">📎 Original artwork</a>`
+            : `<div style="font-size:12px;color:var(--pale);margin-top:8px;">No original artwork stored — check the order.</div>`}
         </div>
         <div class="jt-section-title">Order Value</div>
         <div class="jt-grid-3">
