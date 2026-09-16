@@ -171,51 +171,6 @@
 <div id="site-header"></div>
 
 <!-- CHECKOUT MODAL -->
-<div class="co-modal-bg" id="coModalBg">
-  <div class="co-modal" id="coModal">
-    <div class="co-head">
-      <h3 style="font-family:'Cormorant Garamond',serif;">Checkout</h3>
-      <button class="modal-close" onclick="closeCheckout()">✕</button>
-    </div>
-    <div class="co-body">
-      <span class="co-section-title">Order Summary</span>
-      <div id="coSummaryItems"></div>
-      <div class="co-summary-item total"><span>Total inc. VAT</span><span id="coSummaryTotal">£0.00</span></div>
-      <span class="co-section-title">Your Details</span>
-      <div class="co-field"><label class="co-label">Full Name *</label><input class="co-input" id="coName" placeholder="Charlotte Thornton" type="text"></div>
-      <div class="co-field"><label class="co-label">Email Address *</label><input class="co-input" id="coEmail" placeholder="charlotte@example.com" type="email"></div>
-      <div class="co-field"><label class="co-label">Phone Number</label><input class="co-input" id="coPhone" placeholder="+44 7700 000000" type="tel"></div>
-      <span class="co-section-title">Delivery Address</span>
-      <div class="co-field"><label class="co-label">Address Line 1 *</label><input class="co-input" id="coAddr1" placeholder="12 Rose Lane" type="text"></div>
-      <div class="co-field"><label class="co-label">Address Line 2</label><input class="co-input" id="coAddr2" placeholder="Apartment, suite, etc." type="text"></div>
-      <div class="co-row">
-        <div class="co-field"><label class="co-label">Town / City *</label><input class="co-input" id="coCity" placeholder="London" type="text"></div>
-        <div class="co-field"><label class="co-label">Postcode *</label><input class="co-input" id="coPostcode" placeholder="SW1A 1AA" type="text"></div>
-      </div>
-      <div class="co-field"><label class="co-label">Order Notes <span style="color:var(--pale);font-size:var(--text-xs);">(optional)</span></label><textarea class="co-input" id="coNotes" rows="3" placeholder="Any special instructions…" style="resize:vertical;line-height:1.7;"></textarea></div>
-      <label class="co-field" for="coMarketing" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--cream);">
-        <input type="checkbox" id="coMarketing" style="margin-top:3px;width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;">
-        <span style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">
-          Email me occasionally with new designs, seasonal ideas and offers.
-          <span style="display:block;color:var(--pale);font-size:var(--text-xs);margin-top:4px;">
-            A few times a year at most, never passed to anyone else, and you can unsubscribe from any email. We'll always email you about this order either way.
-          </span>
-        </span>
-      </label>
-
-      <div class="co-err" id="coErr">Please fill in all required fields.</div>
-      <div class="co-stripe-note">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8976A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <p>You'll be taken to Stripe's secure payment page. We never store your card details.</p>
-      </div>
-      <button class="btn" style="width:100%;justify-content:center;gap:12px;" id="coPayBtn" onclick="proceedToStripe()">
-        <span id="coPayBtnText">Pay Securely with Stripe</span>
-        <div id="coPaySpinner" style="width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;flex-shrink:0;"></div>
-      </button>
-      <p style="text-align:center;font-size:var(--text-xs);color:var(--pale);margin-top:12px;">You can review your order again on the Stripe payment page before paying.</p>
-    </div>
-  </div>
-</div>
 
 <!-- UPLOAD FLOW -->
 <div style="background:var(--cream);min-height:calc(100vh - 64px);">
@@ -415,14 +370,60 @@
 
     <!-- STEP 4: ADDED TO BASKET -->
     <div id="step4" class="hidden">
-      <div class="success-wrap" style="margin:0 auto;">
-        <div style="width:80px;height:80px;border-radius:50%;background:rgba(184,151,106,.12);border:1.5px solid var(--gold-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;font-size:var(--text-h2);">✓</div>
-        <h2 class="serif" style="font-size:2.2rem;font-weight:400;margin-bottom:16px;">Added to your basket</h2>
-        <p style="font-size:var(--text-body);color:var(--soft);line-height:1.9;margin-bottom:32px;">Your upload print order has been added. Continue browsing or head to checkout when you're ready.</p>
-        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-          <button class="btn" onclick="openCheckout()">Proceed to Checkout</button>
-          <button class="btn-out" onclick="goStep(1)">Upload Another</button>
+      <!-- Checkout is part of the page now. It used to be a floating panel,
+           which meant the progress bar promised a Checkout step the page never
+           showed, and the form covered the basket being checked. -->
+      <div class="check-card" style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding:20px 24px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;">&#10003;</div>
+        <div style="flex:1;">
+          <div style="font-size:var(--text-sm);font-weight:500;color:var(--text);">Added to your basket</div>
+          <div style="font-size:var(--text-xs);color:var(--soft);margin-top:2px;">Add your details below and we&rsquo;ll take you to Stripe to pay securely.</div>
         </div>
+        <button class="btn-out" onclick="goStep(3)" style="flex-shrink:0;">Back</button>
+      </div>
+
+      <div class="check-card">
+    <div class="co-body">
+      <span class="co-section-title">Order Summary</span>
+      <div id="coSummaryItems"></div>
+      <div class="co-summary-item total"><span>Total inc. VAT</span><span id="coSummaryTotal">£0.00</span></div>
+      <span class="co-section-title">Your Details</span>
+      <div class="co-field"><label class="co-label">Full Name *</label><input class="co-input" id="coName" placeholder="Charlotte Thornton" type="text"></div>
+      <div class="co-field"><label class="co-label">Email Address *</label><input class="co-input" id="coEmail" placeholder="charlotte@example.com" type="email"></div>
+      <div class="co-field"><label class="co-label">Phone Number</label><input class="co-input" id="coPhone" placeholder="+44 7700 000000" type="tel"></div>
+      <span class="co-section-title">Delivery Address</span>
+      <div class="co-field"><label class="co-label">Address Line 1 *</label><input class="co-input" id="coAddr1" placeholder="12 Rose Lane" type="text"></div>
+      <div class="co-field"><label class="co-label">Address Line 2</label><input class="co-input" id="coAddr2" placeholder="Apartment, suite, etc." type="text"></div>
+      <div class="co-row">
+        <div class="co-field"><label class="co-label">Town / City *</label><input class="co-input" id="coCity" placeholder="London" type="text"></div>
+        <div class="co-field"><label class="co-label">Postcode *</label><input class="co-input" id="coPostcode" placeholder="SW1A 1AA" type="text"></div>
+      </div>
+      <div class="co-field"><label class="co-label">Order Notes <span style="color:var(--pale);font-size:var(--text-xs);">(optional)</span></label><textarea class="co-input" id="coNotes" rows="3" placeholder="Any special instructions…" style="resize:vertical;line-height:1.7;"></textarea></div>
+      <label class="co-field" for="coMarketing" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--cream);">
+        <input type="checkbox" id="coMarketing" style="margin-top:3px;width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;">
+        <span style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">
+          Email me occasionally with new designs, seasonal ideas and offers.
+          <span style="display:block;color:var(--pale);font-size:var(--text-xs);margin-top:4px;">
+            A few times a year at most, never passed to anyone else, and you can unsubscribe from any email. We'll always email you about this order either way.
+          </span>
+        </span>
+      </label>
+
+      <div class="co-err" id="coErr">Please fill in all required fields.</div>
+      <div class="co-stripe-note">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8976A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <p>You'll be taken to Stripe's secure payment page. We never store your card details.</p>
+      </div>
+      <button class="btn" style="width:100%;justify-content:center;gap:12px;" id="coPayBtn" onclick="proceedToStripe()">
+        <span id="coPayBtnText">Pay Securely with Stripe</span>
+        <div id="coPaySpinner" style="width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;flex-shrink:0;"></div>
+      </button>
+      <p style="text-align:center;font-size:var(--text-xs);color:var(--pale);margin-top:12px;">You can review your order again on the Stripe payment page before paying.</p>
+      </div>
+      </div>
+
+      <div style="text-align:center;margin-top:18px;">
+        <button class="btn-out" onclick="goStep(1)">Add something else to your order</button>
       </div>
     </div>
 
@@ -1394,6 +1395,7 @@ function goStep(n){
   });
   currentStep=n;
   if(n===3)initStep3();
+  if(n===4 && typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
   // On the file-check step, put the artwork itself at the top of the screen —
   // the customer wants to see their design, not the page heading again.
   if(n===2){
@@ -2428,18 +2430,31 @@ async function buildPrintReadyPdfFromImage(file, sizeKey){
 
 // ── CHECKOUT ─────────────────────────────────────────────
 function openCheckout(){
-  // re-sync from localStorage (source of truth) in case another script's copy differs
+  // Checkout is step 4 of this page now rather than a floating panel. The name
+  // stays so the basket drawer and every other caller keep working.
   try { var lc = JSON.parse(localStorage.getItem('inv_cart')||'[]'); if(Array.isArray(lc)) cart = lc; } catch(e){}
-  if(!cart.length){showToast('Your basket is empty');return;}
+  if(!cart.length){ showToast('Your basket is empty'); return; }
   closeCart();
-  const sub=cart.reduce((s,i)=>s+i.total,0);
-  document.getElementById('coSummaryItems').innerHTML=cart.map(item=>`<div class="co-summary-item"><span>${item.name} <span style="color:var(--pale);font-size:var(--text-xs);">× ${item.qty}</span></span><span>£${item.total.toFixed(2)}</span></div>`).join('');
-  document.getElementById('coSummaryTotal').textContent='£'+sub.toFixed(2);
-  document.getElementById('coErr').style.display='none';
-  document.getElementById('coModalBg').classList.add('open');
+  goStep(4);
 }
-function closeCheckout(){ document.getElementById('coModalBg').classList.remove('open'); }
-document.getElementById('coModalBg').addEventListener('click',function(e){if(e.target===this)closeCheckout();});
+
+// Going back from checkout is simply going back a step.
+function closeCheckout(){ goStep(3); }
+
+// The order summary shown above the details form.
+function renderCheckoutSummary(){
+  try { var lc = JSON.parse(localStorage.getItem('inv_cart')||'[]'); if(Array.isArray(lc)) cart = lc; } catch(e){}
+  const items = document.getElementById('coSummaryItems');
+  const total = document.getElementById('coSummaryTotal');
+  if (!items || !total) return;
+  const sub = cart.reduce((t,i) => t + (+i.total || 0), 0);
+  items.innerHTML = cart.map(item =>
+    `<div class="co-summary-item"><span>${item.name} <span style="color:var(--pale);font-size:var(--text-xs);">&times; ${item.qty}</span></span><span>&pound;${(+item.total).toFixed(2)}</span></div>`
+  ).join('');
+  total.textContent = '£' + sub.toFixed(2);
+  const err = document.getElementById('coErr');
+  if (err) err.style.display = 'none';
+}
 
 async function proceedToStripe(){
   const name=document.getElementById('coName').value.trim();
