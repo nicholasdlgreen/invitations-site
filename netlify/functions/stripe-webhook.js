@@ -145,9 +145,12 @@ function buildCustomerConfirmationHtml(o) {
       <div style="padding:22px 28px 0;">
         <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#B8976A;margin-bottom:10px;">What happens now</div>
         <div style="font-size:14px;line-height:1.8;color:#5C4A3D;">
-          <div style="margin-bottom:7px;">1. We prepare your artwork for press and print it &mdash; usually 3&ndash;5 working days.</div>
+          <div style="margin-bottom:7px;">1. We prepare your artwork for press and print it.</div>
           <div style="margin-bottom:7px;">2. We email you as soon as it is on its way, with tracking.</div>
-          <div>3. Delivery is normally 1&ndash;2 working days after that.</div>
+          <div>3. ${o.delivery ? `You chose <strong>${o.delivery}</strong>.` : 'Your order is on our standard service.'}</div>
+        </div>
+        <div style="font-size:12px;color:#8C7B6E;margin-top:10px;line-height:1.7;">
+          Estimated dates are working days and exclude weekends and bank holidays. We will confirm the dispatch date by email.
         </div>
       </div>
 
@@ -437,6 +440,7 @@ exports.handler = async (event) => {
       order.size          = order.size        || stored.size        || null;
       order.quantity      = order.quantity    || (order.items[0] && order.items[0].qty) || null;
       order.artworkUrl    = order.artworkUrl  || stored.artwork_url || null;
+      order.delivery      = stored.delivery || null;
       order.printReadyUrl = order.printReadyUrl || stored.print_ready_url || null;
       order.customerEmail = (order.customerEmail && order.customerEmail !== 'Unknown')
         ? order.customerEmail : (stored.customer_email || order.customerEmail);

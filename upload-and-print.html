@@ -384,18 +384,14 @@
 
       <div class="check-card">
         <h3>Delivery</h3>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gold);border-radius:12px;background:rgba(184,151,106,.04);" onclick="selectDelivery(0,this)"><input type="radio" name="delivery" checked style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:var(--text-sm);color:var(--text);">Standard</div><div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">5–7 working days</div></div><div style="font-size:var(--text-sm);color:var(--gold);font-weight:500;">Free</div></label>
-          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;" onclick="selectDelivery(12,this)"><input type="radio" name="delivery" style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:var(--text-sm);color:var(--text);">Express</div><div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">2–3 working days</div></div><div style="font-size:var(--text-sm);color:var(--soft);">+£12.00</div></label>
-          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;" onclick="selectDelivery(18,this)"><input type="radio" name="delivery" style="accent-color:var(--gold);"><div style="flex:1;"><div style="font-size:var(--text-sm);color:var(--text);">Next Day</div><div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">Order before 12pm</div></div><div style="font-size:var(--text-sm);color:var(--soft);">+£18.00</div></label>
-        </div>
+        <!-- Built at runtime from delivery_options, so turnaround can be changed
+             without touching this page, and the dates match what the printer works to. -->
+        <div id="deliveryOptions" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <p id="deliveryNote" style="font-size:var(--text-xs);color:var(--pale);margin-top:12px;line-height:1.7;"></p>
       </div>
 
-      <div class="price-strip" style="margin-bottom:24px;">
-        <div class="price-row"><span>Invitations</span><span id="priceBase">£0.00</span></div>
-        <div class="price-row" id="priceUpgradeRow"><span>Paper upgrade</span><span id="priceUpgrade">—</span></div>
-        <div class="price-row" id="priceEnvRow" style="display:none;"><span>Envelopes</span><span id="priceEnvCost">—</span></div>
-        <div class="price-row"><span>Delivery</span><span id="priceDelivery">Free</span></div>
+      <div class="check-card">
+<div class="price-row"><span>Delivery</span><span id="priceDelivery">Free</span></div>
         <div class="price-row"><span>Subtotal (excl. VAT)</span><span id="priceNet">£0.00</span></div>
         <div class="price-row"><span>VAT (20%)</span><span id="priceVat">£0.00</span></div>
         <div class="price-row total"><span>Total inc. VAT</span><span id="priceTotal">£0.00</span></div>
@@ -860,6 +856,7 @@ function applySizeFilter() { renderSizeCards(); }
 
 loadSiteData();
 loadPrintSizes();
+loadDeliveryOptions();
   
 // ── STATE ─────────────────────────────────────────────────
 let cart = [];
@@ -1589,7 +1586,120 @@ function selectChip(el,qty){
   updatePrice();
 }
 
-function selectDelivery(cost,labelEl){
+// ── DELIVERY ──────────────────────────────────────────────
+// Options, turnaround and surcharges come from the database so they can be
+// changed without a code release, and they mirror what PrintedEasy actually
+// work to. Estimated arrival is counted in working days from the cut-off,
+// skipping weekends and bank holidays — a date we cannot keep is worse than
+// no date at all.
+let deliveryOptions = [], bankHolidays = [], selectedDelivery = null;
+
+async function loadDeliveryOptions(){
+  try {
+    const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+    const [opts, hols] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/delivery_options?select=*&active=eq.true&order=display_order`, { headers }).then(r => r.ok ? r.json() : []),
+      fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.uk_bank_holidays&select=data`, { headers }).then(r => r.ok ? r.json() : [])
+    ]);
+    deliveryOptions = Array.isArray(opts) ? opts : [];
+    bankHolidays = (hols && hols[0] && hols[0].data && hols[0].data.dates) || [];
+  } catch (e) {
+    console.warn('[delivery] could not load options:', e.message);
+    deliveryOptions = [];
+  }
+  renderDeliveryOptions();
+}
+
+function isWorkingDay(d){
+  const day = d.getDay();
+  if (day === 0 || day === 6) return false;
+  const iso = d.toISOString().slice(0, 10);
+  return !bankHolidays.includes(iso);
+}
+function addWorkingDays(from, days){
+  const d = new Date(from.getTime());
+  let left = days;
+  while (left > 0){ d.setDate(d.getDate() + 1); if (isWorkingDay(d)) left--; }
+  return d;
+}
+// Orders after the cut-off (or on a non-working day) start the next working day.
+function productionStart(opt){
+  const now = new Date();
+  let start = new Date(now.getTime());
+  const missedCutoff = opt.cutoff_hour != null && now.getHours() >= opt.cutoff_hour;
+  if (missedCutoff || !isWorkingDay(start)) {
+    start = addWorkingDays(start, 1);
+  }
+  return start;
+}
+function estimatedArrival(opt){
+  // The printer counts the day you order as production day one, provided it is
+  // a working day and the cut-off has not passed. Their own example: order
+  // before 4pm Monday on Express (2 production days) arrives Wednesday —
+  // printed Mon and Tue, dispatched Tue, delivered Wed. Counting the order day
+  // as well put every date a day late.
+  const start = productionStart(opt);
+  const days = Math.max(0, (opt.production_days || 1) - 1) + (opt.delivery_days || 1);
+  return addWorkingDays(start, days);
+}
+function formatArrival(d){
+  return d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+}
+// What this service costs on the current basket. PrintedEasy charge us a
+// percentage with a minimum, so a flat fee would lose money on a large order.
+function deliveryPriceFor(opt, orderValue){
+  const pct = parseFloat(opt.surcharge_pct) || 0;
+  if (pct > 0) return Math.max(orderValue * (pct / 100), parseFloat(opt.surcharge_min) || 0);
+  return parseFloat(opt.price) || 0;
+}
+
+function renderDeliveryOptions(){
+  const box = document.getElementById('deliveryOptions');
+  if (!box) return;
+  if (!deliveryOptions.length){
+    box.innerHTML = '<div style="font-size:var(--text-sm);color:var(--soft);">Delivery options are loading…</div>';
+    return;
+  }
+  const orderValue = cart.reduce((t, i) => t + (+i.total || 0), 0) || (typeof lastBaseTotal === 'number' ? lastBaseTotal : 0);
+  box.innerHTML = deliveryOptions.map(function(opt){
+    const tooBig = opt.max_order_value && orderValue > parseFloat(opt.max_order_value);
+    const cost = deliveryPriceFor(opt, orderValue);
+    const arrival = formatArrival(estimatedArrival(opt));
+    const sel = selectedDelivery && selectedDelivery.id === opt.id;
+    return `<label onclick="${tooBig ? '' : `selectDelivery('${opt.id}',this)`}"
+      style="display:flex;align-items:center;gap:12px;cursor:${tooBig?'not-allowed':'pointer'};padding:14px 16px;border:1.5px solid ${sel?'var(--gold)':'var(--border)'};border-radius:12px;background:${sel?'rgba(184,151,106,.04)':'transparent'};opacity:${tooBig?'.45':'1'};">
+      <div style="flex:1;">
+        <div style="font-size:var(--text-sm);font-weight:500;color:var(--text);">${opt.name}</div>
+        <div style="font-size:var(--text-xs);color:var(--soft);margin-top:2px;">${opt.blurb || ''}</div>
+        <div style="font-size:var(--text-xs);color:var(--gold);margin-top:4px;">${tooBig ? 'Not available on orders this size' : 'Estimated arrival ' + arrival}</div>
+      </div>
+      <div style="font-size:var(--text-sm);color:var(--text);white-space:nowrap;">${cost > 0 ? '+£' + cost.toFixed(2) : 'Free'}</div>
+    </label>`;
+  }).join('');
+
+  const note = document.getElementById('deliveryNote');
+  if (note) note.textContent = 'Estimated dates are working days and exclude weekends and bank holidays. We confirm the dispatch date by email.';
+
+  if (!selectedDelivery && deliveryOptions.length) selectDelivery(deliveryOptions[0].id);
+}
+
+function selectDelivery(id, labelEl){
+  const opt = deliveryOptions.find(o => o.id === id);
+  if (!opt) return;
+  const orderValue = cart.reduce((t, i) => t + (+i.total || 0), 0);
+  if (opt.max_order_value && orderValue > parseFloat(opt.max_order_value)) return;
+  selectedDelivery = {
+    id: opt.id,
+    name: opt.name,
+    arrival: formatArrival(estimatedArrival(opt)),
+    arrivalIso: estimatedArrival(opt).toISOString().slice(0, 10)
+  };
+  deliveryCost = deliveryPriceFor(opt, orderValue);
+  renderDeliveryOptions();
+  updatePrice();
+}
+
+function _legacySelectDelivery(cost,labelEl){
   deliveryCost=cost;
   document.querySelectorAll('[name="delivery"]').closest?.('label');
   document.querySelectorAll('label[onclick^="selectDelivery"]').forEach(l=>{
@@ -2458,7 +2568,14 @@ async function proceedToStripe(){
   const successUrl=base+'?order=success';
   const cancelUrl=base+'?order=cancelled';
   try{
-    const res=await fetch('/.netlify/functions/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cart,customer,successUrl,cancelUrl,artworkUrl,printReadyUrl})});
+    const res=await fetch('/.netlify/functions/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl,
+      delivery: selectedDelivery ? {
+        id: selectedDelivery.id, name: selectedDelivery.name,
+        arrival: selectedDelivery.arrival, arrivalIso: selectedDelivery.arrivalIso,
+        cost: deliveryCost
+      } : null
+    })});
     const data=await res.json();
     if(!res.ok||!data.url)throw new Error(data.error||'Could not create checkout session.');
     if(data.orderNumber){const saved=JSON.parse(localStorage.getItem('inv_pending_order')||'{}');saved.ref=data.orderNumber;localStorage.setItem('inv_pending_order',JSON.stringify(saved));}

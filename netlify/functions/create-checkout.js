@@ -134,7 +134,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl } = JSON.parse(event.body);
+    const { cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl, delivery } = JSON.parse(event.body);
 
     if (!cart?.length) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Cart is empty' }) };
@@ -187,6 +187,11 @@ exports.handler = async (event) => {
           status:           'pending',
           artwork_url:      artworkUrl || null,
           print_ready_url:  printReadyUrl || null,
+          // What the customer chose and the date they were shown — so the
+          // confirmation email promises the same thing the checkout did.
+          delivery:         delivery
+                              ? `${delivery.name}${delivery.arrival ? ' · estimated ' + delivery.arrival : ''}`
+                              : null,
         });
         orderId = row?.id;
       } catch (e) {
