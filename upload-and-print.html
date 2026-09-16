@@ -2623,11 +2623,12 @@ async function proceedToStripe(){
     }
   }
 
-  // 10. Repoint step 4's "Upload Another" button to design studio templates
+  // 10. Step 4's "Upload Another" button: back into the studio chooser.
+  //     It used to point at the template gallery, which has no templates in it.
   const uploadAnotherBtn = document.querySelector('#step4 button[onclick="goStep(1)"]');
   if (uploadAnotherBtn) {
-    uploadAnotherBtn.setAttribute('onclick', `window.location.href = '/design-studio-templates.html'`);
-    uploadAnotherBtn.textContent = 'Browse more designs';
+    uploadAnotherBtn.setAttribute('onclick', `window.location.href = '/design-studio.html'`);
+    uploadAnotherBtn.textContent = 'Create another design';
   }
 })();
 
