@@ -207,12 +207,24 @@ async function sendWelcomeIfDue(email) {
     if (!contact) return;                       // no consent, unsubscribed, or already welcomed
 
     const unsubscribeUrl = `https://foreverprint.com/.netlify/functions/unsubscribe?token=${contact.unsubscribe_token}`;
-    await sendEmail({
-      to: contact.email,
-      subject: 'Welcome to Foreverprint',
-      html: buildWelcomeHtml(contact, unsubscribeUrl)
-    });
-    console.log(`Welcome email sent to ${contact.email}`);
+    try {
+      await sendEmail({
+        to: contact.email,
+        subject: 'Welcome to Foreverprint',
+        html: buildWelcomeHtml(contact, unsubscribeUrl)
+      });
+      console.log(`Welcome email sent to ${contact.email}`);
+    } catch (sendErr) {
+      // The claim is taken before sending so two orders cannot both send one.
+      // If the send then fails, hand the claim back — otherwise the customer is
+      // marked as welcomed forever and silently never receives it.
+      console.error('Welcome email failed, releasing the claim so it can retry:', sendErr.message);
+      await fetch(`${SUPABASE_URL}/rest/v1/contacts?email=eq.${encodeURIComponent(contact.email)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' },
+        body: JSON.stringify({ welcome_sent_at: null })
+      }).catch(e => console.error('Could not release the welcome claim:', e.message));
+    }
   } catch (err) {
     console.error('Welcome email failed (non-fatal):', err.message);
   }
