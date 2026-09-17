@@ -526,19 +526,19 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div class="lp-how-step">
         <div class="lp-how-num">3</div>
         <div class="lp-how-title">We print</div>
-        <div class="lp-how-text">[REPLACE: Your order goes to print at our UK facility.]</div>
+        <div class="lp-how-text">Printed in the UK on paper we have chosen and checked ourselves.</div>
       </div>
       <div class="lp-how-step">
         <div class="lp-how-num">4</div>
         <div class="lp-how-title">Delivered</div>
-        <div class="lp-how-text">[REPLACE: Tracked UK delivery with next-day available on eligible orders.]</div>
+        <div class="lp-how-text">Tracked delivery, included as standard. Faster options at checkout.</div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- WHY US — 4 items, real claims only -->
-<!-- FAQS — 5 questions, marked [REPLACE] for honest answers -->
+<!-- FAQS — the visible answers and the FAQPage data below must match -->
 <section class="lp-section lp-section-cream">
   <div class="container">
     <span class="lp-section-tag">FAQs</span>
@@ -547,7 +547,7 @@ was fetched and injected via innerHTML — that was the bug behind the
     <div class="lp-faq-wrap">
       <details class="lp-faq-item">
         <summary class="lp-faq-q"><span class="lp-faq-q-text">What's your turnaround time?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">[REPLACE: Standard turnaround is X working days. Next-day printing available on eligible orders.]</div>
+        <div class="lp-faq-a">Standard orders are printed within 3 working days and sent by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout.</div>
       </details>
       <details class="lp-faq-item">
         <summary class="lp-faq-q"><span class="lp-faq-q-text">What file formats do you accept?</span><span class="lp-faq-toggle">+</span></summary>
@@ -555,7 +555,7 @@ was fetched and injected via innerHTML — that was the bug behind the
       </details>
       <details class="lp-faq-item">
         <summary class="lp-faq-q"><span class="lp-faq-q-text">What if my artwork has issues?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">[REPLACE: Our team reviews every file. If we spot anything (low resolution, wrong colour mode, missing bleed), we'll get in touch before printing.]</div>
+        <div class="lp-faq-a">Every file is checked the moment you upload it — page size against the size you ordered, resolution at that size, and bleed. Anything that would print poorly is flagged on screen before you pay, and our studio looks again before it goes to press. Nothing blocks your order: we tell you what we have found and let you decide.</div>
       </details>
       <details class="lp-faq-item">
         <summary class="lp-faq-q"><span class="lp-faq-q-text">Do you offer design services?</span><span class="lp-faq-toggle">+</span></summary>
@@ -563,7 +563,7 @@ was fetched and injected via innerHTML — that was the bug behind the
       </details>
       <details class="lp-faq-item">
         <summary class="lp-faq-q"><span class="lp-faq-q-text">Can I change my order after placing it?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">[REPLACE: Once your order is placed, contact us as soon as possible — changes may be possible before production starts.]</div>
+        <div class="lp-faq-a">Contact us as soon as you can, quoting your order reference. We can refund in full right up until your file goes to press. Once printing has begun a personalised order cannot be refunded.</div>
       </details>
     </div>
   </div>
@@ -709,7 +709,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
     <button class="path-modal-close" type="button" onclick="closePathModal()" aria-label="Close">×</button>
     <span class="path-modal-tag" id="path-modal-tag">Wedding Invitations</span>
     <h2 class="path-modal-h" id="path-modal-title">How would you like to <em>start?</em></h2>
-    <p class="path-modal-sub">[REPLACE: Whether you've got a design ready or you're starting from scratch, we'll guide you the rest of the way.]</p>
+    <p class="path-modal-sub">Whether your design is ready to print or you are starting from a blank page, we will take it from here.</p>
     <div class="path-modal-grid">
       <a id="path-upload" class="path-card" href="#">
         <div class="path-icon">✦</div>
@@ -736,11 +736,11 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type":"Question","name":"What's your turnaround time?","acceptedAnswer":{"@type":"Answer","text":"[REPLACE]"}},
+    {"@type":"Question","name":"What's your turnaround time?","acceptedAnswer":{"@type":"Answer","text":"Standard orders are printed within 3 working days and sent by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout."}},
     {"@type":"Question","name":"What file formats do you accept?","acceptedAnswer":{"@type":"Answer","text":"PDF, AI, InDesign, and high-resolution PNG or JPG (300dpi minimum)."}},
-    {"@type":"Question","name":"What if my artwork has issues?","acceptedAnswer":{"@type":"Answer","text":"[REPLACE]"}},
+    {"@type":"Question","name":"What if my artwork has issues?","acceptedAnswer":{"@type":"Answer","text":"Every file is checked the moment you upload it — page size against the size you ordered, resolution at that size, and bleed. Anything that would print poorly is flagged on screen before you pay, and our studio looks again before it goes to press. Nothing blocks your order: we tell you what we have found and let you decide."}},
     {"@type":"Question","name":"Do you offer design services?","acceptedAnswer":{"@type":"Answer","text":"Yes. Our Design Studio walks you through creating an invitation from scratch."}},
-    {"@type":"Question","name":"Can I change my order after placing it?","acceptedAnswer":{"@type":"Answer","text":"[REPLACE]"}}
+    {"@type":"Question","name":"Can I change my order after placing it?","acceptedAnswer":{"@type":"Answer","text":"Contact us as soon as you can, quoting your order reference. We can refund in full right up until your file goes to press. Once printing has begun a personalised order cannot be refunded."}}
   ]
 }</script>
 

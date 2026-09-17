@@ -403,17 +403,17 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div class="trust-item">
         <div class="trust-icon">✦</div>
         <div class="trust-title">UK printed</div>
-        <div class="trust-text">[REPLACE: Every order printed in the UK to the highest standards.]</div>
+        <div class="trust-text">Every order printed in the UK and checked by hand before it leaves us.</div>
       </div>
       <div class="trust-item">
         <div class="trust-icon">✧</div>
         <div class="trust-title">Next-day delivery</div>
-        <div class="trust-text">[REPLACE: Next-day delivery available across the UK on eligible orders.]</div>
+        <div class="trust-text">Tracked UK delivery included, with faster options offered at checkout.</div>
       </div>
       <div class="trust-item">
         <div class="trust-icon">✸</div>
         <div class="trust-title">Premium paper stocks</div>
-        <div class="trust-text">[REPLACE: Curated selection of premium British paper stocks for every order.]</div>
+        <div class="trust-text">Paper chosen and stocked by us, from smooth signature card to textured cotton rag.</div>
       </div>
     </div>
   </div>
@@ -645,7 +645,7 @@ function renderProducts() {
         ${img}
         <div class="product-body">
           <h3 class="product-name">${escapeHtml(p.name || '')}</h3>
-          ${tagline ? `<p class="product-desc">${escapeHtml(tagline)}</p>` : '<p class="product-desc">[REPLACE: short product tagline]</p>'}
+          ${tagline ? `<p class="product-desc">${escapeHtml(tagline)}</p>` : '<p class="product-desc"></p>'}
           <div class="product-price">${priceLabel}</div>
         </div>
       </a>`;
