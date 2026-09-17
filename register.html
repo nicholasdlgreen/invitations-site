@@ -576,11 +576,18 @@ form.addEventListener('submit', async (e) => {
 
   // Use the shared invAuth API. The metadata is stored on auth.users.user_metadata
   // and is also passed to our profiles table below.
+  // Carry where they were going. Someone who came here to save a design must
+  // land back on that design once they have confirmed their email, not on a
+  // generic account page having lost what they were doing.
+  const nextParam = new URLSearchParams(window.location.search).get('next') || '';
+  const afterVerify = window.location.origin + '/login.html?verified=true' +
+    (nextParam ? '&next=' + encodeURIComponent(nextParam) : '');
+
   const { data, error } = await window.invAuth.signUp(
     email,
     password,
     { full_name: name, marketing_optin: marketingOptin },
-    window.location.origin + '/login.html?verified=true'
+    afterVerify
   );
 
   if (error){

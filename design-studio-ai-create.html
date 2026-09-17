@@ -1578,19 +1578,44 @@ function artworkFileName(prefix, ext){
         btn.textContent = '✓ Saved to your designs';
         setTimeout(function(){ btn.disabled = false; btn.textContent = '♡ Save this design'; }, 2500);
       } else {
-        // Not signed in: keep the design, send them to sign in, and it saves
-        // itself the moment they are back. Losing someone's design because
-        // they had not made an account would be unforgivable.
+        // Most people saving a design are new customers, so ask rather than
+        // dumping them on a sign-in form with no explanation. The design is
+        // queued first either way: it saves itself the moment they are back.
         window.invAuth.queuePendingSave(PRODUCT_SLUG, CURRENT_DESIGN_ID, state, meta);
-        var back = '/design-studio-ai-create.html?product=' + encodeURIComponent(PRODUCT_SLUG) +
-                   '&design=' + encodeURIComponent(CURRENT_DESIGN_ID);
-        window.location.href = '/login.html?next=' + encodeURIComponent(back);
+        btn.disabled = false; btn.textContent = '♡ Save this design';
+        showSavePrompt();
       }
     } catch (e) {
       btn.disabled = false; btn.textContent = '♡ Save this design';
       alert('Could not save that just now: ' + (e.message || e));
     }
   });
+
+  // Asking someone to make an account is a favour you are asking of them, so
+  // say what they get for it and keep the door open.
+  function showSavePrompt(){
+    if (document.getElementById('ds-save-prompt')) return;
+    var back = '/design-studio-ai-create.html?product=' + encodeURIComponent(PRODUCT_SLUG) +
+               '&design=' + encodeURIComponent(CURRENT_DESIGN_ID);
+    var next = encodeURIComponent(back);
+    var wrap = document.createElement('div');
+    wrap.id = 'ds-save-prompt';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:900;background:rgba(61,46,36,.45);display:flex;align-items:center;justify-content:center;padding:24px;';
+    wrap.innerHTML =
+      '<div style="background:var(--white);border-radius:20px;max-width:420px;width:100%;padding:32px;text-align:center;box-shadow:0 20px 60px rgba(61,46,36,.25);">' +
+        '<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.6rem;color:var(--text);margin-bottom:10px;">Keep this design</div>' +
+        '<p style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin:0 0 22px;">' +
+          'Create an account and this design is saved to it \u2014 come back to it whenever you like, change the wording, or use it again later. ' +
+          'It is held safely in the meantime.' +
+        '</p>' +
+        '<a href="/register.html?next=' + next + '" style="display:block;background:var(--gold);color:#fff;border-radius:60px;padding:14px;text-decoration:none;font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px;">Create an account</a>' +
+        '<a href="/login.html?next=' + next + '" style="display:block;font-size:var(--text-sm);color:var(--soft);text-decoration:none;margin-bottom:16px;">I already have one \u2014 sign in</a>' +
+        '<button type="button" onclick="document.getElementById(\'ds-save-prompt\').remove()" style="background:none;border:0;cursor:pointer;font-size:var(--text-xs);color:var(--pale);text-decoration:underline;">Not now</button>' +
+      '</div>';
+    wrap.addEventListener('click', function(e){ if (e.target === wrap) wrap.remove(); });
+    document.body.appendChild(wrap);
+    logEvent('save_prompt_shown', { size: size });
+  }
 
   // Make some tweaks: keep this design, go to the tweaks page (image-to-image)
   document.getElementById('ds-tweak').addEventListener('click', function(){
