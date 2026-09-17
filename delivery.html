@@ -416,7 +416,8 @@ let cart=[];
 try{cart=JSON.parse(localStorage.getItem('inv_cart')||'[]');}catch(e){cart=[];}
 function saveCart(){localStorage.setItem('inv_cart',JSON.stringify(cart));}
 function updateCartBadge(){document.querySelectorAll('#cartCount').forEach(el=>el.textContent=cart.length);}
-function removeCartItem(i){cart.splice(i,1);saveCart();updateCartBadge();renderCartDrawer();}
+function removeCartItem(i){cart.splice(i,1);saveCart();if (typeof updateCartBadge === 'function') updateCartBadge();
+  else document.addEventListener('DOMContentLoaded', function(){ if (typeof updateCartBadge === 'function') updateCartBadge(); });renderCartDrawer();}
 function openCart(){renderCartDrawer();document.getElementById('cartBg').classList.add('open');document.getElementById('cartDrawer').classList.add('open');}
 function closeCart(){document.getElementById('cartBg').classList.remove('open');document.getElementById('cartDrawer').classList.remove('open');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
@@ -430,7 +431,8 @@ function renderCartDrawer(){
   document.getElementById('cartTotal').textContent='&#163;'+sub.toFixed(2);
   foot.style.display='block';
 }
-updateCartBadge();
+if (typeof updateCartBadge === 'function') updateCartBadge();
+  else document.addEventListener('DOMContentLoaded', function(){ if (typeof updateCartBadge === 'function') updateCartBadge(); });
 </script>
   <script src="/analytics.js" defer></script>
 </body>

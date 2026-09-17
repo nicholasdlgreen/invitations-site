@@ -344,7 +344,8 @@ async function loadData() {
 loadData();
 
 // Header / footer
-fetch('/header.html').then(r=>r.text()).then(html=>{document.getElementById('site-header').outerHTML=html;if(typeof updateCartBadge==='function')updateCartBadge();});
+fetch('/header.html').then(r=>r.text()).then(html=>{document.getElementById('site-header').outerHTML=html;if(typeof updateCartBadge==='function')if (typeof updateCartBadge === 'function') updateCartBadge();
+  else document.addEventListener('DOMContentLoaded', function(){ if (typeof updateCartBadge === 'function') updateCartBadge(); });});
 fetch('/footer.html').then(r=>r.text()).then(html=>{document.getElementById('site-footer').outerHTML=html;});
 </script>
 

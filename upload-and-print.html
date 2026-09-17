@@ -871,8 +871,10 @@ let designMode = false, designState = null;
 // ── CART ──────────────────────────────────────────────────
 function saveCart()       { localStorage.setItem('inv_cart',JSON.stringify(cart)); }
 function updateCartBadge(){ document.querySelectorAll('#cartCount').forEach(el=>el.textContent=cart.length); }
-function addToCart(item)  { cart.push(item); saveCart(); updateCartBadge(); }
-function removeCartItem(i){ cart.splice(i,1); saveCart(); updateCartBadge(); renderCartDrawer(); }
+function addToCart(item)  { cart.push(item); saveCart(); if (typeof updateCartBadge === 'function') updateCartBadge();
+  else document.addEventListener('DOMContentLoaded', function(){ if (typeof updateCartBadge === 'function') updateCartBadge(); }); }
+function removeCartItem(i){ cart.splice(i,1); saveCart(); if (typeof updateCartBadge === 'function') updateCartBadge();
+  else document.addEventListener('DOMContentLoaded', function(){ if (typeof updateCartBadge === 'function') updateCartBadge(); }); renderCartDrawer(); }
 function openCart()       { renderCartDrawer(); var bg=document.getElementById('cartBg'); var dr=document.getElementById('cartDrawer'); if(bg)bg.classList.add('open'); if(dr)dr.classList.add('open'); }
 function closeCart()      { var bg=document.getElementById('cartBg'); var dr=document.getElementById('cartDrawer'); if(bg)bg.classList.remove('open'); if(dr)dr.classList.remove('open'); }
 function showToast(msg)   { const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800); }
