@@ -4,13 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Upload & Print Wedding Invitations | Your Design, Beautifully Printed | Foreverprint</title>
-<meta name="description" content="Upload your wedding invitation design and we'll print it on premium UK paper stocks. PDF, AI, InDesign, PNG or JPG accepted. Digital proof included, free tracked delivery, no minimum quantities."/>
+<meta name="description" content="Upload your wedding invitation design and we'll print it on premium UK paper stocks. PDF, AI, InDesign, PNG or JPG accepted. Quality checked before printing, free tracked delivery, no minimum quantities."/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://foreverprint.com/upload-and-print.html"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://foreverprint.com/upload-and-print.html"/>
 <meta property="og:title" content="Upload & Print Wedding Invitations | Foreverprint"/>
-<meta property="og:description" content="Upload your wedding invitation design and we'll print it on premium UK paper stocks. Digital proof included on every order."/>
+<meta property="og:description" content="Upload your wedding invitation design and we'll print it on premium UK paper stocks. Quality checked before we print."/>
 <meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
 <meta property="og:site_name" content="Foreverprint"/>
 <style>
@@ -465,9 +465,9 @@ const PRODUCT = (function() {
     const el = document.querySelector(selector);
     if (el) el.setAttribute('content', content);
   }
-  setMeta('meta[name="description"]',     `Upload your ${productName.toLowerCase()} design and we'll print it on premium UK paper stocks. PDF, AI, InDesign, PNG or JPG accepted. Digital proof included, free tracked delivery, no minimum quantities.`);
+  setMeta('meta[name="description"]',     `Upload your ${productName.toLowerCase()} design and we'll print it on premium UK paper stocks. PDF, AI, InDesign, PNG or JPG accepted. Quality checked before printing, free tracked delivery, no minimum quantities.`);
   setMeta('meta[property="og:title"]',    `Upload & Print ${productName} | Foreverprint`);
-  setMeta('meta[property="og:description"]', `Upload your ${productName.toLowerCase()} design and we'll print it on premium UK paper stocks. Digital proof included on every order.`);
+  setMeta('meta[property="og:description"]', `Upload your ${productName.toLowerCase()} design and we'll print it on premium UK paper stocks. Quality checked before we print.`);
   setMeta('meta[property="og:url"]',      `https://foreverprint.com/${PRODUCT.slug}`);
 
   // Update visible heading for the size selector. Use the product name as-is —
@@ -2630,8 +2630,6 @@ async function proceedToStripe(){
     function addWorkingDays(date,days){let d=new Date(date),added=0;while(added<days){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)added++;}return d;}
     const deliveryDate=addWorkingDays(new Date(),7);
     const deliveryStr=deliveryDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    const proofDate=addWorkingDays(new Date(),1);
-    const proofStr=proofDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
     const ref=order?.ref||'FP-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*9000);
     // Tell Google this click became an order. fpAnalytics counts a given
     // reference once and once only — this screen can be refreshed, and a
@@ -2673,8 +2671,8 @@ async function proceedToStripe(){
           <div style="font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">What happens next</div>
           <div style="font-size:var(--text-sm);color:var(--soft);line-height:2;">
             <p style="margin-bottom:10px;">✓ <strong style="color:var(--text);">Payment confirmed</strong></p>
-            <p style="margin-bottom:10px;">→ <strong style="color:var(--text);">Digital proof by ${proofStr}</strong> — sent to <strong>${email}</strong></p>
-            <p style="margin-bottom:10px;">○ <strong style="color:var(--text);">Printed &amp; dispatched</strong> — 2–3 working days after proof approval</p>
+            <p style="margin-bottom:10px;">→ <strong style="color:var(--text);">Your file goes to press</strong> — we check it and print your order</p>
+            <p style="margin-bottom:10px;">○ <strong style="color:var(--text);">Printed &amp; dispatched</strong> — we email tracking as soon as it leaves us</p>
             <p>○ <strong style="color:var(--text);">Estimated delivery by ${deliveryStr}</strong></p>
           </div>
         </div>
@@ -2689,7 +2687,7 @@ async function proceedToStripe(){
         </div>
         <div style="background:rgba(184,151,106,.06);border:1px solid var(--gold-lt);border-radius:16px;padding:20px 24px;margin-bottom:32px;">
           <div style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:4px;">Need to make a change?</div>
-          <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">Contact us at <strong>hello@foreverprint.com</strong> quoting reference <strong>${ref}</strong> before your proof is approved.</div>
+          <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">Contact us at <strong>hello@foreverprint.com</strong> quoting reference <strong>${ref}</strong> and we will do what we can &mdash; orders move to print quickly, so the sooner the better.</div>
         </div>
         <div style="text-align:center;"><a class="btn" href="/">Back to Homepage</a></div>
       </div>`;

@@ -117,7 +117,7 @@ async function lookupLiveOrder(orderNum, email) {
       dpd: o.tracking || null,
       stages: [
         { name:'Order Received', desc:'Your order was received and payment confirmed.', date: dt, done: true },
-        { name:'Design Approved', desc:'Your digital proof was approved.', date:'—', done: curIdx >= 2 },
+        { name:'File Checked', desc:'Your artwork passed our pre-press checks.', date:'—', done: curIdx >= 2 },
         { name:'Printing', desc:'Your invitations are being printed.', date:'—', done: curIdx >= 3 },
         { name:'Dispatched', desc: o.tracking ? 'Dispatched via courier. Tracking: ' + o.tracking : 'Dispatched via courier.', date:'—', done: curIdx >= 4 },
         { name:'Delivered', desc:'Your order has arrived.', date:'—', done: curIdx >= 5 }
@@ -129,7 +129,7 @@ async function lookupLiveOrder(orderNum, email) {
 }
 
 function renderTrackResult(result, order) {
-  const statusLabels = { new:'Order Received', proof:'Awaiting Proof Approval', printing:'In Production', dispatched:'Dispatched', delivered:'Delivered', cancelled:'Cancelled' };
+  const statusLabels = { new:'Order Received', proof:'File Being Checked', printing:'In Production', dispatched:'Dispatched', delivered:'Delivered', cancelled:'Cancelled' };
   const statusColour = { dispatched:['#EAF0F7','#4A7FAA'], proof:['#FDF4E7','#C97B3A'], delivered:['#EAF4EE','#5A9E6F'], new:['#EAF4EE','#5A9E6F'], printing:['#EAF4EE','#5A9E6F'], cancelled:['#FCEAEA','#C94A3A'] };
   const sc = statusColour[order.status] || ['#EAF4EE','#5A9E6F'];
   result.innerHTML = `
