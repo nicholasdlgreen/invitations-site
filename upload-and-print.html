@@ -407,24 +407,6 @@
 
       <div class="check-card">
     <div class="co-body">
-      <span class="co-section-title">Order Summary</span>
-      <div id="coBasketNote" style="font-size:var(--text-xs);color:var(--pale);margin:-6px 0 10px;"></div>
-      <div id="coSummaryItems"></div>
-      <div id="coDiscountRow" class="co-summary-item" style="display:none;color:var(--gold);"><span id="coDiscountLabel">Discount</span><span id="coDiscountAmount">-£0.00</span></div>
-      <div class="co-summary-item total"><span>Total inc. VAT</span><span id="coSummaryTotal">£0.00</span></div>
-
-      <div style="margin:14px 0 4px;">
-        <div id="coDiscountForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <input class="co-input" id="coDiscountInput" type="text" placeholder="Discount code" autocomplete="off"
-                 style="flex:1;min-width:150px;text-transform:uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();applyDiscount();}">
-          <button type="button" class="btn-out" id="coDiscountBtn" onclick="applyDiscount()" style="white-space:nowrap;">Apply</button>
-        </div>
-        <div id="coDiscountApplied" style="display:none;font-size:var(--text-sm);color:var(--gold);">
-          <span id="coDiscountAppliedText"></span>
-          <button type="button" onclick="removeDiscount()" style="background:none;border:0;padding:0 0 0 8px;cursor:pointer;font-size:var(--text-xs);color:var(--pale);text-decoration:underline;">Remove</button>
-        </div>
-        <div id="coDiscountMsg" style="display:none;font-size:var(--text-xs);margin-top:6px;line-height:1.6;"></div>
-      </div>
       <span class="co-section-title">Your Details</span>
       <div class="co-field"><label class="co-label">Full Name *</label><input class="co-input" id="coName" placeholder="Charlotte Thornton" type="text"></div>
       <div class="co-field"><label class="co-label">Email Address *</label><input class="co-input" id="coEmail" placeholder="charlotte@example.com" type="email"></div>
@@ -447,6 +429,24 @@
         </span>
       </label>
 
+      <span class="co-section-title">Order Summary</span>
+      <div id="coBasketNote" style="font-size:var(--text-xs);color:var(--pale);margin:-6px 0 10px;"></div>
+      <div id="coSummaryItems"></div>
+      <div id="coDiscountRow" class="co-summary-item" style="display:none;color:var(--gold);"><span id="coDiscountLabel">Discount</span><span id="coDiscountAmount">-£0.00</span></div>
+      <div class="co-summary-item total"><span>Total inc. VAT</span><span id="coSummaryTotal">£0.00</span></div>
+
+      <div style="margin:14px 0 4px;">
+        <div id="coDiscountForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input class="co-input" id="coDiscountInput" type="text" placeholder="Discount code" autocomplete="off"
+                 style="flex:1;min-width:150px;text-transform:uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();applyDiscount();}">
+          <button type="button" class="btn-out" id="coDiscountBtn" onclick="applyDiscount()" style="white-space:nowrap;">Apply</button>
+        </div>
+        <div id="coDiscountApplied" style="display:none;font-size:var(--text-sm);color:var(--gold);">
+          <span id="coDiscountAppliedText"></span>
+          <button type="button" onclick="removeDiscount()" style="background:none;border:0;padding:0 0 0 8px;cursor:pointer;font-size:var(--text-xs);color:var(--pale);text-decoration:underline;">Remove</button>
+        </div>
+        <div id="coDiscountMsg" style="display:none;font-size:var(--text-xs);margin-top:6px;line-height:1.6;"></div>
+      </div>
       <div class="co-err" id="coErr">Please fill in all required fields.</div>
       <div class="co-stripe-note">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8976A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
