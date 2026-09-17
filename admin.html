@@ -1428,6 +1428,7 @@ function openJobTicket(orderId) {
           <div class="jt-field"><div class="jt-field-label">Customer Name</div><div class="jt-field-val">${o.customer_name||'—'}</div></div>
           <div class="jt-field"><div class="jt-field-label">Email</div><div class="jt-field-val">${o.customer_email||'—'}</div></div>
           <div class="jt-field" style="grid-column:1/-1;"><div class="jt-field-label">Delivery Address</div><div class="jt-field-val">${(o.delivery_address||o.customer_address||'—').replace(/,\s*/g,'<br>')}</div></div>
+          <div class="jt-field" style="grid-column:1/-1;"><div class="jt-field-label">Delivery Service</div><div class="jt-field-val">${o.delivery || 'Standard'}</div></div>
         </div>
         ${itemSections}
         <div class="jt-section-title">Order Value</div>
