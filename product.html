@@ -680,8 +680,8 @@ document.addEventListener('keydown', e => {
   if (el) {
     el.addEventListener('click', () => {
       try {
-        if (typeof gtag === 'function') {
-          gtag('event', 'path_chooser_selected', {
+        if (window.fpAnalytics) {
+          window.fpAnalytics.track('path_chooser_selected', {
             product_slug: PRODUCT.slug,
             path: id === 'path-upload' ? 'upload' : 'design'
           });
@@ -691,7 +691,17 @@ document.addEventListener('keydown', e => {
   }
 });
 
-loadData();
+loadData().then(function(){
+  // Which product was viewed, and at what price. Pairs with add_to_cart and
+  // purchase to give a per-product funnel rather than a site-wide one.
+  try {
+    if (window.fpAnalytics) window.fpAnalytics.track('view_item', {
+      currency: 'GBP',
+      value: (typeof getStartingPrice === 'function' ? getStartingPrice(PRODUCT.slug) : null) || undefined,
+      items: [{ item_id: PRODUCT.slug, item_name: (productData && productData.name) || PRODUCT.name || PRODUCT.slug }]
+    });
+  } catch (e) {}
+}).catch(function(){});
 
 // Header / footer
 fetch('/header.html').then(r=>r.text()).then(html=>{document.getElementById('site-header').outerHTML=html;if(typeof updateCartBadge==='function')updateCartBadge();});

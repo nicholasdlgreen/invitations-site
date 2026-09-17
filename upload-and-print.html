@@ -890,7 +890,15 @@ function renderCartDrawer(){
 
 // ── SIZE SELECTION ────────────────────────────────────────
 function selectSize(id){
+  const firstChoice = !selectedSize;
   selectedSize=id;
+  try {
+    if (window.fpAnalytics) window.fpAnalytics.track('select_size', {
+      size: id,
+      product: (typeof PRODUCT !== 'undefined' && PRODUCT) ? PRODUCT.slug : null,
+      changed_mind: !firstChoice
+    });
+  } catch(e) {}
   Object.keys(SIZE_SPECS).forEach(s=>{
     const el=document.getElementById('size-opt-'+s); if(!el)return;
     const sel=s===id;
@@ -915,6 +923,14 @@ dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over
 function handleFile(file){
   if(!file)return;
   currentFile=file;
+  try {
+    if (window.fpAnalytics) window.fpAnalytics.track('artwork_uploaded', {
+      file_type: (file.name.split('.').pop() || '').toLowerCase(),
+      file_size_mb: Math.round((file.size / 1048576) * 10) / 10,
+      size: selectedSize || null,
+      product: (typeof PRODUCT !== 'undefined' && PRODUCT) ? PRODUCT.slug : null
+    });
+  } catch(e) {}
   goStep(2);
   checkFile(file);
 }
@@ -1132,6 +1148,23 @@ async function buildAndRunChecks(file, info){
     btn.style.background = '';
   }
   document.getElementById('checkActions').classList.remove('hidden');
+
+  // What the checks concluded, and why. If people abandon here, this is what
+  // tells us whether it is our warnings or their files that lose the order.
+  try {
+    if (window.fpAnalytics) {
+      const issues = (typeof checks !== 'undefined' && Array.isArray(checks))
+        ? checks.filter(c => c && (c.status === 'fail' || c.status === 'warn'))
+                .map(c => c.label).join(', ')
+        : '';
+      window.fpAnalytics.track('file_check_result', {
+        passed: !!checksPassed,
+        issues: issues || 'none',
+        size: selectedSize || null,
+        product: (typeof PRODUCT !== 'undefined' && PRODUCT) ? PRODUCT.slug : null
+      });
+    }
+  } catch(e) {}
 }
 
 // ── PDF PARSING (pdf.js) ──────────────────────────────────
@@ -1382,6 +1415,18 @@ function goStep(n){
     document.getElementById('sl'+i).className='step-label'+(i===n?' active':'');
   });
   currentStep=n;
+  // The whole order happens on one page, so Analytics would otherwise see a
+  // single page view and none of the journey. Each step is reported as its
+  // own stage, which is what makes drop-off visible.
+  try {
+    const STEP_NAMES = {1:'choose_size_and_upload', 2:'file_check', 3:'paper_and_quantity', 4:'checkout'};
+    if (window.fpAnalytics) window.fpAnalytics.track('order_step', {
+      step_number: n,
+      step_name:   STEP_NAMES[n] || ('step_' + n),
+      product:     (typeof PRODUCT !== 'undefined' && PRODUCT) ? PRODUCT.slug : null,
+      size:        selectedSize || null
+    });
+  } catch(e) {}
   if(n===3)initStep3();
   if(n===4 && typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
   // On the file-check step, put the artwork itself at the top of the screen —
@@ -1878,6 +1923,19 @@ async function addToCartUpload(){
     templateId: designMode && designState ? designState.templateId : null,
     designState: designMode ? designState : null
   });
+  try {
+    if (window.fpAnalytics) window.fpAnalytics.track('add_to_cart', {
+      currency: 'GBP',
+      value: total,
+      items: [{
+        item_id:   PRODUCT.slug,
+        item_name: PRODUCT.name,
+        item_variant: selectedSize,
+        price:     total,
+        quantity:  uploadQty
+      }]
+    });
+  } catch(e) {}
   showToast('Added to your basket ✓');
   goStep(4);
 }
@@ -2580,6 +2638,18 @@ async function proceedToStripe(){
       console.warn('[print-prep] colour step error — keeping our press-ready file (RGB, not CMYK):', e.message);
     }
   }
+  try {
+    if (window.fpAnalytics) window.fpAnalytics.track('begin_checkout', {
+      currency: 'GBP',
+      value: cart.reduce((t,i)=> t + (+i.total || 0), 0),
+      delivery_option: selectedDelivery ? selectedDelivery.name : null,
+      marketing_opt_in: !!document.getElementById('coMarketing')?.checked,
+      items: cart.map(function(i){
+        return { item_id: i.productSlug || i.size, item_name: i.name, item_variant: i.size,
+                 price: +i.total || 0, quantity: +i.qty || 1 };
+      })
+    });
+  } catch(e) {}
   document.getElementById('coPayBtnText').textContent='Redirecting to Stripe…';
   const orderData={cart:JSON.parse(JSON.stringify(cart)),customer,total:cart.reduce((s,i)=>s+i.total,0),date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),timestamp:Date.now(),artworkUrl,printReadyUrl};
   localStorage.setItem('inv_pending_order',JSON.stringify(orderData));
