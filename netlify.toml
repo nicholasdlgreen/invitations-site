@@ -11,6 +11,11 @@
 
 [build]
   publish = "."
+  # Regenerates one HTML page per product plus the sitemap, so the markup a
+  # crawler sees is the right product rather than the template's defaults.
+  # The script exits cleanly if Supabase is unreachable, leaving the committed
+  # pages in place — a build problem must never take the shop down.
+  command = "python3 tools/build_pages.py"
 
 # Security headers. The site had none: no clickjacking protection, no
 # content-type protection, and nothing limiting where scripts may be loaded
