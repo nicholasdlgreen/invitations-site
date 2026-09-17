@@ -448,6 +448,7 @@ function buildJobTicketHtml(o) {
       ${row('Customer', o.customerName)}
       ${row('Email', o.customerEmail)}
       ${row('Delivery Address', (o.deliveryAddress || '').replace(/,\s*/g, '<br>'))}
+      ${row('Delivery Service', o.delivery || 'Standard')}
     </table>
   </td></tr>
 
@@ -610,6 +611,13 @@ exports.handler = async (event) => {
       order.quantity      = order.quantity    || (order.items[0] && order.items[0].qty) || null;
       order.artworkUrl    = order.artworkUrl  || stored.artwork_url || null;
       order.delivery      = stored.delivery || null;
+      // Stripe only reports a shipping address when Stripe itself collected
+      // one, and it doesn't — we take the address in our own checkout form.
+      // Without this the job ticket told the printer "Not provided" for an
+      // address the customer had given us.
+      if (!order.deliveryAddress || order.deliveryAddress === 'Not provided') {
+        order.deliveryAddress = stored.delivery_address || 'Not provided';
+      }
       order.printReadyUrl = order.printReadyUrl || stored.print_ready_url || null;
       order.customerEmail = (order.customerEmail && order.customerEmail !== 'Unknown')
         ? order.customerEmail : (stored.customer_email || order.customerEmail);
