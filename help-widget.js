@@ -15,6 +15,7 @@ function hwPrompt(t){
   // up, so it starts the tracking flow instead of being sent off for an
   // answer she cannot give.
   if(/where is my order/i.test(t)){hwAddMsg('user',t);hwStartTracking();return;}
+  if(/set(ting)? up my artwork|artwork/i.test(t)){hwAddMsg('user',t);hwStartArtwork();return;}
   document.getElementById('hw-input').value=t;hwSend();
 }
 function hwAddMsg(role,text,contact){var msgs=document.getElementById('hw-messages'),div=document.createElement('div');div.className='hw-msg '+role;var s=role==='bot'?'':'You',cb=contact&&role==='bot'?'<br><button class="hw-contact-btn" onclick="hwShowContact()">✉ Contact the team</button>':'';div.innerHTML=(s?'<div class="hw-sender">'+s+'</div>':'')+'<div class="hw-bubble">'+text.replace(/\n/g,'<br>')+cb+'</div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
@@ -127,6 +128,118 @@ function hwAskAnything(){
   hwFlow = null;
   hwFocusInput('Ask us anything...');
   hwAddMsg('bot', 'What else can I help with?');
+}
+
+// ── ARTWORK HELP FLOW ────────────────────────────────────────────────
+// The same questions come up before every upload, and generic advice is
+// useless for them: what people need is the millimetre figure for the size
+// they are actually ordering. Where Amy can know that — on the order page,
+// where a size has been chosen — she gives the real number rather than an
+// explanation of bleed.
+var HW_BLEED_MM = 3;
+
+function hwStartArtwork(){
+  hwFlow = null;
+  hwAddMsg('bot', 'Happy to help you get the file right. What would be most useful?');
+  hwAddPromptRow([
+    { label: 'What size should my file be?', fn: 'hwArtworkSize()' },
+    { label: "What's bleed?",                fn: 'hwArtworkBleed()' },
+    { label: 'Which file types can I send?', fn: 'hwArtworkFormats()' },
+    { label: 'My file was flagged',          fn: 'hwArtworkFlagged()' }
+  ]);
+}
+
+// The size chosen on the order page, when we are on it.
+function hwChosenSize(){
+  try {
+    if (typeof selectedSize === 'undefined' || !selectedSize) return null;
+    if (typeof SIZE_SPECS === 'undefined' || !SIZE_SPECS[selectedSize]) return null;
+    var spec = SIZE_SPECS[selectedSize];
+    return { name: spec.label || selectedSize, w: spec.mmW, h: spec.mmH };
+  } catch (e) { return null; }
+}
+
+async function hwArtworkSize(){
+  hwAddMsg('user', 'What size should my file be?');
+  var chosen = hwChosenSize();
+  if (chosen) {
+    var bw = chosen.w + HW_BLEED_MM * 2, bh = chosen.h + HW_BLEED_MM * 2;
+    hwAddMsg('bot',
+      'You have chosen ' + chosen.name + ', which finishes at ' + chosen.w + ' × ' + chosen.h + 'mm.\n\n' +
+      'Ideally send it ' + bw + ' × ' + bh + 'mm — that is your design plus ' + HW_BLEED_MM + 'mm of bleed on every edge.\n\n' +
+      'If you only have it at ' + chosen.w + ' × ' + chosen.h + 'mm, send it anyway: we extend the edges to make the bleed, and add the crop marks ourselves.');
+    hwArtworkFollowUp();
+    return;
+  }
+  // Not on the order page, or no size chosen yet — quote the common ones.
+  hwShowTyping();
+  var sizes = await hwFetchSizes();
+  hwRemoveTyping();
+  if (!sizes.length) {
+    hwAddMsg('bot', 'Pick your size on the order page and I will give you the exact millimetres. As a rule: your finished size plus ' + HW_BLEED_MM + 'mm of bleed on each edge.');
+  } else {
+    hwAddMsg('bot',
+      'Send your artwork at the finished size plus ' + HW_BLEED_MM + 'mm of bleed on every edge. For our usual sizes that means:\n\n' +
+      sizes.slice(0, 5).map(function(z){
+        return '• ' + z.name + ' — finishes ' + z.w + ' × ' + z.h + 'mm, supply ' + (z.w + HW_BLEED_MM*2) + ' × ' + (z.h + HW_BLEED_MM*2) + 'mm';
+      }).join('\n') +
+      '\n\nNo bleed on your file? Send it anyway — we extend the edges for you.');
+  }
+  hwArtworkFollowUp();
+}
+
+async function hwFetchSizes(){
+  try {
+    var cfg = window.__SUPABASE_CONFIG;
+    if (!cfg) return [];
+    var res = await fetch(cfg.url + '/rest/v1/print_sizes?active=eq.true&select=name,width_mm,height_mm&order=display_order&limit=8', {
+      headers: { apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey }
+    });
+    if (!res.ok) return [];
+    return (await res.json()).map(function(r){
+      return { name: r.name, w: Math.round(r.width_mm), h: Math.round(r.height_mm) };
+    }).filter(function(z){ return z.w && z.h; });
+  } catch (e) { return []; }
+}
+
+function hwArtworkBleed(){
+  hwAddMsg('user', "What's bleed?");
+  hwAddMsg('bot',
+    'Bleed is a little extra design past the edge of the finished card — ' + HW_BLEED_MM + 'mm on each side.\n\n' +
+    'Printing is done on a large sheet and then trimmed, and trimming moves a fraction. Without bleed, that fraction shows as a thin white line along one edge. With it, the colour runs right off the card.\n\n' +
+    'It matters if your design reaches the edge. If everything sits comfortably inside a white border, it makes no difference at all.\n\n' +
+    'And if your file has no bleed, send it as it is — we extend the edges to create it.');
+  hwArtworkFollowUp();
+}
+
+function hwArtworkFormats(){
+  hwAddMsg('user', 'Which file types can I send?');
+  hwAddMsg('bot',
+    'PDF is best, and AI, InDesign or EPS are just as welcome.\n\n' +
+    'JPG, PNG and TIFF are fine too — just make sure the image is big enough. We print at 300 dots per inch, so an A5 card wants roughly 1750 × 2480 pixels. We check this when you upload and tell you if it is short.\n\n' +
+    'Up to 100MB, and either RGB or CMYK — our press handles the conversion.');
+  hwArtworkFollowUp();
+}
+
+function hwArtworkFlagged(){
+  hwAddMsg('user', 'My file was flagged');
+  hwAddMsg('bot',
+    'Our checks are fussy on purpose, and not every warning needs fixing:\n\n' +
+    '• Wrong page size — worth fixing. It means the design would be scaled or cropped to fit.\n' +
+    '• Below 300 DPI — the image is small for the size ordered. A little under is usually fine; a long way under looks soft on paper.\n' +
+    '• No bleed — safe to ignore. We extend the edges for you.\n' +
+    '• We could not preview it — some AI and InDesign files cannot be shown in a browser. Our studio checks those by hand.\n\n' +
+    'You can carry on regardless — nothing stops your order. If you would rather someone looked first, leave your details and we will.');
+  hwArtworkFollowUp(true);
+}
+
+function hwArtworkFollowUp(offerContact){
+  var buttons = [{ label: 'Something else', fn: 'hwStartArtwork()' }];
+  if (offerContact) buttons.push({ label: 'Ask the team to check', fn: 'hwShowContact()' });
+  if (!/upload-and-print/.test(window.location.pathname)) {
+    buttons.unshift({ label: 'Start your order', fn: "window.location.href='/upload-and-print.html'" });
+  }
+  hwAddPromptRow(buttons);
 }
 
 // Returns true when the message was part of a flow and needs no AI reply.
