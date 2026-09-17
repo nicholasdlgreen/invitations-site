@@ -147,26 +147,58 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 
 /* ═══ PRINT ════════════════════════════════════════════ */
 @media print {
-  /* Print the job ticket and nothing else. Hiding with visibility rather
-     than display keeps the ticket's own layout intact — display:none on
-     ancestors would collapse it. Before this, printing produced the ticket
-     with the whole order list and dashboard printed around it. */
-  body * { visibility: hidden !important; }
-  #jobTicketModal, #jobTicketModal * { visibility: visible !important; }
+  /* Print the job ticket and nothing else.
+     The first attempt hid everything with visibility:hidden, which leaves the
+     dashboard still occupying its full height — so the print preview filled
+     with blank pages and the ticket was lost among them. Hiding the modal's
+     siblings outright removes their layout as well as their ink. The ticket
+     is a direct child of <body>, so this reaches everything else. */
+  html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
+  body > *:not(#jobTicketModal) { display: none !important; }
   #jobTicketModal {
-    position: absolute !important; left: 0; top: 0; width: 100%;
-    padding: 0 !important; margin: 0 !important; background: #fff !important;
-    display: block !important; overflow: visible !important;
+    display: block !important; position: static !important;
+    background: #fff !important; padding: 0 !important; margin: 0 !important;
+    overflow: visible !important; inset: auto !important;
   }
-  #jobTicketModal .jt-modal {
-    max-height: none !important; border-radius: 0; box-shadow: none;
-    width: 100%; max-width: 100%; overflow: visible !important;
-  }
-  /* The modal's own header is screen furniture — the ticket has its own. */
+  /* Screen furniture: the ticket carries its own header. */
   #jobTicketModal .modal-head { display: none !important; }
-  .modal-bg:not(#jobTicketModal), .modal-overlay { display: none !important; }
-  body { background: #fff !important; }
-  @page { margin: 12mm; }
+  #jobTicketModal .jt-modal {
+    max-height: none !important; overflow: visible !important;
+    width: 100% !important; max-width: 100% !important;
+    border-radius: 0 !important; box-shadow: none !important;
+  }
+  /* Paper is not a screen: tighten the spacing, keep colour off the header
+     so it does not depend on "print backgrounds" being switched on, and stop
+     fields being split across a page break. */
+  #jobTicketModal .jt-header {
+    background: #fff !important; color: #000 !important;
+    border-bottom: 2px solid #3D2E24; padding: 0 0 10px !important; margin-bottom: 14px;
+  }
+  #jobTicketModal .jt-header-logo,
+  #jobTicketModal .jt-header-ref-num { color: #3D2E24 !important; }
+  #jobTicketModal .jt-header-ref-date { color: #6B4F3A !important; }
+  #jobTicketModal .jt-body { padding: 0 !important; }
+  #jobTicketModal .jt-field {
+    background: #fff !important; border: 1px solid #D9CFC7 !important;
+    padding: 7px 10px !important; break-inside: avoid;
+  }
+  #jobTicketModal .jt-field-label { color: #6B4F3A !important; }
+  #jobTicketModal .jt-field-val   { color: #000 !important; font-size: 12px !important; }
+  #jobTicketModal .jt-field-val.large { font-size: 17px !important; }
+  #jobTicketModal .jt-grid, #jobTicketModal .jt-grid-3 { gap: 7px !important; margin-bottom: 7px !important; }
+  #jobTicketModal .jt-section-title {
+    color: #000 !important; margin-top: 12px !important; margin-bottom: 6px !important;
+    break-after: avoid;
+  }
+  #jobTicketModal .jt-artwork { padding: 10px !important; break-inside: avoid; }
+  #jobTicketModal .jt-artwork a { color: #000 !important; text-decoration: underline; }
+  #jobTicketModal .jt-checklist { gap: 5px !important; break-inside: avoid; }
+  #jobTicketModal .jt-check-item { color: #000 !important; font-size: 10px !important; }
+  #jobTicketModal .jt-footer {
+    background: #fff !important; border-top: 1px solid #D9CFC7; color: #6B4F3A !important;
+    padding: 8px 0 0 !important; margin-top: 10px;
+  }
+  @page { margin: 10mm; }
 }
 }
 
@@ -762,7 +794,8 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     <div class="modal-head">
       <h3>Job Ticket</h3>
       <div class="modal-head-actions">
-        <button class="btn-out" onclick="window.print()" style="padding:7px 16px;font-size:10px;" title="Print, or choose Save as PDF to download the ticket">🖨 Print / Save as PDF</button>
+        <button class="btn-out" onclick="downloadJobTicket()" style="padding:7px 16px;font-size:10px;" title="Save the ticket as a file you can email to the printer">⤓ Save</button>
+      <button class="btn-out" onclick="window.print()" style="padding:7px 16px;font-size:10px;" title="Send the ticket to a printer">🖨 Print</button>
         <button class="modal-close" onclick="closeJobTicket()">✕</button>
       </div>
     </div>
@@ -3000,6 +3033,42 @@ function renderSizeList() {
           </div>
         </div>`).join('')}`;
   }).join('');
+}
+
+// Save the ticket as a standalone file the printer can open or forward.
+// Deliberately HTML rather than a rasterised PDF: the artwork links stay
+// clickable, which is the whole point of the ticket. Anyone wanting a PDF can
+// open it and print to PDF, and the print styles are already set up for that.
+function downloadJobTicket() {
+  const node = document.querySelector('#jobTicketContent .job-ticket');
+  if (!node) { alert('Open a job ticket first.'); return; }
+  const ref = (node.querySelector('.jt-header-ref-num') || {}).textContent || 'ticket';
+
+  // Carry the page's own styles across so the file looks the same offline.
+  let css = '';
+  for (const sheet of document.styleSheets) {
+    try { css += Array.from(sheet.cssRules).map(r => r.cssText).join('\n'); }
+    catch (e) { /* cross-origin sheet (fonts) — linked separately below */ }
+  }
+  const fontLink = document.querySelector('link[href*="fonts.googleapis.com"]');
+
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
+    '<title>Job ticket ' + ref.trim() + ' — Foreverprint</title>' +
+    (fontLink ? fontLink.outerHTML : '') +
+    '<style>' + css + '\n' +
+    'body{background:#fff;margin:0;padding:18px;}' +
+    '.job-ticket{max-width:820px;margin:0 auto;}' +
+    '</style></head><body>' + node.outerHTML + '</body></html>';
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'job-ticket-' + ref.trim().replace(/[^A-Za-z0-9-]/g, '') + '.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 // Small helpers this page did not have. Every other modal has its own close
