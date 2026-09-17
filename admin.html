@@ -147,15 +147,27 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 
 /* ═══ PRINT ════════════════════════════════════════════ */
 @media print {
-  #app-shell { display:block !important; }
-  .sidebar, .topbar, .filters, .stats-grid, .action-btns, .modal-head { display:none !important; }
-  /* Only the modal actually on screen prints — otherwise every hidden
-     form modal in the page would print after the ticket. */
-  .modal-bg:not(.open) { display:none !important; }
-  .modal-bg.open { position:static; background:none; padding:0; display:block !important; }
-  .modal-bg .jt-modal { max-height:none; border-radius:0; box-shadow:none; width:100%; max-width:100%; }
-  .modal-body { padding:0; }
-  body { background:#fff; }
+  /* Print the job ticket and nothing else. Hiding with visibility rather
+     than display keeps the ticket's own layout intact — display:none on
+     ancestors would collapse it. Before this, printing produced the ticket
+     with the whole order list and dashboard printed around it. */
+  body * { visibility: hidden !important; }
+  #jobTicketModal, #jobTicketModal * { visibility: visible !important; }
+  #jobTicketModal {
+    position: absolute !important; left: 0; top: 0; width: 100%;
+    padding: 0 !important; margin: 0 !important; background: #fff !important;
+    display: block !important; overflow: visible !important;
+  }
+  #jobTicketModal .jt-modal {
+    max-height: none !important; border-radius: 0; box-shadow: none;
+    width: 100%; max-width: 100%; overflow: visible !important;
+  }
+  /* The modal's own header is screen furniture — the ticket has its own. */
+  #jobTicketModal .modal-head { display: none !important; }
+  .modal-bg:not(#jobTicketModal), .modal-overlay { display: none !important; }
+  body { background: #fff !important; }
+  @page { margin: 12mm; }
+}
 }
 
 /* ════════════════════════════════════════════════════════ */
