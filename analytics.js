@@ -30,7 +30,7 @@
   // ever lost while we are waiting.
   var CONFIG = {
     ga4Id:            'G-5SNC87QRQ1',   // GA4 measurement ID (Foreverprint website stream)
-    adsId:            '',   // e.g. 'AW-123456789'   — Google Ads conversion ID
+    adsId:            'AW-18457098398',   // Google Ads conversion ID (account 972-711-7378)
     purchaseLabel:    '',   // e.g. 'AbC-D_efGhIjKl' — conversion label for a purchase
     // Value reported to Google. While the business is NOT VAT registered the
     // whole amount charged is revenue, so we report the total paid. When VAT
