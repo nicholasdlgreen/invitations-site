@@ -571,11 +571,22 @@ form.addEventListener('submit', async (e) => {
     const formEl = document.getElementById('loginForm');
     const subEl = document.querySelector('.auth-sub');
     const titleEl = document.querySelector('.auth-title');
+    // Somebody who signed up to save a design must come back to that design.
+    // This branch used to send everyone to the account page regardless, so the
+    // one thing they created an account for appeared to have vanished.
+    const next = params.get('next') || '';
+    const backToDesign = /design-studio/.test(next);
     if (titleEl) titleEl.textContent = 'Welcome to forever·print';
-    if (subEl) subEl.textContent = 'Your account is verified and you\'re signed in.';
+    if (subEl) {
+      subEl.textContent = backToDesign
+        ? 'Your account is verified and your design is saved to it.'
+        : 'Your account is verified and you\'re signed in.';
+    }
     if (formEl){
       formEl.innerHTML =
-        '<a href="/account.html" class="btn-submit" style="text-decoration:none;">Go to my account</a>';
+        '<a href="' + (next || '/account.html') + '" class="btn-submit" style="text-decoration:none;">' +
+          (backToDesign ? 'Back to your design' : (next ? 'Continue' : 'Go to my account')) +
+        '</a>';
     }
     // Hide the divider + bottom links since they don't apply now
     document.querySelectorAll('.auth-divider, .auth-foot').forEach(el => el.style.display = 'none');
