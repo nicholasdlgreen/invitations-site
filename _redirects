@@ -1,3 +1,8 @@
+# ─── ONE HOME FOR THE SITE (must be first) ──────────────────
+# The Netlify subdomain serves a full, indexable copy of the site. Without
+# this, Google can index it as a rival website and links to it leak away.
+https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:splat  301!
+
 # Netlify URL rewriting (Phase 5 — landing pages + configurator)
 #
 # Format: /<from>  /<to>  <status>

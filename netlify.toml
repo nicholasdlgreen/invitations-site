@@ -1,14 +1,4 @@
 
-# ─── ONE HOME FOR THE SITE ──────────────────────────────────
-# The Netlify subdomain serves a complete, indexable copy of the site. Left
-# alone, Google can index it as a separate website competing with our own,
-# and any link to it leaks authority away from foreverprint.com.
-[[redirects]]
-  from = "https://lighthearted-sunburst-4f0ba2.netlify.app/*"
-  to = "https://foreverprint.com/:splat"
-  status = 301
-  force = true
-
 [build]
   publish = "."
   # Regenerates one HTML page per product plus the sitemap, so the markup a
