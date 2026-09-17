@@ -6,7 +6,9 @@
 <title>Wedding Stationery | Foreverprint</title>
 <meta name="description" content="Premium UK-printed stationery. Next-day delivery available."/>
 <meta name="robots" content="index, follow"/>
-<link rel="canonical" href="https://foreverprint.com/"/>
+<!-- Canonical is set from the product slug once the page knows which product
+     it is (see setMeta below). Deliberately absent here: a hard-coded value
+     would tell crawlers every product page duplicates the home page. -->
 <meta property="og:type" content="product"/>
 <meta property="og:site_name" content="Foreverprint"/>
 
@@ -437,8 +439,13 @@ function renderHero() {
   setMeta('meta[property="og:description"]', productData.meta_description || productData.description || '');
   setMeta('meta[property="og:url"]', `https://foreverprint.com/${PRODUCT.slug}`);
   if (productData.hero_image_url) setMeta('meta[property="og:image"]', productData.hero_image_url);
-  const canonical = document.querySelector('link[rel="canonical"]');
-  if (canonical) canonical.setAttribute('href', `https://foreverprint.com/${PRODUCT.slug}`);
+  let canonical = document.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.setAttribute('rel', 'canonical');
+    document.head.appendChild(canonical);
+  }
+  canonical.setAttribute('href', `https://foreverprint.com/${PRODUCT.slug}`);
   document.getElementById('lp-h1').textContent = name;
   if (productData.tagline) document.getElementById('lp-sub').textContent = productData.tagline;
   document.getElementById('path-modal-tag').textContent = name;
