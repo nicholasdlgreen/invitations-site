@@ -359,7 +359,7 @@
       </div>
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <button class="btn" onclick="addToCartUpload()">Add to Basket</button>
+        <button class="btn" onclick="addToCartUpload()">Continue to Checkout</button>
         <button class="btn-out" onclick="goStep(2)">Back</button>
       </div>
     </div>
@@ -375,7 +375,8 @@
 
       <div class="check-card">
     <div class="co-body">
-      <span class="co-section-title">Order Summary</span>
+      <span class="co-section-title">Your Basket</span>
+      <div id="coBasketNote" style="font-size:var(--text-xs);color:var(--pale);margin:-6px 0 10px;"></div>
       <div id="coSummaryItems"></div>
       <div class="co-summary-item total"><span>Total inc. VAT</span><span id="coSummaryTotal">£0.00</span></div>
       <span class="co-section-title">Your Details</span>
@@ -1938,7 +1939,7 @@ async function addToCartUpload(){
       }]
     });
   } catch(e) {}
-  showToast('Added to your basket ✓');
+  showToast('Added to your basket — just your details now ✓');
   goStep(4);
 }
 
@@ -2506,6 +2507,13 @@ function renderCheckoutSummary(){
     `<div class="co-summary-item"><span>${item.name} <span style="color:var(--pale);font-size:var(--text-xs);">&times; ${item.qty}</span></span><span>&pound;${(+item.total).toFixed(2)}</span></div>`
   ).join('');
   total.textContent = '£' + sub.toFixed(2);
+  const note = document.getElementById('coBasketNote');
+  if (note) {
+    const n = cart.length;
+    note.textContent = n === 1
+      ? 'Everything in your basket — pay below to place the order.'
+      : n + ' items in your basket — pay below to place the order.';
+  }
   const err = document.getElementById('coErr');
   if (err) err.style.display = 'none';
 }
