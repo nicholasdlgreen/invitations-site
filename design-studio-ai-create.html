@@ -1644,16 +1644,44 @@ function artworkFileName(prefix, ext){
     if (!designId || !window.invAuth) return false;
     try {
       await window.invAuth.init();
-      if (!window.invAuth.isLoggedIn()) return false;
+      if (!window.invAuth.isLoggedIn()) {
+        // Sent here by a link but not signed in — say so rather than showing
+        // an empty studio and letting them think their design has gone.
+        showStudioNotice('Sign in to open your saved design.',
+          'Sign in', '/login.html?next=' + encodeURIComponent(location.pathname + location.search));
+        return false;
+      }
       var res = await window.invAuth.loadDesign(designId);
       var row = res && res.data;
-      if (!row || !row.design_data || !row.design_data.image) return false;
+      if (!row || !row.design_data || !row.design_data.image) {
+        // Found nothing. Almost always the wrong account: designs belong to
+        // whoever was signed in when they were saved. Failing silently here
+        // is what makes it look like the design has been lost.
+        var who = (window.invAuth.getUser && window.invAuth.getUser()) || {};
+        showStudioNotice(
+          'We could not find that design on this account' + (who.email ? ' (' + who.email + ')' : '') +
+          '. It may have been saved while signed in as someone else.',
+          'See your saved designs', '/saved-designs.html');
+        return false;
+      }
       applyDesignState(row.design_data);
       return true;
     } catch (e) {
       console.warn('[studio] could not reopen that design:', e.message);
+      showStudioNotice('We could not open that design just now. Please try again in a moment.', null, null);
       return false;
     }
+  }
+
+  // A quiet line at the top of the studio, for when something did not go the
+  // way the customer expected.
+  function showStudioNotice(message, actionLabel, actionHref){
+    var bar = document.createElement('div');
+    bar.style.cssText = 'background:var(--cream);border-bottom:1px solid var(--border);padding:14px 20px;text-align:center;font-size:var(--text-sm);color:var(--soft);';
+    bar.innerHTML = message +
+      (actionHref ? ' <a href="' + actionHref + '" style="color:var(--gold);">' + actionLabel + '</a>' : '');
+    var main = document.querySelector('main') || document.body;
+    main.insertBefore(bar, main.firstChild);
   }
 
   // Put a captured design back on screen: wording, size, choices, picture and
