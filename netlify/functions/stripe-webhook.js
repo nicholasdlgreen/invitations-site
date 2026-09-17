@@ -78,7 +78,7 @@ async function sendEmail({ to, subject, html }) {
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from: process.env.FROM_EMAIL || 'orders@invitations.co.uk',
+      from: process.env.FROM_EMAIL || 'orders@foreverprint.com',
       to,
       subject,
       html,
@@ -333,7 +333,7 @@ function buildJobTicketHtml(o) {
     'Artwork received &amp; verified',
     'Resolution checked (300 DPI+)',
     'Bleed confirmed (3mm all sides)',
-    'Colour mode CMYK',
+    'Colour checked (RGB supplied, RIP converts)',
     'Sent to print',
     'Packed &amp; quality checked',
     'DPD label generated',
@@ -347,14 +347,90 @@ function buildJobTicketHtml(o) {
       </tr></table>
     </td></tr>`).join('');
 
-  return `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#F0EDE8;">
+  // ── One block per line item ──────────────────────────────
+  // An order can hold more than one design, and each one has its own
+  // press-ready file. Printing the first file against every item is how a
+  // second design quietly never gets printed, so every item gets its own
+  // specification and its own download.
+  const itemList = (Array.isArray(o.items) && o.items.length)
+    ? o.items
+    : [{ name: null, qty: o.quantity, paper: o.paper, size: o.size,
+         artworkUrl: o.artworkUrl, printArtworkUrl: o.printReadyUrl }];
+  const single = itemList.length === 1;
+  const missing = txt => `<strong style="color:#B00020;">${txt}</strong>`;
+  const fileOf = u => {
+    try { return decodeURIComponent(String(u).split('?')[0].split('/').pop()); }
+    catch (e) { return ''; }
+  };
+
+  const itemSections = itemList.map((it, i) => {
+    // Older orders (and AI-studio designs) carry their files on the order row
+    // rather than the item — fall back to those only when there is one item,
+    // so a multi-item order can never show the same file twice.
+    const printUrl = it.printArtworkUrl || (single ? o.printReadyUrl : null);
+    const artUrl   = it.artworkUrl      || (single ? o.artworkUrl    : null);
+    const spec     = it.printSpec || null;
+    const title    = single
+      ? 'Print Specification'
+      : `Item ${i + 1} of ${itemList.length}${it.name ? ' &mdash; ' + it.name : ''}`;
+
+    return `
+  <tr><td style="padding:20px 10px 0;">
+    <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#B8976A;
+                padding:0 14px;margin-bottom:8px;font-family:Arial,sans-serif;">${title}</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF7F2;border-radius:6px;">
+      ${row('Quantity',    it.qty ? `${it.qty} copies` : (o.quantity ? `${o.quantity} copies` : missing('NOT RECORDED')))}
+      ${row('Paper Stock', it.paper || o.paper || missing('NOT RECORDED &mdash; check the order before printing'))}
+      ${row('Size',        it.size  || o.size  || missing('NOT RECORDED &mdash; check the order before printing'))}
+      ${row('Sheet Size',  spec && spec.pageMm && spec.trimMm
+                             ? `${spec.pageMm.w} &times; ${spec.pageMm.h}mm including bleed and marks &mdash; trims to ${spec.trimMm.w} &times; ${spec.trimMm.h}mm`
+                             : 'Trim size plus 3mm bleed and crop marks')}
+      ${row('Bleed',       '3mm all sides, crop marks included')}
+      ${row('Colour Mode', 'RGB supplied &mdash; your RIP converts (as advised by PrintedEasy)')}
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0"
+           style="background:#FAF7F2;border-radius:6px;border:2px dashed #E8DDD8;margin-top:8px;">
+      <tr><td style="padding:16px;text-align:center;">
+        ${printUrl
+          ? `<div style="font-size:12px;color:#7A6558;margin-bottom:8px;font-family:Arial,sans-serif;">
+               <strong>Print this file.</strong> Built to the ordered size with 3mm bleed
+               and crop marks, trim box set.
+             </div>
+             <a href="${printUrl}"
+                style="color:#B8976A;font-size:13px;word-break:break-all;font-family:Arial,sans-serif;">
+               &#128196; Download PRINT-READY file
+             </a>
+             <div style="font-size:10px;color:#B0A098;margin-top:6px;font-family:Arial,sans-serif;">${fileOf(printUrl)}</div>`
+          : `<div style="font-size:12px;color:#B00020;margin-bottom:8px;font-family:Arial,sans-serif;">
+               <strong>No print-ready file for this item &mdash; prepress must prepare it
+               before printing.</strong> Do not print the original upload as supplied:
+               it has no bleed and no crop marks.
+             </div>`}
+        ${artUrl
+          ? `<div style="font-size:11px;color:#B0A098;margin:12px 0 4px;font-family:Arial,sans-serif;">
+               Customer's original upload &mdash; reference only, do not print:
+             </div>
+             <a href="${artUrl}" style="color:#B0A098;font-size:11px;word-break:break-all;font-family:Arial,sans-serif;">
+               &#128206; Original artwork
+             </a>`
+          : `<div style="font-size:11px;color:#B0A098;margin-top:10px;font-family:Arial,sans-serif;">
+               No original upload stored &mdash; check the admin dashboard.
+             </div>`}
+      </td></tr>
+    </table>
+  </td></tr>`;
+  }).join('');
+
+  return `<!DOCTYPE html><html><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head><body style="margin:0;padding:24px;background:#F0EDE8;">
 <table width="660" cellpadding="0" cellspacing="0"
        style="margin:0 auto;background:#fff;border-radius:8px;border:2px solid #3D2E24;overflow:hidden;">
 
   <tr><td style="background:#3D2E24;padding:18px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td style="font-family:Georgia,serif;font-size:22px;color:#fff;letter-spacing:.06em;">
-        Invita<span style="color:#D4B896;">tions</span>
+        forever<span style="color:#D4B896;">print</span>
       </td>
       <td style="text-align:right;">
         <div style="font-family:Georgia,serif;font-size:18px;color:#fff;">${o.orderNumber}</div>
@@ -375,54 +451,7 @@ function buildJobTicketHtml(o) {
     </table>
   </td></tr>
 
-  <tr><td style="padding:20px 10px 0;">
-    <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#B8976A;
-                padding:0 14px;margin-bottom:8px;font-family:Arial,sans-serif;">Print Specification</div>
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF7F2;border-radius:6px;">
-      ${row('Quantity',   o.quantity ? `${o.quantity} invitations` : '&mdash;')}
-      ${row('Paper Stock', o.paper || 'Smooth White 300gsm')}
-      ${row('Size',       o.size  || '<strong style="color:#B00020;">NOT RECORDED &mdash; check the order before printing</strong>')}
-      ${row('Finish',     'Matt laminate')}
-      ${row('Bleed',      '3mm all sides')}
-      ${row('Colour Mode','CMYK')}
-    </table>
-  </td></tr>
-
-  <tr><td style="padding:20px 10px 0;">
-    <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#B8976A;
-                padding:0 14px;margin-bottom:8px;font-family:Arial,sans-serif;">Artwork</div>
-    <table width="100%" cellpadding="0" cellspacing="0"
-           style="background:#FAF7F2;border-radius:6px;border:2px dashed #E8DDD8;">
-      <tr><td style="padding:16px;text-align:center;">
-        ${o.printReadyUrl
-          ? `<div style="font-size:12px;color:#7A6558;margin-bottom:8px;font-family:Arial,sans-serif;">
-               <strong>Print this file.</strong> Built to the ordered size with 3mm bleed
-               and crop marks, trim box set. Supplied in RGB &mdash; your RIP handles
-               the colour conversion.
-             </div>
-             <a href="${o.printReadyUrl}"
-                style="color:#B8976A;font-size:13px;word-break:break-all;font-family:Arial,sans-serif;">
-               &#128196; Download PRINT-READY file
-             </a>
-             <div style="font-size:11px;color:#B0A098;margin:10px 0 4px;font-family:Arial,sans-serif;">
-               Customer's original upload (reference only &mdash; do not print):
-             </div>
-             ${o.artworkUrl ? `<a href="${o.artworkUrl}" style="color:#B0A098;font-size:11px;word-break:break-all;font-family:Arial,sans-serif;">&#128206; Original artwork</a>` : ''}`
-          : o.artworkUrl
-          ? `<div style="font-size:12px;color:#B00020;margin-bottom:8px;font-family:Arial,sans-serif;">
-               <strong>No print-ready file was produced &mdash; prepress must prepare this
-               before printing.</strong> Only the customer's original upload is available:
-             </div>
-             <a href="${o.artworkUrl}"
-                style="color:#B8976A;font-size:13px;word-break:break-all;font-family:Arial,sans-serif;">
-               &#128206; Download Artwork File
-             </a>`
-          : `<div style="font-size:12px;color:#B0A098;font-family:Arial,sans-serif;">
-               No artwork file uploaded &mdash; check the admin dashboard
-             </div>`}
-      </td></tr>
-    </table>
-  </td></tr>
+  ${itemSections}
 
   <tr><td style="padding:20px 10px 0;">
     <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#B8976A;
@@ -456,7 +485,7 @@ function buildJobTicketHtml(o) {
   <tr><td style="padding:20px 24px;background:#FAF7F2;border-top:1px solid #E8DDD8;margin-top:20px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td style="font-size:10px;color:#B0A098;font-family:Arial,sans-serif;">
-        hello@invitations.co.uk &middot; invitations.co.uk
+        hello@foreverprint.com &middot; foreverprint.com
       </td>
       <td style="text-align:right;font-size:10px;color:#B0A098;font-family:Arial,sans-serif;">
         Ref: ${o.orderNumber} &middot; Generated ${new Date().toLocaleDateString('en-GB')}
@@ -469,12 +498,14 @@ function buildJobTicketHtml(o) {
 
 // ── ADMIN NOTIFICATION EMAIL ──────────────────────────────────────────────────
 function buildAdminNotificationHtml(o) {
-  return `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#F0EDE8;">
+  return `<!DOCTYPE html><html><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head><body style="margin:0;padding:24px;background:#F0EDE8;">
 <table width="540" cellpadding="0" cellspacing="0"
        style="margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;">
   <tr><td style="background:#3D2E24;padding:16px 24px;">
     <span style="font-family:Georgia,serif;font-size:18px;color:#fff;letter-spacing:.06em;">
-      Invita<span style="color:#D4B896;">tions</span>
+      forever<span style="color:#D4B896;">print</span>
     </span>
     <span style="font-size:11px;color:rgba(255,255,255,.4);margin-left:12px;
                  letter-spacing:.1em;text-transform:uppercase;">New Order</span>
@@ -623,7 +654,7 @@ exports.handler = async (event) => {
     // 5. Send notification to admin
     try {
       await sendEmail({
-        to:      process.env.NOTIFY_EMAIL || 'hello@invitations.co.uk',
+        to:      process.env.NOTIFY_EMAIL || 'hello@foreverprint.com',
         subject: `New Order — £${total.toFixed(2)} from ${order.customerName}`,
         html:    buildAdminNotificationHtml(order),
       });

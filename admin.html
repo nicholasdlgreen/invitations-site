@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Admin — Invitations</title>
+<title>Admin — Foreverprint</title>
 <meta name="robots" content="noindex, nofollow"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -149,7 +149,10 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 @media print {
   #app-shell { display:block !important; }
   .sidebar, .topbar, .filters, .stats-grid, .action-btns, .modal-head { display:none !important; }
-  .modal-bg { position:static; background:none; padding:0; display:block !important; }
+  /* Only the modal actually on screen prints — otherwise every hidden
+     form modal in the page would print after the ticket. */
+  .modal-bg:not(.open) { display:none !important; }
+  .modal-bg.open { position:static; background:none; padding:0; display:block !important; }
   .modal-bg .jt-modal { max-height:none; border-radius:0; box-shadow:none; width:100%; max-width:100%; }
   .modal-body { padding:0; }
   body { background:#fff; }
@@ -326,7 +329,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 <!-- ═══ LOGIN ═══════════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo">Invita<span>tions</span></div>
+    <div class="login-logo">forever<span>print</span></div>
     <div class="login-sub">Admin Portal</div>
     <label class="login-label">Password</label>
     <input class="login-input" id="loginEmail" type="email" placeholder="Your email" autocomplete="username" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('loginPwd').focus()"/>
@@ -342,7 +345,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-logo">
-      <div class="sidebar-logo-text">Invita<span>tions</span></div>
+      <div class="sidebar-logo-text">forever<span>print</span></div>
       <div class="sidebar-logo-sub">Admin</div>
     </div>
     <nav class="sidebar-nav">
@@ -737,7 +740,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     <div class="modal-head">
       <h3>Job Ticket</h3>
       <div class="modal-head-actions">
-        <button class="btn-out" onclick="window.print()" style="padding:7px 16px;font-size:10px;">🖨 Print</button>
+        <button class="btn-out" onclick="window.print()" style="padding:7px 16px;font-size:10px;" title="Print, or choose Save as PDF to download the ticket">🖨 Print / Save as PDF</button>
         <button class="modal-close" onclick="closeJobTicket()">✕</button>
       </div>
     </div>
@@ -1359,21 +1362,61 @@ function openJobTicket(orderId) {
     ? new Date(o.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})
     : '—';
   const totalQty = items.reduce((s,i)=>s+(parseInt(i.qty)||0),0) || o.quantity || '—';
-  const itemRows = items.length
-    ? items.map(i=>`
-        <div class="jt-field" style="grid-column:1/-1;">
-          <div class="jt-field-label">Print Item</div>
-          <div class="jt-field-val">${i.name} — ${i.qty} invitations · ${i.paper||'<span style="color:#b00020;">paper not recorded</span>'}</div>
-        </div>`).join('')
-    : `<div class="jt-field" style="grid-column:1/-1;">
-        <div class="jt-field-label">Print Item</div>
-        <div class="jt-field-val">${o.quantity||'—'} invitations · ${o.paper||'<span style="color:#b00020;">paper not recorded</span>'}</div>
-       </div>`;
+  // One section per line item. An order can hold more than one design and each
+  // has its own press-ready file — showing only the first is how a second
+  // design quietly never gets printed.
+  const itemList = items.length ? items : [{
+    name: null, qty: o.quantity, paper: o.paper, size: o.size,
+    artworkUrl: o.artwork_url, printArtworkUrl: o.print_ready_url
+  }];
+  const single  = itemList.length === 1;
+  const missing = t => `<span style="color:#b00020;">${t}</span>`;
+  const fileOf  = u => { try { return decodeURIComponent(String(u).split('?')[0].split('/').pop()); } catch(e){ return ''; } };
+
+  const itemSections = itemList.map((it, n) => {
+    // Older orders (and AI-studio designs) carry their files on the order row
+    // rather than the item — fall back to those only for a single-item order,
+    // so a multi-item order can never show the same file against two items.
+    const printUrl = it.printArtworkUrl || (single ? o.print_ready_url : null);
+    const artUrl   = it.artworkUrl      || (single ? o.artwork_url    : null);
+    const spec     = it.printSpec || null;
+    const title    = single
+      ? 'Print Specification'
+      : `Item ${n + 1} of ${itemList.length}${it.name ? ' — ' + it.name : ''}`;
+    return `
+        <div class="jt-section-title">${title}</div>
+        <div class="jt-grid-3">
+          <div class="jt-field"><div class="jt-field-label">Quantity</div><div class="jt-field-val large">${it.qty || o.quantity || '—'}</div></div>
+          <div class="jt-field"><div class="jt-field-label">Paper Stock</div><div class="jt-field-val">${it.paper || o.paper || missing('Not recorded — check order')}</div></div>
+          <div class="jt-field"><div class="jt-field-label">Size</div><div class="jt-field-val">${it.size || o.size || missing('Not recorded — check order')}</div></div>
+          <div class="jt-field"><div class="jt-field-label">Sheet Size</div><div class="jt-field-val">${
+            spec && spec.pageMm && spec.trimMm
+              ? `${spec.pageMm.w} × ${spec.pageMm.h}mm incl. bleed and marks — trims to ${spec.trimMm.w} × ${spec.trimMm.h}mm`
+              : 'Trim size plus 3mm bleed and crop marks'
+          }</div></div>
+          <div class="jt-field"><div class="jt-field-label">Bleed</div><div class="jt-field-val">${printUrl ? '3mm all sides, crop marks included' : missing('Not applied — needs prepress')}</div></div>
+          <div class="jt-field"><div class="jt-field-label">Colour Mode</div><div class="jt-field-val">${
+            !printUrl ? missing('No print file yet')
+            : /\/print-ready\//.test(printUrl) ? 'CMYK (PDF/X-1a)'
+            : 'RGB — the press RIP converts (PrintedEasy advice)'
+          }</div></div>
+        </div>
+        <div class="jt-artwork">
+          ${printUrl
+            ? `<div style="font-size:11px;color:var(--soft);margin-bottom:8px;"><strong>Print this file</strong> — ordered size, 3mm bleed, crop marks, trim box set:</div>
+               <a href="${printUrl}" target="_blank">🖨 Download PRINT-READY file</a>
+               <div style="font-size:10px;color:var(--pale);margin-top:6px;">${fileOf(printUrl)}</div>`
+            : `<div style="font-size:12px;color:#b00020;margin-bottom:8px;"><strong>No print-ready file for this item.</strong> Do not print the original upload as-is — it has no bleed and no crop marks.</div>`}
+          ${artUrl
+            ? `<div style="font-size:11px;color:var(--pale);margin:12px 0 6px;">Customer's original upload (reference only):</div><a href="${artUrl}" target="_blank" style="opacity:.7;">📎 Original artwork</a>`
+            : `<div style="font-size:12px;color:var(--pale);margin-top:8px;">No original artwork stored — check the order.</div>`}
+        </div>`;
+  }).join('');
 
   document.getElementById('jobTicketContent').innerHTML = `
     <div class="job-ticket">
       <div class="jt-header">
-        <div class="jt-header-logo">Invita<span>tions</span></div>
+        <div class="jt-header-logo">forever<span>print</span></div>
         <div class="jt-header-ref">
           <div class="jt-header-ref-num">${o.order_number||o.id?.slice(0,8)}</div>
           <div class="jt-header-ref-date">Order Date: ${date}</div>
@@ -1386,29 +1429,7 @@ function openJobTicket(orderId) {
           <div class="jt-field"><div class="jt-field-label">Email</div><div class="jt-field-val">${o.customer_email||'—'}</div></div>
           <div class="jt-field" style="grid-column:1/-1;"><div class="jt-field-label">Delivery Address</div><div class="jt-field-val">${(o.delivery_address||o.customer_address||'—').replace(/,\s*/g,'<br>')}</div></div>
         </div>
-        <div class="jt-section-title">Print Specification</div>
-        <div class="jt-grid">${itemRows}</div>
-        <div class="jt-grid-3">
-          <div class="jt-field"><div class="jt-field-label">Total Quantity</div><div class="jt-field-val large">${totalQty}</div></div>
-          <div class="jt-field"><div class="jt-field-label">Paper Stock</div><div class="jt-field-val">${items[0]?.paper||o.paper||'<span style="color:#b00020;">Not recorded — check order</span>'}</div></div>
-          <div class="jt-field"><div class="jt-field-label">Size</div><div class="jt-field-val">${o.size || '<span style="color:#b00020;">Not recorded — check order</span>'}</div></div>
-          <div class="jt-field"><div class="jt-field-label">Bleed</div><div class="jt-field-val">${o.print_ready_url ? '3mm all sides, crop marks included' : '<span style="color:#b00020;">Not applied — needs prepress</span>'}</div></div>
-          <div class="jt-field"><div class="jt-field-label">Colour Mode</div><div class="jt-field-val">${
-            !o.print_ready_url ? '<span style="color:#b00020;">No print file yet</span>'
-            : /\/print-ready\//.test(o.print_ready_url) ? 'CMYK (PDF/X-1a)'
-            : 'RGB — the press RIP converts (PrintedEasy advice)'
-          }</div></div>
-        </div>
-        <div class="jt-section-title">Artwork</div>
-        <div class="jt-artwork">
-          ${o.print_ready_url
-            ? `<div style="font-size:11px;color:var(--soft);margin-bottom:8px;"><strong>Print this file</strong> — ordered size, 3mm bleed, crop marks, trim box set:</div>
-               <a href="${o.print_ready_url}" target="_blank">🖨 Download PRINT-READY file</a>`
-            : `<div style="font-size:12px;color:#b00020;margin-bottom:8px;"><strong>No print-ready file was produced for this order.</strong> Do not print the original upload as-is — it needs prepress work first.</div>`}
-          ${o.artwork_url
-            ? `<div style="font-size:11px;color:var(--pale);margin:12px 0 6px;">Customer's original upload (reference only):</div><a href="${o.artwork_url}" target="_blank" style="opacity:.7;">📎 Original artwork</a>`
-            : `<div style="font-size:12px;color:var(--pale);margin-top:8px;">No original artwork stored — check the order.</div>`}
-        </div>
+        ${itemSections}
         <div class="jt-section-title">Order Value</div>
         <div class="jt-grid-3">
           <div class="jt-field"><div class="jt-field-label">Subtotal (excl. VAT)</div><div class="jt-field-val">£${parseFloat(o.subtotal||(o.total/1.2)||0).toFixed(2)}</div></div>
@@ -1421,7 +1442,7 @@ function openJobTicket(orderId) {
           <div class="jt-check-item"><div class="jt-check-box"></div>Artwork received &amp; verified</div>
           <div class="jt-check-item"><div class="jt-check-box"></div>Resolution checked (300 DPI+)</div>
           <div class="jt-check-item"><div class="jt-check-box"></div>Bleed confirmed (3mm)</div>
-          <div class="jt-check-item"><div class="jt-check-box"></div>Colour mode CMYK</div>
+          <div class="jt-check-item"><div class="jt-check-box"></div>Colour checked (RGB supplied)</div>
           <div class="jt-check-item"><div class="jt-check-box"></div>Digital proof sent to customer</div>
           <div class="jt-check-item"><div class="jt-check-box"></div>Proof approved by customer</div>
           <div class="jt-check-item"><div class="jt-check-box"></div>Sent to print house</div>
@@ -1431,7 +1452,7 @@ function openJobTicket(orderId) {
         </div>
       </div>
       <div class="jt-footer">
-        <div class="jt-footer-text">hello@invitations.co.uk · invitations.co.uk</div>
+        <div class="jt-footer-text">hello@foreverprint.com · foreverprint.com</div>
         <div class="jt-footer-text">Order ref: ${o.order_number||o.id?.slice(0,8)} · Generated ${new Date().toLocaleDateString('en-GB')}</div>
       </div>
     </div>`;
