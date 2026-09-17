@@ -29,7 +29,7 @@
   // loads — but consent and click-ID capture still work, so no ad click is
   // ever lost while we are waiting.
   var CONFIG = {
-    ga4Id:            '',   // e.g. 'G-XXXXXXXXXX'   — GA4 measurement ID
+    ga4Id:            'G-5SNC87QRQ1',   // GA4 measurement ID (Foreverprint website stream)
     adsId:            '',   // e.g. 'AW-123456789'   — Google Ads conversion ID
     purchaseLabel:    '',   // e.g. 'AbC-D_efGhIjKl' — conversion label for a purchase
     // Value reported to Google. While the business is NOT VAT registered the
