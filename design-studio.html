@@ -20,14 +20,14 @@
 <meta name="twitter:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
 <style>
 /* ── ENTRY SCREEN STYLES ── */
-.entry-main{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:60px 32px}
+.entry-main{min-height:calc(100vh - 64px);display:flex;align-items:flex-start;justify-content:center;padding:28px 32px 60px}
 .entry-wrap{max-width:1080px;width:100%;margin:0 auto;text-align:center}
 
-.entry-intro{margin-bottom:60px}
-.entry-intro .tag{font-size:var(--text-xs);letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:18px;display:block}
-.entry-intro h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.4rem,4.5vw,3.4rem);font-weight:300;line-height:1.1;color:var(--text);margin-bottom:18px}
+.entry-intro{margin-bottom:26px}
+.entry-intro .tag{font-size:var(--text-xs);letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:10px;display:block}
+.entry-intro h1{font-family:'Cormorant Garamond',serif;font-size:clamp(1.9rem,3.2vw,2.5rem);font-weight:300;line-height:1.12;color:var(--text);margin-bottom:10px}
 .entry-intro h1 em{font-style:italic;color:var(--gold)}
-.entry-divider{width:48px;height:1px;background:var(--gold-lt);margin:24px auto}
+.entry-divider{width:48px;height:1px;background:var(--gold-lt);margin:14px auto}
 .entry-intro p{font-size:var(--text-body);color:var(--soft);max-width:520px;margin:0 auto;line-height:1.95}
 
 .doors{display:grid;grid-template-columns:1fr 1fr;gap:32px}
@@ -92,7 +92,7 @@
 
 @media (max-width: 760px){
   .doors{grid-template-columns:1fr;gap:20px}
-  .entry-main{padding:40px 24px}
+  .entry-main{padding:20px 20px 40px}
 }
 </style>
 <script src="/vendor/supabase-js-2.116.0.min.js"></script>
@@ -123,7 +123,7 @@
       <span class="tag">The Design Studio</span>
       <h1>What would you like to <em>create?</em></h1>
       <div class="entry-divider"></div>
-      <p>Choose what you're making and our studio will design it with you — describe the look you want, see it come to life, then adjust until it's right.</p>
+      <p>Pick what you're making — our studio designs it with you.</p>
     </div>
 
     <div class="studio-picker" id="studio-products">

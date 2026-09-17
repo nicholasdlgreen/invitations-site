@@ -111,10 +111,7 @@
     <div class="filter-bar-inner">
       <div class="filter-count" id="product-count">Loading…</div>
       <div class="sort-pills">
-        <span class="sort-label">Sort</span>
-        <button class="sort-pill" data-sort="featured" onclick="setSort('featured')">Featured</button>
-        <button class="sort-pill active" data-sort="alpha" onclick="setSort('alpha')">A–Z</button>
-        <button class="sort-pill" data-sort="newest" onclick="setSort('newest')">Newest</button>
+        <span class="sort-label">Sorted A–Z</span>
       </div>
     </div>
   </div>
@@ -166,7 +163,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 let allProducts = [];      // unsorted master list from Supabase
 let pricingPayload = null; // latest pricing_config for "from £X" prices
-let currentSort = 'alpha'; // CHANGED: default to A–Z (was 'featured')
+let currentSort = 'alpha'; // the only order we offer — Featured and Newest were removed
 let currentCat  = null;    // category filter from ?cat= URL param
 
 // Display labels for category filter banner + page heading
