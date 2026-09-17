@@ -410,7 +410,21 @@
       <span class="co-section-title">Order Summary</span>
       <div id="coBasketNote" style="font-size:var(--text-xs);color:var(--pale);margin:-6px 0 10px;"></div>
       <div id="coSummaryItems"></div>
+      <div id="coDiscountRow" class="co-summary-item" style="display:none;color:var(--gold);"><span id="coDiscountLabel">Discount</span><span id="coDiscountAmount">-£0.00</span></div>
       <div class="co-summary-item total"><span>Total inc. VAT</span><span id="coSummaryTotal">£0.00</span></div>
+
+      <div style="margin:14px 0 4px;">
+        <div id="coDiscountForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input class="co-input" id="coDiscountInput" type="text" placeholder="Discount code" autocomplete="off"
+                 style="flex:1;min-width:150px;text-transform:uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();applyDiscount();}">
+          <button type="button" class="btn-out" id="coDiscountBtn" onclick="applyDiscount()" style="white-space:nowrap;">Apply</button>
+        </div>
+        <div id="coDiscountApplied" style="display:none;font-size:var(--text-sm);color:var(--gold);">
+          <span id="coDiscountAppliedText"></span>
+          <button type="button" onclick="removeDiscount()" style="background:none;border:0;padding:0 0 0 8px;cursor:pointer;font-size:var(--text-xs);color:var(--pale);text-decoration:underline;">Remove</button>
+        </div>
+        <div id="coDiscountMsg" style="display:none;font-size:var(--text-xs);margin-top:6px;line-height:1.6;"></div>
+      </div>
       <span class="co-section-title">Your Details</span>
       <div class="co-field"><label class="co-label">Full Name *</label><input class="co-input" id="coName" placeholder="Charlotte Thornton" type="text"></div>
       <div class="co-field"><label class="co-label">Email Address *</label><input class="co-input" id="coEmail" placeholder="charlotte@example.com" type="email"></div>
@@ -2625,7 +2639,22 @@ function renderCheckoutSummary(){
   items.innerHTML = cart.map(item =>
     `<div class="co-summary-item"><span>${item.name} <span style="color:var(--pale);font-size:var(--text-xs);">&times; ${item.qty}</span></span><span>&pound;${(+item.total).toFixed(2)}</span></div>`
   ).join('');
-  total.textContent = '£' + sub.toFixed(2);
+  // A discount is worked out against the goods, so re-check it whenever the
+  // basket changes — removing an item can take the order under a minimum.
+  const row = document.getElementById('coDiscountRow');
+  let due = sub;
+  if (appliedDiscount && appliedDiscount.amount > 0) {
+    const amount = Math.min(appliedDiscount.amount, sub);
+    due = Math.max(0, Math.round((sub - amount) * 100) / 100);
+    if (row) {
+      row.style.display = 'flex';
+      document.getElementById('coDiscountLabel').textContent = appliedDiscount.code + ' — ' + appliedDiscount.label;
+      document.getElementById('coDiscountAmount').textContent = '-£' + amount.toFixed(2);
+    }
+  } else if (row) {
+    row.style.display = 'none';
+  }
+  total.textContent = '£' + due.toFixed(2);
   const note = document.getElementById('coBasketNote');
   if (note) {
     const n = cart.length;
@@ -2635,6 +2664,80 @@ function renderCheckoutSummary(){
   }
   const err = document.getElementById('coErr');
   if (err) err.style.display = 'none';
+}
+
+// ── DISCOUNT CODE ─────────────────────────────────────────
+// The server decides what a code is worth; this only shows the answer. The
+// same check runs again in create-checkout before any money moves, so a code
+// edited in the browser buys nothing.
+let appliedDiscount = null;
+
+function goodsAndDelivery(){
+  const goods = cart.reduce(function(t,i){
+    return t + (+i.total || 0) - (+(i.basis && i.basis.deliveryCost) || 0);
+  }, 0);
+  const del = selectedDelivery ? (+deliveryCost || 0) : 0;
+  return { goods: Math.round(goods*100)/100, delivery: Math.round(del*100)/100 };
+}
+
+function showDiscountMessage(text, ok){
+  const el = document.getElementById('coDiscountMsg');
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.color = ok ? 'var(--gold)' : 'var(--warn, #b00020)';
+  el.style.display = text ? 'block' : 'none';
+}
+
+async function applyDiscount(){
+  const input = document.getElementById('coDiscountInput');
+  const btn   = document.getElementById('coDiscountBtn');
+  if (!input) return;
+  const code = input.value.trim();
+  if (!code) { showDiscountMessage('Enter a code.', false); return; }
+
+  btn.disabled = true; btn.textContent = 'Checking…';
+  showDiscountMessage('', false);
+  try {
+    const { goods, delivery } = goodsAndDelivery();
+    const res = await fetch('/.netlify/functions/validate-discount', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: code,
+        goodsTotal: goods,
+        deliveryCost: delivery,
+        email: (document.getElementById('coEmail') || {}).value || ''
+      })
+    });
+    const data = await res.json();
+    if (data.valid) {
+      appliedDiscount = data;
+      input.value = '';
+      document.getElementById('coDiscountForm').style.display = 'none';
+      document.getElementById('coDiscountApplied').style.display = 'block';
+      document.getElementById('coDiscountAppliedText').textContent = data.code + ' applied — ' + data.label;
+      showDiscountMessage('', true);
+      renderCheckoutSummary();
+      if (window.fpAnalytics) window.fpAnalytics.track('discount_applied', { code: data.code, discount_type: data.type, value: data.amount });
+    } else {
+      appliedDiscount = null;
+      showDiscountMessage(data.message || "That code isn't recognised.", false);
+      renderCheckoutSummary();
+      if (window.fpAnalytics) window.fpAnalytics.track('discount_rejected', { reason: (data.message || '').slice(0, 60) });
+    }
+  } catch (e) {
+    showDiscountMessage('We could not check that code just now.', false);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Apply';
+  }
+}
+
+function removeDiscount(){
+  appliedDiscount = null;
+  document.getElementById('coDiscountForm').style.display = 'flex';
+  document.getElementById('coDiscountApplied').style.display = 'none';
+  showDiscountMessage('', true);
+  renderCheckoutSummary();
 }
 
 async function proceedToStripe(){
@@ -2792,6 +2895,7 @@ async function proceedToStripe(){
       // accepted cookies — a click ID is advertising measurement, not a
       // cookie we need to run the shop.
       attribution: (window.fpAnalytics && window.fpAnalytics.attribution()) || null,
+      discountCode: appliedDiscount ? appliedDiscount.code : null,
       // Record what they agreed to, not just that they agreed: if consent is
       // ever questioned, the wording is the evidence.
       marketing: {

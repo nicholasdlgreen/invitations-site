@@ -134,7 +134,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl, delivery, marketing, attribution } = JSON.parse(event.body);
+    const { cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl, delivery, marketing, attribution, discountCode } = JSON.parse(event.body);
 
     if (!cart?.length) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Cart is empty' }) };
@@ -181,8 +181,35 @@ exports.handler = async (event) => {
     const attrFirst = cleanTouch(attribution && attribution.first);
     const attrJson  = (attrLast || attrFirst) ? { first: attrFirst, last: attrLast } : null;
 
+    // ── Discount ────────────────────────────────────────────────────
+    // Re-checked here against the database. The browser was told what the
+    // code is worth so it could show the customer, but that answer is not
+    // trusted with money — this is the figure Stripe is given.
+    let discount = null;
+    if (discountCode) {
+      try {
+        const { evaluate, lookup } = require('./validate-discount');
+        const goodsTotal   = cart.reduce((t, i) => t + (+i.total || 0), 0)
+                           - cart.reduce((t, i) => t + (+(i.basis && i.basis.deliveryCost) || 0), 0);
+        const deliveryCost = (delivery && +delivery.cost) || 0;
+        const { row, emailUses } = await lookup(String(discountCode).trim(), customer?.email || '');
+        const result = evaluate(row, { goodsTotal, deliveryCost, email: customer?.email || '', emailUses });
+        if (result.valid) {
+          discount = result;
+        } else {
+          console.warn('[discount] rejected at checkout:', discountCode, '-', result.message);
+        }
+      } catch (e) {
+        // A failure here must never stop someone paying. They lose the
+        // discount, which they can raise with us, rather than the order.
+        console.error('[discount] could not apply:', e.message);
+      }
+    }
+
     const orderNumber = generateOrderNumber();
-    const total       = cart.reduce((s, i) => s + i.total, 0);
+    const grossTotal  = cart.reduce((s, i) => s + i.total, 0);
+    const discountAmt = discount ? Math.min(discount.amount, grossTotal) : 0;
+    const total       = Math.max(0, Math.round((grossTotal - discountAmt) * 100) / 100);
     const subtotal    = total / 1.2;
     const vat         = total - subtotal;
 
@@ -204,6 +231,9 @@ exports.handler = async (event) => {
           status:           'pending',
           artwork_url:      artworkUrl || null,
           print_ready_url:  printReadyUrl || null,
+          discount_code:            discount ? discount.code : null,
+          discount_amount:          discount ? +discountAmt.toFixed(2) : null,
+          subtotal_before_discount: discount ? +grossTotal.toFixed(2) : null,
           // What the customer chose and the date they were shown — so the
           // confirmation email promises the same thing the checkout did.
           delivery:         delivery
@@ -254,6 +284,24 @@ exports.handler = async (event) => {
       }
     }
 
+    // A single-use Stripe coupon for this order, so the payment page shows
+    // the discount as its own line and the customer can see what they saved.
+    let stripeCoupon = null;
+    if (discount && discountAmt > 0) {
+      try {
+        const coupon = await stripe.coupons.create({
+          amount_off: Math.round(discountAmt * 100),
+          currency: 'gbp',
+          duration: 'once',
+          name: `${discount.code} — ${discount.label}`,
+          max_redemptions: 1,
+        });
+        stripeCoupon = coupon.id;
+      } catch (e) {
+        console.error('[discount] Stripe coupon failed:', e.message);
+      }
+    }
+
     // ── Create Stripe Checkout Session ──────────────────
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -269,6 +317,7 @@ exports.handler = async (event) => {
         quantity: item.qty,
       })),
       mode: 'payment',
+      ...(stripeCoupon ? { discounts: [{ coupon: stripeCoupon }] } : {}),
      success_url: `${successUrl}&ref=${orderNumber}`,
       cancel_url:  cancelUrl,
       customer_email:    customer?.email || undefined,
@@ -280,6 +329,8 @@ exports.handler = async (event) => {
         artwork_url:      artworkUrl || '',
         print_ready_url:  printReadyUrl || '',
         notes:            customer?.notes    || '',
+        discount_code:    discount ? discount.code : '',
+        discount_amount:  discount ? discountAmt.toFixed(2) : '',
       },
       shipping_address_collection: { allowed_countries: ['GB'] },
       billing_address_collection:  'auto',

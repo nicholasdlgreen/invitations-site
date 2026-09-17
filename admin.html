@@ -444,6 +444,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="publish" onclick="showPricingPanel(this)">🚀 Publish</button>
           <button class="pz-tab" data-pz="reconcile" onclick="showPricingPanel(this)">🔁 Reconciliation</button>
           <button class="pz-tab" data-pz="contacts" onclick="showPricingPanel(this)">👥 Customers</button>
+          <button class="pz-tab" data-pz="discounts" onclick="showPricingPanel(this)">🎟 Discount Codes</button>
           <button class="pz-tab" data-pz="costs" onclick="showPricingPanel(this)">💷 Costs</button>
           <button class="pz-tab" data-pz="pl" onclick="showPricingPanel(this)">📈 Monthly P&amp;L</button>
           <button class="pz-tab" data-pz="mgmt" onclick="showPricingPanel(this)">📊 Management Accounts</button>
@@ -540,6 +541,15 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               </div>
             </div>
             <div id="plBody"><div class="empty"><span class="empty-icon">📈</span><div class="empty-text">Loading…</div></div></div>
+          </div>
+
+          <!-- PANEL: DISCOUNT CODES -->
+          <div class="pz-panel" id="pz-discounts">
+            <div class="section-header">
+              <div><div class="section-title">Discount Codes</div><div class="section-sub">Vouchers customers type at checkout. A use is counted when payment succeeds, so abandoned baskets never burn a limited-use code.</div></div>
+              <button class="btn btn-gold" onclick="openDiscountModal()">＋ New Code</button>
+            </div>
+            <div id="discountList"><div class="empty"><span class="empty-icon">🎟</span><div class="empty-text">No codes yet</div></div></div>
           </div>
 
           <!-- PANEL: SIZES -->
@@ -886,6 +896,40 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
         <button class="btn btn-outline" onclick="closeRecurringModal()">Close</button>
         <button class="btn btn-gold" onclick="saveRecurring()">Add Recurring Cost</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="discountModal">
+  <div class="pz-modal">
+    <div class="modal-title" id="dsc_modalTitle">New Discount Code</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Code (customers type this)</label><input type="text" id="dsc_code" placeholder="WEDDING10" style="text-transform:uppercase"></div>
+      <div class="field"><label>Description (for your reference)</label><input type="text" id="dsc_description" placeholder="Autumn wedding fair"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Type</label>
+        <select id="dsc_type" onchange="discountTypeChanged()">
+          <option value="percent">Percentage off</option>
+          <option value="fixed">Amount off (£)</option>
+          <option value="free_delivery">Free delivery</option>
+        </select>
+      </div>
+      <div class="field"><label id="dsc_valueLabel">Percentage off</label><input type="number" id="dsc_value" placeholder="10" step="0.01" min="0"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Minimum order (£, optional)</label><input type="number" id="dsc_min" placeholder="100" step="0.01" min="0"></div>
+      <div class="field"><label>Total uses allowed (optional)</label><input type="number" id="dsc_maxuses" placeholder="Unlimited" step="1" min="1"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label>Uses per customer (optional)</label><input type="number" id="dsc_maxperemail" placeholder="Unlimited" step="1" min="1"></div>
+      <div class="field"><label>Expires (optional)</label><input type="date" id="dsc_expires"></div>
+    </div>
+    <div class="field"><label>Notes (optional)</label><input type="text" id="dsc_notes" placeholder="Where this code was advertised"></div>
+    <div class="field"><label><input type="checkbox" id="dsc_active" checked style="width:auto;margin-right:8px"> Active</label></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('discountModal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveDiscount()">Save</button>
     </div>
   </div>
 </div>
@@ -1478,7 +1522,8 @@ let lists = { productTypes:[], sizes:[], paperTypes:[], paperWeights:[], finishe
 let settings = { company:'Natch Ltd', vat:'', fyStart:'June' };
 let activeMonth = null;
 const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const PZ_TITLES = { suppliers:'Supplier Directory', reconcile:'Supplier Reconciliation', mgmt:'Management Accounts', settings:'Settings & Export', envelopes:'Envelopes', papers:'Paper Stocks', producttypes:'Product Types', sheetrates:'Sheet Rates', finishes:'Finish Options', publish:'Publish to Site' };
+const PZ_TITLES = {
+  discounts: 'Discount Codes', suppliers:'Supplier Directory', reconcile:'Supplier Reconciliation', mgmt:'Management Accounts', settings:'Settings & Export', envelopes:'Envelopes', papers:'Paper Stocks', producttypes:'Product Types', sheetrates:'Sheet Rates', finishes:'Finish Options', publish:'Publish to Site' };
 
 // ═══════════════════════════════════════════════════════
 // PRICING — BOOT
@@ -1538,6 +1583,7 @@ function showPricingPanel(el) {
   document.getElementById('pz-' + id).classList.add('active');
   el.classList.add('active');
   document.getElementById('pzPanelTitle').textContent = PZ_TITLES[id] || id;
+  if (id === 'discounts')  { loadDiscounts(); }
   if (id === 'reconcile')  { renderRecon(); renderSalesLog(); }
   if (id === 'mgmt')       { renderMgmtHistory(); }
   if (id === 'publish')    { renderPublishStatus(); }
@@ -2941,6 +2987,132 @@ function renderSizeList() {
           </div>
         </div>`).join('')}`;
   }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// ADMIN — DISCOUNT CODES
+// ══════════════════════════════════════════════════════
+
+let discounts = [];
+let editingDiscountId = null;
+
+async function loadDiscounts() {
+  const box = document.getElementById('discountList');
+  try {
+    discounts = await sbFetch('discount_codes?select=*&order=created_at.desc') || [];
+  } catch (e) {
+    box.innerHTML = '<div class="empty"><div class="empty-text">Could not load codes: ' + e.message + '</div></div>';
+    return;
+  }
+  if (!discounts.length) {
+    box.innerHTML = '<div class="empty"><span class="empty-icon">🎟</span><div class="empty-text">No codes yet</div></div>';
+    return;
+  }
+  const money = v => '£' + parseFloat(v || 0).toFixed(2);
+  const describe = d =>
+    d.type === 'percent'       ? parseFloat(d.value) + '% off' :
+    d.type === 'fixed'         ? money(d.value) + ' off' :
+                                 'Free delivery';
+  box.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th>Code</th><th>Discount</th><th>Conditions</th><th>Used</th><th>Status</th><th></th>' +
+    '</tr></thead><tbody>' +
+    discounts.map(d => {
+      const conds = [];
+      if (d.min_order_value != null) conds.push('min ' + money(d.min_order_value));
+      if (d.expires_at) conds.push('until ' + new Date(d.expires_at).toLocaleDateString('en-GB'));
+      if (d.max_uses_per_email != null) conds.push(d.max_uses_per_email + ' per customer');
+      const expired = d.expires_at && new Date(d.expires_at) < new Date();
+      const spent   = d.max_uses != null && d.used_count >= d.max_uses;
+      const status  = !d.active ? '<span style="color:var(--pale)">Off</span>'
+                    : expired   ? '<span style="color:#b00020">Expired</span>'
+                    : spent     ? '<span style="color:#b00020">Fully used</span>'
+                    : '<span style="color:#5A9E6F">Live</span>';
+      return '<tr><td><strong>' + escapeHtml(d.code) + '</strong>' +
+             (d.description ? '<div style="font-size:11px;color:var(--pale)">' + escapeHtml(d.description) + '</div>' : '') +
+             '</td><td>' + describe(d) + '</td><td style="font-size:12px;color:var(--soft)">' + (conds.join(' · ') || '—') + '</td>' +
+             '<td>' + d.used_count + (d.max_uses != null ? ' / ' + d.max_uses : '') + '</td>' +
+             '<td>' + status + '</td>' +
+             '<td style="text-align:right;white-space:nowrap">' +
+               '<button class="action-btn" onclick="openDiscountModal(\'' + d.id + '\')">Edit</button> ' +
+               '<button class="action-btn" onclick="toggleDiscount(\'' + d.id + '\')">' + (d.active ? 'Turn off' : 'Turn on') + '</button>' +
+             '</td></tr>';
+    }).join('') + '</tbody></table>';
+}
+
+function discountTypeChanged() {
+  const t = document.getElementById('dsc_type').value;
+  const label = document.getElementById('dsc_valueLabel');
+  const input = document.getElementById('dsc_value');
+  if (t === 'percent')      { label.textContent = 'Percentage off'; input.disabled = false; input.placeholder = '10'; }
+  else if (t === 'fixed')   { label.textContent = 'Amount off (£)';  input.disabled = false; input.placeholder = '15.00'; }
+  else                      { label.textContent = 'Not needed for free delivery'; input.disabled = true; input.value = ''; }
+}
+
+function openDiscountModal(id) {
+  editingDiscountId = id || null;
+  const d = id ? discounts.find(x => x.id === id) : null;
+  document.getElementById('dsc_modalTitle').textContent = d ? 'Edit Discount Code' : 'New Discount Code';
+  document.getElementById('dsc_code').value        = d ? d.code : '';
+  document.getElementById('dsc_description').value = d ? (d.description || '') : '';
+  document.getElementById('dsc_type').value        = d ? d.type : 'percent';
+  document.getElementById('dsc_value').value       = d && d.type !== 'free_delivery' ? d.value : '';
+  document.getElementById('dsc_min').value         = d && d.min_order_value != null ? d.min_order_value : '';
+  document.getElementById('dsc_maxuses').value     = d && d.max_uses != null ? d.max_uses : '';
+  document.getElementById('dsc_maxperemail').value = d && d.max_uses_per_email != null ? d.max_uses_per_email : '';
+  document.getElementById('dsc_expires').value     = d && d.expires_at ? String(d.expires_at).slice(0, 10) : '';
+  document.getElementById('dsc_notes').value       = d ? (d.notes || '') : '';
+  document.getElementById('dsc_active').checked    = d ? !!d.active : true;
+  discountTypeChanged();
+  document.getElementById('discountModal').classList.add('open');
+}
+
+async function saveDiscount() {
+  const code = document.getElementById('dsc_code').value.trim().toUpperCase();
+  const type = document.getElementById('dsc_type').value;
+  const value = parseFloat(document.getElementById('dsc_value').value);
+  if (!code) { alert('Give the code a name customers can type.'); return; }
+  if (/\s/.test(code)) { alert('Codes cannot contain spaces.'); return; }
+  if (type !== 'free_delivery' && (!isFinite(value) || value <= 0)) { alert('Enter how much the code takes off.'); return; }
+  if (type === 'percent' && value > 100) { alert('A percentage cannot be over 100.'); return; }
+
+  const num = id => { const v = document.getElementById(id).value; return v === '' ? null : parseFloat(v); };
+  const body = {
+    code,
+    description: document.getElementById('dsc_description').value.trim() || null,
+    type,
+    value: type === 'free_delivery' ? 0 : value,
+    min_order_value: num('dsc_min'),
+    max_uses: num('dsc_maxuses'),
+    max_uses_per_email: num('dsc_maxperemail'),
+    expires_at: document.getElementById('dsc_expires').value
+                  ? new Date(document.getElementById('dsc_expires').value + 'T23:59:59').toISOString() : null,
+    notes: document.getElementById('dsc_notes').value.trim() || null,
+    active: document.getElementById('dsc_active').checked,
+    updated_at: new Date().toISOString()
+  };
+  try {
+    if (editingDiscountId) {
+      await sbFetch('discount_codes?id=eq.' + editingDiscountId, { method: 'PATCH', body: JSON.stringify(body) });
+    } else {
+      await sbFetch('discount_codes', { method: 'POST', body: JSON.stringify(body) });
+    }
+    closeModal('discountModal');
+    loadDiscounts();
+  } catch (e) {
+    alert('Could not save: ' + e.message + (/duplicate|unique/i.test(e.message) ? '\n\nThat code already exists.' : ''));
+  }
+}
+
+async function toggleDiscount(id) {
+  const d = discounts.find(x => x.id === id);
+  if (!d) return;
+  try {
+    await sbFetch('discount_codes?id=eq.' + id, {
+      method: 'PATCH',
+      body: JSON.stringify({ active: !d.active, updated_at: new Date().toISOString() })
+    });
+    loadDiscounts();
+  } catch (e) { alert('Could not update: ' + e.message); }
 }
 
 function openSizeModal(editId) {

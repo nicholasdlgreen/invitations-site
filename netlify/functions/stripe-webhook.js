@@ -591,6 +591,8 @@ exports.handler = async (event) => {
       paper:           metadata?.paper      || null,
       size:            metadata?.size       || null,
       artworkUrl:      metadata?.artwork_url || null,
+      discountCode:    metadata?.discount_code || null,
+      discountAmount:  Number(metadata?.discount_amount || 0) || null,
       printReadyUrl:   metadata?.print_ready_url || null,
       items:           [],   // filled from Supabase below
       notes:           metadata?.notes      || null,
@@ -600,6 +602,32 @@ exports.handler = async (event) => {
 
     // 1. Update Supabase order status → printing
     await updateOrderStatus(sessionId, 'printing');
+
+    // 1b. Count the discount now the money has actually arrived. Doing this
+    //     when the code was typed would let an abandoned basket burn a
+    //     limited-use code. The database call is atomic and ignores repeats,
+    //     so a webhook retry cannot count the same order twice.
+    const usedCode = metadata?.discount_code || '';
+    if (usedCode && process.env.SUPABASE_SERVICE_KEY) {
+      try {
+        const key = process.env.SUPABASE_SERVICE_KEY;
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/redeem_discount`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+          body: JSON.stringify({
+            p_code:         usedCode,
+            p_order_id:     metadata?.order_id || null,
+            p_order_number: order.orderNumber,
+            p_email:        order.customerEmail || '',
+            p_amount:       Number(metadata?.discount_amount || 0),
+          }),
+        });
+        if (!res.ok) console.warn('[discount] redemption not recorded:', res.status, await res.text());
+        else console.log(`Discount ${usedCode} redeemed on ${order.orderNumber}`);
+      } catch (e) {
+        console.warn('[discount] redemption failed:', e.message);
+      }
+    }
 
     // Enrich from the stored order: line items, paper and quantity for the
     // emails, and the print-ready file for the job ticket.
