@@ -130,7 +130,22 @@
 }
 </style>
 </head>
-<body><script>window.updateCartBadge=function(){};window.invAuth={toggleAuthDropdown:function(){},signOut:function(){}};window.openCart=function(){};window.closeCart=function(){};</script>
+<body>
+<!-- Real auth, so a design can be saved to an account. This page previously
+     carried a two-function stub and had no way to reach the database at all.
+     Loaded before the stub below, which now only fills in what auth.js does
+     not provide rather than replacing it. -->
+<script src="/vendor/supabase-js-2.116.0.min.js"></script>
+<script src="/supabase-config.js"></script>
+<script src="/auth.js"></script>
+<script>
+window.updateCartBadge = window.updateCartBadge || function(){};
+window.openCart = window.openCart || function(){};
+window.closeCart = window.closeCart || function(){};
+window.invAuth = window.invAuth || {};
+if (!window.invAuth.toggleAuthDropdown) window.invAuth.toggleAuthDropdown = function(){};
+if (!window.invAuth.signOut) window.invAuth.signOut = function(){};
+</script>
 
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet"/>
 <style>
@@ -583,6 +598,7 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div class="ds-actions" id="ds-actions" style="display:none;">
           <button class="ds-act-primary" id="ds-love">Love it — choose paper &amp; order →</button>
           <button class="ds-act-secondary" id="ds-tweak">Make some tweaks</button>
+          <button class="ds-act-secondary" id="ds-save">♡ Save this design</button>
           <button class="ds-act-tertiary" id="ds-restart">Start again</button>
         </div>
         <div class="ds-preview-hint" id="ds-prehint">Add your wording, describe the look, then generate your design.</div>
@@ -1510,21 +1526,77 @@ function artworkFileName(prefix, ext){
     window.scrollTo({top:0,behavior:'smooth'});
   });
 
+  // Everything needed to rebuild this design later: the picture, the brief that
+  // produced it, the wording, the choices made and where the text sits. The
+  // tweak flow already needed exactly this, so there is one definition of it.
+  function captureDesign(){
+    var bg = document.getElementById('ds-nano-bg');
+    var stack = document.getElementById('ds-stack');
+    return {
+      image: bg ? bg.src : '',
+      size: size,
+      brief: buildBrief(),
+      wording: FIELD_MAP.map(function(p){ var el=document.getElementById(p[0]); return el?el.value:''; }),
+      sel: sel,
+      textPos: { left: stack.style.left || '50%', top: stack.style.top || '50%', scale: textScale },
+      productSlug: PRODUCT_SLUG,
+      savedAt: new Date().toISOString()
+    };
+  }
+
+  // A name the customer will recognise in their saved designs: their own
+  // wording first, the product if they have not typed any yet.
+  function designTitle(state){
+    var words = (state.wording || []).filter(function(w){ return w && w.trim(); });
+    if (words.length) {
+      var t = words[0].trim();
+      if (t.length > 48) t = t.slice(0, 45) + '…';
+      return t;
+    }
+    return CONFIG_PRODUCT_NOUN ? (CONFIG_PRODUCT_NOUN.charAt(0).toUpperCase() + CONFIG_PRODUCT_NOUN.slice(1)) : 'Your design';
+  }
+
+  // The id stays the same across saves, so saving twice updates rather than
+  // filling their account with near-identical copies.
+  var CURRENT_DESIGN_ID = (new URLSearchParams(window.location.search).get('design')) || null;
+
+  document.getElementById('ds-save').addEventListener('click', async function(){
+    var btn = this;
+    var state = captureDesign();
+    if (!state.image) { alert('Generate a design first.'); return; }
+
+    CURRENT_DESIGN_ID = CURRENT_DESIGN_ID ||
+      ('design-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+    var meta = { title: designTitle(state), thumbnail_url: state.image, product_slug: PRODUCT_SLUG };
+
+    btn.disabled = true; btn.textContent = 'Saving…';
+    logEvent('design_save', { size: size });
+    try {
+      if (window.invAuth && window.invAuth.isLoggedIn && window.invAuth.isLoggedIn()) {
+        var res = await window.invAuth.saveDesign(PRODUCT_SLUG, CURRENT_DESIGN_ID, state, meta);
+        if (res && res.error) throw res.error;
+        btn.textContent = '✓ Saved to your designs';
+        setTimeout(function(){ btn.disabled = false; btn.textContent = '♡ Save this design'; }, 2500);
+      } else {
+        // Not signed in: keep the design, send them to sign in, and it saves
+        // itself the moment they are back. Losing someone's design because
+        // they had not made an account would be unforgivable.
+        window.invAuth.queuePendingSave(PRODUCT_SLUG, CURRENT_DESIGN_ID, state, meta);
+        var back = '/design-studio-ai-create.html?product=' + encodeURIComponent(PRODUCT_SLUG) +
+                   '&design=' + encodeURIComponent(CURRENT_DESIGN_ID);
+        window.location.href = '/login.html?next=' + encodeURIComponent(back);
+      }
+    } catch (e) {
+      btn.disabled = false; btn.textContent = '♡ Save this design';
+      alert('Could not save that just now: ' + (e.message || e));
+    }
+  });
+
   // Make some tweaks: keep this design, go to the tweaks page (image-to-image)
   document.getElementById('ds-tweak').addEventListener('click', function(){
     logEvent('tweak_start', { size: size });
     try {
-      var bg = document.getElementById('ds-nano-bg');
-      var stack = document.getElementById('ds-stack');
-      var tweakState = {
-        image: bg ? bg.src : '',
-        size: size,
-        brief: buildBrief(),
-        wording: FIELD_MAP.map(function(p){ var el=document.getElementById(p[0]); return el?el.value:''; }),
-        sel: sel,
-        textPos: { left: stack.style.left || '50%', top: stack.style.top || '50%', scale: textScale }
-      };
-      sessionStorage.setItem('fp_design_tweak', JSON.stringify(tweakState));
+      sessionStorage.setItem('fp_design_tweak', JSON.stringify(captureDesign()));
     } catch(e){}
     window.location.href = '/design-studio-tweak.html';
   });
@@ -1540,8 +1612,66 @@ function artworkFileName(prefix, ext){
   // (and clear) any stale fp_design_tweak left over from a previous session.
   // Called by loadStudioFields() once the config fields exist (avoids a race
   // where fields get rebuilt AFTER we restore the wording, wiping it).
+  // Reopen a design the customer saved earlier. Same shape as the tweak state,
+  // so the restore below can put it back exactly as they left it.
+  async function reinstateSaved(){
+    var designId = new URLSearchParams(window.location.search).get('design');
+    if (!designId || !window.invAuth) return false;
+    try {
+      await window.invAuth.init();
+      if (!window.invAuth.isLoggedIn()) return false;
+      var res = await window.invAuth.loadDesign(designId);
+      var row = res && res.data;
+      if (!row || !row.design_data || !row.design_data.image) return false;
+      applyDesignState(row.design_data);
+      return true;
+    } catch (e) {
+      console.warn('[studio] could not reopen that design:', e.message);
+      return false;
+    }
+  }
+
+  // Put a captured design back on screen: wording, size, choices, picture and
+  // the exact spot the text was left in.
+  function applyDesignState(restore){
+    if (restore.wording && Array.isArray(restore.wording)) {
+      FIELD_MAP.forEach(function(pair, i){
+        var el = document.getElementById(pair[0]);
+        if (el && restore.wording[i]) el.value = restore.wording[i];
+      });
+    }
+    if (restore.size) {
+      var szBtn = document.querySelector('.ds-size[data-size="' + restore.size + '"]');
+      if (szBtn) szBtn.click();
+    }
+    if (restore.sel) {
+      sel = restore.sel;
+      // The page ships with one chip already chosen, so clear the group before
+      // re-selecting, or the default is added to what they picked.
+      document.querySelectorAll('.ds-chips').forEach(function(g){
+        var cat = g.dataset.group;
+        g.querySelectorAll('.ds-chip, .ds-sw').forEach(function(c){
+          c.classList.toggle('on', (sel[cat] || []).indexOf(c.dataset.v) > -1);
+        });
+      });
+    }
+    setTimeout(function(){
+      enterGeneratedMode(restore.image);
+      refreshPreview();
+      var tp = restore.textPos, stack = document.getElementById('ds-stack');
+      if (tp && stack) {
+        textScale = tp.scale || 1;
+        stack.style.left = tp.left || '50%';
+        stack.style.top = tp.top || '50%';
+        stack.style.transform = 'translate(-50%,-50%) scale(' + textScale + ')';
+      }
+    }, 120);
+  }
+
   function reinstateTweaked(){
     var params = new URLSearchParams(window.location.search);
+    // A saved design being reopened wins over anything left in this tab.
+    if (params.get('design')) { reinstateSaved(); return; }
     var isReturn = params.get('tweaked') === '1' || params.get('back') === '1';
 
     var result = null;

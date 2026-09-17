@@ -932,13 +932,27 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
       }
     };
 
+    // Designs made in the AI studio are saved under their product slug
+    // (wedding-invitations, save-the-dates, and so on), so anything not listed
+    // above reopens in the studio for that product.
+    function studioUrlFor(productType) {
+      return '/design-studio-ai-create.html?product=' + encodeURIComponent(productType);
+    }
+
+    function prettySlug(slug) {
+      return String(slug || '')
+        .split('-')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+    }
+
     function productLabel(type) {
-      return (PRODUCT_INFO[type] && PRODUCT_INFO[type].label) || type;
+      return (PRODUCT_INFO[type] && PRODUCT_INFO[type].label) || prettySlug(type);
     }
 
     function resumeUrlFor(design) {
       const info = PRODUCT_INFO[design.product_type];
-      const base = info ? info.builderUrlForStep(design.design_data) : '/';
+      const base = info ? info.builderUrlForStep(design.design_data) : studioUrlFor(design.product_type);
       // Pass the design ID so the target page knows which design to load
       return base + (base.includes('?') ? '&' : '?') + 'design=' + encodeURIComponent(design.id);
     }
@@ -968,6 +982,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
         if (d.tier) return 'Started';
         return 'Started';
       }
+      if (d.image) return 'Design created';
       return 'In progress';
     }
 
