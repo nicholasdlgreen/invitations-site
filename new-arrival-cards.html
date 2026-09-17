@@ -14,6 +14,10 @@
 <meta name="twitter:card" content="summary_large_image"/>
 <meta property="og:type" content="product"/>
 <meta property="og:site_name" content="Foreverprint"/>
+<link rel="preload" as="image" href="/.netlify/images?url=/new-arrival-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75" imagesrcset="/.netlify/images?url=/new-arrival-hero.jpg&amp;w=400&amp;fm=webp&amp;q=75 400w, /.netlify/images?url=/new-arrival-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75 800w, /.netlify/images?url=/new-arrival-hero.jpg&amp;w=1200&amp;fm=webp&amp;q=75 1200w" imagesizes="(max-width: 768px) 92vw, 44vw"/>
+<link rel="preconnect" href="https://jvcpzmumkyjdyibmwlsd.supabase.co" crossorigin/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="dns-prefetch" href="https://www.googletagmanager.com"/>
 
 <style>
 /* Product landing page — PPC-optimised. Site-wide tokens (--cream, --gold,
@@ -160,10 +164,10 @@
   .path-modal-panel{padding:28px 24px;}
 }
 </style>
-<script src="/vendor/supabase-js-2.116.0.min.js"></script>
+<script src="/vendor/supabase-js-2.116.0.min.js" defer></script>
 <script src="/supabase-config.js"></script>
-<script src="/auth.js"></script>
-<script src="/cart.js"></script>  
+<script src="/auth.js" defer></script>
+<script src="/cart.js" defer></script>  
 </head>
 <body>
 
@@ -191,7 +195,7 @@
         </div>
       </div>
       <div>
-        <div id="lp-hero-img-wrap"></div>
+        <div id="lp-hero-img-wrap"><img class="lp-hero-img" data-prerendered src="/.netlify/images?url=/new-arrival-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75" srcset="/.netlify/images?url=/new-arrival-hero.jpg&amp;w=400&amp;fm=webp&amp;q=75 400w, /.netlify/images?url=/new-arrival-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75 800w, /.netlify/images?url=/new-arrival-hero.jpg&amp;w=1200&amp;fm=webp&amp;q=75 1200w" sizes="(max-width: 768px) 92vw, 44vw" alt="New Arrival Cards" width="800" height="644" fetchpriority="high" decoding="async"/></div>
       </div>
     </div>
   </div>
@@ -459,8 +463,20 @@ function renderHero() {
   if (productData.tagline) document.getElementById('lp-sub').textContent = productData.tagline;
   document.getElementById('path-modal-tag').textContent = name;
   const wrap = document.getElementById('lp-hero-img-wrap');
-  if (productData.hero_image_url) {
-    wrap.innerHTML = `<img class="lp-hero-img" src="${escapeHtml(productData.hero_image_url)}" alt="${escapeHtml(name)}"/>`;
+  // The build puts the hero straight into the HTML so it can start loading
+  // immediately. Replacing it here would throw that away and fetch the
+  // full-size original a second time.
+  if (wrap.querySelector('img[data-prerendered]')) {
+    // already there, and already the right size
+  } else if (productData.hero_image_url) {
+    const src = productData.hero_image_url;
+    // Netlify resizes and re-encodes on the fly: a 1600px JPEG becomes an
+    // 800px WebP — same picture, roughly a tenth of the bytes.
+    const cdn = (w) => `/.netlify/images?url=${encodeURIComponent(src)}&w=${w}&fm=webp&q=75`;
+    wrap.innerHTML = `<img class="lp-hero-img" src="${cdn(800)}"
+      srcset="${cdn(400)} 400w, ${cdn(800)} 800w, ${cdn(1200)} 1200w"
+      sizes="(max-width: 768px) 92vw, 44vw"
+      alt="${escapeHtml(name)}" width="800" height="644" fetchpriority="high" decoding="async"/>`;
   } else {
     wrap.innerHTML = `<div class="lp-hero-img-placeholder">✦</div>`;
   }

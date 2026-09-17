@@ -25,10 +25,10 @@
 <!-- Auth + cart scripts (same set every other page loads) so the header
      Account dropdown and cart badge work. supabase-js first, then config,
      then auth; cart.js provides updateCartBadge(). -->
-<script src="/vendor/supabase-js-2.116.0.min.js"></script>
+<script src="/vendor/supabase-js-2.116.0.min.js" defer></script>
 <script src="/supabase-config.js"></script>
-<script src="/auth.js"></script>
-<script src="/cart.js"></script>
+<script src="/auth.js" defer></script>
+<script src="/cart.js" defer></script>
 <style>
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 .path-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:52px;}

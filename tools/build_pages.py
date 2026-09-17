@@ -198,7 +198,37 @@ def build_page(template, product, pricing):
         + "</script>",
     )
 
-    # 6. The hero subtitle, when the product has one
+    # 6. The hero image, in the markup and already the right size.
+    #    Measured before this change: the browser could not even ASK for the
+    #    hero until the product data came back — it started at 1441ms and
+    #    finished at 2066ms, and it was a 1600px, 218KB JPEG being shown on a
+    #    375px phone. In the HTML with a preload, it starts with the page; via
+    #    Netlify's image service the same picture is about 26KB of WebP.
+    if image:
+        rel = image.replace(SITE, "")
+        def cdn(w):
+            return f"/.netlify/images?url={rel}&amp;w={w}&amp;fm=webp&amp;q=75"
+        img_tag = (
+            f'<img class="lp-hero-img" data-prerendered src="{cdn(800)}" '
+            f'srcset="{cdn(400)} 400w, {cdn(800)} 800w, {cdn(1200)} 1200w" '
+            f'sizes="(max-width: 768px) 92vw, 44vw" '
+            f'alt="{esc(name)}" width="800" height="644" '
+            f'fetchpriority="high" decoding="async"/>'
+        )
+        html = html.replace(
+            '<div id="lp-hero-img-wrap"></div>',
+            f'<div id="lp-hero-img-wrap">{img_tag}</div>',
+        )
+        # Tell the browser about it before it reaches the markup.
+        html = html.replace(
+            '<link rel="preconnect" href="https://jvcpzmumkyjdyibmwlsd.supabase.co" crossorigin/>',
+            f'<link rel="preload" as="image" href="{cdn(800)}" '
+            f'imagesrcset="{cdn(400)} 400w, {cdn(800)} 800w, {cdn(1200)} 1200w" '
+            f'imagesizes="(max-width: 768px) 92vw, 44vw"/>\n'
+            '<link rel="preconnect" href="https://jvcpzmumkyjdyibmwlsd.supabase.co" crossorigin/>',
+        )
+
+    # 7. The hero subtitle, when the product has one
     if tagline:
         html = re.sub(
             r'(<p class="lp-hero-sub" id="lp-sub">)(.*?)(</p>)',
