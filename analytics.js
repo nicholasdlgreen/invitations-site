@@ -108,6 +108,9 @@
     });
     writeCookie(CONSENT_COOKIE, 'granted', CONSENT_DAYS);
     if (!silent) { captureAttribution(); loadTag(); hideBanner(); }
+    // Storage was denied when the tag first loaded, so ask it to send a page
+    // view now that it may — otherwise this visit is missing from reporting.
+    if (!silent && CONFIG.ga4Id) { try { gtag('event', 'page_view'); } catch (e) {} }
   }
 
   function denyConsent() {
@@ -314,8 +317,15 @@
   // ── START ────────────────────────────────────────────────────────────
   function start() {
     captureAttribution();          // memory always; storage only with consent
-    if (consentState() === 'granted') loadTag();
-    else if (consentState() === null) showBanner();
+    // Advanced Consent Mode: the tag loads for everyone, but the denied
+    // defaults set above mean it stores nothing and sends no identifying
+    // data until the visitor agrees. Two reasons this beats withholding the
+    // tag entirely: Google can verify the tag exists (it cannot accept a
+    // cookie banner), and cookieless pings let Google model the conversions
+    // of people who declined — typically a fifth of them, which we would
+    // otherwise bid blind without.
+    loadTag();
+    if (consentState() === null) showBanner();
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start);
