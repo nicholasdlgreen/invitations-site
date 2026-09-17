@@ -192,12 +192,24 @@ exports.handler = async (event) => {
         const goodsTotal   = cart.reduce((t, i) => t + (+i.total || 0), 0)
                            - cart.reduce((t, i) => t + (+(i.basis && i.basis.deliveryCost) || 0), 0);
         const deliveryCost = (delivery && +delivery.cost) || 0;
-        const { row, emailUses } = await lookup(String(discountCode).trim(), customer?.email || '');
-        const result = evaluate(row, { goodsTotal, deliveryCost, email: customer?.email || '', emailUses });
+        const { row, emailUses, previousOrders } = await lookup(String(discountCode).trim(), customer?.email || '');
+        const result = evaluate(row, {
+          goodsTotal, deliveryCost, email: customer?.email || '', emailUses, previousOrders,
+          emailKnown: true,          // by checkout we always know who they are
+        });
         if (result.valid) {
           discount = result;
         } else {
+          // The customer was shown a discount and it no longer applies —
+          // usually a per-customer rule that could only be judged once we
+          // knew their email. Stop and say so. Charging full price quietly
+          // would be indefensible.
           console.warn('[discount] rejected at checkout:', discountCode, '-', result.message);
+          return {
+            statusCode: 409,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: result.message, discountRejected: true, code: String(discountCode).toUpperCase() }),
+          };
         }
       } catch (e) {
         // A failure here must never stop someone paying. They lose the

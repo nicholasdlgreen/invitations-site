@@ -1479,6 +1479,7 @@ function goStep(n){
   if(n===3)initStep3();
   if(n===4) renderBasketStep();
   if(n===5 && typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
+  if(n===5 && typeof watchEmailForDiscount === 'function') watchEmailForDiscount();
   // On the file-check step, put the artwork itself at the top of the screen —
   // the customer wants to see their design, not the page heading again.
   if(n===2){
@@ -2732,6 +2733,22 @@ async function applyDiscount(){
   }
 }
 
+// Per-customer rules can only be judged once we know the customer, so a code
+// applied before the email was typed is re-checked when it is.
+function watchEmailForDiscount(){
+  const email = document.getElementById('coEmail');
+  if (!email || email.dataset.discountWatch) return;
+  email.dataset.discountWatch = '1';
+  email.addEventListener('blur', function(){
+    const input = document.getElementById('coDiscountInput');
+    if (appliedDiscount && email.value.trim()) {
+      const code = appliedDiscount.code;
+      removeDiscount();
+      if (input) { input.value = code; applyDiscount(); }
+    }
+  });
+}
+
 function removeDiscount(){
   appliedDiscount = null;
   document.getElementById('coDiscountForm').style.display = 'flex';
@@ -2910,10 +2927,26 @@ async function proceedToStripe(){
       } : null
     })});
     const data=await res.json();
+    // The code was checked again with their email in hand. If it no longer
+    // applies, say so and let them decide — never charge full price quietly.
+    if (res.status === 409 && data.discountRejected) {
+      removeDiscount();
+      showDiscountMessage(data.error || 'That code cannot be used on this order.', false);
+      document.getElementById('coDiscountInput')?.scrollIntoView({behavior:'smooth', block:'center'});
+      throw new Error('DISCOUNT_REJECTED');
+    }
     if(!res.ok||!data.url)throw new Error(data.error||'Could not create checkout session.');
     if(data.orderNumber){const saved=JSON.parse(localStorage.getItem('inv_pending_order')||'{}');saved.ref=data.orderNumber;localStorage.setItem('inv_pending_order',JSON.stringify(saved));}
     window.location.href=data.url;
   }catch(err){
+    if (err && err.message === 'DISCOUNT_REJECTED') {
+      const b=document.getElementById('coPayBtn');
+      document.getElementById('coPaySpinner').style.display='none';
+      document.getElementById('coPayBtnText').textContent='Pay Securely with Stripe';
+      if (b) b.disabled=false;
+      return;
+    }
+
     errEl.textContent='Payment error: '+err.message+' — please try again or contact us.';
     errEl.style.display='block';
     document.getElementById('coPayBtnText').textContent='Pay Securely with Stripe';

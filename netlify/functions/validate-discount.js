@@ -39,7 +39,7 @@ async function sb(path, options = {}) {
  * Shared with create-checkout via the exported function below, so the money
  * is calculated in exactly one place.
  */
-function evaluate(row, { goodsTotal, deliveryCost, email, emailUses }) {
+function evaluate(row, { goodsTotal, deliveryCost, email, emailUses, previousOrders, emailKnown }) {
   const now = new Date();
 
   if (!row)                        return { valid: false, message: "That code isn't recognised." };
@@ -57,6 +57,14 @@ function evaluate(row, { goodsTotal, deliveryCost, email, emailUses }) {
   }
   if (row.max_uses_per_email != null && email && emailUses >= row.max_uses_per_email) {
     return { valid: false, message: "You've already used that code." };
+  }
+  if (row.first_order_only && email && previousOrders > 0) {
+    return { valid: false, message: 'That code is for first orders only.' };
+  }
+  // A per-customer rule cannot be judged without knowing the customer. Rather
+  // than promise a discount we may withdraw at the till, ask for the email.
+  if (!emailKnown && (row.first_order_only || row.max_uses_per_email != null)) {
+    return { valid: false, needsEmail: true, message: 'Enter your email address below, then apply the code.' };
   }
 
   // Discounts apply to the goods, not to delivery — except the free delivery
@@ -100,7 +108,17 @@ async function lookup(code, email) {
     );
     emailUses = Array.isArray(used) ? used.length : 0;
   }
-  return { row, emailUses };
+  let previousOrders = 0;
+  if (row && row.first_order_only && email) {
+    // Orders that reached payment. Pending rows are abandoned baskets and
+    // must not make somebody a returning customer.
+    const prior = await sb(
+      `orders?customer_email=eq.${encodeURIComponent(String(email).toLowerCase())}` +
+      `&status=in.(printing,dispatched,delivered,complete)&select=id&limit=1`
+    );
+    previousOrders = Array.isArray(prior) ? prior.length : 0;
+  }
+  return { row, emailUses, previousOrders };
 }
 
 function callerId(event) {
@@ -158,8 +176,11 @@ exports.handler = async (event) => {
       };
     }
 
-    const { row, emailUses } = await lookup(code, email);
-    const result = evaluate(row, { goodsTotal, deliveryCost, email, emailUses });
+    const { row, emailUses, previousOrders } = await lookup(code, email);
+    const result = evaluate(row, {
+      goodsTotal, deliveryCost, email, emailUses, previousOrders,
+      emailKnown: !!email,
+    });
     return { statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify(result) };
   } catch (e) {
     console.error('[discount] validation failed:', e.message);

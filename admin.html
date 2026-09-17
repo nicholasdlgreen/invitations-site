@@ -926,6 +926,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <div class="field"><label>Expires (optional)</label><input type="date" id="dsc_expires"></div>
     </div>
     <div class="field"><label>Notes (optional)</label><input type="text" id="dsc_notes" placeholder="Where this code was advertised"></div>
+    <div class="field"><label><input type="checkbox" id="dsc_firstonly" style="width:auto;margin-right:8px"> First-time customers only <span style="color:var(--pale);font-size:11px">— refused if that email has ordered before</span></label></div>
     <div class="field"><label><input type="checkbox" id="dsc_active" checked style="width:auto;margin-right:8px"> Active</label></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('discountModal')">Cancel</button>
@@ -3033,6 +3034,7 @@ async function loadDiscounts() {
       if (d.min_order_value != null) conds.push('min ' + money(d.min_order_value));
       if (d.expires_at) conds.push('until ' + new Date(d.expires_at).toLocaleDateString('en-GB'));
       if (d.max_uses_per_email != null) conds.push(d.max_uses_per_email + ' per customer');
+      if (d.first_order_only) conds.push('first order only');
       const expired = d.expires_at && new Date(d.expires_at) < new Date();
       const spent   = d.max_uses != null && d.used_count >= d.max_uses;
       const status  = !d.active ? '<span style="color:var(--pale)">Off</span>'
@@ -3073,6 +3075,7 @@ function openDiscountModal(id) {
   document.getElementById('dsc_maxperemail').value = d && d.max_uses_per_email != null ? d.max_uses_per_email : '';
   document.getElementById('dsc_expires').value     = d && d.expires_at ? String(d.expires_at).slice(0, 10) : '';
   document.getElementById('dsc_notes').value       = d ? (d.notes || '') : '';
+  document.getElementById('dsc_firstonly').checked = d ? !!d.first_order_only : false;
   document.getElementById('dsc_active').checked    = d ? !!d.active : true;
   discountTypeChanged();
   document.getElementById('discountModal').classList.add('open');
@@ -3099,6 +3102,7 @@ async function saveDiscount() {
     expires_at: document.getElementById('dsc_expires').value
                   ? new Date(document.getElementById('dsc_expires').value + 'T23:59:59').toISOString() : null,
     notes: document.getElementById('dsc_notes').value.trim() || null,
+    first_order_only: document.getElementById('dsc_firstonly').checked,
     active: document.getElementById('dsc_active').checked,
     updated_at: new Date().toISOString()
   };
