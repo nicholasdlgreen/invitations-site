@@ -23,6 +23,33 @@ const headers = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
+function callerId(event) {
+  return (event.headers['x-nf-client-connection-ip']
+       || event.headers['client-ip']
+       || (event.headers['x-forwarded-for'] || '').split(',')[0].trim()
+       || 'unknown');
+}
+
+// Order numbers are four digits. With somebody's email address, a few
+// thousand tries would find their order — so tries are counted. A genuine
+// customer checking their own order needs a handful an hour at most.
+async function tooManyLookups(event) {
+  const key = process.env.SUPABASE_SERVICE_KEY;
+  if (!key) return false;
+  const bucket = `track:${callerId(event)}:${new Date().toISOString().slice(0, 13)}`;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bump_rate_limit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ p_bucket: bucket, p_limit: 20 }),
+    });
+    if (res.ok && (await res.json()) === false) return true;
+  } catch (e) {
+    console.warn('[track-order] rate limit check failed, allowing:', e.message);
+  }
+  return false;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
   if (event.httpMethod !== 'POST') {
@@ -36,6 +63,13 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); }
   catch (e) { return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid request' }) }; }
+
+  if (await tooManyLookups(event)) {
+    return {
+      statusCode: 429, headers,
+      body: JSON.stringify({ error: 'Too many lookups. Please wait a few minutes and try again.' }),
+    };
+  }
 
   const orderNumber = String(body.orderNumber || '').trim();
   const email = String(body.email || '').trim().toLowerCase();
