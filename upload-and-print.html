@@ -186,7 +186,9 @@
       <div class="step-line"></div>
       <div class="step-item"><div class="step-num" id="sn3">3</div><div class="step-label" id="sl3">Paper &amp; Quantity</div></div>
       <div class="step-line"></div>
-      <div class="step-item"><div class="step-num" id="sn4">4</div><div class="step-label" id="sl4">Checkout</div></div>
+      <div class="step-item"><div class="step-num" id="sn4">4</div><div class="step-label" id="sl4">Basket</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num" id="sn5">5</div><div class="step-label" id="sl5">Checkout</div></div>
     </div>
 
     <!-- STEP 1: UPLOAD -->
@@ -359,23 +361,53 @@
       </div>
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <button class="btn" onclick="addToCartUpload()">Continue to Checkout</button>
+        <button class="btn" onclick="addToCartUpload()">Add to Basket</button>
         <button class="btn-out" onclick="goStep(2)">Back</button>
       </div>
     </div>
 
     <!-- STEP 4: ADDED TO BASKET -->
+    <!-- STEP 4: BASKET -->
+    <!-- A holding step between adding something and paying for it. Adding to
+         the basket used to drop the customer straight into a form asking for
+         their card, which is not what "Add to Basket" promises, and left no
+         obvious way to add a second item. -->
     <div id="step4" class="hidden">
-      <!-- Checkout is part of the page now. It used to be a floating panel,
-           which meant the progress bar promised a Checkout step the page never
-           showed, and the form covered the basket being checked. -->
       <div style="margin-bottom:14px;">
         <a href="#" onclick="goStep(3);return false;" style="font-size:var(--text-sm);color:var(--soft);text-decoration:none;">&larr; Back to paper &amp; quantity</a>
       </div>
 
+      <div class="check-card" style="padding:26px 28px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;">&#10003;</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:400;color:var(--text);">Added to your basket</div>
+        </div>
+        <p id="basketNote" style="font-size:var(--text-sm);color:var(--soft);margin:0 0 20px 42px;line-height:1.7;"></p>
+
+        <div id="basketItems"></div>
+
+        <div style="border-top:1px solid var(--border);margin-top:18px;padding-top:16px;display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-size:var(--text-sm);color:var(--soft);">Total inc. VAT</span>
+          <span id="basketTotal" style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--text);">&pound;0.00</span>
+        </div>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;align-items:center;">
+          <button class="btn" onclick="goStep(5)">Checkout &rarr;</button>
+          <a href="/products" style="font-size:var(--text-sm);color:var(--soft);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:2px;">Keep shopping</a>
+        </div>
+        <p style="font-size:var(--text-xs);color:var(--pale);margin-top:16px;line-height:1.7;">Your basket is saved on this device, so you can come back to it. Items are held for 7 days.</p>
+      </div>
+    </div>
+
+    <!-- STEP 5: CHECKOUT -->
+    <div id="step5" class="hidden">
+      <div style="margin-bottom:14px;">
+        <a href="#" onclick="goStep(4);return false;" style="font-size:var(--text-sm);color:var(--soft);text-decoration:none;">&larr; Back to basket</a>
+      </div>
+
       <div class="check-card">
     <div class="co-body">
-      <span class="co-section-title">Your Basket</span>
+      <span class="co-section-title">Order Summary</span>
       <div id="coBasketNote" style="font-size:var(--text-xs);color:var(--pale);margin:-6px 0 10px;"></div>
       <div id="coSummaryItems"></div>
       <div class="co-summary-item total"><span>Total inc. VAT</span><span id="coSummaryTotal">£0.00</span></div>
@@ -1412,7 +1444,7 @@ function togglePassedChecks(){
 
 // ── STEP NAVIGATION ───────────────────────────────────────
 function goStep(n){
-  [1,2,3,4].forEach(i=>{
+  [1,2,3,4,5].forEach(i=>{
     document.getElementById('step'+i)?.classList.toggle('hidden',i!==n);
     document.getElementById('sn'+i).className='step-num'+(i<n?' done':i===n?' active':'');
     document.getElementById('sl'+i).className='step-label'+(i===n?' active':'');
@@ -1422,7 +1454,7 @@ function goStep(n){
   // single page view and none of the journey. Each step is reported as its
   // own stage, which is what makes drop-off visible.
   try {
-    const STEP_NAMES = {1:'choose_size_and_upload', 2:'file_check', 3:'paper_and_quantity', 4:'checkout'};
+    const STEP_NAMES = {1:'choose_size_and_upload', 2:'file_check', 3:'paper_and_quantity', 4:'basket', 5:'checkout'};
     if (window.fpAnalytics) window.fpAnalytics.track('order_step', {
       step_number: n,
       step_name:   STEP_NAMES[n] || ('step_' + n),
@@ -1431,7 +1463,8 @@ function goStep(n){
     });
   } catch(e) {}
   if(n===3)initStep3();
-  if(n===4 && typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
+  if(n===4) renderBasketStep();
+  if(n===5 && typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
   // On the file-check step, put the artwork itself at the top of the screen —
   // the customer wants to see their design, not the page heading again.
   if(n===2){
@@ -1922,6 +1955,7 @@ async function addToCartUpload(){
     printSpec: printSpec,
     basis: priceBasis,
     // Design-studio extras (only present when in design mode)
+    addedAt: Date.now(),
     source: designMode ? 'design-studio' : 'upload',
     templateId: designMode && designState ? designState.templateId : null,
     designState: designMode ? designState : null
@@ -1939,7 +1973,7 @@ async function addToCartUpload(){
       }]
     });
   } catch(e) {}
-  showToast('Added to your basket — just your details now ✓');
+  showToast('Added to your basket ✓');
   goStep(4);
 }
 
@@ -2490,11 +2524,96 @@ function openCheckout(){
   try { var lc = JSON.parse(localStorage.getItem('inv_cart')||'[]'); if(Array.isArray(lc)) cart = lc; } catch(e){}
   if(!cart.length){ showToast('Your basket is empty'); return; }
   closeCart();
-  goStep(4);
+  goStep(5);
 }
 
-// Going back from checkout is simply going back a step.
-function closeCheckout(){ goStep(3); }
+// Going back from checkout returns to the basket.
+function closeCheckout(){ goStep(4); }
+
+// ── BASKET STEP ───────────────────────────────────────────
+// Items are kept in this browser, not against an account — most customers
+// check out as guests. They are held for 7 days: long enough to come back
+// and finish, short enough that nobody pays for something they configured a
+// month ago and have forgotten about.
+const BASKET_DAYS = 7;
+
+function pruneBasket(){
+  let changed = false;
+  try {
+    var lc = JSON.parse(localStorage.getItem('inv_cart')||'[]');
+    if (!Array.isArray(lc)) lc = [];
+    const cutoff = Date.now() - BASKET_DAYS*864e5;
+    const kept = lc.filter(function(it){
+      // Items saved before we started stamping the date are kept: we cannot
+      // tell how old they are, and throwing away someone's order is worse
+      // than showing it a little too long.
+      if (!it || !it.addedAt) return true;
+      return it.addedAt > cutoff;
+    });
+    if (kept.length !== lc.length) changed = true;
+    cart = kept;
+    if (changed) saveCart();
+  } catch(e){}
+  return changed;
+}
+
+function basketItemDate(it){
+  if (!it || !it.addedAt) return '';
+  const d = new Date(it.addedAt);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const itsDay = new Date(it.addedAt); itsDay.setHours(0,0,0,0);
+  if (itsDay.getTime() === today.getTime()) return 'Added today';
+  return 'Added ' + d.toLocaleDateString('en-GB',{day:'numeric',month:'long'});
+}
+
+function renderBasketStep(){
+  const dropped = pruneBasket();
+  const list  = document.getElementById('basketItems');
+  const total = document.getElementById('basketTotal');
+  const note  = document.getElementById('basketNote');
+  if (!list || !total) return;
+
+  if (!cart.length){
+    list.innerHTML = '<p style="font-size:var(--text-sm);color:var(--soft);">Your basket is empty.</p>';
+    total.textContent = '£0.00';
+    if (note) note.textContent = dropped
+      ? 'Items are held for 7 days, and yours have now expired. Upload your artwork again to start a new order.'
+      : 'Nothing in your basket yet.';
+    return;
+  }
+
+  if (note) {
+    note.textContent = cart.length === 1
+      ? 'Check it over, then head to checkout — or keep shopping and add more.'
+      : 'You have ' + cart.length + ' items. Check them over, then head to checkout — or keep shopping and add more.';
+  }
+
+  list.innerHTML = cart.map(function(item, i){
+    const line = [item.size, item.paper].filter(Boolean).join(' · ');
+    return '<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border);">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:var(--text-sm);font-weight:500;color:var(--text);">' + (item.name || 'Your artwork') + '</div>' +
+        '<div style="font-size:var(--text-xs);color:var(--soft);margin-top:3px;line-height:1.6;">' + line + '</div>' +
+        '<div style="font-size:var(--text-xs);color:var(--pale);margin-top:3px;">Quantity ' + (item.qty || 1) +
+          (basketItemDate(item) ? ' · ' + basketItemDate(item) : '') + '</div>' +
+      '</div>' +
+      '<div style="text-align:right;white-space:nowrap;">' +
+        '<div style="font-size:var(--text-sm);color:var(--text);">£' + (+item.total || 0).toFixed(2) + '</div>' +
+        '<button onclick="removeFromBasket(' + i + ')" style="background:none;border:0;padding:4px 0 0;cursor:pointer;font-size:var(--text-xs);color:var(--pale);text-decoration:underline;">Remove</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  total.textContent = '£' + cart.reduce(function(t,i){ return t + (+i.total || 0); }, 0).toFixed(2);
+}
+
+function removeFromBasket(i){
+  cart.splice(i, 1);
+  saveCart();
+  if (typeof updateCartBadge === 'function') updateCartBadge();
+  renderBasketStep();
+  showToast('Removed from your basket');
+}
 
 // The order summary shown above the details form.
 function renderCheckoutSummary(){
@@ -2511,8 +2630,8 @@ function renderCheckoutSummary(){
   if (note) {
     const n = cart.length;
     note.textContent = n === 1
-      ? 'Everything in your basket — pay below to place the order.'
-      : n + ' items in your basket — pay below to place the order.';
+      ? 'Paying for 1 item.'
+      : 'Paying for ' + n + ' items.';
   }
   const err = document.getElementById('coErr');
   if (err) err.style.display = 'none';
