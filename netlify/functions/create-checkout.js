@@ -134,7 +134,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl, delivery, marketing } = JSON.parse(event.body);
+    const { cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl, delivery, marketing, attribution } = JSON.parse(event.body);
 
     if (!cart?.length) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Cart is empty' }) };
@@ -164,6 +164,23 @@ exports.handler = async (event) => {
       console.warn('[price-check] SKIPPED — pricing data unavailable');
     }
 
+    // ── Where the order came from ───────────────────────────────────
+    // Browser-supplied, so treat it as untrusted: keep only the fields we
+    // know, trim each one, and never let it grow without bound.
+    const ATTR_FIELDS = ['gclid','gbraid','wbraid','msclkid','utm_source','utm_medium',
+                         'utm_campaign','utm_term','utm_content','landing_page','referrer','seen_at'];
+    const cleanTouch = t => {
+      if (!t || typeof t !== 'object') return null;
+      const out = {};
+      for (const f of ATTR_FIELDS) {
+        if (typeof t[f] === 'string' && t[f]) out[f] = t[f].slice(0, 300);
+      }
+      return Object.keys(out).length ? out : null;
+    };
+    const attrLast  = cleanTouch(attribution && attribution.last);
+    const attrFirst = cleanTouch(attribution && attribution.first);
+    const attrJson  = (attrLast || attrFirst) ? { first: attrFirst, last: attrLast } : null;
+
     const orderNumber = generateOrderNumber();
     const total       = cart.reduce((s, i) => s + i.total, 0);
     const subtotal    = total / 1.2;
@@ -192,6 +209,16 @@ exports.handler = async (event) => {
           delivery:         delivery
                               ? `${delivery.name}${delivery.arrival ? ' · estimated ' + delivery.arrival : ''}`
                               : null,
+          // Attribution: the full picture in jsonb, the fields we report on
+          // lifted out alongside it. Last touch wins for the flat columns —
+          // that is the click Google will be paid for.
+          attribution:    attrJson,
+          gclid:          attrLast?.gclid || attrFirst?.gclid || null,
+          utm_source:     attrLast?.utm_source   || null,
+          utm_medium:     attrLast?.utm_medium   || null,
+          utm_campaign:   attrLast?.utm_campaign || null,
+          utm_term:       attrLast?.utm_term     || null,
+          landing_page:   attrLast?.landing_page || attrFirst?.landing_page || null,
           marketing_consent:      !!(marketing && marketing.granted),
           marketing_consent_text: marketing && marketing.granted ? marketing.text : null,
           marketing_consent_at:   marketing && marketing.granted ? new Date().toISOString() : null,

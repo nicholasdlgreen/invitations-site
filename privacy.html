@@ -47,6 +47,14 @@
     </div>
 
     <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px;margin-bottom:20px;">
+      <h2 class="serif" style="font-size:1.3rem;font-weight:400;margin-bottom:14px;">Cookies and Measurement</h2>
+      <p style="font-size:var(--text-sm);color:var(--soft);line-height:2;">Some cookies are necessary for the site to work &mdash; they remember what is in your basket and keep your session secure. These are always on, because without them you could not place an order.</p>
+      <p style="font-size:var(--text-sm);color:var(--soft);line-height:2;margin-top:14px;">Everything else we ask you about first. If you agree, we use Google Analytics to understand which parts of the site people find useful, and Google Ads measurement to know when an advert we have paid for led to an order. That includes storing a click identifier from the advert you arrived through, so we can connect your order back to it. We share a hashed &mdash; that is, scrambled and not readable &mdash; version of your email address with Google for the same purpose.</p>
+      <p style="font-size:var(--text-sm);color:var(--soft);line-height:2;margin-top:14px;">If you say no, none of that happens. No analytics or advertising cookies are set, no click identifier is stored, and nothing about your visit is sent to Google. The site behaves exactly the same and you can order as normal.</p>
+      <p style="font-size:var(--text-sm);color:var(--soft);line-height:2;margin-top:14px;">You can change your mind at any time using the <strong>Cookie Preferences</strong> link at the bottom of any page. We ask again every six months in any case.</p>
+    </div>
+
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px;margin-bottom:20px;">
       <h2 class="serif" style="font-size:1.3rem;font-weight:400;margin-bottom:14px;">Your Rights</h2>
       <p style="font-size:var(--text-sm);color:var(--soft);line-height:2;">Under UK GDPR you have the right to access the personal data we hold about you, to request correction of inaccurate data, to request deletion of your data (subject to legal obligations), to request restriction of processing, and to data portability. To exercise any of these rights, please contact us at hello@foreverprint.com.</p>
     </div>
@@ -74,6 +82,7 @@ fetch('/footer.html').then(r=>r.text()).then(html=>{
 });
 </script>
 
+  <script src="/analytics.js" defer></script>
   <script src="/help-widget.js" defer></script>
 </body>
 </html>

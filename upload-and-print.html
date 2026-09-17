@@ -1751,16 +1751,22 @@ function updatePrice(){
   const subtotalEx=(base+upgrade+envCost+deliveryCost)/1.2;
   const vat=subtotalEx*0.2;
   const total=subtotalEx+vat;
-  document.getElementById('priceBase').textContent='£'+base.toFixed(2);
-  document.getElementById('priceUpgrade').textContent=upgrade?'+£'+upgrade.toFixed(2):'Included';
-  document.getElementById('priceUpgradeRow').style.display=upgrade?'flex':'none';
-  document.getElementById('priceEnvRow').style.display=envelopesEnabled?'flex':'none';
-  if(envelopesEnabled)document.getElementById('priceEnvCost').textContent='£'+envCost.toFixed(2);
-  document.getElementById('envLineTotal').textContent='£'+envCost.toFixed(2);
-  document.getElementById('priceDelivery').textContent=deliveryCost?'£'+deliveryCost.toFixed(2):'Free';
-  document.getElementById('priceNet').textContent='£'+subtotalEx.toFixed(2);
-  document.getElementById('priceVat').textContent='£'+vat.toFixed(2);
-  document.getElementById('priceTotal').textContent='£'+total.toFixed(2);
+  // Write only to rows that exist. The price panel has been redesigned since
+  // this function was written and priceBase / priceUpgrade / priceEnvCost are
+  // gone — writing to them threw on the first line, so the subtotal, VAT,
+  // delivery and total below never ran and the customer saw £0.00 throughout.
+  const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  const setShow = (id, on)  => { const el = document.getElementById(id); if (el) el.style.display = on ? 'flex' : 'none'; };
+  setText('priceBase',    '£'+base.toFixed(2));
+  setText('priceUpgrade', upgrade?'+£'+upgrade.toFixed(2):'Included');
+  setShow('priceUpgradeRow', !!upgrade);
+  setShow('priceEnvRow',     envelopesEnabled);
+  if(envelopesEnabled) setText('priceEnvCost','£'+envCost.toFixed(2));
+  setText('envLineTotal', '£'+envCost.toFixed(2));
+  setText('priceDelivery', deliveryCost?'£'+deliveryCost.toFixed(2):'Free');
+  setText('priceNet',   '£'+subtotalEx.toFixed(2));
+  setText('priceVat',   '£'+vat.toFixed(2));
+  setText('priceTotal', '£'+total.toFixed(2));
 }
 
 async function addToCartUpload(){
@@ -2583,6 +2589,10 @@ async function proceedToStripe(){
   try{
     const res=await fetch('/.netlify/functions/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       cart, customer, successUrl, cancelUrl, artworkUrl, printReadyUrl,
+      // Which ad, if any, earned this order. Null unless the customer
+      // accepted cookies — a click ID is advertising measurement, not a
+      // cookie we need to run the shop.
+      attribution: (window.fpAnalytics && window.fpAnalytics.attribution()) || null,
       // Record what they agreed to, not just that they agreed: if consent is
       // ever questioned, the wording is the evidence.
       marketing: {
@@ -2623,6 +2633,21 @@ async function proceedToStripe(){
     const proofDate=addWorkingDays(new Date(),1);
     const proofStr=proofDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
     const ref=order?.ref||'FP-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*9000);
+    // Tell Google this click became an order. fpAnalytics counts a given
+    // reference once and once only — this screen can be refreshed, and a
+    // double-counted sale would bid up a keyword that did not earn it.
+    try {
+      if (window.fpAnalytics && order) {
+        window.fpAnalytics.purchase({
+          ref: ref,
+          total: order.total,
+          items: order.cart || [],
+          email: order.customer?.email || '',
+          phone: order.customer?.phone || '',
+          name: order.customer?.name || ''
+        });
+      }
+    } catch (e) { console.warn('[analytics] purchase event failed:', e.message); }
     const name=order?.customer?.name||'Valued Customer';
     const email=order?.customer?.email||'';
     const addr=order?.customer?.address||'';
@@ -2821,6 +2846,7 @@ fetch('/footer.html').then(r=>r.text()).then(html=>{
 });
 </script>
 
+  <script src="/analytics.js" defer></script>
   <script src="/help-widget.js" defer></script>
 </body>
 </html>

@@ -6,4 +6,3 @@ Sitemap: https://foreverprint.com/sitemap.xml
 Disallow: /admin-orders.html
 Disallow: /seo-editor.html
 Disallow: /pricing-editor.html
-Disallow: /design-studio.html
