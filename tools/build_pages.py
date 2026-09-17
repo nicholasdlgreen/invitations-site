@@ -241,6 +241,76 @@ def build_page(template, product, pricing):
     return html
 
 
+# Pages that keep their own navigation or have none.
+CHROME_SKIP = {"header.html", "footer.html", "admin.html"}
+
+
+def inline_chrome():
+    """Put the header and footer into every page's HTML.
+
+    Until now both were fetched by JavaScript and injected after load. Two
+    consequences, both bad:
+
+      * A product page's HTML contained ONE internal link. Everything else —
+        all 21 products, the studio, the footer — existed only after scripts
+        ran. Internal links are how search engines discover pages and judge
+        which matter, so the site looked like a shop with no aisles.
+      * Scripts inside injected HTML never execute. The mobile menu button
+        calls toggleMobileNav, which is defined in header.html and was
+        therefore never defined at all — the burger menu did nothing on any
+        page. Verified undefined on the live site before this change.
+
+    The fetch stays as a fallback and is made null-safe, so if this step ever
+    fails the site behaves exactly as it did before.
+    """
+    try:
+        header = open(os.path.join(ROOT, "header.html"), encoding="utf-8").read().strip()
+        footer = open(os.path.join(ROOT, "footer.html"), encoding="utf-8").read().strip()
+    except OSError as e:
+        log(f"could not read header/footer ({e}) — navigation left as it was")
+        return
+
+    done = 0
+    for name in sorted(os.listdir(ROOT)):
+        if not name.endswith(".html") or name in CHROME_SKIP:
+            continue
+        path = os.path.join(ROOT, name)
+        try:
+            html = open(path, encoding="utf-8").read()
+        except OSError:
+            continue
+        before = html
+
+        # Placeholders come in three shapes across the site: a div, a
+        # <header>/<footer> element, and one with an inline style. Match the
+        # shape rather than the exact string, so a page is never quietly
+        # skipped and left with no navigation in its markup.
+        def swap(kind, markup, page):
+            return re.sub(
+                r'<(div|%s)\s+id="site-%s"[^>]*>\s*</\1>' % (kind, kind),
+                lambda m: markup,
+                page,
+                count=1,
+            )
+
+        html = swap("header", header, html)
+        html = swap("footer", footer, html)
+
+        # The injector now finds nothing to replace. Make that harmless rather
+        # than a null reference error — spacing varies from page to page, so
+        # this matches the shape rather than an exact string.
+        html = re.sub(
+            r"document\.getElementById\(\s*'site-(header|footer)'\s*\)\s*\.\s*(outerHTML|innerHTML)\s*=\s*html\s*;",
+            lambda m: "var __c=document.getElementById('site-%s'); if(__c) __c.%s=html;" % (m.group(1), m.group(2)),
+            html,
+        )
+
+        if html != before:
+            open(path, "w", encoding="utf-8").write(html)
+            done += 1
+    log(f"navigation written into {done} pages")
+
+
 def write_sitemap(slugs):
     today = date.today().isoformat()
     out = [
@@ -314,6 +384,7 @@ def main():
         written.append(slug)
 
     log(f"wrote {len(written)} product pages")
+    inline_chrome()
     write_sitemap(written)
     return 0
 
