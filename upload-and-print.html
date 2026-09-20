@@ -678,6 +678,11 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div class="co-field"><label class="co-label">Full Name *</label><input class="co-input" id="coName" placeholder="Charlotte Thornton" type="text"></div>
       <div class="co-field"><label class="co-label">Email Address *</label><input class="co-input" id="coEmail" placeholder="charlotte@example.com" type="email"></div>
       <div class="co-field"><label class="co-label">Phone Number</label><input class="co-input" id="coPhone" placeholder="+44 7700 000000" type="tel"></div>
+      <div class="co-field">
+        <label class="co-label" for="coEventDate">Date of your wedding or event <span style="color:var(--pale);font-size:var(--text-xs);">(optional)</span></label>
+        <input class="co-input" id="coEventDate" type="date">
+        <span style="display:block;font-size:var(--text-xs);color:var(--pale);margin-top:6px;line-height:1.6;">So we can check our timings work for you &mdash; we'll say something if your date looks tight.</span>
+      </div>
       <span class="co-section-title">Delivery Address</span>
       <div class="co-field"><label class="co-label">Address Line 1 *</label><input class="co-input" id="coAddr1" placeholder="12 Rose Lane" type="text"></div>
       <div class="co-field"><label class="co-label">Address Line 2</label><input class="co-input" id="coAddr2" placeholder="Apartment, suite, etc." type="text"></div>
@@ -3167,7 +3172,7 @@ async function proceedToStripe(){
   document.getElementById('coPayBtnText').textContent='Uploading artwork…';
   document.getElementById('coPaySpinner').style.display='block';
   btn.disabled=true;
-  const customer={name,email,phone:document.getElementById('coPhone').value.trim(),address:[addr1,document.getElementById('coAddr2').value.trim(),city,postcode].filter(Boolean).join(', '),notes:document.getElementById('coNotes').value.trim()};
+  const customer={name,email,phone:document.getElementById('coPhone').value.trim(),address:[addr1,document.getElementById('coAddr2').value.trim(),city,postcode].filter(Boolean).join(', '),notes:document.getElementById('coNotes').value.trim(),eventDate:(document.getElementById('coEventDate')||{}).value||''};
   let artworkUrl=null;
   // AI-studio designs already have their print-ready artwork uploaded — use it.
   if (designMode && designState && designState.aiArtworkUrl) {
