@@ -678,6 +678,11 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div class="co-field"><label class="co-label">Full Name *</label><input class="co-input" id="coName" placeholder="Charlotte Thornton" type="text"></div>
       <div class="co-field"><label class="co-label">Email Address *</label><input class="co-input" id="coEmail" placeholder="charlotte@example.com" type="email"></div>
       <div class="co-field"><label class="co-label">Phone Number</label><input class="co-input" id="coPhone" placeholder="+44 7700 000000" type="tel"></div>
+      <div class="co-field">
+        <label class="co-label" for="coEventDate">Date of your wedding or event <span style="color:var(--pale);font-size:var(--text-xs);">(optional)</span></label>
+        <input class="co-input" id="coEventDate" type="date">
+        <span style="display:block;font-size:var(--text-xs);color:var(--pale);margin-top:6px;line-height:1.6;">So we can check our timings work for you &mdash; we'll say something if your date looks tight.</span>
+      </div>
       <span class="co-section-title">Delivery Address</span>
       <div class="co-field"><label class="co-label">Address Line 1 *</label><input class="co-input" id="coAddr1" placeholder="12 Rose Lane" type="text"></div>
       <div class="co-field"><label class="co-label">Address Line 2</label><input class="co-input" id="coAddr2" placeholder="Apartment, suite, etc." type="text"></div>
@@ -3167,7 +3172,7 @@ async function proceedToStripe(){
   document.getElementById('coPayBtnText').textContent='Uploading artwork…';
   document.getElementById('coPaySpinner').style.display='block';
   btn.disabled=true;
-  const customer={name,email,phone:document.getElementById('coPhone').value.trim(),address:[addr1,document.getElementById('coAddr2').value.trim(),city,postcode].filter(Boolean).join(', '),notes:document.getElementById('coNotes').value.trim()};
+  const customer={name,email,phone:document.getElementById('coPhone').value.trim(),address:[addr1,document.getElementById('coAddr2').value.trim(),city,postcode].filter(Boolean).join(', '),notes:document.getElementById('coNotes').value.trim(),eventDate:(document.getElementById('coEventDate')||{}).value||''};
   let artworkUrl=null;
   // AI-studio designs already have their print-ready artwork uploaded — use it.
   if (designMode && designState && designState.aiArtworkUrl) {
@@ -3417,12 +3422,63 @@ async function proceedToStripe(){
         </div>
         <div style="text-align:center;"><a class="btn" href="/">Back to Homepage</a></div>
       </div>`;
+    googleCustomerReviewsOptIn({ ref: ref, email: email });
     history.replaceState(null,'',window.location.pathname);
   } else if(params.get('order')==='cancelled'){
     setTimeout(()=>showToast('Payment cancelled — your basket is still saved.'),500);
     history.replaceState(null,'',window.location.pathname);
   }
 })();
+
+// ── GOOGLE CUSTOMER REVIEWS ───────────────────────────────
+// Google's own free post-purchase survey. It is what earns the star rating
+// that shows beside our ads and listings, and Google needs roughly 100
+// reviews before those stars appear — so it runs from the first order.
+//
+// It is an OPT-IN: this only asks the customer whether Google may email them
+// later. It does not collect a review here, and it sends nothing if the
+// customer says no.
+//
+// Inert until GOOGLE_MERCHANT_ID is filled in. Get the ID from Google
+// Merchant Center, then set it here and in the Content-Security-Policy.
+var GOOGLE_MERCHANT_ID = '';   // e.g. '123456789'
+
+function googleCustomerReviewsOptIn(order){
+  if (!GOOGLE_MERCHANT_ID || !order || !order.email) return;
+  // Only with consent — the same cookie the rest of our tagging respects.
+  try {
+    if (window.fpAnalytics && typeof window.fpAnalytics.consentState === 'function'){
+      var c = window.fpAnalytics.consentState();
+      if (c && c.analytics === false) return;
+    }
+  } catch(e){}
+
+  // Google wants the date the customer should have the order by, not today.
+  var eta = new Date();
+  eta.setDate(eta.getDate() + 5);
+  var estimated = eta.toISOString().slice(0, 10);
+
+  window.renderOptIn = function(){
+    try {
+      window.gapi.load('surveyoptin', function(){
+        window.gapi.surveyoptin.render({
+          merchant_id: GOOGLE_MERCHANT_ID,
+          order_id: String(order.ref || ''),
+          email: String(order.email || ''),
+          delivery_country: 'GB',
+          estimated_delivery_date: estimated,
+          opt_in_style: 'CENTER_DIALOG'
+        });
+      });
+    } catch(e){ console.warn('[reviews] opt-in failed:', e.message); }
+  };
+
+  var sc = document.createElement('script');
+  sc.src = 'https://apis.google.com/js/platform.js?onload=renderOptIn';
+  sc.async = true; sc.defer = true;
+  sc.onerror = function(){ console.warn('[reviews] could not load the Google opt-in'); };
+  document.head.appendChild(sc);
+}
 
 // ── DESIGN-STUDIO MODE ────────────────────────────────────
 // If the user came from the design studio, skip the upload steps entirely
