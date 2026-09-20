@@ -1399,6 +1399,9 @@ async function updateStatus(id, status) {
   // us, so it asks for the tracking number and sends the email rather than
   // quietly changing a dropdown.
   if (status === 'dispatched') { await dispatchOrder(id); return; }
+  // Delivered is the moment a review is worth asking for, and the only moment
+  // we get. Google needs ~100 post-fulfilment reviews before it shows stars.
+  if (status === 'delivered')  { await deliverOrder(id);  return; }
   try {
     await sbFetch(`orders?id=eq.${id}`, {
       method:'PATCH',
@@ -1410,6 +1413,59 @@ async function updateStatus(id, status) {
     updateOrderStats();
   } catch(err) {
     alert('Failed to update status: ' + err.message);
+  }
+}
+
+async function deliverOrder(id) {
+  const order = allOrders.find(o => o.id === id) || {};
+  const already = order.review_email_sent_at;
+
+  if (already && !confirm(`The review request already went to this customer on ${new Date(already).toLocaleDateString('en-GB')}.\n\nSend it again?`)) {
+    loadOrders();
+    return;
+  }
+  if (!already && !confirm('Mark delivered and email this customer to ask how it went?\n\nEveryone who receives an order gets asked — we never pick and choose.')) {
+    loadOrders();
+    return;
+  }
+
+  // Mark delivered regardless of whether the email gets out, so the order
+  // status is never held hostage by an email problem.
+  try {
+    await sbFetch(`orders?id=eq.${id}`, {
+      method:'PATCH',
+      headers:{'Prefer':'return=minimal'},
+      body:JSON.stringify({
+        status:'delivered',
+        delivered_at: order.delivered_at || new Date().toISOString(),
+        updated_at:new Date().toISOString()
+      }),
+    });
+  } catch (err) {
+    alert('Could not mark the order delivered: ' + err.message);
+    loadOrders();
+    return;
+  }
+
+  try {
+    const res = await fetch('/.netlify/functions/send-review-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ADMIN_TOKEN || ''}` },
+      body: JSON.stringify({ orderId: id, resend: !!already })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.needsConfig
+        ? 'Marked delivered, but no review email was sent.\n\n' + data.error
+        : 'Marked delivered, but the review email failed: ' + (data.error || res.status));
+      loadOrders();
+      return;
+    }
+    toast('Delivered — review request sent ✓');
+    loadOrders();
+  } catch (err) {
+    alert('Marked delivered, but the review email failed: ' + err.message);
+    loadOrders();
   }
 }
 

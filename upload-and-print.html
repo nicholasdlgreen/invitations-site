@@ -3417,12 +3417,63 @@ async function proceedToStripe(){
         </div>
         <div style="text-align:center;"><a class="btn" href="/">Back to Homepage</a></div>
       </div>`;
+    googleCustomerReviewsOptIn({ ref: ref, email: email });
     history.replaceState(null,'',window.location.pathname);
   } else if(params.get('order')==='cancelled'){
     setTimeout(()=>showToast('Payment cancelled — your basket is still saved.'),500);
     history.replaceState(null,'',window.location.pathname);
   }
 })();
+
+// ── GOOGLE CUSTOMER REVIEWS ───────────────────────────────
+// Google's own free post-purchase survey. It is what earns the star rating
+// that shows beside our ads and listings, and Google needs roughly 100
+// reviews before those stars appear — so it runs from the first order.
+//
+// It is an OPT-IN: this only asks the customer whether Google may email them
+// later. It does not collect a review here, and it sends nothing if the
+// customer says no.
+//
+// Inert until GOOGLE_MERCHANT_ID is filled in. Get the ID from Google
+// Merchant Center, then set it here and in the Content-Security-Policy.
+var GOOGLE_MERCHANT_ID = '';   // e.g. '123456789'
+
+function googleCustomerReviewsOptIn(order){
+  if (!GOOGLE_MERCHANT_ID || !order || !order.email) return;
+  // Only with consent — the same cookie the rest of our tagging respects.
+  try {
+    if (window.fpAnalytics && typeof window.fpAnalytics.consentState === 'function'){
+      var c = window.fpAnalytics.consentState();
+      if (c && c.analytics === false) return;
+    }
+  } catch(e){}
+
+  // Google wants the date the customer should have the order by, not today.
+  var eta = new Date();
+  eta.setDate(eta.getDate() + 5);
+  var estimated = eta.toISOString().slice(0, 10);
+
+  window.renderOptIn = function(){
+    try {
+      window.gapi.load('surveyoptin', function(){
+        window.gapi.surveyoptin.render({
+          merchant_id: GOOGLE_MERCHANT_ID,
+          order_id: String(order.ref || ''),
+          email: String(order.email || ''),
+          delivery_country: 'GB',
+          estimated_delivery_date: estimated,
+          opt_in_style: 'CENTER_DIALOG'
+        });
+      });
+    } catch(e){ console.warn('[reviews] opt-in failed:', e.message); }
+  };
+
+  var sc = document.createElement('script');
+  sc.src = 'https://apis.google.com/js/platform.js?onload=renderOptIn';
+  sc.async = true; sc.defer = true;
+  sc.onerror = function(){ console.warn('[reviews] could not load the Google opt-in'); };
+  document.head.appendChild(sc);
+}
 
 // ── DESIGN-STUDIO MODE ────────────────────────────────────
 // If the user came from the design studio, skip the upload steps entirely
