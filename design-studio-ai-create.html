@@ -83,6 +83,27 @@
 /* draggable text mode (after generation) */
 .ds-canvas.is-generated .ds-safe{cursor:move;top:0;left:0;right:0;bottom:0;padding:0;align-items:flex-start;}
 .ds-canvas.is-generated .ds-stack{position:absolute;transition:none;width:84%;max-width:84%;}
+
+/* "we're working on it" state — generation takes a while and people watch
+   the preview, not the button they just pressed */
+.ds-gen{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:15px;padding:24px;text-align:center;background:linear-gradient(180deg,rgba(251,248,242,.95),rgba(244,237,230,.95));}
+.ds-canvas.is-generating .ds-gen{display:flex;}
+/* a slow sweep of light across the paper, like a sheet catching the light */
+.ds-gen::after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.9) 50%,transparent 68%);transform:translateX(-120%);animation:ds-sweep 2.8s ease-in-out infinite;pointer-events:none;}
+@keyframes ds-sweep{to{transform:translateX(120%);}}
+.ds-gen>*{position:relative;z-index:1;}
+.ds-gen-mark{font-size:1.9rem;line-height:1;color:var(--gold);animation:ds-bloom 2s ease-in-out infinite;}
+@keyframes ds-bloom{0%,100%{opacity:.4;transform:scale(.86) rotate(0deg);}50%{opacity:1;transform:scale(1.1) rotate(30deg);}}
+.ds-gen-msg{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--brown);min-height:1.5em;transition:opacity .35s;}
+.ds-gen-bar{width:62%;max-width:200px;height:2px;border-radius:2px;background:rgba(61,46,36,.12);overflow:hidden;}
+.ds-gen-bar i{position:absolute;top:0;height:100%;width:38%;border-radius:2px;background:var(--gold);animation:ds-crawl 1.9s ease-in-out infinite;}
+@keyframes ds-crawl{0%{left:-40%;}100%{left:100%;}}
+.ds-gen-sub{font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);}
+@media (prefers-reduced-motion: reduce){
+  .ds-gen::after{display:none;}
+  .ds-gen-mark{animation:none;opacity:1;}
+  .ds-gen-bar i{animation:none;left:0;width:100%;opacity:.55;}
+}
 .ds-drag-hint{text-align:center;font-size:var(--text-xs);color:var(--soft);margin-top:12px;line-height:1.4;}
 .ds-resize{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;font-size:var(--text-xs);color:var(--soft);}
 .ds-resize button{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--white);color:var(--gold);font-size:16px;cursor:pointer;line-height:1;}
@@ -587,6 +608,12 @@ was fetched and injected via innerHTML — that was the bug behind the
               <div class="ln rsvp"   id="pv-rsvp"></div>
               <div class="ln custom" id="pv-custom"></div>
             </div>
+          </div>
+          <div class="ds-gen" id="ds-gen" role="status" aria-live="polite">
+            <div class="ds-gen-mark" aria-hidden="true">&#10022;</div>
+            <div class="ds-gen-msg" id="ds-gen-msg">Reading your brief&hellip;</div>
+            <div class="ds-gen-bar" aria-hidden="true"><i></i></div>
+            <div class="ds-gen-sub">This usually takes under a minute</div>
           </div>
         </div>
         <div class="ds-drag-hint" id="ds-drag-hint" style="display:none;">Drag your wording to position it in the clear space · use − / + to resize</div>
@@ -1141,6 +1168,51 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     if(el) el.addEventListener('input', refreshPreview);
   });
 
+  // --- "we're working on it" state -------------------------------------
+  // The button label alone was too quiet: people watch the preview, not the
+  // button they just pressed, so nothing appeared to be happening.
+  var GEN_MESSAGES = [
+    'Reading your brief\u2026',
+    'Sketching the composition\u2026',
+    'Choosing your colours\u2026',
+    'Painting in the details\u2026',
+    'Almost there\u2026'
+  ];
+  var genTimer = null;
+
+  function showGenerating(){
+    var canvas = document.getElementById('ds-canvas');
+    var msg    = document.getElementById('ds-gen-msg');
+    if(!canvas || !msg) return;
+    var i = 0;
+    msg.textContent = GEN_MESSAGES[0];
+    msg.style.opacity = '1';
+    canvas.classList.add('is-generating');
+    // On a phone the preview sits well above the Generate button, so without
+    // this the customer taps and sees nothing change on screen.
+    var box = canvas.getBoundingClientRect();
+    if(box.bottom < 80 || box.top > (window.innerHeight - 80)){
+      try { canvas.scrollIntoView({ behavior:'smooth', block:'center' }); }
+      catch(e){ canvas.scrollIntoView(); }
+    }
+    clearInterval(genTimer);
+    genTimer = setInterval(function(){
+      // Hold on the last message rather than looping back to the first, so a
+      // slow generation never looks as though it has started over.
+      if(i >= GEN_MESSAGES.length - 1) return;
+      i++;
+      msg.style.opacity = '0';
+      setTimeout(function(){ msg.textContent = GEN_MESSAGES[i]; msg.style.opacity = '1'; }, 350);
+    }, 4000);
+  }
+
+  function hideGenerating(){
+    var canvas = document.getElementById('ds-canvas');
+    if(canvas) canvas.classList.remove('is-generating');
+    clearInterval(genTimer);
+    genTimer = null;
+  }
+
   document.getElementById('ds-generate').addEventListener('click', function(){
     var self=this;
     var brief = buildBrief();
@@ -1148,6 +1220,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     logEvent(genCount === 1 ? 'generate' : 'regenerate', { count: genCount, size: size, selections: sel, brief: brief });
     self.textContent='Creating your design…';
     self.disabled=true;
+    showGenerating();
     fetch('/.netlify/functions/studio-nano', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1156,6 +1229,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     .then(function(r){ return r.json(); })
     .then(function(data){
       self.disabled=false;
+      hideGenerating();
       if(data.image){
         enterGeneratedMode(data.image);
         self.textContent='↻ Generate again';
@@ -1166,6 +1240,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     })
     .catch(function(err){
       self.disabled=false;
+      hideGenerating();
       self.textContent='↻ Try again';
       alert('Could not reach the design service: ' + err.message);
     });
@@ -1509,6 +1584,7 @@ function artworkFileName(prefix, ext){
     // remove the generated background + exit generated mode
     var bg = document.getElementById('ds-nano-bg'); if(bg) bg.remove();
     var canvas = document.getElementById('ds-canvas');
+    hideGenerating();
     canvas.classList.remove('is-generated');
     // hide the post-gen controls, restore the generate button
     document.getElementById('ds-actions').style.display = 'none';
