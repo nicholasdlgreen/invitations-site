@@ -128,20 +128,6 @@ function floorPriceFor(item, ctx) {
   return base + envelopes;             // delivery deliberately excluded
 }
 
-// The event date is optional and typed by the customer, so it is validated
-// rather than passed straight into the database. Anything that is not a plain
-// YYYY-MM-DD within a sensible window is dropped.
-function cleanEventDate(v) {
-  if (!v) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v).trim());
-  if (!m) return null;
-  const d = new Date(v + 'T00:00:00Z');
-  if (isNaN(d.getTime())) return null;
-  const year = d.getUTCFullYear();
-  if (year < 2020 || year > 2100) return null;
-  return v.trim();
-}
-
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -250,7 +236,6 @@ exports.handler = async (event) => {
           customer_phone:   customer?.phone    || '',
           delivery_address: customer?.address  || '',
           notes:            customer?.notes    || '',
-          event_date:       cleanEventDate(customer?.eventDate),
           items:            cart,
           subtotal:         +subtotal.toFixed(2),
           vat:              +vat.toFixed(2),
