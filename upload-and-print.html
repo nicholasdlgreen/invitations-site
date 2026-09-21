@@ -3626,6 +3626,40 @@ function googleCustomerReviewsOptIn(order){
   document.head.appendChild(sc);
 }
 
+// ── ONE BASKET, NOT TWO ───────────────────────────────────
+// Every other page needs the floating basket drawer, because it is the only
+// basket they have. This page is different: step 4 IS the basket, with the
+// items, the total, the "use this design on these too" offer and the route to
+// checkout. Opening a drawer on top of it gives the customer two baskets that
+// disagree about which one to trust, and the drawer's own checkout button
+// jumps straight to payment — skipping the basket step and everything on it.
+//
+// So here the header basket goes to step 4 instead of opening the drawer.
+// cart.js loads before this script, so this override wins.
+(function oneBasketOnly(){
+  const drawerCheckout = window.goToCheckout;
+
+  window.openCart = function(){
+    if (typeof closeCart === 'function') { try { closeCart(); } catch(e){} }
+    goStep(4);
+  };
+
+  // If anything still reaches the drawer's checkout (an older cached page,
+  // say), send it through the basket rather than over the top of it.
+  window.goToCheckout = function(){
+    let live = [];
+    try { live = JSON.parse(localStorage.getItem('inv_cart') || '[]'); } catch(e){}
+    if (!live.length) {
+      if (typeof showToast === 'function') showToast('Your basket is empty');
+      return;
+    }
+    if (typeof closeCart === 'function') { try { closeCart(); } catch(e){} }
+    goStep(4);
+  };
+  // Keep a handle on the original in case it is ever needed again.
+  window._drawerCheckout = drawerCheckout;
+})();
+
 // ── DESIGN-STUDIO MODE ────────────────────────────────────
 // If the user came from the design studio, skip the upload steps entirely
 // and jump straight to paper/quantity/checkout. The customised design SVG
