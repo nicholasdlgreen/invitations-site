@@ -1847,7 +1847,13 @@ function togglePassedChecks(){
 }
 
 // ── STEP NAVIGATION ───────────────────────────────────────
+// Has goStep run yet? The very first call is the page setting itself up, and
+// scrolling then would yank the customer away from the top of the page.
+let _steppedOnce = false;
+
 function goStep(n){
+  const _changing = _steppedOnce && n !== currentStep;
+  _steppedOnce = true;
   [1,2,3,4,5].forEach(i=>{
     document.getElementById('step'+i)?.classList.toggle('hidden',i!==n);
     document.getElementById('sn'+i).className='step-num'+(i<n?' done':i===n?' active':'');
@@ -1866,6 +1872,21 @@ function goStep(n){
       size:        selectedSize || null
     });
   } catch(e) {}
+  // Bring the new step into view. Without this, moving between steps only
+  // swaps which section is visible — so someone scrolled halfway down the page
+  // who clicks Basket sees nothing change and reasonably concludes the button
+  // is broken. Only when the step's top is actually out of view, so it never
+  // jumps the page around unnecessarily.
+  if (_changing) {
+    const el = document.getElementById('step' + n);
+    if (el) {
+      const top = el.getBoundingClientRect().top;
+      if (top < 0 || top > window.innerHeight * 0.4) {
+        try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        catch(e){ el.scrollIntoView(); }
+      }
+    }
+  }
   if(n===3)initStep3();
   if(n===4) renderBasketStep();
   if(n===5 && typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
