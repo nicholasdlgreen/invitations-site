@@ -390,25 +390,89 @@ def build_guide(template, guide, products):
     html = html.replace("{{URL}}", esc(url))
     html = html.replace("{{H1}}", esc(guide["title"]))
 
+    # A banner photograph. Falls back to the first related product's hero, so
+    # a guide never ships as a wall of prose just because nobody set one.
+    banner = (guide.get("hero_image") or "").strip()
+    if not banner:
+        for ps in guide.get("related_products") or []:
+            prod = by_slug.get(ps)
+            if prod and (prod.get("hero_image_url") or "").strip():
+                banner = prod["hero_image_url"].strip()
+                break
+    if banner:
+        def cdn(w):
+            return f"/.netlify/images?url={banner}&amp;w={w}&amp;fm=webp&amp;q=75"
+        html = html.replace("{{BANNER}}",
+            '<div class="gd-banner">'
+            f'<img src="{cdn(1200)}" srcset="{cdn(600)} 600w, {cdn(1200)} 1200w, {cdn(1800)} 1800w" '
+            'sizes="100vw" alt="" width="1200" height="380" fetchpriority="high" decoding="async" '
+            # The image service is a resize proxy, not the source of truth. If
+            # it is unavailable — or we are running the site locally, where it
+            # does not exist — fall back to the original file rather than
+            # showing a broken banner.
+            f'onerror="this.onerror=null;this.removeAttribute(\'srcset\');this.src=\'{banner}\';"/>'
+            "</div>")
+    else:
+        html = html.replace("{{BANNER}}", "")
+
     intro = (guide.get("intro") or "").strip()
     html = html.replace("{{INTRO}}",
                         f'<p class="gd-intro">{esc(intro)}</p>' if intro else "")
 
     # Body. Product names in the prose become links, using the same one-pass
     # linker the product pages use, so a guide feeds the pages it mentions.
+    def paras(text):
+        """Blank line starts a paragraph; a single newline is a line break
+        within one. Example wording is written line by line and would
+        otherwise collapse into run-on prose."""
+        for para in [p for p in re.split(r"\n\s*\n", text) if p.strip()]:
+            body = link_products(esc(para.strip()), products, None)
+            yield body.replace("\n", "<br>")
+
     out = []
+    steps_open = False
     for sec in guide.get("sections") or []:
         heading = (sec.get("heading") or "").strip()
         text = (sec.get("text") or "").strip()
-        if heading:
-            out.append(f"<h2>{esc(heading)}</h2>")
-        for para in [p for p in re.split(r"\n\s*\n", text) if p.strip()]:
-            # A blank line starts a new paragraph; a single newline is a line
-            # break within one. Example invitation wording is written line by
-            # line, and without this it renders as run-on prose.
-            body = link_products(esc(para.strip()), products, None)
-            body = body.replace("\n", "<br>")
-            out.append(f"<p>{body}</p>")
+        layout = (sec.get("layout") or "prose").strip().lower()
+
+        if layout == "steps" and not steps_open:
+            out.append('<ol class="gd-steps">')
+            steps_open = True
+        elif layout != "steps" and steps_open:
+            out.append("</ol>")
+            steps_open = False
+
+        if layout == "steps":
+            out.append('<li class="gd-step">')
+            if heading:
+                out.append(f"<h2>{esc(heading)}</h2>")
+            out.extend(f"<p>{b}</p>" for b in paras(text))
+            out.append("</li>")
+
+        elif layout == "example":
+            # Everything up to the first blank line after the wording is the
+            # specimen; anything after it is the note explaining it.
+            if heading:
+                out.append(f"<h2>{esc(heading)}</h2>")
+            blocks = list(paras(text))
+            # A trailing block with no line breaks is commentary, not wording.
+            note = ""
+            if len(blocks) > 1 and "<br>" not in blocks[-1]:
+                note = blocks.pop()
+            out.append('<div class="gd-specimen">')
+            out.extend(f"<p>{b}</p>" for b in blocks)
+            out.append("</div>")
+            if note:
+                out.append(f'<p class="gd-specimen-note">{note}</p>')
+
+        else:
+            if heading:
+                out.append(f"<h2>{esc(heading)}</h2>")
+            out.extend(f"<p>{b}</p>" for b in paras(text))
+
+    if steps_open:
+        out.append("</ol>")
     html = html.replace("{{SECTIONS}}", "\n".join(out))
 
     # FAQs, visible and in the schema, built from one source.

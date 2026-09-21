@@ -143,6 +143,34 @@ nav a:hover,nav a.active{color:var(--gold);}
 @media(max-width:480px){.footer-top{grid-template-columns:1fr;}}
 
 /* ── GUIDE ARTICLE ─────────────────────────────────────── */
+/* Banner photograph. A guide about printed things has to show some. */
+.gd-banner{position:relative;height:clamp(240px,34vw,380px);overflow:hidden;background:var(--cream);}
+.gd-banner img{width:100%;height:100%;object-fit:cover;display:block;}
+.gd-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(61,46,36,.12) 0%,rgba(61,46,36,.05) 45%,var(--cream) 100%);}
+
+/* A specimen card. Invitation wording set as an invitation, not as prose —
+   on a stationery site the typography IS the product, so showing it does
+   more than describing it. */
+.gd-specimen{background:var(--white);border:1px solid var(--border);border-radius:4px;
+  box-shadow:0 14px 40px rgba(61,46,36,.10);padding:clamp(30px,5vw,52px) clamp(24px,4vw,46px);
+  margin:0 0 22px;text-align:center;position:relative;}
+.gd-specimen::before{content:'';position:absolute;left:50%;top:18px;transform:translateX(-50%);
+  width:34px;height:1px;background:var(--gold-lt);}
+.gd-specimen p{font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,1.7vw,1.15rem);
+  line-height:2.05;color:var(--text);margin:0 0 18px;letter-spacing:.02em;}
+.gd-specimen p:last-child{margin-bottom:0;}
+.gd-specimen-note{font-size:var(--text-sm);color:var(--soft);line-height:1.9;margin:0 0 34px;}
+
+/* Numbered stages, so a timeline reads as one. */
+.gd-steps{list-style:none;padding:0;margin:0;counter-reset:gd;}
+.gd-step{position:relative;padding:0 0 30px 58px;counter-increment:gd;}
+.gd-step:not(:last-child)::after{content:'';position:absolute;left:17px;top:38px;bottom:0;width:1px;background:var(--border);}
+.gd-step::before{content:counter(gd);position:absolute;left:0;top:0;width:35px;height:35px;border-radius:50%;
+  border:1px solid var(--gold-lt);color:var(--gold);display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:1rem;background:var(--white);}
+.gd-step h2{margin:4px 0 10px !important;font-size:clamp(1.25rem,2.2vw,1.5rem) !important;}
+.gd-step p:last-child{margin-bottom:0;}
+
 .gd-hero{background:var(--cream);padding:70px 0 52px;}
 .gd-wrap{max-width:720px;margin:0 auto;padding:0 24px;}
 .gd-eyebrow{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:14px;}
@@ -622,6 +650,7 @@ was fetched and injected via innerHTML — that was the bug behind the
 -->
 
 <article>
+  <div class="gd-banner"><img src="/.netlify/images?url=/wedding-invitations-hero.jpg&amp;w=1200&amp;fm=webp&amp;q=75" srcset="/.netlify/images?url=/wedding-invitations-hero.jpg&amp;w=600&amp;fm=webp&amp;q=75 600w, /.netlify/images?url=/wedding-invitations-hero.jpg&amp;w=1200&amp;fm=webp&amp;q=75 1200w, /.netlify/images?url=/wedding-invitations-hero.jpg&amp;w=1800&amp;fm=webp&amp;q=75 1800w" sizes="100vw" alt="" width="1200" height="380" fetchpriority="high" decoding="async" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='/wedding-invitations-hero.jpg';"/></div>
   <section class="gd-hero">
     <div class="gd-wrap">
       <span class="gd-eyebrow"><a href="/guides" style="color:inherit;text-decoration:none;">Guides</a></span>
@@ -636,27 +665,37 @@ was fetched and injected via innerHTML — that was the bug behind the
 <p>Traditionally the hosts are whoever is paying, and they are named first. In practice most couples now host themselves or share it with both families, and the wording follows whatever is actually true rather than what used to be expected.</p>
 <p>Everything else on the invitation is the same regardless. Only the opening lines change.</p>
 <h2>Hosted by the bride's parents (traditional)</h2>
+<div class="gd-specimen">
 <p>Mr and Mrs John Whitfield<br>request the pleasure of your company<br>at the marriage of their daughter</p>
 <p>Eleanor Grace<br>to<br>Thomas James Bennett</p>
 <p>Saturday the fourteenth of September<br>two thousand and twenty six<br>at half past one o'clock</p>
 <p>St Mary's Church, Cheltenham<br>and afterwards at Lypiatt Manor</p>
-<p>This is the most formal version. Dates and times are written out in full, and titles are used throughout.</p>
+</div>
+<p class="gd-specimen-note">This is the most formal version. Dates and times are written out in full, and titles are used throughout.</p>
 <h2>Hosted by both families</h2>
+<div class="gd-specimen">
 <p>Together with their families<br>Eleanor Whitfield<br>and<br>Thomas Bennett<br>invite you to celebrate their marriage</p>
 <p>Saturday 14th September 2026 at 1.30pm<br>St Mary's Church, Cheltenham<br>Reception to follow at Lypiatt Manor</p>
-<p>This is the most common wording now. It avoids naming who paid for what, which suits most families.</p>
+</div>
+<p class="gd-specimen-note">This is the most common wording now. It avoids naming who paid for what, which suits most families.</p>
 <h2>Hosted by the couple</h2>
+<div class="gd-specimen">
 <p>Eleanor Whitfield and Thomas Bennett<br>request the pleasure of your company<br>at their wedding</p>
 <p>Saturday 14th September 2026<br>St Mary's Church, Cheltenham at 1.30pm<br>Reception at Lypiatt Manor</p>
-<p>Where the couple are hosting, the invitation can be considerably less formal. Requesting the pleasure of your company can become simply would love you to join them.</p>
+</div>
+<p class="gd-specimen-note">Where the couple are hosting, the invitation can be considerably less formal. Requesting the pleasure of your company can become simply would love you to join them.</p>
 <h2>Where parents are divorced or remarried</h2>
+<div class="gd-specimen">
 <p>Name each parent on their own line, mother first, and do not join them with and:</p>
 <p>Mrs Sarah Whitfield<br>Mr John Whitfield<br>request the pleasure of your company<br>at the marriage of their daughter</p>
-<p>Where a parent has remarried and the step-parent is hosting too, both are named on one line: Mr and Mrs John Whitfield. Where the relationship is difficult, together with their families avoids the question entirely, and nobody reads anything into it.</p>
+</div>
+<p class="gd-specimen-note">Where a parent has remarried and the step-parent is hosting too, both are named on one line: Mr and Mrs John Whitfield. Where the relationship is difficult, together with their families avoids the question entirely, and nobody reads anything into it.</p>
 <h2>Where a parent has died</h2>
+<div class="gd-specimen">
 <p>There is no fixed convention, and families do this differently. Some name the surviving parent only. Others acknowledge the parent who has died:</p>
 <p>Eleanor Grace Whitfield<br>daughter of Mrs Sarah Whitfield<br>and the late Mr John Whitfield</p>
-<p>A line in the <a href="/order-of-service">order of service</a> is another way to do it, and keeps the invitation itself simple.</p>
+</div>
+<p class="gd-specimen-note">A line in the <a href="/order-of-service">order of service</a> is another way to do it, and keeps the invitation itself simple.</p>
 <h2>What goes below the names</h2>
 <p>The date, the time and the venue, in that order. A second venue for the reception follows underneath where the two are different.</p>
 <p>Dress code sits at the foot of the card where there is one, in smaller type. It is the question hosts are asked most, so it is worth including rather than leaving to a wedding website.</p>
