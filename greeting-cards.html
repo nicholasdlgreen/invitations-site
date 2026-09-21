@@ -116,8 +116,9 @@
 
 /* Product intro + buying guide — only rendered for products that have one */
 .lp-intro-wrap{max-width:720px;margin:0 auto;}
-.lp-intro-lead{font-family:'Cormorant Garamond',serif;font-size:clamp(1.15rem,2vw,1.4rem);line-height:1.7;color:var(--text);margin:0 0 36px;}
-.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;}
+.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;text-align:left;}
+.lp-intro-body a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-lt);padding-bottom:1px;transition:border-color .2s,color .2s;}
+.lp-intro-body a:hover{color:var(--brown);border-bottom-color:var(--brown);}
 
 /* FAQs */
 .lp-faq-wrap{max-width:680px;margin:0 auto;}
@@ -470,8 +471,6 @@ was fetched and injected via innerHTML — that was the bug behind the
   </div>
 </section>
 
-<!--LP_INTRO-->
-
 <!-- PRICING -->
 <section class="lp-section lp-section-white" id="pricing">
   <div class="container">
@@ -547,6 +546,8 @@ was fetched and injected via innerHTML — that was the bug behind the
 
 <!-- WHY US — 4 items, real claims only -->
 <!-- FAQS — the visible answers and the FAQPage data below must match -->
+<!--LP_INTRO-->
+
 <section class="lp-section lp-section-cream">
   <div class="container">
     <span class="lp-section-tag">FAQs</span>

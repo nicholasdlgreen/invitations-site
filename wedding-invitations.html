@@ -119,8 +119,9 @@
 
 /* Product intro + buying guide — only rendered for products that have one */
 .lp-intro-wrap{max-width:720px;margin:0 auto;}
-.lp-intro-lead{font-family:'Cormorant Garamond',serif;font-size:clamp(1.15rem,2vw,1.4rem);line-height:1.7;color:var(--text);margin:0 0 36px;}
-.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;}
+.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;text-align:left;}
+.lp-intro-body a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-lt);padding-bottom:1px;transition:border-color .2s,color .2s;}
+.lp-intro-body a:hover{color:var(--brown);border-bottom-color:var(--brown);}
 
 /* FAQs */
 .lp-faq-wrap{max-width:680px;margin:0 auto;}
@@ -473,17 +474,6 @@ was fetched and injected via innerHTML — that was the bug behind the
   </div>
 </section>
 
-<section class="lp-section lp-section-white">
-<div class="container">
-<div class="lp-intro-wrap">
-<p class="lp-intro-lead">Your invitation is the first thing your guests hold, and the first hint of the day you are planning. Printed in the UK on paper we stock ourselves — from smooth signature card to soft, thick cotton rag — with gold foil, a deckle edge or a wax seal if you want them.</p>
-<h2 class="lp-section-h2">Choosing your <em>Wedding Invitations</em></h2>
-<div class="lp-section-divider"></div>
-<p class="lp-intro-body">Order by household rather than by guest: one invitation per couple or family, not per person. Most couples land on 60-80 invitations for 120 guests. Add ten spare for last-minute additions, keepsakes and the one that gets lost in the post — reprinting a short run later costs far more than the extra ten now. Send them six to eight weeks before the day, or three months if people need to travel or book time off.</p>
-</div>
-</div>
-</section>
-
 <!-- PRICING -->
 <section class="lp-section lp-section-white" id="pricing">
   <div class="container">
@@ -559,6 +549,17 @@ was fetched and injected via innerHTML — that was the bug behind the
 
 <!-- WHY US — 4 items, real claims only -->
 <!-- FAQS — the visible answers and the FAQPage data below must match -->
+<section class="lp-section lp-section-white">
+<div class="container">
+<span class="lp-section-tag">Choosing yours</span>
+<h2 class="lp-section-h2">Choosing your <em>Wedding Invitations</em></h2>
+<div class="lp-section-divider"></div>
+<div class="lp-intro-wrap">
+<p class="lp-intro-body">Order by household rather than by guest: one invitation per couple or family, not per person. Most couples land on 60-80 invitations for 120 guests. Add ten spare for last-minute additions, keepsakes and the one that gets lost in the post — reprinting a short run later costs far more than the extra ten now. Send them six to eight weeks before the day, or three months if people need to travel or book time off.</p>
+</div>
+</div>
+</section>
+
 <section class="lp-section lp-section-cream">
   <div class="container">
     <span class="lp-section-tag">FAQs</span>

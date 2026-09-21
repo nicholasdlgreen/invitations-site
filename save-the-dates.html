@@ -119,8 +119,9 @@
 
 /* Product intro + buying guide — only rendered for products that have one */
 .lp-intro-wrap{max-width:720px;margin:0 auto;}
-.lp-intro-lead{font-family:'Cormorant Garamond',serif;font-size:clamp(1.15rem,2vw,1.4rem);line-height:1.7;color:var(--text);margin:0 0 36px;}
-.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;}
+.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;text-align:left;}
+.lp-intro-body a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-lt);padding-bottom:1px;transition:border-color .2s,color .2s;}
+.lp-intro-body a:hover{color:var(--brown);border-bottom-color:var(--brown);}
 
 /* FAQs */
 .lp-faq-wrap{max-width:680px;margin:0 auto;}
@@ -473,17 +474,6 @@ was fetched and injected via innerHTML — that was the bug behind the
   </div>
 </section>
 
-<section class="lp-section lp-section-white">
-<div class="container">
-<div class="lp-intro-wrap">
-<p class="lp-intro-lead">A save the date does one job: it gets your wedding into people's diaries before anything else claims the weekend. Short, warm and printed on the same papers as the rest of your stationery, so the two feel like a pair when the invitation follows.</p>
-<h2 class="lp-section-h2">Choosing your <em>Save the Date</em></h2>
-<div class="lp-section-divider"></div>
-<p class="lp-intro-body">Send these as soon as the date and venue are fixed — six to twelve months ahead, and earlier for a destination wedding or a bank holiday weekend. Send them only to people you are certain to invite: a save the date is a promise, and taking it back is awkward. Keep the wording brief, because the detail belongs on the invitation. One per household, and order a few spares for the fridge doors of both sets of parents.</p>
-</div>
-</div>
-</section>
-
 <!-- PRICING -->
 <section class="lp-section lp-section-white" id="pricing">
   <div class="container">
@@ -559,6 +549,17 @@ was fetched and injected via innerHTML — that was the bug behind the
 
 <!-- WHY US — 4 items, real claims only -->
 <!-- FAQS — the visible answers and the FAQPage data below must match -->
+<section class="lp-section lp-section-white">
+<div class="container">
+<span class="lp-section-tag">Choosing yours</span>
+<h2 class="lp-section-h2">Choosing your <em>Save the Date</em></h2>
+<div class="lp-section-divider"></div>
+<div class="lp-intro-wrap">
+<p class="lp-intro-body">Send these as soon as the date and venue are fixed — six to twelve months ahead, and earlier for a destination wedding or a bank holiday weekend. Send them only to people you are certain to invite: a save the date is a promise, and taking it back is awkward. Keep the wording brief, because the detail belongs on the invitation. One per household, and order a few spares for the fridge doors of both sets of parents.</p>
+</div>
+</div>
+</section>
+
 <section class="lp-section lp-section-cream">
   <div class="container">
     <span class="lp-section-tag">FAQs</span>

@@ -284,23 +284,28 @@ def build_page(template, product, pricing, all_products=()):
     #
     #    Anything a product does not have simply keeps the generic version, so
     #    this fills in page by page as the copy gets written.
-    intro = (product.get("intro_long") or "").strip()
+    # The buying guide, given the same section grammar as everything else on
+    # the page: eyebrow label, centred heading, divider, then a readable
+    # column. It sits between "From design to doorstep" and the FAQs, which
+    # are both cream, so a white section separates them — and it puts the
+    # reading next to the other reading rather than between the hero and the
+    # price, where it interrupted the buying decision.
+    #
+    # intro_long is deliberately NOT rendered. The hero paragraph already
+    # says what the product is, beside the photograph where it belongs, and
+    # having both meant the same point twice within a screen of each other.
     guide = (product.get("buyer_guide") or "").strip()
-    if intro or guide:
-        # Use the product name exactly as stored. Lower-casing the first
-        # letter turned "Save the Date" into "save the Date", and any rule
-        # clever enough to fix that would also ruin "RSVP Cards".
-        heading = esc(name) if name else "this"
-        parts = ['<section class="lp-section lp-section-white">', '<div class="container">',
-                 '<div class="lp-intro-wrap">']
-        if intro:
-            parts.append(f'<p class="lp-intro-lead">{esc(intro)}</p>')
-        if guide:
-            parts.append(f'<h2 class="lp-section-h2">Choosing your <em>{heading}</em></h2>')
-            parts.append('<div class="lp-section-divider"></div>')
-            # esc() first, then link — so the link markup we add survives.
-            parts.append(f'<p class="lp-intro-body">{link_products(esc(guide), all_products, slug)}</p>')
-        parts += ['</div>', '</div>', '</section>']
+    if guide:
+        parts = [
+            '<section class="lp-section lp-section-white">',
+            '<div class="container">',
+            '<span class="lp-section-tag">Choosing yours</span>',
+            f'<h2 class="lp-section-h2">Choosing your <em>{esc(name)}</em></h2>',
+            '<div class="lp-section-divider"></div>',
+            '<div class="lp-intro-wrap">',
+            f'<p class="lp-intro-body">{link_products(esc(guide), all_products, slug)}</p>',
+            '</div>', '</div>', '</section>',
+        ]
         html = html.replace("<!--LP_INTRO-->", "\n".join(parts), 1)
 
     # 8. The product's own FAQs, replacing the generic five. The visible list
