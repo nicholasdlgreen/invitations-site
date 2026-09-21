@@ -4,11 +4,11 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Wedding Invitations | Foreverprint</title>
-<meta name="description" content="your wedding stationery. Printed on pith crisp, vivid colour — whether you upload your own design or create one from scratch in our studio."/>
+<meta name="description" content="Luxury wedding invitations printed in the UK on heavyweight papers. Upload your own design or create one in our studio, checked by us before printing."/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://foreverprint.com/wedding-invitations"/>
 <meta property="og:title" content="Wedding Invitations | Foreverprint"/>
-<meta property="og:description" content="your wedding stationery. Printed on pith crisp, vivid colour — whether you upload your own design or create one from scratch in our studio."/>
+<meta property="og:description" content="Luxury wedding invitations printed in the UK on heavyweight papers. Upload your own design or create one in our studio, checked by us before printing."/>
 <meta property="og:url" content="https://foreverprint.com/wedding-invitations"/>
 <meta property="og:image" content="https://foreverprint.com/wedding-invitations-hero.jpg"/>
 <meta name="twitter:card" content="summary_large_image"/>
@@ -116,6 +116,11 @@
 .lp-why-icon{font-size:var(--text-h3);color:var(--gold);margin-bottom:12px;}
 .lp-why-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);margin-bottom:8px;}
 .lp-why-text{font-size:var(--text-sm);color:var(--soft);line-height:1.85;}
+
+/* Product intro + buying guide — only rendered for products that have one */
+.lp-intro-wrap{max-width:720px;margin:0 auto;}
+.lp-intro-lead{font-family:'Cormorant Garamond',serif;font-size:clamp(1.15rem,2vw,1.4rem);line-height:1.7;color:var(--text);margin:0 0 36px;}
+.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;}
 
 /* FAQs */
 .lp-faq-wrap{max-width:680px;margin:0 auto;}
@@ -468,6 +473,17 @@ was fetched and injected via innerHTML — that was the bug behind the
   </div>
 </section>
 
+<section class="lp-section lp-section-white">
+<div class="container">
+<div class="lp-intro-wrap">
+<p class="lp-intro-lead">Your invitation is the first thing your guests hold, and the first hint of the day you are planning. Printed in the UK on paper we stock ourselves — from smooth signature card to soft, thick cotton rag — with gold foil, a deckle edge or a wax seal if you want them.</p>
+<h2 class="lp-section-h2">Choosing your <em>Wedding Invitations</em></h2>
+<div class="lp-section-divider"></div>
+<p class="lp-intro-body">Order by household rather than by guest: one invitation per couple or family, not per person. Most couples land on 60-80 invitations for 120 guests. Add ten spare for last-minute additions, keepsakes and the one that gets lost in the post — reprinting a short run later costs far more than the extra ten now. Send them six to eight weeks before the day, or three months if people need to travel or book time off.</p>
+</div>
+</div>
+</section>
+
 <!-- PRICING -->
 <section class="lp-section lp-section-white" id="pricing">
   <div class="container">
@@ -549,26 +565,12 @@ was fetched and injected via innerHTML — that was the bug behind the
     <h2 class="lp-section-h2">Common <em>questions.</em></h2>
     <div class="lp-section-divider"></div>
     <div class="lp-faq-wrap">
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">What's your turnaround time?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">Standard orders are printed within 3 working days and sent by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout.</div>
-      </details>
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">What file formats do you accept?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">We accept PDF, AI (Adobe Illustrator), InDesign, and high-resolution PNG or JPG (300dpi minimum). PDF is preferred for best results.</div>
-      </details>
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">What if my artwork has issues?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">Every file is checked the moment you upload it — page size against the size you ordered, resolution at that size, and bleed. Anything that would print poorly is flagged on screen before you pay, and our studio looks again before it goes to press. Nothing blocks your order: we tell you what we have found and let you decide.</div>
-      </details>
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">Do you offer design services?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">Yes. If you don't have artwork ready, our Design Studio walks you through creating from scratch.</div>
-      </details>
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">Can I change my order after placing it?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">Contact us as soon as you can, quoting your order reference. We can refund in full right up until your file goes to press. Once printing has begun a personalised order cannot be refunded.</div>
-      </details>
+      <details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">How many wedding invitations do I actually need?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">One per household, not per guest — a couple or a family share one. For 120 guests that is usually 60 to 80 invitations. Order about ten more than you think: spares cover last-minute additions, a keepsake for yourselves and one for each set of parents, and a short reprint later costs more than the extras would have.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">When should we send them?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Six to eight weeks before the wedding for most weddings. Make it three months if guests need to travel, book flights or take time off, and send save the dates earlier still. Working back from that, allow a week for addressing and posting, plus our printing time.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">What size should our invitations be?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">A5 (148 x 210mm) is the most popular — generous enough for full details without a separate sheet. A6 (105 x 148mm) suits a shorter invitation and costs less to post. DL (99 x 210mm) is elegant and fits a standard envelope. Square 148mm looks lovely but usually attracts a large-letter postage surcharge, so check with the Post Office before committing.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">Which paper should we choose?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Smooth white is crisp and photographs well, and suits fine type and detailed illustration. Cotton rag is thick and soft with a slight texture — it feels expensive in the hand and is kind to letterpress-style designs. If you are undecided, order a sample: paper is the one thing you cannot judge on a screen.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">Can you print a design we already have?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Yes, and most of our orders arrive that way. Upload a PDF, Illustrator, InDesign or high-resolution image file and we check the size, resolution and bleed before anything prints. If you have no artwork, our Design Studio builds one with you.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">Do you print envelopes to match?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Envelopes can be added to your order at checkout in a range of colours. We do not print guest addresses on them at the moment, so allow yourself an evening and a good pen.</div></details>
     </div>
   </div>
 </section>
@@ -735,18 +737,8 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
 <!-- JSON-LD: Product schema (no inline price; price is JS-rendered, would
      violate Google's structured-data-must-match-HTML rule. Add Offer.price
      when we move to build-time pre-rendering for Google Shopping.) -->
-<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Wedding Invitations", "url": "https://foreverprint.com/wedding-invitations", "brand": {"@type": "Brand", "name": "Foreverprint"}, "description": "your wedding stationery. Printed on pith crisp, vivid colour — whether you upload your own design or create one from scratch in our studio.", "image": "https://foreverprint.com/wedding-invitations-hero.jpg"}</script>
-<script type="application/ld+json" id="ld-faq">{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {"@type":"Question","name":"What's your turnaround time?","acceptedAnswer":{"@type":"Answer","text":"Standard orders are printed within 3 working days and sent by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout."}},
-    {"@type":"Question","name":"What file formats do you accept?","acceptedAnswer":{"@type":"Answer","text":"PDF, AI, InDesign, and high-resolution PNG or JPG (300dpi minimum)."}},
-    {"@type":"Question","name":"What if my artwork has issues?","acceptedAnswer":{"@type":"Answer","text":"Every file is checked the moment you upload it — page size against the size you ordered, resolution at that size, and bleed. Anything that would print poorly is flagged on screen before you pay, and our studio looks again before it goes to press. Nothing blocks your order: we tell you what we have found and let you decide."}},
-    {"@type":"Question","name":"Do you offer design services?","acceptedAnswer":{"@type":"Answer","text":"Yes. Our Design Studio walks you through creating an invitation from scratch."}},
-    {"@type":"Question","name":"Can I change my order after placing it?","acceptedAnswer":{"@type":"Answer","text":"Contact us as soon as you can, quoting your order reference. We can refund in full right up until your file goes to press. Once printing has begun a personalised order cannot be refunded."}}
-  ]
-}</script>
+<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Wedding Invitations", "url": "https://foreverprint.com/wedding-invitations", "brand": {"@type": "Brand", "name": "Foreverprint"}, "description": "Luxury wedding invitations printed in the UK on heavyweight papers. Upload your own design or create one in our studio, checked by us before printing.", "image": "https://foreverprint.com/wedding-invitations-hero.jpg"}</script>
+<script type="application/ld+json" id="ld-faq">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How many wedding invitations do I actually need?", "acceptedAnswer": {"@type": "Answer", "text": "One per household, not per guest — a couple or a family share one. For 120 guests that is usually 60 to 80 invitations. Order about ten more than you think: spares cover last-minute additions, a keepsake for yourselves and one for each set of parents, and a short reprint later costs more than the extras would have."}}, {"@type": "Question", "name": "When should we send them?", "acceptedAnswer": {"@type": "Answer", "text": "Six to eight weeks before the wedding for most weddings. Make it three months if guests need to travel, book flights or take time off, and send save the dates earlier still. Working back from that, allow a week for addressing and posting, plus our printing time."}}, {"@type": "Question", "name": "What size should our invitations be?", "acceptedAnswer": {"@type": "Answer", "text": "A5 (148 x 210mm) is the most popular — generous enough for full details without a separate sheet. A6 (105 x 148mm) suits a shorter invitation and costs less to post. DL (99 x 210mm) is elegant and fits a standard envelope. Square 148mm looks lovely but usually attracts a large-letter postage surcharge, so check with the Post Office before committing."}}, {"@type": "Question", "name": "Which paper should we choose?", "acceptedAnswer": {"@type": "Answer", "text": "Smooth white is crisp and photographs well, and suits fine type and detailed illustration. Cotton rag is thick and soft with a slight texture — it feels expensive in the hand and is kind to letterpress-style designs. If you are undecided, order a sample: paper is the one thing you cannot judge on a screen."}}, {"@type": "Question", "name": "Can you print a design we already have?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, and most of our orders arrive that way. Upload a PDF, Illustrator, InDesign or high-resolution image file and we check the size, resolution and bleed before anything prints. If you have no artwork, our Design Studio builds one with you."}}, {"@type": "Question", "name": "Do you print envelopes to match?", "acceptedAnswer": {"@type": "Answer", "text": "Envelopes can be added to your order at checkout in a range of colours. We do not print guest addresses on them at the moment, so allow yourself an evening and a good pen."}}]}</script>
 
 <script>
 // ── PRODUCT IDENTIFIER FROM URL ──────────────────────────
@@ -785,7 +777,11 @@ async function loadData() {
     fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
     fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
   ]);
+  // Did Supabase actually answer? A failed request and a genuine "no such
+  // product" look the same from here, and they must not be treated the same.
+  let lookupAnswered = false;
   if (ptRes.ok) {
+    lookupAnswered = true;
     const rows = await ptRes.json();
     if (rows && rows.length) productData = rows[0];
   }
@@ -797,7 +793,13 @@ async function loadData() {
     }
   }
   if (!productData) {
-    showNotFound();
+    // Only claim the product does not exist when Supabase said so. If the
+    // request itself failed — an outage, a rate limit, a dropped connection —
+    // the page already served is correct and complete, and replacing it with
+    // an error would turn a working page into a dead one for customers and
+    // for search engines alike.
+    if (lookupAnswered) showNotFound();
+    else console.warn('[product] could not reach Supabase; keeping the page as served');
     return;
   }
   renderHero();

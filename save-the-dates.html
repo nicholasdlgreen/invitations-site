@@ -4,11 +4,11 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Save the Date | Foreverprint</title>
-<meta name="description" content="Give your guests advance notice with beautifully printed save the dates. Smaller and lighter than full invitations — perfect for early announcements months ahead of the big day."/>
+<meta name="description" content="Save the dates that give your guests early notice, printed in the UK. Smaller and lighter than an invitation, and the first glimpse of your day's style."/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://foreverprint.com/save-the-dates"/>
 <meta property="og:title" content="Save the Date | Foreverprint"/>
-<meta property="og:description" content="Give your guests advance notice with beautifully printed save the dates. Smaller and lighter than full invitations — perfect for early announcements months ahead of the big day."/>
+<meta property="og:description" content="Save the dates that give your guests early notice, printed in the UK. Smaller and lighter than an invitation, and the first glimpse of your day's style."/>
 <meta property="og:url" content="https://foreverprint.com/save-the-dates"/>
 <meta property="og:image" content="https://foreverprint.com/save-the-dates-card.jpg"/>
 <meta name="twitter:card" content="summary_large_image"/>
@@ -116,6 +116,11 @@
 .lp-why-icon{font-size:var(--text-h3);color:var(--gold);margin-bottom:12px;}
 .lp-why-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);margin-bottom:8px;}
 .lp-why-text{font-size:var(--text-sm);color:var(--soft);line-height:1.85;}
+
+/* Product intro + buying guide — only rendered for products that have one */
+.lp-intro-wrap{max-width:720px;margin:0 auto;}
+.lp-intro-lead{font-family:'Cormorant Garamond',serif;font-size:clamp(1.15rem,2vw,1.4rem);line-height:1.7;color:var(--text);margin:0 0 36px;}
+.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;}
 
 /* FAQs */
 .lp-faq-wrap{max-width:680px;margin:0 auto;}
@@ -468,6 +473,17 @@ was fetched and injected via innerHTML — that was the bug behind the
   </div>
 </section>
 
+<section class="lp-section lp-section-white">
+<div class="container">
+<div class="lp-intro-wrap">
+<p class="lp-intro-lead">A save the date does one job: it gets your wedding into people's diaries before anything else claims the weekend. Short, warm and printed on the same papers as the rest of your stationery, so the two feel like a pair when the invitation follows.</p>
+<h2 class="lp-section-h2">Choosing your <em>Save the Date</em></h2>
+<div class="lp-section-divider"></div>
+<p class="lp-intro-body">Send these as soon as the date and venue are fixed — six to twelve months ahead, and earlier for a destination wedding or a bank holiday weekend. Send them only to people you are certain to invite: a save the date is a promise, and taking it back is awkward. Keep the wording brief, because the detail belongs on the invitation. One per household, and order a few spares for the fridge doors of both sets of parents.</p>
+</div>
+</div>
+</section>
+
 <!-- PRICING -->
 <section class="lp-section lp-section-white" id="pricing">
   <div class="container">
@@ -549,26 +565,12 @@ was fetched and injected via innerHTML — that was the bug behind the
     <h2 class="lp-section-h2">Common <em>questions.</em></h2>
     <div class="lp-section-divider"></div>
     <div class="lp-faq-wrap">
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">What's your turnaround time?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">Standard orders are printed within 3 working days and sent by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout.</div>
-      </details>
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">What file formats do you accept?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">We accept PDF, AI (Adobe Illustrator), InDesign, and high-resolution PNG or JPG (300dpi minimum). PDF is preferred for best results.</div>
-      </details>
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">What if my artwork has issues?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">Every file is checked the moment you upload it — page size against the size you ordered, resolution at that size, and bleed. Anything that would print poorly is flagged on screen before you pay, and our studio looks again before it goes to press. Nothing blocks your order: we tell you what we have found and let you decide.</div>
-      </details>
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">Do you offer design services?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">Yes. If you don't have artwork ready, our Design Studio walks you through creating from scratch.</div>
-      </details>
-      <details class="lp-faq-item">
-        <summary class="lp-faq-q"><span class="lp-faq-q-text">Can I change my order after placing it?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">Contact us as soon as you can, quoting your order reference. We can refund in full right up until your file goes to press. Once printing has begun a personalised order cannot be refunded.</div>
-      </details>
+      <details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">How far ahead should save the dates go out?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Six to twelve months before the wedding. Twelve or more if guests are travelling abroad, if your date falls on a bank holiday, or if it is in peak summer when people book early. The invitation itself follows six to eight weeks before the day.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">Do we have to send save the dates at all?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">No. They are worth it when your date is in demand or guests need to travel and plan. If you are inviting a small local group and your invitations are going out early anyway, you can skip them without anyone minding.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">Who should get one?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Only people you are certain will be invited. A save the date is effectively an invitation with the details missing, so anyone who receives one must receive the invitation later. Send to households rather than individuals.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">What should it say?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Your names, the date, the town or venue, and a line saying the invitation will follow. Nothing else — no RSVP, no gift list, no timings. If you have a wedding website, a small line pointing there is useful and saves you fielding questions.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">What size and shape works best?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">A6 (105 x 148mm) is the usual choice: postcard-sized, cheap to post and it sticks to a fridge door. Square 148mm looks striking but often costs more to post, so check postage before you order. Whichever you choose, it works best echoing the design you will use for the invitation.</div></details>
+<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">Can they match our invitations?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Yes, and they should. Use the same paper, the same typeface and the same palette, and the pair reads as one suite when the invitation lands. Order both from the same artwork and they will match exactly.</div></details>
     </div>
   </div>
 </section>
@@ -735,18 +737,8 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
 <!-- JSON-LD: Product schema (no inline price; price is JS-rendered, would
      violate Google's structured-data-must-match-HTML rule. Add Offer.price
      when we move to build-time pre-rendering for Google Shopping.) -->
-<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Save the Date", "url": "https://foreverprint.com/save-the-dates", "brand": {"@type": "Brand", "name": "Foreverprint"}, "description": "Give your guests advance notice with beautifully printed save the dates. Smaller and lighter than full invitations — perfect for early announcements months ahead of the big day.", "image": "https://foreverprint.com/save-the-dates-card.jpg"}</script>
-<script type="application/ld+json" id="ld-faq">{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {"@type":"Question","name":"What's your turnaround time?","acceptedAnswer":{"@type":"Answer","text":"Standard orders are printed within 3 working days and sent by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout."}},
-    {"@type":"Question","name":"What file formats do you accept?","acceptedAnswer":{"@type":"Answer","text":"PDF, AI, InDesign, and high-resolution PNG or JPG (300dpi minimum)."}},
-    {"@type":"Question","name":"What if my artwork has issues?","acceptedAnswer":{"@type":"Answer","text":"Every file is checked the moment you upload it — page size against the size you ordered, resolution at that size, and bleed. Anything that would print poorly is flagged on screen before you pay, and our studio looks again before it goes to press. Nothing blocks your order: we tell you what we have found and let you decide."}},
-    {"@type":"Question","name":"Do you offer design services?","acceptedAnswer":{"@type":"Answer","text":"Yes. Our Design Studio walks you through creating an invitation from scratch."}},
-    {"@type":"Question","name":"Can I change my order after placing it?","acceptedAnswer":{"@type":"Answer","text":"Contact us as soon as you can, quoting your order reference. We can refund in full right up until your file goes to press. Once printing has begun a personalised order cannot be refunded."}}
-  ]
-}</script>
+<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Save the Date", "url": "https://foreverprint.com/save-the-dates", "brand": {"@type": "Brand", "name": "Foreverprint"}, "description": "Save the dates that give your guests early notice, printed in the UK. Smaller and lighter than an invitation, and the first glimpse of your day's style.", "image": "https://foreverprint.com/save-the-dates-card.jpg"}</script>
+<script type="application/ld+json" id="ld-faq">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How far ahead should save the dates go out?", "acceptedAnswer": {"@type": "Answer", "text": "Six to twelve months before the wedding. Twelve or more if guests are travelling abroad, if your date falls on a bank holiday, or if it is in peak summer when people book early. The invitation itself follows six to eight weeks before the day."}}, {"@type": "Question", "name": "Do we have to send save the dates at all?", "acceptedAnswer": {"@type": "Answer", "text": "No. They are worth it when your date is in demand or guests need to travel and plan. If you are inviting a small local group and your invitations are going out early anyway, you can skip them without anyone minding."}}, {"@type": "Question", "name": "Who should get one?", "acceptedAnswer": {"@type": "Answer", "text": "Only people you are certain will be invited. A save the date is effectively an invitation with the details missing, so anyone who receives one must receive the invitation later. Send to households rather than individuals."}}, {"@type": "Question", "name": "What should it say?", "acceptedAnswer": {"@type": "Answer", "text": "Your names, the date, the town or venue, and a line saying the invitation will follow. Nothing else — no RSVP, no gift list, no timings. If you have a wedding website, a small line pointing there is useful and saves you fielding questions."}}, {"@type": "Question", "name": "What size and shape works best?", "acceptedAnswer": {"@type": "Answer", "text": "A6 (105 x 148mm) is the usual choice: postcard-sized, cheap to post and it sticks to a fridge door. Square 148mm looks striking but often costs more to post, so check postage before you order. Whichever you choose, it works best echoing the design you will use for the invitation."}}, {"@type": "Question", "name": "Can they match our invitations?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, and they should. Use the same paper, the same typeface and the same palette, and the pair reads as one suite when the invitation lands. Order both from the same artwork and they will match exactly."}}]}</script>
 
 <script>
 // ── PRODUCT IDENTIFIER FROM URL ──────────────────────────
@@ -785,7 +777,11 @@ async function loadData() {
     fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
     fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
   ]);
+  // Did Supabase actually answer? A failed request and a genuine "no such
+  // product" look the same from here, and they must not be treated the same.
+  let lookupAnswered = false;
   if (ptRes.ok) {
+    lookupAnswered = true;
     const rows = await ptRes.json();
     if (rows && rows.length) productData = rows[0];
   }
@@ -797,7 +793,13 @@ async function loadData() {
     }
   }
   if (!productData) {
-    showNotFound();
+    // Only claim the product does not exist when Supabase said so. If the
+    // request itself failed — an outage, a rate limit, a dropped connection —
+    // the page already served is correct and complete, and replacing it with
+    // an error would turn a working page into a dead one for customers and
+    // for search engines alike.
+    if (lookupAnswered) showNotFound();
+    else console.warn('[product] could not reach Supabase; keeping the page as served');
     return;
   }
   renderHero();

@@ -228,6 +228,72 @@ def build_page(template, product, pricing):
             '<link rel="preconnect" href="https://jvcpzmumkyjdyibmwlsd.supabase.co" crossorigin/>',
         )
 
+    # 7. The product's own words, when it has any.
+    #
+    #    intro_long, buyer_guide and faqs have existed as fields for a while and
+    #    three products already had them written — but nothing ever read them,
+    #    so every page fell back to the template's generic copy. That is why the
+    #    twenty product pages measured 95% identical: the only per-product text
+    #    the page could show was the name and the tagline.
+    #
+    #    Anything a product does not have simply keeps the generic version, so
+    #    this fills in page by page as the copy gets written.
+    intro = (product.get("intro_long") or "").strip()
+    guide = (product.get("buyer_guide") or "").strip()
+    if intro or guide:
+        # Use the product name exactly as stored. Lower-casing the first
+        # letter turned "Save the Date" into "save the Date", and any rule
+        # clever enough to fix that would also ruin "RSVP Cards".
+        heading = esc(name) if name else "this"
+        parts = ['<section class="lp-section lp-section-white">', '<div class="container">',
+                 '<div class="lp-intro-wrap">']
+        if intro:
+            parts.append(f'<p class="lp-intro-lead">{esc(intro)}</p>')
+        if guide:
+            parts.append(f'<h2 class="lp-section-h2">Choosing your <em>{heading}</em></h2>')
+            parts.append('<div class="lp-section-divider"></div>')
+            parts.append(f'<p class="lp-intro-body">{esc(guide)}</p>')
+        parts += ['</div>', '</div>', '</section>']
+        html = html.replace("<!--LP_INTRO-->", "\n".join(parts), 1)
+
+    # 8. The product's own FAQs, replacing the generic five. The visible list
+    #    and the FAQPage structured data are built from the same source, because
+    #    schema that does not match what the reader can see is a violation.
+    faqs = product.get("faqs") or []
+    if isinstance(faqs, list) and faqs:
+        items = []
+        for f in faqs:
+            q = (f.get("q") or "").strip()
+            a = (f.get("a") or "").strip()
+            if not q or not a:
+                continue
+            items.append(
+                '<details class="lp-faq-item">'
+                f'<summary class="lp-faq-q"><span class="lp-faq-q-text">{esc(q)}</span>'
+                '<span class="lp-faq-toggle">+</span></summary>'
+                f'<div class="lp-faq-a">{esc(a)}</div></details>'
+            )
+        if items:
+            start = html.find("<!--LP_FAQ_START-->")
+            end = html.find("<!--LP_FAQ_END-->")
+            if start != -1 and end != -1 and end > start:
+                html = (html[:start] + "\n".join(items)
+                        + html[end + len("<!--LP_FAQ_END-->"):])
+            ld_faq = {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {"@type": "Question", "name": (f.get("q") or "").strip(),
+                     "acceptedAnswer": {"@type": "Answer", "text": (f.get("a") or "").strip()}}
+                    for f in faqs if (f.get("q") or "").strip() and (f.get("a") or "").strip()
+                ],
+            }
+            html = re.sub(
+                r'(?s)(<script type="application/ld\+json" id="ld-faq">).*?(</script>)',
+                lambda m: m.group(1) + json.dumps(ld_faq, ensure_ascii=False) + m.group(2),
+                html, count=1,
+            )
+
     # 7. The hero subtitle, when the product has one
     if tagline:
         html = re.sub(

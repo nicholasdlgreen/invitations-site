@@ -4,11 +4,11 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Menu cards | Foreverprint</title>
-<meta name="description" content=""/>
+<meta name="description" content="Wedding menu cards printed in the UK on heavyweight stock. Set each place beautifully and let guests know what is coming, course by course."/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://foreverprint.com/menu-cards"/>
 <meta property="og:title" content="Menu cards | Foreverprint"/>
-<meta property="og:description" content=""/>
+<meta property="og:description" content="Wedding menu cards printed in the UK on heavyweight stock. Set each place beautifully and let guests know what is coming, course by course."/>
 <meta property="og:url" content="https://foreverprint.com/menu-cards"/>
 <meta property="og:image" content="https://foreverprint.com/menu-cards-card.jpg"/>
 <meta name="twitter:card" content="summary_large_image"/>
@@ -116,6 +116,11 @@
 .lp-why-icon{font-size:var(--text-h3);color:var(--gold);margin-bottom:12px;}
 .lp-why-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);margin-bottom:8px;}
 .lp-why-text{font-size:var(--text-sm);color:var(--soft);line-height:1.85;}
+
+/* Product intro + buying guide — only rendered for products that have one */
+.lp-intro-wrap{max-width:720px;margin:0 auto;}
+.lp-intro-lead{font-family:'Cormorant Garamond',serif;font-size:clamp(1.15rem,2vw,1.4rem);line-height:1.7;color:var(--text);margin:0 0 36px;}
+.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;}
 
 /* FAQs */
 .lp-faq-wrap{max-width:680px;margin:0 auto;}
@@ -468,6 +473,8 @@ was fetched and injected via innerHTML — that was the bug behind the
   </div>
 </section>
 
+<!--LP_INTRO-->
+
 <!-- PRICING -->
 <section class="lp-section lp-section-white" id="pricing">
   <div class="container">
@@ -549,6 +556,7 @@ was fetched and injected via innerHTML — that was the bug behind the
     <h2 class="lp-section-h2">Common <em>questions.</em></h2>
     <div class="lp-section-divider"></div>
     <div class="lp-faq-wrap">
+      <!--LP_FAQ_START-->
       <details class="lp-faq-item">
         <summary class="lp-faq-q"><span class="lp-faq-q-text">What's your turnaround time?</span><span class="lp-faq-toggle">+</span></summary>
         <div class="lp-faq-a">Standard orders are printed within 3 working days and sent by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout.</div>
@@ -569,6 +577,7 @@ was fetched and injected via innerHTML — that was the bug behind the
         <summary class="lp-faq-q"><span class="lp-faq-q-text">Can I change my order after placing it?</span><span class="lp-faq-toggle">+</span></summary>
         <div class="lp-faq-a">Contact us as soon as you can, quoting your order reference. We can refund in full right up until your file goes to press. Once printing has begun a personalised order cannot be refunded.</div>
       </details>
+      <!--LP_FAQ_END-->
     </div>
   </div>
 </section>
@@ -735,7 +744,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
 <!-- JSON-LD: Product schema (no inline price; price is JS-rendered, would
      violate Google's structured-data-must-match-HTML rule. Add Offer.price
      when we move to build-time pre-rendering for Google Shopping.) -->
-<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Menu cards", "url": "https://foreverprint.com/menu-cards", "brand": {"@type": "Brand", "name": "Foreverprint"}, "image": "https://foreverprint.com/menu-cards-card.jpg"}</script>
+<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Menu cards", "url": "https://foreverprint.com/menu-cards", "brand": {"@type": "Brand", "name": "Foreverprint"}, "description": "Wedding menu cards printed in the UK on heavyweight stock. Set each place beautifully and let guests know what is coming, course by course.", "image": "https://foreverprint.com/menu-cards-card.jpg"}</script>
 <script type="application/ld+json" id="ld-faq">{
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -785,7 +794,11 @@ async function loadData() {
     fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
     fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
   ]);
+  // Did Supabase actually answer? A failed request and a genuine "no such
+  // product" look the same from here, and they must not be treated the same.
+  let lookupAnswered = false;
   if (ptRes.ok) {
+    lookupAnswered = true;
     const rows = await ptRes.json();
     if (rows && rows.length) productData = rows[0];
   }
@@ -797,7 +810,13 @@ async function loadData() {
     }
   }
   if (!productData) {
-    showNotFound();
+    // Only claim the product does not exist when Supabase said so. If the
+    // request itself failed — an outage, a rate limit, a dropped connection —
+    // the page already served is correct and complete, and replacing it with
+    // an error would turn a working page into a dead one for customers and
+    // for search engines alike.
+    if (lookupAnswered) showNotFound();
+    else console.warn('[product] could not reach Supabase; keeping the page as served');
     return;
   }
   renderHero();
