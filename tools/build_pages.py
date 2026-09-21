@@ -403,7 +403,12 @@ def build_guide(template, guide, products):
         if heading:
             out.append(f"<h2>{esc(heading)}</h2>")
         for para in [p for p in re.split(r"\n\s*\n", text) if p.strip()]:
-            out.append(f"<p>{link_products(esc(para.strip()), products, None)}</p>")
+            # A blank line starts a new paragraph; a single newline is a line
+            # break within one. Example invitation wording is written line by
+            # line, and without this it renders as run-on prose.
+            body = link_products(esc(para.strip()), products, None)
+            body = body.replace("\n", "<br>")
+            out.append(f"<p>{body}</p>")
     html = html.replace("{{SECTIONS}}", "\n".join(out))
 
     # FAQs, visible and in the schema, built from one source.
