@@ -3030,6 +3030,36 @@ function suiteDesign(){
   return null;
 }
 
+// Shapes that count as "the same" — A6 is 1.410, A5 1.419, A4 1.414, so a
+// design made for one fits the others unchanged. Square (1.0) and DL (2.121)
+// are nowhere near and would need the artwork reshaping.
+const SUITE_RATIO_TOLERANCE = 0.05;
+
+function sizeRatioMap(rows){
+  const m = {};
+  (rows || []).forEach(function(r){
+    const w = parseFloat(r.width_mm), h = parseFloat(r.height_mm);
+    if (!w || !h) return;
+    m[String(r.name).toLowerCase()] = Math.max(w, h) / Math.min(w, h);
+  });
+  return m;
+}
+
+// A product qualifies if ANY size it offers is the same shape as the design.
+//
+// This is worked out from the data on purpose rather than from a list of
+// product names. The size data is still being filled in, so a product that
+// does not fit today starts appearing on its own the moment the right size is
+// added to it — nobody has to remember to come back and edit this.
+function productTakesDesign(product, designRatio, ratios){
+  const sizes = Array.isArray(product.available_sizes) ? product.available_sizes : [];
+  if (!sizes.length) return false;          // nothing orderable yet
+  return sizes.some(function(name){
+    const r = ratios[String(name).toLowerCase()];
+    return r && Math.abs(r - designRatio) <= SUITE_RATIO_TOLERANCE;
+  });
+}
+
 async function renderSuiteOffer(){
   const box = document.getElementById('suiteOffer');
   if (!box) return;
@@ -3037,7 +3067,8 @@ async function renderSuiteOffer(){
 
   // Only offer this when there is genuinely a design we can carry across.
   // Showing cards that quietly do nothing is worse than showing none.
-  if (!suiteDesign()) return;
+  const design = suiteDesign();
+  if (!design) return;
 
   const SB = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
   const K  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
@@ -3049,13 +3080,18 @@ async function renderSuiteOffer(){
     const category = me && me[0] && me[0].category;
     if (!category) return;
 
-    const [siblings, ready] = await Promise.all([
-      fetch(SB + '/rest/v1/product_types?select=slug,name,tagline,hero_image_url,display_order' +
+    const [siblings, ready, sizes] = await Promise.all([
+      fetch(SB + '/rest/v1/product_types?select=slug,name,available_sizes,hero_image_url,display_order' +
         '&active=eq.true&category=eq.' + encodeURIComponent(category) + '&order=display_order',
         { headers }).then(function(r){ return r.ok ? r.json() : []; }),
       fetch(SB + '/rest/v1/studio_config?select=product_slug', { headers })
+        .then(function(r){ return r.ok ? r.json() : []; }),
+      fetch(SB + '/rest/v1/print_sizes?select=name,width_mm,height_mm&active=eq.true', { headers })
         .then(function(r){ return r.ok ? r.json() : []; })
     ]);
+
+    const ratios = sizeRatioMap(sizes);
+    const designRatio = ratios[String(design.size || 'A5').toLowerCase()] || (210 / 148);
 
     const isReady = {};
     (ready || []).forEach(function(c){ isReady[c.product_slug] = true; });
@@ -3063,7 +3099,10 @@ async function renderSuiteOffer(){
     cart.forEach(function(i){ if (i.productSlug) inBasket[i.productSlug] = true; });
 
     const offer = (siblings || []).filter(function(p){
-      return isReady[p.slug] && !inBasket[p.slug] && p.slug !== PRODUCT.slug;
+      return isReady[p.slug]
+          && !inBasket[p.slug]
+          && p.slug !== PRODUCT.slug
+          && productTakesDesign(p, designRatio, ratios);
     });
     if (!offer.length) return;
 
