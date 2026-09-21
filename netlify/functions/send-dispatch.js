@@ -7,7 +7,8 @@
 // admin session token. Without that check, anyone could email your customers
 // from your domain.
 //
-// Env: SUPABASE_URL, SUPABASE_SERVICE_KEY, SUPABASE_ANON_KEY, RESEND_API_KEY, FROM_EMAIL
+// Env: SUPABASE_URL, SUPABASE_SERVICE_KEY, SUPABASE_ANON_KEY, RESEND_API_KEY,
+//      FROM_EMAIL, TRUSTPILOT_BCC
 
 const SUPABASE_URL  = process.env.SUPABASE_URL || 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
 const SERVICE_KEY   = process.env.SUPABASE_SERVICE_KEY;
@@ -42,11 +43,27 @@ async function callerIsAdmin(event) {
   }
 }
 
+// Trustpilot's Automatic Feedback Service. BCC'ing their address on this
+// email is what triggers a review invitation: they read the customer's
+// address off it and send the invitation themselves after the delay set in
+// the Trustpilot dashboard.
+//
+// Why this email and not the order confirmation: dispatch is the real
+// fulfilment moment, and it is a step we take anyway because it carries the
+// tracking number. Anything that only exists to trigger a review eventually
+// gets skipped on a busy week.
+//
+// The address is a credential — anyone holding it could fire invitations in
+// our name — so it lives in the environment, not in the repository.
+const TRUSTPILOT_BCC = process.env.TRUSTPILOT_BCC || '';
+
 async function sendEmail({ to, subject, html }) {
+  const payload = { from: `Foreverprint <${FROM_EMAIL}>`, to, subject, html };
+  if (TRUSTPILOT_BCC) payload.bcc = TRUSTPILOT_BCC;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: `Foreverprint <${FROM_EMAIL}>`, to, subject, html })
+    body: JSON.stringify(payload)
   });
   if (!res.ok) throw new Error('Resend ' + res.status + ': ' + (await res.text()).slice(0, 200));
   return res.json();

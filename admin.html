@@ -1381,11 +1381,9 @@ function renderRow(o) {
     </td>
     <td style="font-size:11px;color:var(--soft);white-space:nowrap;">
       ${date}
-      ${o.review_email_sent_at
-        ? `<div style="font-size:10px;color:#5A9E6F;margin-top:3px;" title="Review request sent ${new Date(o.review_email_sent_at).toLocaleString('en-GB')}">&#10003; review asked</div>`
-        : (o.status === 'dispatched'
-            ? `<div style="font-size:10px;color:var(--pale);margin-top:3px;" title="The daily sweep asks a few days after dispatch">&middot; review pending</div>`
-            : '')}
+      ${o.dispatch_email_sent_at
+        ? `<div style="font-size:10px;color:#5A9E6F;margin-top:3px;" title="Trustpilot was copied on the dispatch email of ${new Date(o.dispatch_email_sent_at).toLocaleDateString('en-GB')} and invites the customer after the delay set in your Trustpilot dashboard">&#10003; review invite sent</div>`
+        : ''}
     </td>
     <td>
       <div class="action-btns">
@@ -1424,20 +1422,10 @@ async function updateStatus(id, status) {
 }
 
 async function deliverOrder(id) {
+  // Marking delivered no longer emails anyone. The review invitation is
+  // Trustpilot's job now — send-dispatch.js BCCs them, and they invite the
+  // customer themselves. Asking again here would be the second ask.
   const order = allOrders.find(o => o.id === id) || {};
-  const already = order.review_email_sent_at;
-
-  if (already && !confirm(`The review request already went to this customer on ${new Date(already).toLocaleDateString('en-GB')}.\n\nSend it again?`)) {
-    loadOrders();
-    return;
-  }
-  if (!already && !confirm('Mark delivered and email this customer to ask how it went?\n\nEveryone who receives an order gets asked — we never pick and choose.')) {
-    loadOrders();
-    return;
-  }
-
-  // Mark delivered regardless of whether the email gets out, so the order
-  // status is never held hostage by an email problem.
   try {
     await sbFetch(`orders?id=eq.${id}`, {
       method:'PATCH',
@@ -1448,30 +1436,12 @@ async function deliverOrder(id) {
         updated_at:new Date().toISOString()
       }),
     });
+    const idx = allOrders.findIndex(o=>o.id===id);
+    if (idx>-1) { allOrders[idx].status = 'delivered'; }
+    updateOrderStats();
+    toast('Marked delivered ✓');
   } catch (err) {
     alert('Could not mark the order delivered: ' + err.message);
-    loadOrders();
-    return;
-  }
-
-  try {
-    const res = await fetch('/.netlify/functions/send-review-request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ADMIN_TOKEN || ''}` },
-      body: JSON.stringify({ orderId: id, resend: !!already })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      alert(data.needsConfig
-        ? 'Marked delivered, but no review email was sent.\n\n' + data.error
-        : 'Marked delivered, but the review email failed: ' + (data.error || res.status));
-      loadOrders();
-      return;
-    }
-    toast('Delivered — review request sent ✓');
-    loadOrders();
-  } catch (err) {
-    alert('Marked delivered, but the review email failed: ' + err.message);
     loadOrders();
   }
 }

@@ -54,8 +54,16 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# The daily review sweep. Asks anyone whose order went out a few days ago and
-# who has not been asked yet — see send-review-requests-due.js for the guards.
-# Does nothing at all until REVIEW_URL is set.
-[functions."send-review-requests-due"]
-  schedule = "0 9 * * *"
+# The daily review sweep is DELIBERATELY NOT SCHEDULED.
+#
+# Trustpilot now sends the invitations itself: send-dispatch.js BCCs their
+# Automatic Feedback Service address, and they invite the customer after the
+# delay set in the Trustpilot dashboard. Those reviews come back marked
+# verified, which counts for more than one left by someone following a link.
+#
+# Running our own sweep as well would ask every customer twice. The function
+# and its email are kept because they still work — if Trustpilot is ever
+# dropped, set REVIEW_URL and restore the schedule line below.
+#
+# [functions."send-review-requests-due"]
+#   schedule = "0 9 * * *"
