@@ -658,6 +658,8 @@ was fetched and injected via innerHTML — that was the bug behind the
           <span id="basketTotal" style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--text);">&pound;0.00</span>
         </div>
 
+        <div id="suiteOffer" style="display:none;"></div>
+
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;align-items:center;">
           <button class="btn" onclick="goStep(5)">Checkout &rarr;</button>
           <a href="/products" style="font-size:var(--text-sm);color:var(--soft);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:2px;">Keep shopping</a>
@@ -2348,8 +2350,17 @@ async function addToCartUpload(){
     deliveryCost: deliveryCost
   };
 
+  // Name the line by the product, not the design. Once someone puts the same
+  // design on four different things, four identically-named basket lines are
+  // impossible to tell apart.
+  const couple = designMode && designState
+    ? [ (designState.text && designState.text.name1) || '', (designState.text && designState.text.name2) || '' ]
+        .filter(Boolean).join(' & ')
+    : '';
   addToCart({
-    name: designMode && designState ? (designState.templateName + ' — ' + (designState.text.name1 || '') + ' & ' + (designState.text.name2 || '')) : (currentFile?currentFile.name.replace(/\.[^.]+$/,''):'Custom Design'),
+    name: designMode
+      ? (PRODUCT.name + (couple ? ' — ' + couple : ''))
+      : (currentFile ? currentFile.name.replace(/\.[^.]+$/,'') : 'Custom Design'),
     qty: uploadQty,
     size: selectedSize,
     paper: paperLabel,
@@ -2362,6 +2373,10 @@ async function addToCartUpload(){
     // Design-studio extras (only present when in design mode)
     addedAt: Date.now(),
     source: designMode ? 'design-studio' : 'upload',
+    // True when this is the same design put onto another product. The design
+    // was paid for once; reusing it is print work, so no design premium.
+    reusedDesign: designMode && isSuiteAddition(),
+    productSlug: PRODUCT.slug,
     templateId: designMode && designState ? designState.templateId : null,
     designState: designMode ? designState : null
   });
@@ -2971,6 +2986,141 @@ function basketItemDate(it){
   return 'Added ' + d.toLocaleDateString('en-GB',{day:'numeric',month:'long'});
 }
 
+// ── USE THIS DESIGN ON MORE PRODUCTS ──────────────────────
+// One design should be able to dress the whole day. The mechanism is simpler
+// than it looks: the design already lives in sessionStorage, and design mode
+// keys off ?source=design-studio — so putting it on another product is just a
+// navigation to that product's URL. The artwork is reused byte-for-byte.
+//
+// We only offer products in the SAME CATEGORY (weddings to weddings), and only
+// those whose shape matches what the design was made for. The whole A-series
+// shares one ratio, so an A5 invitation design fits A6, A4 and the rest
+// unchanged — no regeneration, no cost, and genuinely the same design rather
+// than a lookalike. Square and DL are a different shape and are left out until
+// reshaping is solved.
+const SUITE_STORE_KEY = 'foreverprint_suite_origin';
+
+// Marks the navigation we started ourselves, so the basket line can be priced
+// as a reuse rather than a fresh design.
+function isSuiteAddition(){
+  try { return new URLSearchParams(window.location.search).get('reuse') === '1'; }
+  catch(e){ return false; }
+}
+
+// Find the design to carry across. Deliberately does NOT depend on designMode:
+// someone can come back to a saved basket tomorrow, on a fresh page load with
+// no ?source=design-studio, and the offer still has to work. The basket is the
+// most durable home for it — it lives in localStorage and travels with the
+// order — so that is checked first, with the live design and sessionStorage as
+// fallbacks.
+function suiteDesign(){
+  const fromCart = (cart || []).find(function(i){
+    return i.source === 'design-studio' && i.designState &&
+           (i.designState.artworkUrl || i.designState.thumbnail);
+  });
+  if (fromCart) return fromCart.designState;
+
+  if (designMode && designState && (designState.artworkUrl || designState.thumbnail)) {
+    return designState;
+  }
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('foreverprint_design') || 'null');
+    if (saved && (saved.artworkUrl || saved.thumbnail)) return saved;
+  } catch(e){}
+  return null;
+}
+
+async function renderSuiteOffer(){
+  const box = document.getElementById('suiteOffer');
+  if (!box) return;
+  box.style.display = 'none';
+
+  // Only offer this when there is genuinely a design we can carry across.
+  // Showing cards that quietly do nothing is worse than showing none.
+  if (!suiteDesign()) return;
+
+  const SB = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+  const K  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+  const headers = { apikey: K, Authorization: 'Bearer ' + K };
+
+  try {
+    const me = await fetch(SB + '/rest/v1/product_types?select=category&slug=eq.' +
+      encodeURIComponent(PRODUCT.slug) + '&limit=1', { headers }).then(function(r){ return r.ok ? r.json() : []; });
+    const category = me && me[0] && me[0].category;
+    if (!category) return;
+
+    const [siblings, ready] = await Promise.all([
+      fetch(SB + '/rest/v1/product_types?select=slug,name,tagline,hero_image_url,display_order' +
+        '&active=eq.true&category=eq.' + encodeURIComponent(category) + '&order=display_order',
+        { headers }).then(function(r){ return r.ok ? r.json() : []; }),
+      fetch(SB + '/rest/v1/studio_config?select=product_slug', { headers })
+        .then(function(r){ return r.ok ? r.json() : []; })
+    ]);
+
+    const isReady = {};
+    (ready || []).forEach(function(c){ isReady[c.product_slug] = true; });
+    const inBasket = {};
+    cart.forEach(function(i){ if (i.productSlug) inBasket[i.productSlug] = true; });
+
+    const offer = (siblings || []).filter(function(p){
+      return isReady[p.slug] && !inBasket[p.slug] && p.slug !== PRODUCT.slug;
+    });
+    if (!offer.length) return;
+
+    box.innerHTML =
+      '<div style="border-top:1px solid var(--border);margin-top:22px;padding-top:22px;">' +
+        '<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.3rem;color:var(--text);margin-bottom:6px;">Your design works on these too</div>' +
+        '<div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;margin-bottom:16px;">' +
+          'The same design, no extra design charge &mdash; you only pay for the printing.' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">' +
+        offer.map(function(p){
+          return '<button type="button" class="suite-card" data-slug="' + escAttr(p.slug) + '" ' +
+            'style="text-align:left;background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;padding:0;font-family:inherit;transition:border-color .2s,transform .2s;">' +
+            '<div style="aspect-ratio:4/3;background:var(--cream);overflow:hidden;">' +
+              (p.hero_image_url ? '<img src="' + escAttr(p.hero_image_url) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;">' : '') +
+            '</div>' +
+            '<div style="padding:10px 12px 12px;">' +
+              '<div style="font-size:var(--text-sm);color:var(--text);">' + escHtml(p.name) + '</div>' +
+              '<div style="font-size:var(--text-xs);color:var(--gold);margin-top:4px;">Use this design &rarr;</div>' +
+            '</div>' +
+          '</button>';
+        }).join('') +
+        '</div>' +
+      '</div>';
+
+    box.style.display = 'block';
+    box.querySelectorAll('.suite-card').forEach(function(btn){
+      btn.addEventListener('mouseenter', function(){ btn.style.borderColor = 'var(--gold)'; btn.style.transform = 'translateY(-2px)'; });
+      btn.addEventListener('mouseleave', function(){ btn.style.borderColor = 'var(--border)'; btn.style.transform = 'none'; });
+      btn.addEventListener('click', function(){ addDesignToProduct(btn.getAttribute('data-slug')); });
+    });
+  } catch (e) {
+    // A failed offer must never break the basket.
+    console.warn('[suite] could not load matching products:', e.message);
+  }
+}
+
+function addDesignToProduct(slug){
+  const design = suiteDesign();
+  if (!design || !slug) return;
+  try {
+    // design mode reads this on the next page; it is already there, but write
+    // it again so a stale copy can never be what gets reused.
+    sessionStorage.setItem('foreverprint_design', JSON.stringify(design));
+    sessionStorage.setItem(SUITE_STORE_KEY, PRODUCT.slug);
+  } catch(e){}
+  if (window.fpAnalytics) {
+    try { window.fpAnalytics.track('suite_add_product', { from: PRODUCT.slug, to: slug }); } catch(e){}
+  }
+  window.location.href = '/upload-and-print.html?product=' + encodeURIComponent(slug) +
+                         '&source=design-studio&reuse=1';
+}
+
+function escHtml(t){ return String(t == null ? '' : t).replace(/[&<>"\']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function escAttr(t){ return escHtml(t); }
+
 function renderBasketStep(){
   const dropped = pruneBasket();
   const list  = document.getElementById('basketItems');
@@ -3010,6 +3160,7 @@ function renderBasketStep(){
   }).join('');
 
   total.textContent = '£' + cart.reduce(function(t,i){ return t + (+i.total || 0); }, 0).toFixed(2);
+  renderSuiteOffer();
 }
 
 function removeFromBasket(i){
@@ -3511,6 +3662,8 @@ function googleCustomerReviewsOptIn(order){
   // Renumber remaining step badges so the user sees 1, 2 (not 3, 4)
   const sn3 = document.getElementById('sn3'); if (sn3) sn3.textContent = '1';
   const sn4 = document.getElementById('sn4'); if (sn4) sn4.textContent = '2';
+  // Checkout was left as "5" while the two before it became 1 and 2.
+  const sn5 = document.getElementById('sn5'); if (sn5) sn5.textContent = '3';
 
   // 3. Hide the step1 and step2 divs entirely
   document.getElementById('step1')?.classList.add('hidden');
