@@ -3,179 +3,177 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Table Plan | Foreverprint</title>
-<meta name="description" content="Wedding table plans printed in the UK, large enough to read at a glance, so your guests find their seats without a queue forming at the door."/>
+<title>Wedding Stationery Guides | Foreverprint</title>
+<meta name="description" content="Practical guides to wedding stationery: when to send save the dates and invitations, how many you need, what to write and what to order."/>
 <meta name="robots" content="index, follow"/>
-<link rel="canonical" href="https://foreverprint.com/table-plans"/>
-<meta property="og:title" content="Table Plan | Foreverprint"/>
-<meta property="og:description" content="Wedding table plans printed in the UK, large enough to read at a glance, so your guests find their seats without a queue forming at the door."/>
-<meta property="og:url" content="https://foreverprint.com/table-plans"/>
-<meta property="og:image" content="https://foreverprint.com/table-plans-card.jpg"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta property="og:type" content="product"/>
+<link rel="canonical" href="https://foreverprint.com/guides"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://foreverprint.com/guides"/>
+<meta property="og:title" content="Wedding Stationery Guides | Foreverprint"/>
+<meta property="og:description" content="Practical guides to wedding stationery: when to send save the dates and invitations, how many you need, what to write and what to order."/>
+<meta property="og:locale" content="en_GB"/>
 <meta property="og:site_name" content="Foreverprint"/>
-<link rel="preload" as="image" href="/.netlify/images?url=/table-plans-card.jpg&amp;w=800&amp;fm=webp&amp;q=75" imagesrcset="/.netlify/images?url=/table-plans-card.jpg&amp;w=400&amp;fm=webp&amp;q=75 400w, /.netlify/images?url=/table-plans-card.jpg&amp;w=800&amp;fm=webp&amp;q=75 800w, /.netlify/images?url=/table-plans-card.jpg&amp;w=1200&amp;fm=webp&amp;q=75 1200w" imagesizes="(max-width: 768px) 92vw, 44vw"/>
-<link rel="preconnect" href="https://jvcpzmumkyjdyibmwlsd.supabase.co" crossorigin/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link rel="dns-prefetch" href="https://www.googletagmanager.com"/>
-
-<style>
-/* Product landing page — PPC-optimised. Site-wide tokens (--cream, --gold,
-   --soft, --text, --white, --border, --pale, --gold-lt) inherited from
-   header.html. */
-
-/* HERO — H1 plain (message-match), price prominent, single CTA */
-.lp-hero{background:var(--cream);padding:44px 0 40px;}
-.lp-hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:start;}
-@media(min-width:769px){.lp-hero-grid > div:last-child{margin-top:34px;}}
-.lp-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;}
-.lp-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.6vw,3rem);font-weight:400;line-height:1.06;color:var(--text);margin:0 0 12px;}
-.lp-hero-sub{font-size:var(--text-body);color:var(--soft);line-height:1.7;margin:0 0 22px;max-width:500px;}
-.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:11px 18px;display:inline-block;margin-bottom:18px;}
-.lp-price-label{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:3px;}
-.lp-price-value{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--text);line-height:1;}
-.lp-price-meta{font-size:var(--text-xs);color:var(--soft);margin-top:5px;}
-.lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
-.lp-cta:hover{background:transparent;color:var(--gold);}
-.lp-cta::after{content:'→';transition:transform .2s;}
-.lp-cta:hover::after{transform:translateX(4px);}
-.lp-hero-trust{display:flex;gap:22px;margin-top:16px;font-size:var(--text-xs);color:var(--soft);flex-wrap:wrap;}
-.lp-hero-reassure{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-top:22px;padding-top:20px;border-top:1px solid var(--border);}
-.lp-hr-item{display:flex;align-items:center;gap:9px;font-size:var(--text-sm);color:var(--soft);}
-.lp-hr-icon{color:var(--gold);font-size:var(--text-sm);flex-shrink:0;}
-.lp-hero-trust span::before{content:'✓ ';color:var(--gold);font-weight:600;}
-.lp-hero-img{width:100%;max-width:480px;aspect-ratio:4/3;object-fit:cover;border-radius:16px;background:var(--pale);}
-.lp-hero-img-placeholder{width:100%;max-width:480px;aspect-ratio:4/3;border-radius:16px;background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:var(--text-body);font-style:italic;color:var(--gold-lt);border:1px solid var(--border);}
-.lp-hero-img-placeholder::before{content:'✦';font-size:var(--text-h2);}
-
-/* PRICING SECTION — full quantity table */
-.lp-section{padding:44px 0;}
-.lp-section-cream{background:var(--cream);}
-.lp-section-white{background:var(--white);}
-.lp-section-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;text-align:center;margin-bottom:10px;}
-.lp-section-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,2.6vw,2.1rem);font-weight:400;line-height:1.15;text-align:center;color:var(--text);margin:0 0 8px;}
-.lp-section-h2 em{color:var(--gold);font-style:italic;}
-.lp-section-divider{width:36px;height:1px;background:var(--gold);margin:14px auto 28px;}
-.lp-anchor-grid{max-width:720px;margin:0 auto;}
-.lp-price-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.lp-price-table th{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--soft);font-weight:500;text-align:right;padding:14px 18px;background:var(--cream);}
-.lp-price-table th:first-child{text-align:left;}
-.lp-price-table td{padding:13px 18px;font-size:var(--text-body);color:var(--text);border-top:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;}
-.lp-price-table td:first-child{text-align:left;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--soft);}
-.lp-price-table tr.pt-popular td{background:rgba(184,151,106,.06);}
-.pt-badge{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold-lt);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;}
-.lp-price-note{font-size:var(--text-xs);color:var(--soft);text-align:center;margin-top:14px;line-height:1.6;}
-.lp-anchor{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:30px 28px;position:relative;}
-.lp-anchor.popular{border:2px solid var(--gold);}
-.lp-anchor-badge{position:absolute;top:-11px;left:22px;background:var(--gold);color:#fff;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;padding:5px 12px;border-radius:12px;font-weight:500;}
-.lp-anchor-tag{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;}
-.lp-anchor-price{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:400;color:var(--text);line-height:1;margin-bottom:6px;}
-.lp-anchor-qty{font-size:var(--text-sm);color:var(--soft);margin-bottom:16px;}
-.lp-anchor-spec{font-size:var(--text-xs);color:var(--pale);padding-top:16px;border-top:1px solid var(--border);}
-.lp-upgrade-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:28px 36px;max-width:680px;margin:0 auto;}
-.lp-upgrade-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;margin-bottom:6px;color:var(--text);}
-.lp-upgrade-sub{font-size:var(--text-xs);color:var(--soft);margin-bottom:18px;}
-.lp-upgrade-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--border);font-size:var(--text-sm);}
-.lp-upgrade-row:last-child{border-bottom:none;}
-.lp-upgrade-label{color:var(--soft);}
-.lp-upgrade-value{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--text);font-weight:400;}
-.lp-cta-row{text-align:center;margin-top:36px;}
-
-/* PAPER & FINISH SHOWCASE — editorial, sensory, no prices */
-.lp-strip{padding:52px 0;border-top:1px solid var(--border);}
-.lp-strip-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:8px;}
-.lp-strip-h{font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,2.4vw,2rem);font-weight:400;text-align:center;color:var(--text);margin:0 0 6px;}
-.lp-strip-intro{font-size:var(--text-sm);color:var(--soft);text-align:center;max-width:500px;margin:10px auto 30px;line-height:1.75;}
-.lp-showcase{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:920px;margin:0 auto;}
-.lp-show-card{text-align:left;}
-.lp-swatch{aspect-ratio:3/2;border-radius:12px;border:1px solid var(--border);background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);color:var(--gold-lt);margin-bottom:12px;}
-.lp-show-name{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);margin-bottom:2px;}
-.lp-show-tier{font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
-.lp-show-desc{font-size:var(--text-sm);color:var(--soft);line-height:1.7;}
-/* Finishing — dark panel, framed as craft */
-.lp-finish-panel{background:var(--text);border-radius:18px;padding:44px 40px;max-width:920px;margin:0 auto;}
-.lp-finish-panel .lp-strip-tag{color:var(--gold-lt);}
-.lp-finish-panel .lp-strip-h{color:var(--cream);}
-.lp-finish-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}
-.lp-finish-item{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:18px 22px;}
-.lp-finish-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--cream);margin-bottom:4px;}
-.lp-finish-desc{font-size:var(--text-sm);color:rgba(255,255,255,.6);line-height:1.6;}
-.lp-finish-foot{text-align:center;margin-top:22px;font-size:var(--text-sm);color:rgba(255,255,255,.55);}
-
-/* HOW IT WORKS — compact horizontal */
-.lp-how{padding:48px 0;background:var(--cream);}
-.lp-how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1000px;margin:0 auto;}
-.lp-how-step{text-align:center;padding:0 16px;}
-.lp-how-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--white);border:1px solid var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:12px;}
-.lp-how-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:400;color:var(--text);margin-bottom:6px;}
-.lp-how-text{font-size:var(--text-xs);color:var(--soft);line-height:1.7;}
-
-/* WHY US — 4 items, real claims */
-.lp-why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;max-width:1000px;margin:0 auto;}
-.lp-why-item{text-align:center;padding:0 8px;}
-.lp-why-icon{font-size:var(--text-h3);color:var(--gold);margin-bottom:12px;}
-.lp-why-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);margin-bottom:8px;}
-.lp-why-text{font-size:var(--text-sm);color:var(--soft);line-height:1.85;}
-
-/* Product intro + buying guide — only rendered for products that have one */
-.lp-intro-wrap{max-width:720px;margin:0 auto;}
-.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;text-align:left;}
-.lp-intro-body a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-lt);padding-bottom:1px;transition:border-color .2s,color .2s;}
-.lp-intro-body a:hover{color:var(--brown);border-bottom-color:var(--brown);}
-
-/* FAQs */
-.lp-faq-wrap{max-width:680px;margin:0 auto;}
-.lp-faq-item{border-bottom:1px solid var(--border);}
-.lp-faq-q{padding:20px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:24px;list-style:none;}
-.lp-faq-q::-webkit-details-marker{display:none;}
-.lp-faq-q-text{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);}
-.lp-faq-toggle{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:var(--text-sm);color:var(--gold);transition:transform .25s;}
-.lp-faq-item[open] .lp-faq-toggle{transform:rotate(45deg);}
-.lp-faq-a{font-size:var(--text-sm);color:var(--soft);line-height:1.95;padding:0 0 20px;max-width:600px;}
-
-/* FINAL CTA */
-.lp-final{background:var(--cream);padding:88px 0;text-align:center;}
-.lp-final-h{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:300;line-height:1.15;margin:0 0 16px;color:var(--text);}
-.lp-final-h em{color:var(--gold);font-style:italic;}
-
-/* PATH-CHOOSER MODAL */
-.path-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
-.path-modal.open{display:flex;}
-.path-modal-backdrop{position:absolute;inset:0;background:rgba(33,22,12,.62);animation:pmFade .2s ease;}
-.path-modal-panel{position:relative;background:var(--cream);border-radius:18px;padding:40px 40px 36px;max-width:680px;width:100%;box-shadow:0 30px 80px rgba(33,22,12,.30);animation:pmSlide .25s ease;}
-.path-modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:var(--text-body);color:var(--soft);cursor:pointer;line-height:1;}
-.path-modal-close:hover{color:var(--text);}
-.path-modal-tag{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:8px;}
-.path-modal-h{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;line-height:1.15;color:var(--text);text-align:center;margin:0 0 8px;}
-.path-modal-h em{color:var(--gold);font-style:italic;}
-.path-modal-sub{font-size:var(--text-sm);color:var(--soft);text-align:center;line-height:1.7;margin:0 auto 28px;max-width:440px;}
-.path-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.path-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:28px 28px 24px;text-decoration:none;display:flex;flex-direction:column;transition:all .2s;cursor:pointer;}
-.path-card:hover{border-color:var(--gold);box-shadow:0 12px 28px rgba(184,153,104,.10);transform:translateY(-2px);}
-.path-icon{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);margin-bottom:10px;}
-.path-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;color:var(--text);margin:0 0 8px;line-height:1.2;}
-.path-desc{font-size:var(--text-sm);color:var(--soft);line-height:1.75;margin:0 0 16px;flex:1;}
-.path-card-cta{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--text);font-weight:500;border-bottom:1px solid var(--gold);padding-bottom:3px;display:inline-block;align-self:flex-start;}
-.path-card-cta::after{content:' →';color:var(--gold);}
-.path-modal-help{margin-top:22px;text-align:center;font-size:var(--text-xs);color:var(--soft);}
-.path-modal-help a{color:var(--gold);text-decoration:none;}
-@keyframes pmFade{from{opacity:0;}to{opacity:1;}}
-@keyframes pmSlide{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-
-@media(max-width:768px){
-  .lp-hero-grid{grid-template-columns:1fr;gap:32px;}
-  .lp-anchor-grid,.lp-how-steps,.lp-why-grid{grid-template-columns:1fr;gap:18px;}
-  .lp-strip-pills{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding:0 16px;}
-  .path-modal-grid{grid-template-columns:1fr;}
-  .path-modal-panel{padding:28px 24px;}
-}
-</style>
-<script src="/vendor/supabase-js-2.116.0.min.js" defer></script>
-<script src="/supabase-config.js"></script>
-<script src="/auth.js" defer></script>
-<script src="/cart.js"></script>  
 </head>
 <body>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet"/>
+<style>
+:root {
+--cream:#FAF7F2; --blush:#F0DDD8; --lav:#DDD5E8; --sage:#D1DDD0;
+--mist:#E8EBF0; --gold:#B8976A; --gold-lt:#D4B896; --brown:#6B4F3A;
+--text:#3D2E24; --soft:#7A6558; --pale:#B0A098; --white:#FFFFFF;
+--border:#E8DDD8; --ok:#5A9E6F; --warn:#C97B3A; --err:#C94A3A;
+/* Fluid type scale — scales smoothly from laptop to large screens.
+   clamp(min, preferred, max): min is the floor (never smaller),
+   max is the ceiling (never larger), preferred grows with the viewport. */
+--text-xs:   clamp(13px, 0.55vw + 11px, 15px);   /* small labels, captions */
+--text-sm:   clamp(15px, 0.6vw + 12px, 17px);    /* secondary / meta text */
+--text-body: clamp(17px, 0.7vw + 14px, 19px);    /* body copy */
+--text-lg:   clamp(19px, 0.8vw + 15px, 22px);    /* lead paragraphs */
+--text-h3:   clamp(21px, 1.3vw + 16px, 27px);
+--text-h2:   clamp(30px, 2.4vw + 19px, 42px);
+--text-h1:   clamp(40px, 3.8vw + 21px, 58px);
+--nav-size:  clamp(16px, 0.5vw + 14px, 18px);    /* nav links */
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; font-size:var(--text-body); }
+body { font-family:'Jost',sans-serif; font-weight:300; background:var(--cream); color:var(--text); line-height:1.6; min-height:100vh; font-size:var(--text-body); }
+.serif { font-family:'Cormorant Garamond',serif; }
+.hidden { display:none !important; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+@keyframes spin { to{transform:rotate(360deg);} }
+header{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;}
+.hinner{max-width:1180px;margin:0 auto;padding:0 32px;height:74px;display:flex;align-items:center;justify-content:space-between;position:relative;}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:400;letter-spacing:.06em;color:var(--text);text-decoration:none;}
+.logo span{color:var(--gold);}
+nav{display:flex;align-items:center;gap:36px;}
+nav a{font-size:var(--nav-size);letter-spacing:.04em;text-transform:none;color:var(--soft);text-decoration:none;transition:color .2s;font-weight:400;}
+.megamenu{position:static;height:74px;display:flex;align-items:center;}
+.megamenu-trigger{display:inline-flex;align-items:center;gap:6px;font-size:var(--nav-size);color:var(--soft);height:74px;}
+.mega-chev{font-size:var(--text-xs);transition:transform .2s;}
+.megamenu-panel{position:absolute;left:16px;right:16px;top:78px;background:var(--white);border:1px solid var(--border);border-radius:20px;box-shadow:0 20px 40px -20px rgba(61,46,36,.22);padding:34px 48px 38px;display:none;grid-template-columns:1fr 1fr 1fr;gap:48px;z-index:210;}
+.megamenu:hover .megamenu-panel,.megamenu.open .megamenu-panel{display:grid;}
+.megamenu-panel::before{content:'';position:absolute;left:0;right:0;top:-16px;height:16px;background:transparent;}
+.megamenu:hover .mega-chev,.megamenu.open .mega-chev{transform:rotate(180deg);}
+.megamenu:hover .megamenu-trigger,.megamenu.open .megamenu-trigger{color:var(--gold);}
+.mega-cat{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--text);margin-bottom:6px;}
+.mega-rule{width:28px;height:1px;background:var(--gold-lt);margin-bottom:16px;}
+.megamenu-panel a{display:block;font-size:var(--text-sm);letter-spacing:.02em;text-transform:none;color:var(--soft);padding:7px 0;transition:color .2s;}
+.megamenu-panel a:hover{color:var(--gold);}
+.mega-viewall{font-size:var(--text-xs) !important;letter-spacing:.1em !important;text-transform:uppercase !important;color:var(--gold) !important;margin-top:12px;}
+nav a:hover,nav a.active{color:var(--gold);}
+.cart-btn{display:flex;align-items:center;gap:8px;padding:10px 22px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:background .25s;border-radius:60px;}
+.cart-btn:hover{background:var(--brown);}
+.cart-count{background:rgba(255,255,255,.25);padding:2px 8px;font-size:var(--text-xs);border-radius:20px;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:15px 38px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:background .25s,box-shadow .25s;text-decoration:none;border-radius:60px;box-shadow:0 4px 18px rgba(184,151,106,.25);}
+.btn:hover{background:var(--brown);box-shadow:0 6px 24px rgba(107,79,58,.3);}
+.btn-out{display:inline-flex;align-items:center;gap:8px;padding:14px 37px;background:transparent;color:var(--gold);border:1px solid var(--gold);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:all .25s;text-decoration:none;border-radius:60px;}
+.btn-out:hover{background:var(--gold);color:#fff;}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;}
+.section{padding:90px 0;}
+.tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;display:block;}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:400;line-height:1.2;color:var(--text);}
+.divider{width:48px;height:1px;background:var(--gold-lt);margin:20px 0;}
+.centered{text-align:center;}
+.centered .divider{margin:20px auto;}
+.cart-bg{position:fixed;inset:0;background:rgba(61,46,36,.4);z-index:400;display:none;}
+.cart-bg.open{display:block;}
+.cart-drawer{position:fixed;right:0;top:0;bottom:0;width:420px;background:var(--white);z-index:401;transform:translateX(100%);transition:transform .35s ease;display:flex;flex-direction:column;border-radius:20px 0 0 20px;}
+.cart-drawer.open{transform:translateX(0);}
+.cart-head{padding:24px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cart-head h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;}
+.cart-scroll{flex:1;overflow-y:auto;padding:20px 28px;}
+.cart-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border);}
+.cart-item-img{width:60px;height:80px;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:var(--text-lg);border-radius:8px;}
+.cart-item-info{flex:1;}
+.cart-item-name{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:400;margin-bottom:4px;}
+.cart-item-meta{font-size:var(--text-xs);color:var(--soft);margin-bottom:8px;}
+.cart-item-price{font-size:var(--text-sm);color:var(--gold);}
+.cart-remove{background:none;border:none;font-size:var(--text-lg);color:var(--pale);cursor:pointer;padding:4px;}
+.cart-foot{padding:20px 28px;border-top:1px solid var(--border);}
+.cart-row{display:flex;justify-content:space-between;font-size:var(--text-sm);margin-bottom:8px;}
+.cart-row.vat{font-size:var(--text-xs);color:var(--soft);}
+.cart-row.total{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:20px;padding-top:12px;border-top:1px solid var(--border);}
+.cart-empty{text-align:center;padding:60px 20px;color:var(--pale);}
+.modal-close{background:none;border:none;font-size:var(--text-h3);color:var(--pale);cursor:pointer;line-height:1;padding:4px;}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:14px 28px;border-radius:60px;font-size:var(--text-sm);letter-spacing:.06em;opacity:0;transition:all .35s;z-index:999;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* === RIGHT ZONE: Account dropdown + Basket === */
+.right-zone{display:flex;align-items:center;gap:18px;}
+/* Account state (signed-out / signed-in containers, mutually exclusive) */
+.auth-state{position:relative;display:none;align-items:center;}
+.auth-state.active{display:flex;}
+/* Account trigger button */
+.acct-trigger{display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:none;padding:6px 4px;font-family:inherit;}
+.acct-icon{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--soft);flex-shrink:0;transition:all .2s;}
+.acct-icon svg{width:14px;height:14px;}
+.acct-icon.signedin{background:var(--cream);border-color:var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);text-transform:uppercase;}
+.acct-trigger:hover .acct-icon,.acct-trigger.open .acct-icon{background:var(--gold);border-color:var(--gold);color:var(--white);}
+.acct-label{font-size:var(--text-body);letter-spacing:.04em;text-transform:none;color:var(--soft);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.acct-trigger:hover .acct-label,.acct-trigger.open .acct-label{color:var(--gold);}
+.acct-chevron{font-size:var(--text-xs);transition:transform .25s;}
+.acct-trigger.open .acct-chevron{transform:rotate(180deg);}
+/* Account dropdown menu */
+.acct-dropdown{position:absolute;top:calc(100% + 14px);right:0;background:var(--white);min-width:240px;box-shadow:0 16px 40px -16px rgba(61,46,36,.25);border-radius:8px;overflow:hidden;display:none;border-top:2px solid var(--gold);z-index:250;}
+.acct-dropdown.open{display:block;animation:fadeUp .25s ease;}
+.dd-email{padding:16px 20px 14px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-body);color:var(--gold);word-break:break-all;line-height:1.4;}
+.acct-dropdown a,.acct-dropdown button{display:block;width:100%;padding:13px 20px;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;border:none;background:none;text-align:left;cursor:pointer;transition:background .2s,color .2s;}
+.acct-dropdown a:hover,.acct-dropdown button:hover{background:var(--cream);color:var(--gold);}
+.dd-divider{height:1px;background:var(--border);margin:0 20px;}
+.nav-toggle{display:none;background:none;border:none;cursor:pointer;color:var(--text);padding:6px;}
+.nav-toggle svg{width:26px;height:26px;}
+@media(max-width:768px){
+.nav-toggle{display:block;order:-1;}
+.hinner{position:relative;}
+.hinner nav{display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);flex-direction:column;align-items:stretch;gap:0;padding:8px 0;border-bottom:1px solid var(--border);box-shadow:0 16px 32px -18px rgba(61,46,36,.25);}
+.hinner nav.open{display:flex;}
+.hinner nav a{padding:15px 32px;font-size:var(--text-body);border-bottom:1px solid var(--border);}
+.hinner nav a:last-child{border-bottom:none;}
+.footer-top{grid-template-columns:1fr 1fr;gap:32px;}
+/* Mega-menu on mobile: show panel inline, stacked, not as a floating dropdown */
+.megamenu{width:100%;height:auto;display:block;}
+.megamenu-trigger{padding:15px 32px;border-bottom:1px solid var(--border);width:100%;height:auto;}
+.megamenu-panel{position:static;display:block !important;box-shadow:none;border:none;padding:0 0 8px;background:var(--cream);}
+.mega-col{padding:14px 32px 6px;}
+.mega-cat{font-size:1.1rem;margin-bottom:4px;}
+.megamenu-panel a{padding:9px 0;font-size:var(--text-body);}
+.mega-chev{display:none;}
+}
+@media(max-width:480px){.footer-top{grid-template-columns:1fr;}}
+
+/* ── GUIDE ARTICLE ─────────────────────────────────────── */
+.gd-hero{background:var(--cream);padding:70px 0 52px;}
+.gd-wrap{max-width:720px;margin:0 auto;padding:0 24px;}
+.gd-eyebrow{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:14px;}
+.gd-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,2.9rem);font-weight:300;line-height:1.1;color:var(--text);margin:0 0 20px;}
+.gd-intro{font-family:'Cormorant Garamond',serif;font-size:clamp(1.1rem,1.8vw,1.35rem);line-height:1.75;color:var(--text);margin:0;}
+.gd-body{background:var(--white);padding:56px 0 60px;}
+.gd-body h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.35rem,2.4vw,1.7rem);font-weight:400;color:var(--text);margin:44px 0 14px;line-height:1.25;}
+.gd-body h2:first-child{margin-top:0;}
+.gd-body p{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0 0 16px;}
+.gd-body a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-lt);padding-bottom:1px;transition:color .2s,border-color .2s;}
+.gd-body a:hover{color:var(--brown);border-bottom-color:var(--brown);}
+.gd-faqs{background:var(--cream);padding:56px 0 60px;}
+.gd-faq-h{font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,2.6vw,2rem);font-weight:300;color:var(--text);text-align:center;margin:0 0 30px;}
+.gd-faq-item{border-bottom:1px solid var(--border);}
+.gd-faq-q{padding:20px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:24px;list-style:none;}
+.gd-faq-q::-webkit-details-marker{display:none;}
+.gd-faq-q-text{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--text);}
+.gd-faq-toggle{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--white);display:flex;align-items:center;justify-content:center;font-size:var(--text-sm);color:var(--gold);transition:transform .25s;}
+.gd-faq-item[open] .gd-faq-toggle{transform:rotate(45deg);}
+.gd-faq-a{font-size:var(--text-sm);color:var(--soft);line-height:1.95;padding:0 0 20px;}
+.gd-related{background:var(--white);padding:52px 0 60px;}
+.gd-related-h{font-family:'Cormorant Garamond',serif;font-size:clamp(1.4rem,2.4vw,1.8rem);font-weight:300;color:var(--text);text-align:center;margin:0 0 26px;}
+.gd-related-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+.gd-card{display:block;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--white);text-decoration:none;color:inherit;transition:transform .2s,box-shadow .2s,border-color .2s;}
+.gd-card:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(61,46,36,.10);border-color:var(--gold);}
+.gd-card-img{aspect-ratio:4/3;background:var(--cream);overflow:hidden;}
+.gd-card-img img{width:100%;height:100%;object-fit:cover;}
+.gd-card-name{padding:12px 14px 14px;font-size:var(--text-sm);color:var(--text);}
+.gd-more{background:var(--cream);padding:46px 0 56px;text-align:center;}
+@media(max-width:640px){.gd-hero{padding:48px 0 38px;}.gd-body{padding:40px 0 44px;}}
+</style>
 
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet"/>
 <style>
@@ -623,143 +621,26 @@ was fetched and injected via innerHTML — that was the bug behind the
 "updateCartBadge is not defined" error.
 -->
 
-<!-- HERO -->
-<section class="lp-hero">
-  <div class="container">
-    <div class="lp-hero-grid">
-      <div>
-        <span class="lp-tag" id="lp-tag">Wedding Stationery</span>
-        <h1 class="lp-h1" id="lp-h1">Table Plan</h1>
-        <p class="lp-hero-sub" id="lp-sub">Welcome and seat your guests with a table plan that's a centrepiece in its own right. Printed in the UK on premium stock to match your suite, at whatever scale your day needs — from intimate gatherings to grand receptions. Choose your paper and finishing, upload your design or create one with us</p>
-        <div class="lp-price-block" id="lp-price-block">
-          <div class="lp-price-label">From</div>
-          <div class="lp-price-value" id="lp-price-value">£—</div>
-          <div class="lp-price-meta" id="lp-price-meta">Pricing loads from your published data</div>
-        </div>
-        <div><button class="lp-cta" id="lp-hero-cta" type="button" onclick="openPathModal(this)">Start Your Order</button></div>
-        <div class="lp-hero-reassure">
-          <div class="lp-hr-item"><span class="lp-hr-icon">✦</span><span>UK printed</span></div>
-          <div class="lp-hr-item"><span class="lp-hr-icon">✧</span><span>Premium paper</span></div>
-          <div class="lp-hr-item"><span class="lp-hr-icon">✸</span><span>Tracked delivery</span></div>
-          <div class="lp-hr-item"><span class="lp-hr-icon">✶</span><span>File checked by hand</span></div>
-        </div>
-      </div>
-      <div>
-        <div id="lp-hero-img-wrap"><img class="lp-hero-img" data-prerendered src="/.netlify/images?url=/table-plans-card.jpg&amp;w=800&amp;fm=webp&amp;q=75" srcset="/.netlify/images?url=/table-plans-card.jpg&amp;w=400&amp;fm=webp&amp;q=75 400w, /.netlify/images?url=/table-plans-card.jpg&amp;w=800&amp;fm=webp&amp;q=75 800w, /.netlify/images?url=/table-plans-card.jpg&amp;w=1200&amp;fm=webp&amp;q=75 1200w" sizes="(max-width: 768px) 92vw, 44vw" alt="Table Plan" width="800" height="644" fetchpriority="high" decoding="async"/></div>
-      </div>
+<article>
+  <section class="gd-hero">
+    <div class="gd-wrap">
+      <span class="gd-eyebrow"><a href="/guides" style="color:inherit;text-decoration:none;">Guides</a></span>
+      <h1 class="gd-h1">Wedding stationery guides</h1>
+      <p class="gd-intro">When to send things, how many to order and what to put on them &mdash; the questions couples ask us most, answered properly.</p>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- PRICING -->
-<section class="lp-section lp-section-white" id="pricing">
-  <div class="container">
-    <span class="lp-section-tag">Pricing</span>
-    <h2 class="lp-section-h2">Simple, <em>honest pricing.</em></h2>
-    <div class="lp-section-divider"></div>
-    <div id="lp-anchor-grid" class="lp-anchor-grid">
-      <div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Loading pricing…</div>
+  <section class="gd-body">
+    <div class="gd-wrap">
+      <div class="gd-related-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));"><a class="gd-card" href="/guides/wedding-stationery-timeline" style="padding:20px 22px 22px;border-radius:14px;"><div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--text);margin-bottom:8px;line-height:1.3;">When to send your wedding stationery</div><div style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;">Wedding stationery goes out in stages over roughly a year, and each stage depends on something being settled first. This is the order most couples...</div></a></div>
     </div>
-    <div id="lp-upgrade-card" class="lp-upgrade-card" style="display:none;">
-      <div class="lp-upgrade-title">Upgrade options</div>
-      <div class="lp-upgrade-sub">Adjustments to the prices above:</div>
-      <div id="lp-upgrade-rows"></div>
-    </div>
-    <div class="lp-cta-row">
-      <button class="lp-cta" type="button" onclick="openPathModal(this)">Start Your Order</button>
-    </div>
-  </div>
-</section>
+  </section>
 
-<!-- PAPER SHOWCASE -->
-<section class="lp-strip lp-section-cream" id="lp-papers-strip-section" style="display:none;">
-  <div class="container">
-    <span class="lp-strip-tag">Choose your paper</span>
-    <h2 class="lp-strip-h">Each one a pleasure to hold</h2>
-    <p class="lp-strip-intro">The paper is what sets each option apart — from our smooth signature stock to luxurious cotton rag and textured finishes.</p>
-    <div id="lp-papers-strip" class="lp-showcase"></div>
-  </div>
-</section>
+  
+  
+</article>
 
-<!-- FINISHING SHOWCASE -->
-<section class="lp-strip lp-section-cream" id="lp-finishes-strip-section" style="display:none;">
-  <div class="container">
-    <div class="lp-finish-panel">
-      <span class="lp-strip-tag">Finishing touches</span>
-      <h2 class="lp-strip-h">The details that make it unforgettable</h2>
-      <div id="lp-finishes-strip" class="lp-finish-grid"></div>
-      <div class="lp-finish-foot">Add any finishing touch when you personalise your design in the studio.</div>
-    </div>
-  </div>
-</section>
 
-<!-- HOW IT WORKS -->
-<section class="lp-how">
-  <div class="container">
-    <span class="lp-section-tag">How it works</span>
-    <h2 class="lp-section-h2">From design to <em>doorstep.</em></h2>
-    <div class="lp-section-divider"></div>
-    <div class="lp-how-steps">
-      <div class="lp-how-step">
-        <div class="lp-how-num">1</div>
-        <div class="lp-how-title">Upload or design</div>
-        <div class="lp-how-text">Upload finished artwork or use our Design Studio to create from scratch.</div>
-      </div>
-      <div class="lp-how-step">
-        <div class="lp-how-num">2</div>
-        <div class="lp-how-title">Choose specs</div>
-        <div class="lp-how-text">Pick your size, paper, finish and quantity.</div>
-      </div>
-      <div class="lp-how-step">
-        <div class="lp-how-num">3</div>
-        <div class="lp-how-title">We print</div>
-        <div class="lp-how-text">Printed in the UK on paper we have chosen and checked ourselves.</div>
-      </div>
-      <div class="lp-how-step">
-        <div class="lp-how-num">4</div>
-        <div class="lp-how-title">Delivered</div>
-        <div class="lp-how-text">Tracked delivery, included as standard. Faster options at checkout.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- WHY US — 4 items, real claims only -->
-<!-- FAQS — the visible answers and the FAQPage data below must match -->
-<section class="lp-section lp-section-white">
-<div class="container">
-<span class="lp-section-tag">Choosing yours</span>
-<h2 class="lp-section-h2">Choosing your <em>Table Plan</em></h2>
-<div class="lp-section-divider"></div>
-<div class="lp-intro-wrap">
-<p class="lp-intro-body">A wedding Table Plan is usually the last piece of stationery to be finalised, because it cannot be completed until the <a href="/rsvp-cards">RSVP Cards</a> are back and the seating is settled. Most venues display a single large board on an easel near the entrance to the room. Guests are commonly listed alphabetically by surname, which is faster to scan than grouping by table, with the table named beside each name. It is normally ordered alongside the <a href="/table-numbers">Table numbers</a> and <a href="/menu-cards">Menu cards</a> so the lettering matches.</p>
-</div>
-</div>
-</section>
-
-<section class="lp-section lp-section-cream">
-  <div class="container">
-    <span class="lp-section-tag">FAQs</span>
-    <h2 class="lp-section-h2">Common <em>questions.</em></h2>
-    <div class="lp-section-divider"></div>
-    <div class="lp-faq-wrap">
-      <details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">When should a wedding table plan be ordered?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">After the RSVP deadline, once final numbers and seating are settled. Most couples allow a week or two before the day, which is enough for printing and delivery while leaving room for a late change.</div></details>
-<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">Should a table plan be alphabetical or grouped by table?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Alphabetical by surname is quicker for a guest to scan, particularly with 100 or more names, because they look for themselves rather than reading every table. Grouping by table shows who is sitting together, which some couples prefer for smaller weddings.</div></details>
-<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">What size should a wedding table plan be?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Large enough to read from a step or two back, since several guests will be looking at once and a queue forms if only one person can read it at a time. The size is usually matched to the easel or frame the venue provides.</div></details>
-<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">What happens if guests drop out after the table plan is printed?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Small changes are usually managed on the day by moving place cards rather than reprinting. Where a whole table changes, a reprint is sometimes needed, which is why the plan is left as late as the schedule allows.</div></details>
-<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">Do we need a table plan and place cards?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">Most weddings use both: the plan tells guests which table, and place cards tell them which seat. Some couples use the plan alone and let guests choose seats within their table.</div></details>
-<details class="lp-faq-item"><summary class="lp-faq-q"><span class="lp-faq-q-text">Should the table plan match our other wedding stationery?</span><span class="lp-faq-toggle">+</span></summary><div class="lp-faq-a">It commonly does, using the same typeface and colours as the table numbers and menu cards. It is one of the first things guests see on entering the room, so it tends to set the tone for the table.</div></details>
-    </div>
-  </div>
-</section>
-
-<!-- FINAL CTA -->
-<section class="lp-final">
-  <div class="container">
-    <h2 class="lp-final-h">Ready to <em>start?</em></h2>
-    <button class="lp-cta" type="button" onclick="openPathModal(this)">Start Your Order</button>
-  </div>
-</section>
 
 <style>
 footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
@@ -978,432 +859,10 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   </div>
 </div>
 
-<!-- PATH-CHOOSER MODAL -->
-<div id="path-modal" class="path-modal" role="dialog" aria-modal="true" aria-labelledby="path-modal-title" aria-hidden="true">
-  <div class="path-modal-backdrop" onclick="closePathModal()"></div>
-  <div class="path-modal-panel" role="document">
-    <button class="path-modal-close" type="button" onclick="closePathModal()" aria-label="Close">×</button>
-    <span class="path-modal-tag" id="path-modal-tag">Wedding Invitations</span>
-    <h2 class="path-modal-h" id="path-modal-title">How would you like to <em>start?</em></h2>
-    <p class="path-modal-sub">Whether your design is ready to print or you are starting from a blank page, we will take it from here.</p>
-    <div class="path-modal-grid">
-      <a id="path-upload" class="path-card" href="#">
-        <div class="path-icon">✦</div>
-        <h3 class="path-title">I have my design ready</h3>
-        <p class="path-desc">Upload your artwork. Choose your size, paper and finish.</p>
-        <span class="path-card-cta">Upload &amp; configure</span>
-      </a>
-      <a id="path-design" class="path-card" href="#">
-        <div class="path-icon">✧</div>
-        <h3 class="path-title">Help me design it</h3>
-        <p class="path-desc">Use our Design Studio to create from scratch — no design experience needed.</p>
-        <span class="path-card-cta">Open Design Studio</span>
-      </a>
-    </div>
-    <div class="path-modal-help">Not sure which is right for you? <a href="#">Get in touch</a></div>
-  </div>
-</div>
-
-<!-- JSON-LD: Product schema (no inline price; price is JS-rendered, would
-     violate Google's structured-data-must-match-HTML rule. Add Offer.price
-     when we move to build-time pre-rendering for Google Shopping.) -->
-<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Table Plan", "url": "https://foreverprint.com/table-plans", "brand": {"@type": "Brand", "name": "Foreverprint"}, "description": "Wedding table plans printed in the UK, large enough to read at a glance, so your guests find their seats without a queue forming at the door.", "image": "https://foreverprint.com/table-plans-card.jpg"}</script>
-<script type="application/ld+json" id="ld-faq">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "When should a wedding table plan be ordered?", "acceptedAnswer": {"@type": "Answer", "text": "After the RSVP deadline, once final numbers and seating are settled. Most couples allow a week or two before the day, which is enough for printing and delivery while leaving room for a late change."}}, {"@type": "Question", "name": "Should a table plan be alphabetical or grouped by table?", "acceptedAnswer": {"@type": "Answer", "text": "Alphabetical by surname is quicker for a guest to scan, particularly with 100 or more names, because they look for themselves rather than reading every table. Grouping by table shows who is sitting together, which some couples prefer for smaller weddings."}}, {"@type": "Question", "name": "What size should a wedding table plan be?", "acceptedAnswer": {"@type": "Answer", "text": "Large enough to read from a step or two back, since several guests will be looking at once and a queue forms if only one person can read it at a time. The size is usually matched to the easel or frame the venue provides."}}, {"@type": "Question", "name": "What happens if guests drop out after the table plan is printed?", "acceptedAnswer": {"@type": "Answer", "text": "Small changes are usually managed on the day by moving place cards rather than reprinting. Where a whole table changes, a reprint is sometimes needed, which is why the plan is left as late as the schedule allows."}}, {"@type": "Question", "name": "Do we need a table plan and place cards?", "acceptedAnswer": {"@type": "Answer", "text": "Most weddings use both: the plan tells guests which table, and place cards tell them which seat. Some couples use the plan alone and let guests choose seats within their table."}}, {"@type": "Question", "name": "Should the table plan match our other wedding stationery?", "acceptedAnswer": {"@type": "Answer", "text": "It commonly does, using the same typeface and colours as the table numbers and menu cards. It is one of the first things guests see on entering the room, so it tends to set the tone for the table."}}]}</script>
-
-<script>
-// ── PRODUCT IDENTIFIER FROM URL ──────────────────────────
-const PRODUCT = (function() {
-  const params = new URLSearchParams(window.location.search);
-  let slug = params.get('product');
-  if (!slug) {
-    const path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
-    if (path && !path.includes('.') && !path.includes('/')) slug = path;
-  }
-  slug = (slug || '').toLowerCase().trim();
-  const name = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  return { slug, name };
-})();
-
-const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
-
-const SIZE_DIMS = {
-  'A4':'210 × 297 mm', 'A5':'148 × 210 mm', 'A6':'105 × 148 mm',
-  '5x7':'127 × 178 mm', 'DL':'99 × 210 mm', 'Square':'148 × 148 mm'
-};
-
-let productData = null;
-let pricingPayload = null;
-let productPricing = null;
-
-function escapeHtml(s) {
-  if (s == null) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-async function loadData() {
-  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
-  const [ptRes, pricesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
-    fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
-  ]);
-  // Did Supabase actually answer? A failed request and a genuine "no such
-  // product" look the same from here, and they must not be treated the same.
-  let lookupAnswered = false;
-  if (ptRes.ok) {
-    lookupAnswered = true;
-    const rows = await ptRes.json();
-    if (rows && rows.length) productData = rows[0];
-  }
-  if (pricesRes.ok) {
-    const rows = await pricesRes.json();
-    if (rows && rows.length && rows[0].payload && rows[0].payload.schema_version === 2 && Array.isArray(rows[0].payload.products)) {
-      pricingPayload = rows[0].payload;
-      productPricing = pricingPayload.products.find(p => p.slug === PRODUCT.slug) || null;
-    }
-  }
-  if (!productData) {
-    // Only claim the product does not exist when Supabase said so. If the
-    // request itself failed — an outage, a rate limit, a dropped connection —
-    // the page already served is correct and complete, and replacing it with
-    // an error would turn a working page into a dead one for customers and
-    // for search engines alike.
-    if (lookupAnswered) showNotFound();
-    else console.warn('[product] could not reach Supabase; keeping the page as served');
-    return;
-  }
-  renderHero();
-  updateModalLinks();
-  renderPricing();
-  renderPapersStrip();
-  renderSizesStrip();
-  renderFinishesStrip();
-  renderJsonLd();
-}
-
-function showNotFound() {
-  const sections = document.querySelectorAll('section');
-  if (sections.length) {
-    const html = `<section style="padding:120px 20px;text-align:center;background:var(--cream);">
-      <div style="max-width:560px;margin:0 auto;font-family:'Cormorant Garamond',serif;color:var(--text);">
-        <div style="font-size:2.4rem;font-weight:300;margin-bottom:14px;">Product not found</div>
-        <p style="font-family:'Jost',sans-serif;font-size:var(--text-body);color:var(--soft);line-height:1.9;margin-bottom:32px;">We couldn't find a product matching <strong style="color:var(--text);">/${escapeHtml(PRODUCT.slug)}</strong>.</p>
-        <a href="/products" style="font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:4px;">Browse all products →</a>
-      </div></section>`;
-    sections[0].outerHTML = html;
-    for (let i = sections.length - 1; i > 0; i--) sections[i].remove();
-  }
-  document.title = 'Product not found | Foreverprint';
-}
-
-function renderHero() {
-  const name = productData.name || PRODUCT.name;
-  document.title = productData.meta_title || `${name} | Foreverprint`;
-  const setMeta = (sel, content) => {
-    const el = document.querySelector(sel);
-    if (el && content) el.setAttribute('content', content);
-  };
-  setMeta('meta[name="description"]', productData.meta_description || productData.description || '');
-  setMeta('meta[property="og:title"]', productData.meta_title || `${name} | Foreverprint`);
-  setMeta('meta[property="og:description"]', productData.meta_description || productData.description || '');
-  setMeta('meta[property="og:url"]', `https://foreverprint.com/${PRODUCT.slug}`);
-  if (productData.hero_image_url) {
-    // Absolute, or social networks cannot fetch it.
-    const img = productData.hero_image_url.startsWith('http')
-      ? productData.hero_image_url
-      : 'https://foreverprint.com' + productData.hero_image_url;
-    setMeta('meta[property="og:image"]', img);
-  }
-  let canonical = document.querySelector('link[rel="canonical"]');
-  if (!canonical) {
-    canonical = document.createElement('link');
-    canonical.setAttribute('rel', 'canonical');
-    document.head.appendChild(canonical);
-  }
-  canonical.setAttribute('href', `https://foreverprint.com/${PRODUCT.slug}`);
-  document.getElementById('lp-h1').textContent = name;
-  if (productData.tagline) document.getElementById('lp-sub').textContent = productData.tagline;
-  document.getElementById('path-modal-tag').textContent = name;
-  const wrap = document.getElementById('lp-hero-img-wrap');
-  // The build puts the hero straight into the HTML so it can start loading
-  // immediately. Replacing it here would throw that away and fetch the
-  // full-size original a second time.
-  if (wrap.querySelector('img[data-prerendered]')) {
-    // already there, and already the right size
-  } else if (productData.hero_image_url) {
-    const src = productData.hero_image_url;
-    // Netlify resizes and re-encodes on the fly: a 1600px JPEG becomes an
-    // 800px WebP — same picture, roughly a tenth of the bytes.
-    const cdn = (w) => `/.netlify/images?url=${encodeURIComponent(src)}&w=${w}&fm=webp&q=75`;
-    wrap.innerHTML = `<img class="lp-hero-img" src="${cdn(800)}"
-      srcset="${cdn(400)} 400w, ${cdn(800)} 800w, ${cdn(1200)} 1200w"
-      sizes="(max-width: 768px) 92vw, 44vw"
-      alt="${escapeHtml(name)}" width="800" height="644" fetchpriority="high" decoding="async"/>`;
-  } else {
-    wrap.innerHTML = `<div class="lp-hero-img-placeholder">✦</div>`;
-  }
-}
-
-function updateModalLinks() {
-  const upload = document.getElementById('path-upload');
-  const design = document.getElementById('path-design');
-  if (upload) upload.href = `/${PRODUCT.slug}/order`;
-  // Straight into the studio for THIS product — the customer has already told
-  // us what they are making by being on this page, so asking again is friction.
-  if (design) design.href = `/design-studio-ai-create.html?product=${PRODUCT.slug}`;
-}
-
-function pickAnchorQtys(qtys) {
-  const sorted = [...qtys].sort((a,b) => a - b);
-  if (sorted.length <= 3) return sorted;
-  return [sorted[0], sorted[Math.floor(sorted.length/2)], sorted[sorted.length-1]];
-}
-
-function renderPricing() {
-  const grid = document.getElementById('lp-anchor-grid');
-  const priceValue = document.getElementById('lp-price-value');
-  const priceMeta = document.getElementById('lp-price-meta');
-
-  if (!productPricing || !Array.isArray(productPricing.sheet_sells) || !productPricing.sheet_sells.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Pricing will appear here once published in admin.</div>';
-    priceValue.textContent = '£—';
-    priceMeta.textContent = 'Pricing to be confirmed';
-    return;
-  }
-  const papers = productPricing.available_papers || [];
-  const sizes  = productPricing.available_sizes || [];
-  if (!papers.length || !sizes.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Configure available sizes and papers in admin.</div>';
-    return;
-  }
-  const defaultPaper = papers[0];
-  const defaultSize  = sizes.includes('A5') ? 'A5' : sizes[0];
-  const matches = productPricing.sheet_sells.filter(s => s.paper === defaultPaper && s.size === defaultSize);
-  if (!matches.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">No pricing yet for ${escapeHtml(defaultPaper)} × ${escapeHtml(defaultSize)}.</div>`;
-    return;
-  }
-  const qtys = [...new Set(productPricing.sheet_sells
-      .filter(s => s.size === defaultSize && papers.includes(s.paper))
-      .map(m => parseInt(m.qty,10)))].sort((a,b)=>a-b);
-
-  // Build a price lookup: price[paper][qty]
-  const priceOf = (paper, qty) => {
-    const m = productPricing.sheet_sells.find(s => s.paper === paper && s.size === defaultSize && parseInt(s.qty,10) === qty);
-    return m ? Math.round(parseFloat(m.sell)) : null;
-  };
-
-  // Hero price = cheapest paper, lowest qty
-  const lowest = priceOf(defaultPaper, qtys[0]);
-  priceValue.textContent = `£${lowest}`;
-  priceMeta.textContent = `From ${qtys[0]} · ${escapeHtml(defaultSize)} · Inc. VAT`;
-
-  const popularQty = qtys.length >= 3 ? qtys[Math.floor(qtys.length/2)] : null;
-
-  grid.innerHTML = `
-    <table class="lp-price-table">
-      <thead><tr><th>Quantity</th>${papers.map(p => `<th>${escapeHtml(p)}</th>`).join('')}</tr></thead>
-      <tbody>
-        ${qtys.map(q => {
-          const pop = q === popularQty;
-          return `<tr${pop ? ' class="pt-popular"' : ''}>
-            <td>${q} cards${pop ? ' <span class="pt-badge">Most popular</span>' : ''}</td>
-            ${papers.map(p => { const pr = priceOf(p, q); return `<td>${pr !== null ? '£'+pr : '—'}</td>`; }).join('')}
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <div class="lp-price-note">${escapeHtml(defaultSize)} · all prices include VAT · finishing touches adjust the price in the studio</div>`;
-
-  renderUpgradeRows(productPricing, defaultPaper, defaultSize, []);
-}
-
-function renderUpgradeRows(pp, defaultPaper, defaultSize, anchors) {
-  if (!anchors.length) return;
-  const baseline = anchors[Math.floor(anchors.length / 2)];
-  const baselineQty = parseInt(baseline.qty, 10);
-  const baselineSell = parseFloat(baseline.sell);
-  const rows = [];
-
-  (pp.available_sizes || []).forEach(size => {
-    if (size === defaultSize) return;
-    const m = pp.sheet_sells.find(s => s.paper === defaultPaper && s.size === size && parseInt(s.qty,10) === baselineQty);
-    if (!m) return;
-    const delta = parseFloat(m.sell) - baselineSell;
-    if (Math.abs(delta) < 0.5) return;
-    const sign = delta > 0 ? '+' : '−';
-    const dimText = SIZE_DIMS[size] ? ` (${SIZE_DIMS[size]})` : '';
-    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${escapeHtml(size)}${dimText}</span><span class="lp-upgrade-value">${sign}£${Math.round(Math.abs(delta))}</span></div>`);
-  });
-
-  (pp.available_papers || []).forEach(paper => {
-    if (paper === defaultPaper) return;
-    const m = pp.sheet_sells.find(s => s.paper === paper && s.size === defaultSize && parseInt(s.qty,10) === baselineQty);
-    if (!m) return;
-    const delta = parseFloat(m.sell) - baselineSell;
-    if (Math.abs(delta) < 0.5) return;
-    const sign = delta > 0 ? '+' : '−';
-    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${escapeHtml(paper)} paper</span><span class="lp-upgrade-value">${sign}£${Math.round(Math.abs(delta))}</span></div>`);
-  });
-
-  (pp.finish_sells || []).forEach(f => {
-    const sell = parseFloat(f.sell) || 0;
-    if (sell <= 0) return;
-    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${escapeHtml(f.name)} finish</span><span class="lp-upgrade-value">+£${Math.round(sell)}</span></div>`);
-  });
-
-  if (!rows.length) return;
-  document.getElementById('lp-upgrade-rows').innerHTML = rows.join('');
-  document.getElementById('lp-upgrade-card').style.display = '';
-}
-
-const PAPER_DESC = {
-  'Smooth 300gsm': ['Our signature', 'Clean, crisp and substantial — a soft matte white that lets colour and detail sing.'],
-  'Smooth White': ['Our signature', 'Clean, crisp and substantial — a soft matte white that lets colour and detail sing.'],
-  'Cotton Rag': ['Premium', 'Thick, tactile and softly textured — the deep, pillowy cotton stock reserved for fine stationery.'],
-  'Textured Ivory': ['Luxe', 'A warm ivory with a fine felt-like grain and gentle weight — heirloom paper for the most special day.'],
-  'Vellum': ['Delicate', 'A translucent, whisper-thin sheet that veils your design in soft elegance.']
-};
-const FINISH_DESC = {
-  'Gold Foil': 'Mirror-bright foil, pressed into the paper — it catches the light as the envelope opens.',
-  'Foil': 'Mirror-bright foil, pressed into the paper — it catches the light as the envelope opens.',
-  'Deckle Edge': 'A soft, feathered edge with the romance of old-world, hand-torn paper.',
-  'Vellum Wrap': 'A translucent overlay that veils your design in delicate, whisper-thin elegance.',
-  'Wax Seal': 'A pressed wax seal to close the suite — the oldest mark of something worth opening.',
-  'Letterpress': 'Ink pressed deep into thick paper, leaving an impression you can feel.'
-};
-
-function renderPapersStrip() {
-  const papers = (productPricing && productPricing.available_papers) || [];
-  if (!papers.length) return;
-  const strip = document.getElementById('lp-papers-strip');
-  strip.innerHTML = papers.map(name => {
-    const meta = PAPER_DESC[name] || ['', 'A beautiful stock, chosen for its quality and feel.'];
-    return `<div class="lp-show-card">
-      <div class="lp-swatch">${escapeHtml(name)}</div>
-      <div class="lp-show-name">${escapeHtml(name)}</div>
-      ${meta[0] ? `<div class="lp-show-tier">${escapeHtml(meta[0])}</div>` : ''}
-      <div class="lp-show-desc">${escapeHtml(meta[1])}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('lp-papers-strip-section').style.display = '';
-}
-
-function renderSizesStrip() {
-  const section = document.getElementById('lp-sizes-strip-section');
-  const strip = document.getElementById('lp-sizes-strip');
-  if (!section || !strip) return;
-  const sizes = (productPricing && productPricing.available_sizes) || [];
-  if (!sizes.length) return;
-  strip.innerHTML = sizes.map(size => {
-    const dim = SIZE_DIMS[size] || '';
-    return `<span class="lp-strip-pill" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:var(--text-sm);">${escapeHtml(size)}${dim ? `<span class="pill-dim" style="display:block;font-size:var(--text-xs);color:var(--soft);margin-top:3px;">${escapeHtml(dim)}</span>` : ''}</span>`;
-  }).join('');
-  document.getElementById('lp-sizes-strip-section').style.display = '';
-}
-
-function renderFinishesStrip() {
-  const finishes = ((productPricing && productPricing.available_finishes) || []).filter(f => f && f !== 'None');
-  if (!finishes.length) return;
-  const strip = document.getElementById('lp-finishes-strip');
-  strip.innerHTML = finishes.map(name => {
-    const desc = FINISH_DESC[name] || 'A premium finishing touch, added when you personalise your design.';
-    return `<div class="lp-finish-item">
-      <div class="lp-finish-name">${escapeHtml(name)}</div>
-      <div class="lp-finish-desc">${escapeHtml(desc)}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('lp-finishes-strip-section').style.display = '';
-}
-
-function renderJsonLd() {
-  const ld = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": productData.name || PRODUCT.name,
-    "description": productData.meta_description || productData.description || '',
-    "brand": { "@type": "Brand", "name": "Foreverprint" },
-    "url": `https://foreverprint.com/${PRODUCT.slug}`,
-    ...(productData.hero_image_url ? { "image": productData.hero_image_url } : {})
-  };
-  const el = document.getElementById('ld-product');
-  if (el) el.textContent = JSON.stringify(ld);
-}
-
-// ── PATH-CHOOSER MODAL ───────────────────────────────────
-let lastPathTrigger = null;
-
-function openPathModal(trigger) {
-  lastPathTrigger = trigger || null;
-  const modal = document.getElementById('path-modal');
-  modal.setAttribute('aria-hidden', 'false');
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  const firstFocusable = modal.querySelector('.path-card, .path-modal-close');
-  if (firstFocusable) setTimeout(() => firstFocusable.focus(), 50);
-  // GA event for funnel tracking; safe no-op if gtag not loaded.
-  try {
-    if (typeof gtag === 'function') {
-      gtag('event', 'path_chooser_opened', {
-        product_slug: PRODUCT.slug,
-        product_name: PRODUCT.name || ''
-      });
-    }
-  } catch (e) { /* swallow */ }
-}
-
-function closePathModal() {
-  const modal = document.getElementById('path-modal');
-  modal.setAttribute('aria-hidden', 'true');
-  modal.classList.remove('open');
-  document.body.style.overflow = '';
-  if (lastPathTrigger && typeof lastPathTrigger.focus === 'function') {
-    lastPathTrigger.focus();
-  }
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    const modal = document.getElementById('path-modal');
-    if (modal && modal.classList.contains('open')) closePathModal();
-  }
-});
-
-['path-upload', 'path-design'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) {
-    el.addEventListener('click', () => {
-      try {
-        if (window.fpAnalytics) {
-          window.fpAnalytics.track('path_chooser_selected', {
-            product_slug: PRODUCT.slug,
-            path: id === 'path-upload' ? 'upload' : 'design'
-          });
-        }
-      } catch (e) { /* swallow */ }
-    });
-  }
-});
-
-loadData().then(function(){
-  // Which product was viewed, and at what price. Pairs with add_to_cart and
-  // purchase to give a per-product funnel rather than a site-wide one.
-  try {
-    if (window.fpAnalytics) window.fpAnalytics.track('view_item', {
-      currency: 'GBP',
-      value: (typeof getStartingPrice === 'function' ? getStartingPrice(PRODUCT.slug) : null) || undefined,
-      items: [{ item_id: PRODUCT.slug, item_name: (productData && productData.name) || PRODUCT.name || PRODUCT.slug }]
-    });
-  } catch (e) {}
-}).catch(function(){});
-
-// Header / footer
-fetch('/header.html').then(r=>r.text()).then(html=>{var __c=document.getElementById('site-header'); if(__c) __c.outerHTML=html;if(typeof updateCartBadge==='function')if (typeof updateCartBadge === 'function') updateCartBadge();
-  else document.addEventListener('DOMContentLoaded', function(){ if (typeof updateCartBadge === 'function') updateCartBadge(); });});
-fetch('/footer.html').then(r=>r.text()).then(html=>{var __c=document.getElementById('site-footer'); if(__c) __c.outerHTML=html;});
-</script>
-
-  <script src="/analytics.js" defer></script>
-  <script src="/help-widget.js" defer></script>
+<script type="application/ld+json" id="ld-article">{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Wedding stationery guides", "url": "https://foreverprint.com/guides"}</script>
+<script type="application/ld+json" id="ld-guide-faq">{}</script>
+<script src="/cart.js"></script>
+<script src="/analytics.js" defer></script>
+<script src="/help-widget.js" defer></script>
 </body>
 </html>

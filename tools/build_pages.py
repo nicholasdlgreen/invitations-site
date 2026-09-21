@@ -370,6 +370,147 @@ def build_page(template, product, pricing, all_products=()):
 
 
 # Pages that keep their own navigation or have none.
+def build_guide(template, guide, products):
+    """Render one guide article to /guides/<slug>.
+
+    Guides exist because product pages do not earn links — nobody links to a
+    menu cards page. Timelines, wording templates and checklists do get cited,
+    and the internal links from a guide then pass that authority on to the
+    pages that actually sell.
+    """
+    slug = guide["slug"]
+    title = (guide.get("meta_title") or "").strip() or f'{guide["title"]} | Foreverprint'
+    desc = re.sub(r"\s+", " ", (guide.get("meta_description") or "").strip())[:300]
+    url = f"{SITE}/guides/{slug}"
+    by_slug = {p.get("slug"): p for p in products if p.get("slug")}
+
+    html = template
+    html = html.replace("{{TITLE}}", esc(title))
+    html = html.replace("{{DESC}}", esc(desc))
+    html = html.replace("{{URL}}", esc(url))
+    html = html.replace("{{H1}}", esc(guide["title"]))
+
+    intro = (guide.get("intro") or "").strip()
+    html = html.replace("{{INTRO}}",
+                        f'<p class="gd-intro">{esc(intro)}</p>' if intro else "")
+
+    # Body. Product names in the prose become links, using the same one-pass
+    # linker the product pages use, so a guide feeds the pages it mentions.
+    out = []
+    for sec in guide.get("sections") or []:
+        heading = (sec.get("heading") or "").strip()
+        text = (sec.get("text") or "").strip()
+        if heading:
+            out.append(f"<h2>{esc(heading)}</h2>")
+        for para in [p for p in re.split(r"\n\s*\n", text) if p.strip()]:
+            out.append(f"<p>{link_products(esc(para.strip()), products, None)}</p>")
+    html = html.replace("{{SECTIONS}}", "\n".join(out))
+
+    # FAQs, visible and in the schema, built from one source.
+    faqs = [f for f in (guide.get("faqs") or [])
+            if (f.get("q") or "").strip() and (f.get("a") or "").strip()]
+    if faqs:
+        items = "".join(
+            '<details class="gd-faq-item">'
+            f'<summary class="gd-faq-q"><span class="gd-faq-q-text">{esc(f["q"].strip())}</span>'
+            '<span class="gd-faq-toggle">+</span></summary>'
+            f'<div class="gd-faq-a">{esc(f["a"].strip())}</div></details>'
+            for f in faqs
+        )
+        html = html.replace("{{FAQS}}",
+            '<section class="gd-faqs"><div class="gd-wrap">'
+            '<h2 class="gd-faq-h">Common questions</h2>' + items + "</div></section>")
+        ld_faq = {"@context": "https://schema.org", "@type": "FAQPage",
+                  "mainEntity": [{"@type": "Question", "name": f["q"].strip(),
+                                  "acceptedAnswer": {"@type": "Answer", "text": f["a"].strip()}}
+                                 for f in faqs]}
+        html = html.replace('<script type="application/ld+json" id="ld-guide-faq">{}</script>',
+                            '<script type="application/ld+json" id="ld-guide-faq">'
+                            + json.dumps(ld_faq, ensure_ascii=False) + "</script>")
+    else:
+        html = html.replace("{{FAQS}}", "")
+
+    # Related products, as cards.
+    cards = []
+    for ps in guide.get("related_products") or []:
+        prod = by_slug.get(ps)
+        if not prod:
+            continue
+        img = prod.get("hero_image_url") or ""
+        cards.append(
+            f'<a class="gd-card" href="/{esc(ps)}">'
+            + (f'<div class="gd-card-img"><img src="{esc(img)}" alt="" loading="lazy"></div>' if img
+               else '<div class="gd-card-img"></div>')
+            + f'<div class="gd-card-name">{esc(prod.get("name") or ps)}</div></a>'
+        )
+    html = html.replace("{{RELATED}}",
+        '<section class="gd-related"><div class="gd-wrap">'
+        '<h2 class="gd-related-h">What you will need</h2>'
+        '<div class="gd-related-grid">' + "".join(cards) + "</div></div></section>"
+        if cards else "")
+
+    ld = {"@context": "https://schema.org", "@type": "Article",
+          "headline": guide["title"], "description": desc,
+          "mainEntityOfPage": {"@type": "WebPage", "@id": url},
+          "publisher": {"@type": "Organization", "name": "Foreverprint",
+                        "url": SITE}}
+    html = html.replace('<script type="application/ld+json" id="ld-article">{}</script>',
+                        '<script type="application/ld+json" id="ld-article">'
+                        + json.dumps(ld, ensure_ascii=False) + "</script>")
+    return html
+
+
+def write_guides_index(guides, slugs):
+    """The /guides hub. Built from the same template as the articles, so the
+    two cannot drift apart visually, and it gives the guides one place to be
+    linked from rather than relying on the footer alone."""
+    try:
+        tpl = open(os.path.join(ROOT, "guide.html"), encoding="utf-8").read()
+    except OSError:
+        return
+    live = {g["slug"]: g for g in guides if g.get("slug") in set(slugs)}
+    cards = []
+    for sl in slugs:
+        g = live.get(sl)
+        if not g:
+            continue
+        summary = re.sub(r"\s+", " ", (g.get("intro") or "")).strip()
+        if len(summary) > 150:
+            summary = summary[:147].rstrip() + "..."
+        cards.append(
+            f'<a class="gd-card" href="/guides/{esc(sl)}" '
+            'style="padding:20px 22px 22px;border-radius:14px;">'
+            f'<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.2rem;'
+            f'color:var(--text);margin-bottom:8px;line-height:1.3;">{esc(g["title"])}</div>'
+            f'<div style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;">{esc(summary)}</div></a>'
+        )
+
+    html = tpl
+    html = html.replace("{{TITLE}}", "Wedding Stationery Guides | Foreverprint")
+    html = html.replace("{{DESC}}", esc(
+        "Practical guides to wedding stationery: when to send save the dates and "
+        "invitations, how many you need, what to write and what to order."))
+    html = html.replace("{{URL}}", f"{SITE}/guides")
+    html = html.replace("{{H1}}", "Wedding stationery guides")
+    html = html.replace("{{INTRO}}",
+        '<p class="gd-intro">When to send things, how many to order and what to put on them '
+        '&mdash; the questions couples ask us most, answered properly.</p>')
+    html = html.replace("{{SECTIONS}}",
+        '<div class="gd-related-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));">'
+        + "".join(cards) + "</div>")
+    html = html.replace("{{FAQS}}", "")
+    html = html.replace("{{RELATED}}", "")
+    # The hub is a list, not an article.
+    html = html.replace('<script type="application/ld+json" id="ld-article">{}</script>',
+                        '<script type="application/ld+json" id="ld-article">'
+                        + json.dumps({"@context": "https://schema.org", "@type": "CollectionPage",
+                                      "name": "Wedding stationery guides",
+                                      "url": f"{SITE}/guides"}, ensure_ascii=False) + "</script>")
+    # No "read our other guides" link on the page that lists them all.
+    html = re.sub(r'(?s)<section class="gd-more">.*?</section>', "", html, count=1)
+    open(os.path.join(ROOT, "guides.html"), "w", encoding="utf-8").write(html)
+
+
 CHROME_SKIP = {"header.html", "footer.html", "admin.html"}
 
 
@@ -398,11 +539,18 @@ def inline_chrome():
         log(f"could not read header/footer ({e}) — navigation left as it was")
         return
 
+    # Root pages plus the guides folder. Guides live one level down, and
+    # listing only the root left them with the placeholder and no navigation
+    # in their markup — which is exactly the problem inlining exists to solve.
+    pages = [(n, os.path.join(ROOT, n)) for n in sorted(os.listdir(ROOT))]
+    guides_dir = os.path.join(ROOT, "guides")
+    if os.path.isdir(guides_dir):
+        pages += [(n, os.path.join(guides_dir, n)) for n in sorted(os.listdir(guides_dir))]
+
     done = 0
-    for name in sorted(os.listdir(ROOT)):
+    for name, path in pages:
         if not name.endswith(".html") or name in CHROME_SKIP:
             continue
-        path = os.path.join(ROOT, name)
         try:
             html = open(path, encoding="utf-8").read()
         except OSError:
@@ -413,13 +561,26 @@ def inline_chrome():
         # <header>/<footer> element, and one with an inline style. Match the
         # shape rather than the exact string, so a page is never quietly
         # skipped and left with no navigation in its markup.
+        # Inlined chrome is wrapped in markers so it can be found and replaced
+        # on the NEXT build. Without them the header and footer were baked in
+        # permanently: after the first inline the placeholder was gone, so
+        # editing header.html or footer.html reached only pages that get
+        # regenerated. Adding one footer link landed on 4 pages out of 55.
         def swap(kind, markup, page):
-            return re.sub(
-                r'<(div|%s)\s+id="site-%s"[^>]*>\s*</\1>' % (kind, kind),
-                lambda m: markup,
-                page,
-                count=1,
-            )
+            wrapped = f"<!--CHROME:{kind}-->{markup}<!--/CHROME:{kind}-->"
+            patterns = [
+                # first time: the placeholder
+                r'<(?:div|%s)\s+id="site-%s"[^>]*>\s*</(?:div|%s)>' % (kind, kind, kind),
+                # later builds: our own marked block
+                r'<!--CHROME:%s-->.*?<!--/CHROME:%s-->' % (kind, kind),
+                # one-off migration for pages inlined before the markers existed
+                r'<%s\b[^>]*>.*?</%s>' % (kind, kind),
+            ]
+            for pat in patterns:
+                new_page, n = re.subn(pat, lambda m: wrapped, page, count=1, flags=re.S)
+                if n:
+                    return new_page
+            return page
 
         html = swap("header", header, html)
         html = swap("footer", footer, html)
@@ -439,7 +600,7 @@ def inline_chrome():
     log(f"navigation written into {done} pages")
 
 
-def write_sitemap(slugs):
+def write_sitemap(slugs, guide_slugs=()):
     today = date.today().isoformat()
     out = [
         '<?xml version="1.0" encoding="UTF-8"?>',
@@ -462,13 +623,17 @@ def write_sitemap(slugs):
         add(loc, pri, freq)
     for slug in slugs:
         add("/" + slug, "0.8", "weekly")
+    if guide_slugs:
+        add("/guides", "0.6", "monthly")
+        for g in guide_slugs:
+            add("/guides/" + g, "0.6", "monthly")
     for loc, pri, freq in CORE_PAGES[3:]:
         add(loc, pri, freq)
     out.append("</urlset>")
     open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8").write(
         "\n".join(out) + "\n"
     )
-    log(f"sitemap.xml: {len(slugs) + len(CORE_PAGES)} URLs")
+    log(f"sitemap.xml: {len(slugs) + len(CORE_PAGES) + (len(guide_slugs) + 1 if guide_slugs else 0)} URLs")
 
 
 def main():
@@ -485,6 +650,9 @@ def main():
             url,
             key,
             "/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1",
+        )
+        guides = fetch(
+            url, key, "/rest/v1/guides?active=eq.true&select=*&order=display_order"
         )
     except Exception as e:
         log(f"could not reach Supabase ({e}) — leaving existing pages untouched")
@@ -512,8 +680,30 @@ def main():
         written.append(slug)
 
     log(f"wrote {len(written)} product pages")
+
+    guide_slugs = []
+    if guides:
+        try:
+            gt = open(os.path.join(ROOT, "guide.html"), encoding="utf-8").read()
+        except OSError as e:
+            log(f"cannot read guide.html ({e}) — guides skipped")
+            gt = None
+        if gt:
+            os.makedirs(os.path.join(ROOT, "guides"), exist_ok=True)
+            for g in guides:
+                gslug = (g.get("slug") or "").strip()
+                if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", gslug or ""):
+                    log(f"skipping unusual guide slug: {gslug!r}")
+                    continue
+                page = build_guide(gt, g, products)
+                open(os.path.join(ROOT, "guides", gslug + ".html"),
+                     "w", encoding="utf-8").write(page)
+                guide_slugs.append(gslug)
+            write_guides_index(guides, guide_slugs)
+            log(f"wrote {len(guide_slugs)} guides")
+
     inline_chrome()
-    write_sitemap(written)
+    write_sitemap(written, guide_slugs)
     return 0
 
 
