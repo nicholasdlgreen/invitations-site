@@ -59,4 +59,13 @@ https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:sp
 /*.woff2 /:splat.woff2 200
 /*.pdf   /:splat.pdf   200
 
-/*  /product.html?product=:splat  200
+# Anything that reaches here does not exist. It used to fall through to
+# product.html, which answered HTTP 200 with "Product not found" — a soft 404.
+# Google treats that as a real page: it indexes junk URLs, wastes crawl budget
+# and never learns the address is dead. Verified before the change: /guides,
+# /guides/test and /this-page-does-not-exist all returned 200.
+#
+# Product pages are real generated files (wedding-invitations.html and the
+# rest), which Netlify serves for the clean path without needing a rule, so
+# nothing depends on the old catch-all.
+/*  /404.html  404
