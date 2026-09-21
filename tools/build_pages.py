@@ -128,22 +128,32 @@ def link_products(text, products, self_slug):
     <a href="/wedding-<a href="/invitations">invitations</a>">.
     """
     candidates = []
+    self_name = ""
     for p in products:
         slug = (p.get("slug") or "").strip()
         name = (p.get("name") or "").strip()
+        if slug == self_slug:
+            self_name = name
+            continue
         # 'invitations' is the catch-all bucket and never gets a page built,
         # so a link to it would be a 404.
-        if not slug or not name or slug == self_slug or slug == "invitations":
+        if not slug or not name or slug == "invitations":
             continue
         candidates.append((name, slug))
     if not candidates:
         return text
 
-    # Longest names first so "table plan" is never matched inside a longer one.
-    candidates.sort(key=lambda c: len(c[0]), reverse=True)
-    lookup = {name.lower(): slug for name, slug in candidates}
+    # The page's own name goes into the pattern too, matched but never linked.
+    # Without it, "Party Invitations" matched inside "Engagement Party
+    # Invitations" and the page linked its own name to a different product.
+    # Longest first, so the longer name always wins at a given position.
+    matchable = list(candidates)
+    if self_name:
+        matchable.append((self_name, None))
+    matchable.sort(key=lambda c: len(c[0]), reverse=True)
+    lookup = {name.lower(): slug for name, slug in matchable}
     pattern = re.compile(
-        r"(?<!\w)(" + "|".join(re.escape(n) for n, _ in candidates) + r")(s?)(?!\w)",
+        r"(?<!\w)(" + "|".join(re.escape(n) for n, _ in matchable) + r")(s?)(?!\w)",
         re.I,
     )
 
