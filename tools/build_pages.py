@@ -113,7 +113,53 @@ def starting_price(pricing, slug):
     return None
 
 
-def build_page(template, product, pricing):
+def link_products(text, products, self_slug):
+    """Link the first mention of each other product, once, in a single pass.
+
+    The copy names place cards, table numbers and the table plan because that
+    is how couples talk about them — but naming a product without linking it
+    wastes the strongest on-site signal there is. Links spread authority across
+    the twenty pages and give search engines one topic cluster instead of
+    twenty islands.
+
+    Done in ONE pass over the original text rather than a substitution per
+    product. Running them in sequence meant a later name could match inside a
+    link already written, which produced
+    <a href="/wedding-<a href="/invitations">invitations</a>">.
+    """
+    candidates = []
+    for p in products:
+        slug = (p.get("slug") or "").strip()
+        name = (p.get("name") or "").strip()
+        # 'invitations' is the catch-all bucket and never gets a page built,
+        # so a link to it would be a 404.
+        if not slug or not name or slug == self_slug or slug == "invitations":
+            continue
+        candidates.append((name, slug))
+    if not candidates:
+        return text
+
+    # Longest names first so "table plan" is never matched inside a longer one.
+    candidates.sort(key=lambda c: len(c[0]), reverse=True)
+    lookup = {name.lower(): slug for name, slug in candidates}
+    pattern = re.compile(
+        r"(?<!\w)(" + "|".join(re.escape(n) for n, _ in candidates) + r")(s?)(?!\w)",
+        re.I,
+    )
+
+    linked = set()
+
+    def sub(m):
+        slug = lookup.get(m.group(1).lower())
+        if not slug or slug in linked:
+            return m.group(0)
+        linked.add(slug)
+        return f'<a href="/{slug}">{m.group(1)}{m.group(2)}</a>'
+
+    return pattern.sub(sub, text)
+
+
+def build_page(template, product, pricing, all_products=()):
     slug = product["slug"]
     name = product.get("name") or slug.replace("-", " ").title()
     title = product.get("meta_title") or f"{name} | Foreverprint"
@@ -252,7 +298,8 @@ def build_page(template, product, pricing):
         if guide:
             parts.append(f'<h2 class="lp-section-h2">Choosing your <em>{heading}</em></h2>')
             parts.append('<div class="lp-section-divider"></div>')
-            parts.append(f'<p class="lp-intro-body">{esc(guide)}</p>')
+            # esc() first, then link — so the link markup we add survives.
+            parts.append(f'<p class="lp-intro-body">{link_products(esc(guide), all_products, slug)}</p>')
         parts += ['</div>', '</div>', '</section>']
         html = html.replace("<!--LP_INTRO-->", "\n".join(parts), 1)
 
@@ -445,7 +492,7 @@ def main():
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", slug):
             log(f"skipping unusual slug: {slug!r}")
             continue
-        html = build_page(template, p, pricing)
+        html = build_page(template, p, pricing, products)
         open(os.path.join(ROOT, slug + ".html"), "w", encoding="utf-8").write(html)
         written.append(slug)
 
