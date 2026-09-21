@@ -196,3 +196,8 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };
+
+// Shared with send-review-requests-due.js so the email itself is written once.
+exports.buildReviewHtml = buildReviewHtml;
+exports.sendEmail = sendEmail;
+exports.REVIEW_URL = REVIEW_URL;

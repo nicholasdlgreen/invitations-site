@@ -1379,7 +1379,14 @@ function renderRow(o) {
         ${statuses.map(s=>`<option value="${s}"${o.status===s?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
       </select>
     </td>
-    <td style="font-size:11px;color:var(--soft);white-space:nowrap;">${date}</td>
+    <td style="font-size:11px;color:var(--soft);white-space:nowrap;">
+      ${date}
+      ${o.review_email_sent_at
+        ? `<div style="font-size:10px;color:#5A9E6F;margin-top:3px;" title="Review request sent ${new Date(o.review_email_sent_at).toLocaleString('en-GB')}">&#10003; review asked</div>`
+        : (o.status === 'dispatched'
+            ? `<div style="font-size:10px;color:var(--pale);margin-top:3px;" title="The daily sweep asks a few days after dispatch">&middot; review pending</div>`
+            : '')}
+    </td>
     <td>
       <div class="action-btns">
         <button class="action-btn primary" onclick="openJobTicket('${o.id}')">📄 Job Ticket</button>
