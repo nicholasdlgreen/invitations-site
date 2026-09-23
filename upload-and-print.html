@@ -1600,6 +1600,33 @@ loadDeliveryOptions();
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('inv_cart')||'[]'); } catch(e){ cart=[]; }
 let currentFile=null, currentStep=1, selectedSize=null;
+// Photographs of the actual stocks, shot flat and square, at two sizes: the
+// full swatch (760px) and a thumbnail (420px) for the small tier tiles.
+//
+// Keyed by the paper name exactly as admin stores it, because that name is
+// the join running through the whole pricing chain — papers, products, sheet
+// rates. A paper with no photograph returns null, and the caller decides what
+// to show. We never substitute a different paper's picture: someone choosing
+// a £41 Italian stock must be looking at that stock.
+//
+// No photograph yet: Cartonboard, Gloss.
+const PAPER_IMAGE = {
+  'Uncoated':               'uncoated',
+  'Silk':                   'silk',
+  'Ice White':              'icewhite',
+  'Recycled Uncoated':      'recycled',
+  'Tintoretto Gesso':       'tintoretto',
+  'Nettuno Bianco':         'nettuno',
+  'Acquerello Bianco':      'acquerello',
+  'Sirio Pearl Polar Dawn': 'polardawn'
+};
+
+function paperImage(name, size) {
+  const slug = PAPER_IMAGE[name];
+  if (!slug) return null;
+  return (size === 'thumb' ? '/img/paper/thumb/' : '/img/paper/') + slug + '.jpg';
+}
+
 let selectedPaper='smooth', selectedWeight=null, selectedFinish='None', selectedFinishes={}, uploadQty=25, checksPassed=true;
 let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
 // Design-studio mode: set in the IIFE near the bottom of this script if
