@@ -59,6 +59,15 @@ https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:sp
 /*.woff2 /:splat.woff2 200
 /*.pdf   /:splat.pdf   200
 
+# Internal documents are NOT public. The publish directory is the repository
+# root, so every committed file is served — docs/PRICING.md would hand anyone
+# our cost base, the supplier discount and our margin position at a plain URL.
+# The trailing ! forces the rule even though the file exists, which is the only
+# way to stop Netlify serving it. Verify after deploying: /docs/PRICING.md and
+# /BRAND-IMAGERY-GUIDE.md must both return 404.
+/docs/*   /404.html   404!
+/*.md     /404.html   404!
+
 # Anything that reaches here does not exist. It used to fall through to
 # product.html, which answered HTTP 200 with "Product not found" — a soft 404.
 # Google treats that as a real page: it indexes junk URLs, wastes crawl budget

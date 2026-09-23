@@ -492,6 +492,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab" data-pz="costs" onclick="showPricingPanel(this)">💷 Costs</button>
           <button class="pz-tab" data-pz="pl" onclick="showPricingPanel(this)">📈 Monthly P&amp;L</button>
           <button class="pz-tab" data-pz="mgmt" onclick="showPricingPanel(this)">📊 Management Accounts</button>
+          <button class="pz-tab" data-pz="docs" onclick="showPricingPanel(this)">📚 Documents</button>
           <button class="pz-tab" data-pz="settings" onclick="showPricingPanel(this)">⚙️ Settings &amp; Export</button>
         </div>
 
@@ -762,6 +763,15 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
                 <tbody id="mgmtHistoryBody"><tr><td colspan="10"><div class="empty"><span class="empty-icon">📊</span><div class="empty-text">No months saved yet</div></div></td></tr></tbody>
               </table></div>
             </div>
+          </div>
+
+          <!-- PANEL: DOCUMENTS -->
+          <div class="pz-panel" id="pz-docs">
+            <div class="section-header">
+              <div><div class="section-title">Documents</div><div class="section-sub">The things the business depends on knowing, in one place. Most live elsewhere — a shared document, the code repository, a supplier's portal — so this points at them rather than keeping a second copy that quietly goes out of date. Short notes can be written here instead.</div></div>
+              <button class="btn btn-gold" onclick="openDocModal()">＋ Add Document</button>
+            </div>
+            <div id="docsList"><div class="empty"><span class="empty-icon">📚</span><div class="empty-text">No documents yet</div></div></div>
           </div>
 
           <!-- PANEL: SETTINGS & EXPORT -->
@@ -1152,6 +1162,27 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
       <button class="btn btn-gold btn-sm" onclick="saveFinish()">Save Finish Type</button>
     </div>
     <input type="hidden" id="fin_editId">
+  </div>
+</div>
+
+<div class="modal-overlay" id="docModal">
+  <div class="pz-modal">
+    <div class="modal-title">Add Document</div>
+    <div class="field"><label>Title</label><input type="text" id="doc_title" placeholder="e.g. How Foreverprint pricing works"></div>
+    <div class="field"><label>What it is for</label><input type="text" id="doc_desc" placeholder="One line — enough to know whether this is the one you want."></div>
+    <div class="field"><label>Category</label><input type="text" id="doc_category" placeholder="e.g. Pricing, Brand, Suppliers, Legal" list="doc_categories">
+      <datalist id="doc_categories"></datalist></div>
+    <div class="field"><label>Link</label><input type="text" id="doc_url" placeholder="https://… — leave blank if it has no web address">
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;">A shared document, a supplier portal, anywhere it can be opened.</p></div>
+    <div class="field"><label>Or where to find it</label><input type="text" id="doc_location" placeholder="e.g. Repository → docs/PRICING.md">
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;">For anything with no link — a file, a folder, a filing cabinet.</p></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="doc_body" rows="5" placeholder="Short notes worth keeping here rather than in an inbox. Longer documents belong at the link above."></textarea></div>
+    <div class="field"><label>Display Order</label><input type="number" id="doc_order" placeholder="10" step="10" min="0" style="max-width:120px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeDocModal()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="saveDoc()">Save Document</button>
+    </div>
+    <input type="hidden" id="doc_editId">
   </div>
 </div>
 
@@ -1651,6 +1682,7 @@ function pricingLoad() {
   loadFinishOptionsFromSupabase();
   loadFinishTypesFromSupabase();
   loadSheetRatesFromSupabase();
+  loadDocsFromSupabase();
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
 loadPricingSettings();
   renderAllSelects(); renderLM(); renderCostTable(); renderSupplierList();
@@ -3619,6 +3651,133 @@ function renderProductTypeList() {
 
 let finishOptions = [];
 let finishTypes = [];
+
+// ═══════════════════════════════════════════════════════
+// DOCUMENTS — an index of what the business depends on knowing.
+// Deliberately a directory, not a store: most of these live somewhere else,
+// and a second copy in here would quietly go out of date. `body` exists for
+// short notes that are better kept in the tool than in an inbox.
+// ═══════════════════════════════════════════════════════
+
+let docsIndex = [];
+
+async function loadDocsFromSupabase() {
+  try {
+    docsIndex = await sbFetch('docs_index?select=*&order=display_order');
+    if (!Array.isArray(docsIndex)) docsIndex = [];
+  } catch (err) {
+    // The table is admin-only, so this fails for a signed-out page. That is
+    // the point, and is not worth shouting about.
+    console.warn('Could not load documents:', err.message);
+    docsIndex = [];
+  }
+  renderDocsList();
+}
+
+function renderDocsList() {
+  const container = document.getElementById('docsList');
+  if (!container) return;
+  const live = docsIndex.filter(d => d.active !== false);
+  if (!live.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">📚</span><div class="empty-text">No documents yet</div></div>';
+    return;
+  }
+  // Fill the category suggestions from what already exists, so the list stays
+  // tidy without anyone having to remember the spelling.
+  const dl = document.getElementById('doc_categories');
+  if (dl) dl.innerHTML = [...new Set(live.map(d => d.category).filter(Boolean))]
+    .sort().map(c => `<option value="${escapeHtml(c)}">`).join('');
+
+  const groups = {};
+  live.forEach(d => { (groups[d.category || 'Other'] = groups[d.category || 'Other'] || []).push(d); });
+
+  container.innerHTML = Object.keys(groups).sort().map(cat => `
+    <div style="margin-bottom:22px;">
+      <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-lt);margin-bottom:10px;">${escapeHtml(cat)}</div>
+      ${groups[cat].map(d => {
+        const where = d.url
+          ? `<a href="${escapeHtml(d.url)}" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">Open ↗</a>`
+          : (d.location ? `<span style="color:rgba(250,247,242,.55);">${escapeHtml(d.location)}</span>` : '');
+        const hasNotes = d.body && d.body.trim();
+        return `<div class="supplier-card" style="align-items:flex-start;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:500;font-size:13px;">${escapeHtml(d.title)}</div>
+            ${d.description ? `<div style="font-size:12px;color:rgba(250,247,242,.55);margin-top:4px;line-height:1.6;">${escapeHtml(d.description)}</div>` : ''}
+            <div style="font-size:11px;margin-top:8px;">${where}</div>
+            ${hasNotes ? `<details style="margin-top:10px;">
+              <summary style="cursor:pointer;font-size:11px;color:var(--gold-lt);">Notes</summary>
+              <div style="white-space:pre-wrap;font-size:12px;line-height:1.7;color:rgba(250,247,242,.8);margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:6px;">${escapeHtml(d.body)}</div>
+            </details>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-outline btn-xs" onclick="openDocModal('${d.id}')">Edit</button>
+            <button class="btn btn-danger btn-xs" onclick="deleteDoc('${d.id}')">✕</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function openDocModal(editId) {
+  ['doc_title','doc_desc','doc_category','doc_url','doc_location','doc_body','doc_order','doc_editId']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.querySelector('#docModal .modal-title').textContent = editId ? 'Edit Document' : 'Add Document';
+  if (editId) {
+    const d = docsIndex.find(x => x.id === editId);
+    if (d) {
+      document.getElementById('doc_title').value    = d.title || '';
+      document.getElementById('doc_desc').value     = d.description || '';
+      document.getElementById('doc_category').value = d.category || '';
+      document.getElementById('doc_url').value      = d.url || '';
+      document.getElementById('doc_location').value = d.location || '';
+      document.getElementById('doc_body').value     = d.body || '';
+      document.getElementById('doc_order').value    = d.display_order != null ? d.display_order : '';
+      document.getElementById('doc_editId').value   = editId;
+    }
+  }
+  document.getElementById('docModal').classList.add('open');
+}
+
+function closeDocModal() { document.getElementById('docModal').classList.remove('open'); }
+
+async function saveDoc() {
+  const title = document.getElementById('doc_title').value.trim();
+  if (!title) { toast('A title is needed'); return; }
+  const editId = document.getElementById('doc_editId').value;
+  const payload = {
+    title,
+    description:   document.getElementById('doc_desc').value.trim() || null,
+    category:      document.getElementById('doc_category').value.trim() || null,
+    url:           document.getElementById('doc_url').value.trim() || null,
+    location:      document.getElementById('doc_location').value.trim() || null,
+    body:          document.getElementById('doc_body').value.trim() || null,
+    display_order: parseInt(document.getElementById('doc_order').value, 10) || 0,
+    active:        true,
+    updated_at:    new Date().toISOString()
+  };
+  try {
+    if (editId) await sbFetch(`docs_index?id=eq.${editId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+    else        await sbFetch('docs_index', { method: 'POST', body: JSON.stringify(payload) });
+    closeDocModal();
+    await loadDocsFromSupabase();
+    toast('Saved ✓');
+  } catch (err) {
+    toast('Save failed: ' + err.message);
+  }
+}
+
+async function deleteDoc(id) {
+  const d = docsIndex.find(x => x.id === id);
+  if (!confirm(`Remove "${d ? d.title : 'this document'}" from the index? The document itself is not touched.`)) return;
+  try {
+    await sbFetch(`docs_index?id=eq.${id}`, { method: 'DELETE' });
+    docsIndex = docsIndex.filter(x => x.id !== id);
+    renderDocsList();
+    toast('Removed ✓');
+  } catch (err) {
+    toast('Delete failed: ' + err.message);
+  }
+}
 
 async function loadFinishTypesFromSupabase() {
   try {
