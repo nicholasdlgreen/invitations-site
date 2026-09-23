@@ -83,6 +83,46 @@
 .pp-back{display:block;margin-top:12px;font-size:var(--text-xs);color:var(--soft);text-decoration:none;}
 .pp-back:hover{color:var(--gold);}
 @media (max-width:900px){.pp{grid-template-columns:1fr;}.pp-panel{position:static;}.pp-photo{height:300px;}}
+/* THE CHOICES COLUMN — six labelled rows, one line of pills each */
+.pp-right{display:flex;flex-direction:column;gap:15px;min-width:0;}
+.rq{display:flex;align-items:baseline;gap:12px;}
+.rq h2{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:26px;margin:0;color:var(--text);}
+.rq span{font-size:12.5px;color:var(--soft);}
+.rlab{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--pale);margin-bottom:8px;}
+.tiers{display:flex;gap:10px;}
+.tier{flex:1;display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:14px;background:var(--white);
+  border:2px solid var(--border);cursor:pointer;font-family:inherit;text-align:left;transition:border-color .18s,box-shadow .18s;min-width:0;}
+.tier:hover{border-color:var(--gold-lt);}
+.tier.on{border-color:var(--gold);box-shadow:0 3px 14px rgba(61,46,36,.09);}
+/* Zoomed right into the grain: our papers are all white, so a whole sheet at
+   this size reads as a blank grey square. */
+.tier .th{width:68px;height:68px;border-radius:9px;background-size:300%;background-position:center;
+  border:1px solid var(--border);flex-shrink:0;background-color:#F3EDE4;}
+.tier .tn{font-family:'Cormorant Garamond',serif;font-size:16.5px;color:var(--text);display:block;}
+.tier .tx{font-size:11px;color:var(--pale);display:block;margin-top:2px;}
+.pills{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.pill{background:var(--white);border:1.5px solid var(--border);border-radius:40px;padding:8px 15px;font-family:inherit;
+  font-size:12.5px;color:var(--soft);cursor:pointer;transition:border-color .15s,color .15s;display:inline-flex;align-items:center;gap:7px;}
+.pill:hover{border-color:var(--gold-lt);}
+.pill.on{border-color:var(--gold);color:var(--text);background:#FDFBF8;}
+.pill .dot{width:15px;height:15px;border-radius:50%;border:1px solid rgba(61,46,36,.18);flex-shrink:0;}
+.pill.on .dot{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--gold);}
+.pill-sep{width:1px;align-self:stretch;background:var(--border);margin:2px 5px;}
+.pill-note{font-size:11.5px;color:var(--pale);}
+.frow{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+.frow:last-child{margin-bottom:0;}
+.fname{font-size:11px;color:var(--pale);width:74px;flex-shrink:0;}
+.rnote{font-size:12.5px;color:var(--soft);background:#F6F1E9;border-radius:10px;padding:11px 15px;line-height:1.55;}
+.dels{display:flex;gap:9px;}
+.del{flex:1;background:var(--white);border:1.5px solid var(--border);border-radius:13px;padding:12px 14px;cursor:pointer;
+  font-family:inherit;text-align:left;transition:border-color .15s;min-width:0;}
+.del:hover{border-color:var(--gold-lt);}
+.del.on{border-color:var(--gold);background:#FDFBF8;}
+.del b{font-weight:400;font-size:13px;color:var(--text);display:block;}
+.del i{font-style:normal;font-size:11px;color:var(--pale);display:block;margin-top:3px;line-height:1.45;}
+.del u{text-decoration:none;font-size:11.5px;color:var(--soft);display:block;margin-top:5px;}
+.rfine{font-size:11px;color:var(--pale);margin:6px 0 0;line-height:1.6;}
+@media (max-width:900px){.tiers{flex-direction:column;}.dels{flex-direction:column;}}
 /* BLEED / TRIM / SAFE OVERLAY */
 .bleed-overlay{position:absolute;pointer-events:none;}
 .bleed-line{position:absolute;box-sizing:border-box;border-width:1px;}
@@ -811,70 +851,51 @@ was fetched and injected via innerHTML — that was the bug behind the
           </div>
         </div>
         <div class="pp-right">
+          <div class="rq">
+            <h2>Make it yours</h2>
+            <span id="rqSub">Everything about your order, on one page</span>
+          </div>
 
-      <div class="check-card">
-        <h3>Paper stock</h3>
-        <div class="paper-grid" id="paperGrid"></div>
-        <div id="weightPicker" style="margin-top:18px;"></div>
-      </div>
+          <div>
+            <div class="rlab">1 &middot; How should it feel</div>
+            <div class="tiers" id="tierRow"></div>
+          </div>
 
-      <div class="check-card" id="finishCard" style="display:none;">
-        <h3>Finishing</h3>
-        <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:16px;line-height:1.8;">Optional finishing touches that elevate the final piece.</p>
-        <div id="finishGrid" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
-      </div>
+          <div>
+            <div class="rlab">2 &middot; The paper</div>
+            <div class="pills" id="paperGrid"></div>
+            <div id="weightPicker"></div>
+          </div>
 
-      <div class="check-card">
-        <h3>Envelopes</h3>
-        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:16px;border:1.5px solid var(--border);border-radius:14px;transition:border-color .25s;" id="envToggleWrap">
-          <input type="checkbox" id="envToggle" onchange="toggleEnvelopes()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
-          <div><div style="font-size:var(--text-sm);color:var(--text);font-weight:400;">Add matching envelopes</div><div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">Premium gummed · Priced per envelope</div></div>
-        </label>
-        <div id="envSection" style="display:none;margin-top:16px;">
-          <div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;font-weight:500;">Choose colour</div>
-          <div id="envPicker" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
-          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:var(--text-sm);color:var(--soft);">Envelope total</span>
-            <span style="font-size:var(--text-sm);color:var(--gold);font-weight:500;" id="envLineTotal">£0.00</span>
+          <div id="finishCard">
+            <div class="rlab">3 &middot; Finishing</div>
+            <div id="finishGrid"></div>
+          </div>
+
+          <div>
+            <div class="rlab">4 &middot; Envelopes</div>
+            <div class="pills" id="envPicker"></div>
+            <div class="rfine" id="envLine"></div>
+          </div>
+
+          <div>
+            <div class="rlab">5 &middot; How many</div>
+            <div class="pills" id="qtyPresetPane"></div>
+            <div id="qtyCustomPane" style="display:none;margin-top:9px;">
+              <input id="qtyCustom" type="number" min="1" step="1" placeholder="Enter a number"
+                     oninput="applyCustomQty(this.value)"
+                     style="width:170px;padding:9px 13px;border:1.5px solid var(--border);border-radius:40px;font-family:inherit;font-size:12.5px;color:var(--text);">
+            </div>
+          </div>
+
+          <div>
+            <div class="rlab">6 &middot; When you need them</div>
+            <div class="dels" id="deliveryOptions"></div>
+            <p class="rfine" id="deliveryNote"></p>
+          </div>
           </div>
         </div>
       </div>
-
-      <div class="check-card">
-        <h3>Quantity</h3>
-        <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:20px;line-height:1.8;">We recommend ordering a few extras — reprinting a small batch later costs more per unit.</p>
-        <div style="display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;">
-          <button id="tabPreset" onclick="switchQtyTab('preset')" style="flex:1;padding:10px;border:none;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Choose amount</button>
-          <button id="tabCustom" onclick="switchQtyTab('custom')" style="flex:1;padding:10px;border:none;background:var(--white);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Enter exact amount</button>
-        </div>
-        <div id="qtyPresetPane" style="display:flex;flex-wrap:wrap;gap:10px;">
-          <div class="qty-chip selected" onclick="selectChip(this,25)">25</div>
-          <div class="qty-chip" onclick="selectChip(this,50)">50</div>
-          <div class="qty-chip" onclick="selectChip(this,75)">75</div>
-          <div class="qty-chip" onclick="selectChip(this,100)">100</div>
-          <div class="qty-chip" onclick="selectChip(this,150)">150</div>
-          <div class="qty-chip" onclick="selectChip(this,200)">200</div>
-          <div class="qty-chip" onclick="selectChip(this,250)">250</div>
-          <div class="qty-chip" onclick="selectChip(this,300)">300</div>
-        </div>
-        <div id="qtyCustomPane" style="display:none;">
-          <input type="number" id="qtyCustomInput" class="form-input" min="1" placeholder="e.g. 85" oninput="updatePrice()" style="max-width:200px;font-size:1.2rem;text-align:center;padding:14px;">
-          <div class="hint" style="margin-top:8px;">Enter any amount you need.</div>
-        </div>
-      </div>
-
-      <div class="check-card">
-        <h3>Delivery</h3>
-        <!-- Built at runtime from delivery_options, so turnaround can be changed
-             without touching this page, and the dates match what the printer works to. -->
-        <div id="deliveryOptions" style="display:flex;flex-direction:column;gap:10px;"></div>
-        <p id="deliveryNote" style="font-size:var(--text-xs);color:var(--pale);margin-top:12px;line-height:1.7;"></p>
-      </div>
-
-        </div>
-      </div>
-    </div>
-
     <!-- STEP 4: ADDED TO BASKET -->
     <!-- STEP 4: BASKET -->
     <!-- A holding step between adding something and paying for it. Adding to
@@ -2302,10 +2323,14 @@ function goStep(n){
 }
 
 function initStep3(){
-  if(currentFile){
-    document.getElementById('fileSummaryName').textContent=currentFile.name;
-    document.getElementById('fileSummaryMeta').textContent=(currentFile.size/1024/1024).toFixed(1)+' MB · Ready for print';
-  }
+  // The file summary bar was removed from step 3 — the page now opens on how
+  // it should feel, not on the name of the file. These two writes were left
+  // behind and threw on null for anyone who had actually uploaded something,
+  // which stopped the rest of this function and left step 3 blank.
+  const fsName = document.getElementById('fileSummaryName');
+  const fsMeta = document.getElementById('fileSummaryMeta');
+  if (currentFile && fsName) fsName.textContent = currentFile.name;
+  if (currentFile && fsMeta) fsMeta.textContent = (currentFile.size/1024/1024).toFixed(1)+' MB · Ready for print';
   // Paper grid — filter CONFIG.papers to only those available for this product.
   // Uses new schema (currentProduct.available_papers) first, falls back to old.
   const { set: pubPapers, hasWildcard } = getAvailablePapers();
@@ -2318,24 +2343,14 @@ function initStep3(){
   if (!papersToShow.find(p => p.id === selectedPaper) && papersToShow.length) {
     selectedPaper = papersToShow[0].id;
   }
-  const grid=document.getElementById('paperGrid');
-  // Stock cards (no pricing — selection only)
-  grid.innerHTML = papersToShow.map(p=>`
-    <div class="paper-opt${p.id===selectedPaper?' selected':''}" onclick="selectPaperOpt('${p.id}')">
-      <div class="paper-name">${p.name}</div>
-      <div class="paper-sub">${p.description||p.subtitle||''}</div>
-      ${p.finishLabel?`<div class="paper-finish">${p.finishLabel}</div>`:''}
-    </div>`).join('');
+  visiblePapers = papersToShow;
+  renderTierRow();
+  renderPaperPills();
   renderWeightPicker();
   // Finish grid — show only if product has more than one finish (i.e. options beyond just "None")
   renderFinishGrid();
-  // Envelope picker
-  const picker=document.getElementById('envPicker');
-  picker.innerHTML=ENVELOPES.map(e=>`
-    <div onclick="selectEnvColour('${e.id}')" title="${e.name}" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;">
-      <div id="env-swatch-${e.id}" style="width:36px;height:36px;border-radius:50%;background:${e.hex};border:2px solid ${selectedEnvColour===e.id?'var(--text)':e.border};transition:all .2s;transform:${selectedEnvColour===e.id?'scale(1.15)':'scale(1)'};"></div>
-      <div style="font-size:var(--text-xs);color:var(--soft);text-align:center;max-width:48px;line-height:1.3;">${e.name}</div>
-    </div>`).join('');
+  renderEnvelopePills();
+  renderQtyPills();
   updatePrice();
 }
 
@@ -2379,7 +2394,20 @@ function renderFinishGrid() {
   // only show types that have real options (more than just "None")
   types = types.filter(t => (t.options||[]).filter(o => o.name && o.name.toLowerCase() !== 'none').length > 0);
 
-  if (!types.length) { card.style.display = 'none'; return; }
+  // A paper that takes no finishing says so, rather than the row vanishing and
+  // leaving the customer wondering where foiling went. Only two of our stocks
+  // can be finished at all, so this is the common case, not the edge case.
+  if (!types.length) {
+    card.style.display = '';
+    const chosenName = (chosen && chosen.name) || 'This paper';
+    const canDo = (publishedPapers || [])
+      .filter(pp => Array.isArray(pp.finishes) && pp.finishes.length)
+      .map(pp => pp.name);
+    grid.innerHTML = `<div class="rnote">${chosenName} takes no finishing \u2014 the mill's surface is the finish.`
+      + (canDo.length ? ` Foiling, lamination and spot UV are available on ${canDo.slice(0,3).join(' and ')}.` : '')
+      + `</div>`;
+    return;
+  }
   card.style.display = '';
 
   // default each type's selection to its popular option (or "None")
@@ -2390,25 +2418,20 @@ function renderFinishGrid() {
     }
   });
 
+  // One labelled line per finishing type, pills across. The description of
+  // whatever was last clicked goes in the panel on the left, so nothing is
+  // explained twice and this row stays a single line each.
   grid.style.display = 'block';
   grid.innerHTML = types.map(t => {
     const opts = t.options || [];
     const sel = selectedFinishes[t.name];
-    const luxe = t.isLuxe ? `<span class="finish-luxe">LUXE</span>` : '';
+    const esc = v => String(v||'').replace(/'/g,'&#39;');
     const optsHtml = opts.map(o => {
-      const isSel = o.name === sel;
       const swatch = o.swatch ? `<span class="finish-swatch finish-sw-${o.swatch}"></span>` : '';
-      return `<span class="finish-opt${isSel?' sel':''}" onclick="selectFinishOpt('${t.name.replace(/'/g,'&#39;')}','${(o.name||'').replace(/'/g,'&#39;')}')">${swatch}${o.name}</span>`;
+      return `<button type="button" class="pill${o.name===sel?' on':''}"
+        onclick="selectFinishOpt('${esc(t.name)}','${esc(o.name)}')">${swatch}${o.name}</button>`;
     }).join('');
-    // helper text: show the description of the selected option if it has one
-    const selOpt = opts.find(o => o.name === sel);
-    const helper = (selOpt && selOpt.description) ? `<div class="finish-helper">${selOpt.name} — ${selOpt.description}</div>` : '';
-    return `<div class="finish-type">
-      <div class="finish-type-head"><span class="finish-type-name">${t.name}</span>${luxe}</div>
-      ${t.description?`<div class="finish-type-desc">${t.description}</div>`:''}
-      <div class="finish-opts">${optsHtml}</div>
-      ${helper}
-    </div>`;
+    return `<div class="frow"><span class="fname">${t.name}</span><span class="pills">${optsHtml}</span></div>`;
   }).join('');
 }
 
@@ -2424,8 +2447,8 @@ function selectFinishOpt(typeName, optName){
 function selectPaperOpt(id){
   selectedPaper=id;
   selectedWeight=null;   // reset — will default to the popular weight for this stock
-  document.querySelectorAll('.paper-opt').forEach(el=>el.classList.remove('selected'));
-  if(event&&event.currentTarget) event.currentTarget.classList.add('selected');
+  if (typeof renderTierRow === 'function') renderTierRow();
+  if (typeof renderPaperPills === 'function') renderPaperPills();
   renderWeightPicker();
   // Which finishes are possible depends on the paper, so the grid is rebuilt
   // here rather than only when the product loads.
@@ -2450,6 +2473,120 @@ function availableWeightsFor(stock){
 }
 
 // Render the weight options for the currently-selected stock (no pricing shown).
+// Which tier a paper belongs to. The Fedrigoni range and the recycled stock
+// are named explicitly; anything else — including a paper added in admin
+// tomorrow — falls into Signature rather than disappearing off the page.
+const LUXURY_PAPERS = ['Tintoretto Gesso','Nettuno Bianco','Acquerello Bianco','Sirio Pearl Polar Dawn'];
+const KINDER_PAPERS = ['Recycled Uncoated'];
+const TIERS = [
+  { id:'signature', name:'Signature', hint:'Smooth and clean' },
+  { id:'luxury',    name:'Luxury',    hint:'Italian, and you feel it' },
+  { id:'kinder',    name:'Kinder',    hint:'Wholly recycled' }
+];
+let visiblePapers = [];
+let selectedTier = null;
+
+function tierOf(paperName) {
+  if (LUXURY_PAPERS.includes(paperName)) return 'luxury';
+  if (KINDER_PAPERS.includes(paperName)) return 'kinder';
+  return 'signature';
+}
+function papersInTier(tierId) {
+  return (visiblePapers || []).filter(p => tierOf(p.name) === tierId);
+}
+
+function renderTierRow() {
+  const row = document.getElementById('tierRow');
+  if (!row) return;
+  const chosen = (visiblePapers || []).find(p => p.id === selectedPaper);
+  if (chosen) selectedTier = tierOf(chosen.name);
+
+  // Only offer a tier this product actually has papers for.
+  const live = TIERS.filter(t => papersInTier(t.id).length);
+  row.innerHTML = live.map(t => {
+    // The thumbnail is one of the tier's own papers, so it is never a picture
+    // of something we are not selling here.
+    const first = papersInTier(t.id).find(p => paperImage(p.name));
+    const img = first ? paperImage(first.name) : null;
+    return `<button type="button" class="tier${t.id===selectedTier?' on':''}" onclick="selectTier('${t.id}')">
+      <span class="th"${img?` style="background-image:url('${img}')"`:''}></span>
+      <span style="min-width:0;"><span class="tn">${t.name}</span><span class="tx">${t.hint}</span></span>
+    </button>`;
+  }).join('');
+}
+
+function selectTier(id) {
+  const list = papersInTier(id);
+  if (!list.length) return;
+  selectedTier = id;
+  // Moving tier moves the paper with it, or the panel would still be showing
+  // a paper from the tier they just left.
+  if (!list.find(p => p.id === selectedPaper)) {
+    selectedPaper = list[0].id;
+    selectedWeight = null;
+  }
+  renderTierRow(); renderPaperPills(); renderWeightPicker(); renderFinishGrid(); updatePrice();
+}
+
+function renderPaperPills() {
+  const wrap = document.getElementById('paperGrid');
+  if (!wrap) return;
+  const list = papersInTier(selectedTier) .length ? papersInTier(selectedTier) : (visiblePapers || []);
+  wrap.innerHTML = list.map(p =>
+    `<button type="button" class="pill${p.id===selectedPaper?' on':''}" onclick="selectPaperOpt('${p.id}')">${p.name}</button>`
+  ).join('');
+}
+
+function renderEnvelopePills() {
+  const wrap = document.getElementById('envPicker');
+  if (!wrap) return;
+  // "No envelopes" is a pill like any other rather than a tick box, so the row
+  // reads as one question with one answer.
+  wrap.innerHTML =
+    `<button type="button" class="pill${!envelopesEnabled?' on':''}" onclick="setEnvelopes(false)">No envelopes</button>`
+    + '<span class="pill-sep"></span>'
+    + ENVELOPES.map(e =>
+      `<button type="button" class="pill${envelopesEnabled&&selectedEnvColour===e.id?' on':''}" onclick="setEnvelopes(true,'${e.id}')">
+         <span class="dot" style="background:${e.hex}"></span>${e.name}</button>`).join('');
+}
+
+function setEnvelopes(on, id) {
+  envelopesEnabled = !!on;
+  if (on && id) selectedEnvColour = id;
+  const sec = document.getElementById('envSection');
+  if (sec) sec.style.display = on ? 'block' : 'none';
+  const chk = document.getElementById('envToggle');
+  if (chk) chk.checked = !!on;
+  renderEnvelopePills();
+  updatePrice();
+}
+
+const QTY_STEPS = [25,50,75,100,150,200,250,300];
+function renderQtyPills() {
+  const wrap = document.getElementById('qtyPresetPane');
+  if (!wrap) return;
+  const custom = !QTY_STEPS.includes(uploadQty);
+  wrap.innerHTML = QTY_STEPS.map(q =>
+      `<button type="button" class="pill${uploadQty===q?' on':''}" onclick="setQty(${q})">${q}</button>`).join('')
+    + `<button type="button" class="pill${custom?' on':''}" onclick="openCustomQty()">${custom?uploadQty:'Another number\u2026'}</button>`;
+}
+function setQty(q) {
+  uploadQty = q;
+  const pane = document.getElementById('qtyCustomPane');
+  if (pane) pane.style.display = 'none';
+  renderQtyPills(); updatePrice();
+}
+function openCustomQty() {
+  const pane = document.getElementById('qtyCustomPane');
+  if (pane) { pane.style.display = 'block'; const i = document.getElementById('qtyCustom'); if (i) i.focus(); }
+}
+function applyCustomQty(v) {
+  const n = parseInt(v, 10);
+  if (!isFinite(n) || n < 1) return;
+  uploadQty = n;
+  renderQtyPills(); updatePrice();
+}
+
 function renderWeightPicker(){
   const wrap = document.getElementById('weightPicker');
   if(!wrap) return;
@@ -2473,32 +2610,27 @@ function renderWeightPicker(){
   const single = weights.length===1 && !weights[0].gsm && !weights[0].name;
   if(single){ wrap.innerHTML=''; return; }
 
-  const maxGsm = Math.max.apply(null, weights.map(w=>w.gsm||0)) || 1;
-  const hint = weights.length>1
-    ? `${stock.name} comes in ${weights.length} weights — the heavier, the more substantial it feels.`
-    : `${stock.name} — a single beautiful weight.`;
-  wrap.innerHTML =
-    `<div class="weight-hint">Choose your thickness</div>
-     <div class="weight-sub">${hint}</div>
-     <div class="weight-list">` +
-    weights.map(w=>{
-      const barH = 18 + Math.round(((w.gsm||maxGsm)/maxGsm)*14);
-      const barW = 6 + Math.round(((w.gsm||maxGsm)/maxGsm)*6);
-      return `<div class="weight-opt${w.id===selectedWeight?' sel':''}" onclick="selectWeightOpt('${w.id}')">
-        <div class="weight-left">
-          <div class="weight-bar" style="width:${barW}px;height:${barH}px;"></div>
-          <div>
-            <div class="weight-name">${w.name||''}${w.gsm?` <span class="weight-gsm">· ${w.gsm}gsm</span>`:''}${w.popular?'<span class="weight-pop">POPULAR</span>':''}</div>
-            ${w.feel?`<div class="weight-feel">${w.feel}</div>`:''}
-          </div>
-        </div>
-      </div>`;
-    }).join('') +
-    `</div>
-     <div class="weight-sample"><span class="weight-q">?</span> Not sure? Order a free sample pack to feel each one.</div>`;
+  // Weights sit on the same row as the papers, after a divider — choosing the
+  // paper and choosing its thickness is one decision, not two. What each
+  // weight feels like is said in the panel on the left, not repeated here.
+  const papers = document.getElementById('paperGrid');
+  const existing = papers ? papers.querySelector('.pill-sep') : null;
+  if (existing) { while (existing.nextSibling) existing.parentNode.removeChild(existing.nextSibling); existing.remove(); }
+  wrap.innerHTML = '';
+  if (!papers) return;
+  if (weights.length === 1) {
+    const w = weights[0];
+    if (w.gsm) papers.insertAdjacentHTML('beforeend',
+      `<span class="pill-sep"></span><span class="pill-note">${w.gsm}gsm \u2014 one weight</span>`);
+    return;
+  }
+  papers.insertAdjacentHTML('beforeend', '<span class="pill-sep"></span>' + weights.map(w =>
+    `<button type="button" class="pill${w.id===selectedWeight?' on':''}" onclick="selectWeightOpt('${w.id}')">${w.gsm?w.gsm+'gsm':(w.name||'')}</button>`
+  ).join(''));
 }
 function selectWeightOpt(id){
   selectedWeight=id;
+  if (typeof renderPaperPills === 'function') renderPaperPills();
   renderWeightPicker();
   updatePrice();
 }
@@ -2617,15 +2749,14 @@ function renderDeliveryOptions(){
     const cost = deliveryPriceFor(opt, orderValue);
     const arrival = formatArrival(estimatedArrival(opt));
     const sel = selectedDelivery && selectedDelivery.id === opt.id;
-    return `<label onclick="${tooBig ? '' : `selectDelivery('${opt.id}',this)`}"
-      style="display:flex;align-items:center;gap:12px;cursor:${tooBig?'not-allowed':'pointer'};padding:14px 16px;border:1.5px solid ${sel?'var(--gold)':'var(--border)'};border-radius:12px;background:${sel?'rgba(184,151,106,.04)':'transparent'};opacity:${tooBig?'.45':'1'};">
-      <div style="flex:1;">
-        <div style="font-size:var(--text-sm);font-weight:500;color:var(--text);">${opt.name}</div>
-        <div style="font-size:var(--text-xs);color:var(--soft);margin-top:2px;">${opt.blurb || ''}</div>
-        <div style="font-size:var(--text-xs);color:var(--gold);margin-top:4px;">${tooBig ? 'Not available on orders this size' : 'Estimated arrival ' + arrival}</div>
-      </div>
-      <div style="font-size:var(--text-sm);color:var(--text);white-space:nowrap;">${cost > 0 ? '+£' + cost.toFixed(2) : 'Free'}</div>
-    </label>`;
+    // Three across rather than three stacked: the whole of step 3 has to fit
+    // one screen, and these are the last rows on it.
+    return `<button type="button" class="del${sel?' on':''}"${tooBig?' disabled style="opacity:.45;cursor:not-allowed"':` onclick="selectDelivery('${opt.id}',this)"`}>
+      <b>${opt.name}</b>
+      <i>${opt.blurb || ''}</i>
+      <i>${tooBig ? 'Not available on orders this size' : 'Arrives ' + arrival}</i>
+      <u>${cost > 0 ? '+£' + cost.toFixed(2) : 'Free'}</u>
+    </button>`;
   }).join('');
 
   const note = document.getElementById('deliveryNote');
@@ -2773,7 +2904,11 @@ function renderPaperPanel() {
   }
 
   // Name, and the weight in words as well as numbers.
-  const w = (paper.weights || []).find(x => x.gsm === selectedWeight) || (paper.weights || [])[0];
+  // selectedWeight holds the weight's ID ('uncoated-300'), not its gsm. Reading
+  // it as a gsm silently fell through to weights[0] and showed the lightest
+  // weight whatever was actually chosen — invisible on the six papers that
+  // have only one weight, wrong on the two that have four.
+  const w = (paper.weights || []).find(x => x.id === selectedWeight) || (paper.weights || [])[0];
   set('ppName', paper.name);
   set('ppSpec', w ? `${w.gsm}gsm \u00b7 ${w.name}` : '');
   set('ppFeel', paper.subtitle || '');
@@ -2798,7 +2933,10 @@ async function addToCartUpload(){
 
   // Same lookup chain as updatePrice() so cart total matches displayed price.
   let base, upgrade;
-  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty);
+  // Pass the weight. Without it the lookup matched the first row for this
+  // paper at any gsm, so the basket could charge 250gsm's price for a 400gsm
+  // card the customer had just been shown a different total for.
+  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty, selectedGsm());
   if (newSheetSell != null) {
     const finishSell = totalFinishSell();
     base = newSheetSell + finishSell;
