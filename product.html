@@ -68,6 +68,7 @@
 .lp-anchor-price{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:400;color:var(--text);line-height:1;margin-bottom:6px;}
 .lp-anchor-qty{font-size:var(--text-sm);color:var(--soft);margin-bottom:16px;}
 .lp-anchor-spec{font-size:var(--text-xs);color:var(--pale);padding-top:16px;border-top:1px solid var(--border);}
+.pt-gsm{display:block;font-size:.72rem;font-weight:400;letter-spacing:.04em;color:var(--soft);margin-top:2px;text-transform:none;}
 .lp-upgrade-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:28px 36px;max-width:680px;margin:0 auto;}
 .lp-upgrade-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;margin-bottom:6px;color:var(--text);}
 .lp-upgrade-sub{font-size:var(--text-xs);color:var(--soft);margin-bottom:18px;}
@@ -658,7 +659,7 @@ was fetched and injected via innerHTML — that was the bug behind the
     </div>
     <div id="lp-upgrade-card" class="lp-upgrade-card" style="display:none;">
       <div class="lp-upgrade-title">Upgrade options</div>
-      <div class="lp-upgrade-sub">Adjustments to the prices above:</div>
+      <div class="lp-upgrade-sub" id="lp-upgrade-note">Adjustments to the prices above:</div>
       <div id="lp-upgrade-rows"></div>
     </div>
     <div class="lp-cta-row">
@@ -1070,7 +1071,7 @@ async function loadData() {
   }
   if (pricesRes.ok) {
     const rows = await pricesRes.json();
-    if (rows && rows.length && rows[0].payload && rows[0].payload.schema_version === 2 && Array.isArray(rows[0].payload.products)) {
+    if (rows && rows.length && rows[0].payload && rows[0].payload.schema_version >= 2 && Array.isArray(rows[0].payload.products)) {
       pricingPayload = rows[0].payload;
       productPricing = pricingPayload.products.find(p => p.slug === PRODUCT.slug) || null;
     }
@@ -1183,89 +1184,126 @@ function renderPricing() {
     priceMeta.textContent = 'Pricing to be confirmed';
     return;
   }
-  const papers = productPricing.available_papers || [];
+  const sells  = productPricing.sheet_sells;
+  const papers = (productPricing.available_papers || []).filter(p => sells.some(s => s.paper === p));
   const sizes  = productPricing.available_sizes || [];
   if (!papers.length || !sizes.length) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Configure available sizes and papers in admin.</div>';
     return;
   }
-  const defaultPaper = papers[0];
-  const defaultSize  = sizes.includes('A5') ? 'A5' : sizes[0];
-  const matches = productPricing.sheet_sells.filter(s => s.paper === defaultPaper && s.size === defaultSize);
-  if (!matches.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">No pricing yet for ${escapeHtml(defaultPaper)} × ${escapeHtml(defaultSize)}.</div>`;
+  const defaultSize = sizes.includes('A5') ? 'A5' : sizes[0];
+
+  // Which weight to quote each paper at. Weights are a property of the stock,
+  // but not every weight is available on every product — the folded card route
+  // carries Uncoated at 300gsm only — so this only ever picks from weights that
+  // actually have a price here. The stock's "popular" weight wins when priced.
+  const catalogue = (pricingPayload && Array.isArray(pricingPayload.papers)) ? pricingPayload.papers : [];
+  function defaultGsmFor(paper) {
+    const priced = [...new Set(sells.filter(s => s.paper === paper && s.size === defaultSize)
+                                    .map(s => s.gsm).filter(g => g != null))].sort((a,b) => a-b);
+    if (!priced.length) return null;
+    const stock = catalogue.find(c => c.name === paper);
+    const pop = stock && (stock.weights || []).find(w => w.popular);
+    return (pop && priced.includes(pop.gsm)) ? pop.gsm : priced[0];
+  }
+  const gsmOf = {};
+  papers.forEach(p => { gsmOf[p] = defaultGsmFor(p); });
+  const shown = papers.filter(p => gsmOf[p] !== null);
+  if (!shown.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">No pricing yet for ${escapeHtml(defaultSize)}.</div>`;
     return;
   }
-  const qtys = [...new Set(productPricing.sheet_sells
-      .filter(s => s.size === defaultSize && papers.includes(s.paper))
-      .map(m => parseInt(m.qty,10)))].sort((a,b)=>a-b);
 
-  // Build a price lookup: price[paper][qty]
-  const priceOf = (paper, qty) => {
-    const m = productPricing.sheet_sells.find(s => s.paper === paper && s.size === defaultSize && parseInt(s.qty,10) === qty);
-    return m ? Math.round(parseFloat(m.sell)) : null;
+  const qtys = [...new Set(sells.filter(s => s.size === defaultSize && shown.includes(s.paper))
+                                .map(m => parseInt(m.qty,10)))].sort((a,b)=>a-b);
+
+  const priceOf = (paper, qty, gsm, size) => {
+    const m = sells.find(s => s.paper === paper && s.size === (size || defaultSize) &&
+                              parseInt(s.qty,10) === qty &&
+                              (gsm == null || s.gsm == null || s.gsm === gsm));
+    return m ? parseFloat(m.sell) : null;
   };
 
-  // Hero price = cheapest paper, lowest qty
-  const lowest = priceOf(defaultPaper, qtys[0]);
-  priceValue.textContent = `£${lowest}`;
-  priceMeta.textContent = `From ${qtys[0]} · ${escapeHtml(defaultSize)} · Inc. VAT`;
+  // Hero price = the cheapest we can do this product for at the lowest quantity.
+  const firstQty = qtys[0];
+  const cheapest = shown
+    .map(p => priceOf(p, firstQty, gsmOf[p]))
+    .filter(v => v != null)
+    .sort((a,b) => a-b)[0];
+  priceValue.textContent = cheapest != null ? '£' + Math.round(cheapest) : '£—';
+  priceMeta.textContent = `From ${firstQty} · ${escapeHtml(defaultSize)}`;
 
   const popularQty = qtys.length >= 3 ? qtys[Math.floor(qtys.length/2)] : null;
 
   grid.innerHTML = `
     <table class="lp-price-table">
-      <thead><tr><th>Quantity</th>${papers.map(p => `<th>${escapeHtml(p)}</th>`).join('')}</tr></thead>
+      <thead><tr><th>Quantity</th>${shown.map(p =>
+        `<th>${escapeHtml(p)}${gsmOf[p] ? `<span class="pt-gsm">${gsmOf[p]}gsm</span>` : ''}</th>`).join('')}</tr></thead>
       <tbody>
         ${qtys.map(q => {
           const pop = q === popularQty;
           return `<tr${pop ? ' class="pt-popular"' : ''}>
             <td>${q} cards${pop ? ' <span class="pt-badge">Most popular</span>' : ''}</td>
-            ${papers.map(p => { const pr = priceOf(p, q); return `<td>${pr !== null ? '£'+pr : '—'}</td>`; }).join('')}
+            ${shown.map(p => { const pr = priceOf(p, q, gsmOf[p]); return `<td>${pr !== null ? '£'+Math.round(pr) : '—'}</td>`; }).join('')}
           </tr>`;
         }).join('')}
       </tbody>
     </table>
-    <div class="lp-price-note">${escapeHtml(defaultSize)} · all prices include VAT · finishing touches adjust the price in the studio</div>`;
+    <div class="lp-price-note">${escapeHtml(defaultSize)} · print only · other sizes, thicknesses and finishing touches adjust the price in the studio</div>`;
 
-  renderUpgradeRows(productPricing, defaultPaper, defaultSize, []);
+  // The upgrade card used to be dead code: it was called with an empty anchor
+  // list, so the guard at the top of it fired every time and customers only
+  // ever saw one size priced.
+  const baseline = shown[0];
+  renderUpgradeRows(productPricing, baseline, defaultSize, gsmOf[baseline],
+                    popularQty || firstQty, priceOf);
 }
 
-function renderUpgradeRows(pp, defaultPaper, defaultSize, anchors) {
-  if (!anchors.length) return;
-  const baseline = anchors[Math.floor(anchors.length / 2)];
-  const baselineQty = parseInt(baseline.qty, 10);
-  const baselineSell = parseFloat(baseline.sell);
+// What the other choices cost, against one baseline order, so a customer can
+// see the shape of the range without opening the studio. Everything is quoted
+// as a difference from the same (paper, weight, size, quantity).
+function renderUpgradeRows(pp, basePaper, baseSize, baseGsm, baseQty, priceOf) {
+  const baseSell = priceOf(basePaper, baseQty, baseGsm, baseSize);
+  if (baseSell == null) return;
   const rows = [];
+  const line = (label, delta) => {
+    if (Math.abs(delta) < 0.5) return;
+    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${label}</span>` +
+              `<span class="lp-upgrade-value">${delta > 0 ? '+' : '−'}£${Math.round(Math.abs(delta))}</span></div>`);
+  };
 
   (pp.available_sizes || []).forEach(size => {
-    if (size === defaultSize) return;
-    const m = pp.sheet_sells.find(s => s.paper === defaultPaper && s.size === size && parseInt(s.qty,10) === baselineQty);
-    if (!m) return;
-    const delta = parseFloat(m.sell) - baselineSell;
-    if (Math.abs(delta) < 0.5) return;
-    const sign = delta > 0 ? '+' : '−';
-    const dimText = SIZE_DIMS[size] ? ` (${SIZE_DIMS[size]})` : '';
-    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${escapeHtml(size)}${dimText}</span><span class="lp-upgrade-value">${sign}£${Math.round(Math.abs(delta))}</span></div>`);
+    if (size === baseSize) return;
+    const v = priceOf(basePaper, baseQty, baseGsm, size);
+    if (v != null) line(escapeHtml(size) + (SIZE_DIMS[size] ? ` (${SIZE_DIMS[size]})` : ''), v - baseSell);
+  });
+
+  // Thicknesses of the paper we are quoting, in gsm order.
+  const otherGsms = [...new Set(pp.sheet_sells
+      .filter(s => s.paper === basePaper && s.size === baseSize && s.gsm != null && s.gsm !== baseGsm)
+      .map(s => s.gsm))].sort((a,b) => a-b);
+  otherGsms.forEach(g => {
+    const v = priceOf(basePaper, baseQty, g, baseSize);
+    if (v != null) line(`${escapeHtml(basePaper)} ${g}gsm`, v - baseSell);
   });
 
   (pp.available_papers || []).forEach(paper => {
-    if (paper === defaultPaper) return;
-    const m = pp.sheet_sells.find(s => s.paper === paper && s.size === defaultSize && parseInt(s.qty,10) === baselineQty);
-    if (!m) return;
-    const delta = parseFloat(m.sell) - baselineSell;
-    if (Math.abs(delta) < 0.5) return;
-    const sign = delta > 0 ? '+' : '−';
-    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${escapeHtml(paper)} paper</span><span class="lp-upgrade-value">${sign}£${Math.round(Math.abs(delta))}</span></div>`);
+    if (paper === basePaper) return;
+    const priced = [...new Set(pp.sheet_sells.filter(s => s.paper === paper && s.size === baseSize)
+                                             .map(s => s.gsm))].sort((a,b) => a-b);
+    if (!priced.length) return;
+    const v = priceOf(paper, baseQty, priced[0], baseSize);
+    if (v != null) line(escapeHtml(paper) + (priced[0] ? ` ${priced[0]}gsm` : ''), v - baseSell);
   });
 
   (pp.finish_sells || []).forEach(f => {
     const sell = parseFloat(f.sell) || 0;
-    if (sell <= 0) return;
-    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${escapeHtml(f.name)} finish</span><span class="lp-upgrade-value">+£${Math.round(sell)}</span></div>`);
+    if (sell > 0) line(escapeHtml(f.name), sell);
   });
 
   if (!rows.length) return;
+  const note = document.getElementById('lp-upgrade-note');
+  if (note) note.textContent = `Against ${baseQty} × ${baseSize} on ${basePaper}${baseGsm ? ' ' + baseGsm + 'gsm' : ''}`;
   document.getElementById('lp-upgrade-rows').innerHTML = rows.join('');
   document.getElementById('lp-upgrade-card').style.display = '';
 }

@@ -617,12 +617,26 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <!-- PANEL: SHEET RATES -->
           <div class="pz-panel" id="pz-sheetrates">
             <div class="section-header">
-              <div><div class="section-title">Sheet Rates</div><div class="section-sub">Pick a paper stock, then enter your printer cost per (size × quantity). These rates apply to all products that use this paper. Margin is applied per-product at publish time.</div></div>
+              <div><div class="section-title">Sheet Rates</div><div class="section-sub">What the printer charges us, per (size × quantity). The same paper costs a different amount depending on what it is printed as — A4 silk is one price as a poster and another as a folded order of service — so pick the product family first, then the paper and its weight. Margin is applied per-product at publish time.</div></div>
             </div>
             <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;margin-bottom:16px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
-              <div class="field" style="flex:1;min-width:280px;margin:0;">
-                <label>Choose Paper Stock</label>
-                <select id="sr_paperSelect" onchange="renderSheetRatesGrid()" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"><option value="">— select a paper —</option></select>
+              <div class="field" style="flex:1;min-width:190px;margin:0;">
+                <label>Product family</label>
+                <select id="sr_familySelect" onchange="renderSheetRatesGrid()" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;">
+                  <option value="">— select —</option>
+                  <option value="flat-card">Flat cards</option>
+                  <option value="folded-card">Folded cards</option>
+                  <option value="folded-leaflet">Folded leaflets</option>
+                  <option value="large-format">Large format</option>
+                </select>
+              </div>
+              <div class="field" style="flex:1;min-width:190px;margin:0;">
+                <label>Paper stock</label>
+                <select id="sr_paperSelect" onchange="populateSheetRateWeights();renderSheetRatesGrid()" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"><option value="">— select a paper —</option></select>
+              </div>
+              <div class="field" style="flex:0 0 150px;margin:0;">
+                <label>Weight</label>
+                <select id="sr_weightSelect" onchange="renderSheetRatesGrid()" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;"><option value="">— select —</option></select>
               </div>
               <button class="btn btn-gold" onclick="saveSheetRates()" id="sr_saveBtn" disabled>Save Sheet Rates</button>
             </div>
@@ -1063,6 +1077,18 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     <!-- PRODUCT CONFIGURATION -->
     <div style="margin:24px 0 12px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-lt);font-weight:500;">Product Configuration</div>
     <p style="font-size:11px;color:rgba(250,247,242,.5);margin:0 0 14px;line-height:1.6;">Tick which sizes, papers and finishes are available for this product. The customer will only see ticked options on the configurator.</p>
+
+    <div class="field">
+      <label>Product family</label>
+      <select id="pt_supplierFamily" style="max-width:280px;">
+        <option value="">— select —</option>
+        <option value="flat-card">Flat cards</option>
+        <option value="folded-card">Folded cards</option>
+        <option value="folded-leaflet">Folded leaflets</option>
+        <option value="large-format">Large format</option>
+      </select>
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;line-height:1.6;">How the printer makes it, which is what decides the cost. Without this the product cannot be priced at all.</p>
+    </div>
 
     <div class="field">
       <label>Available Sizes</label>
@@ -3428,6 +3454,7 @@ function openProductTypeModal(editId) {
   const fields = ['pt_name','pt_slug','pt_tagline','pt_description','pt_features','pt_heroImage','pt_fromPrice','pt_metaTitle','pt_metaDescription','pt_displayOrder','pt_marginPct'];
   fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('pt_active').value = 'true';
+  document.getElementById('pt_supplierFamily').value = '';
   document.getElementById('pt_category').value = '';
   document.getElementById('pt_editId').value = '';
   document.getElementById('pt_slug').dataset.autoSet = 'false';
@@ -3454,6 +3481,7 @@ function openProductTypeModal(editId) {
       document.getElementById('pt_metaDescription').value = p.meta_description || '';
       document.getElementById('pt_displayOrder').value    = p.display_order != null ? p.display_order : '';
       document.getElementById('pt_active').value          = p.active === false ? 'false' : 'true';
+      document.getElementById('pt_supplierFamily').value  = p.supplier_family || '';
       document.getElementById('pt_editId').value          = editId;
       selectedSizes    = Array.isArray(p.available_sizes)    ? p.available_sizes    : [];
       selectedPapers   = Array.isArray(p.available_papers)   ? p.available_papers   : [];
@@ -3496,6 +3524,7 @@ async function saveProductType() {
     meta_description:   document.getElementById('pt_metaDescription').value.trim() || null,
     display_order:      parseInt(document.getElementById('pt_displayOrder').value, 10) || 0,
     active:             document.getElementById('pt_active').value === 'true',
+    supplier_family:    document.getElementById('pt_supplierFamily').value || null,
     available_sizes:    readPtChips('pt_availableSizes'),
     available_papers:   readPtChips('pt_availablePapers'),
     available_finishes: readPtChips('pt_availableFinishes'),
@@ -3558,10 +3587,12 @@ function renderProductTypeList() {
     const papersCount   = (p.available_papers   || []).length;
     const finishesCount = (p.available_finishes || []).length;
     const margin        = (p.margin_pct != null) ? p.margin_pct + '%' : 'no margin';
-    const configSummary = `${sizesCount} size${sizesCount!==1?'s':''} · ${papersCount} paper${papersCount!==1?'s':''} · ${finishesCount} finish${finishesCount!==1?'es':''} · ${margin}`;
-    const statusBadge = p.active === false
+    const family        = p.supplier_family || 'NO FAMILY';
+    const configSummary = `${family} · ${sizesCount} size${sizesCount!==1?'s':''} · ${papersCount} paper${papersCount!==1?'s':''} · ${finishesCount} finish${finishesCount!==1?'es':''} · ${margin}`;
+    const statusBadge = (p.active === false
       ? '<span class="tag" style="margin-left:6px;background:rgba(200,80,80,.15);color:#d88">hidden</span>'
-      : '';
+      : '') + (p.supplier_family ? ''
+      : '<span class="tag" style="margin-left:6px;background:rgba(200,80,80,.15);color:#d88">no family — cannot price</span>');
     return `<div class="supplier-card">
       <div style="display:flex;align-items:center;gap:14px">
         ${p.hero_image_url ? `<img src="${p.hero_image_url}" style="width:54px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.08)" alt="">` : ''}
@@ -3801,14 +3832,31 @@ function populateSheetRatesPaperSelect() {
     `<option value="${(p.name || '').replace(/"/g,'&quot;')}">${p.name}</option>`
   ).join('');
   if (current) sel.value = current;
+  populateSheetRateWeights();
+}
+
+// The weights a paper comes in live on the stock itself, so the dropdown is
+// rebuilt whenever the paper changes. A stock with a single weight selects it
+// automatically — there is nothing to choose.
+function populateSheetRateWeights() {
+  const sel = document.getElementById('sr_weightSelect');
+  if (!sel) return;
+  const paper = (papers || []).find(p => p.name === document.getElementById('sr_paperSelect').value);
+  const ws = (paper && Array.isArray(paper.weights)) ? paper.weights : [];
+  const gsms = ws.map(w => parseInt(w.gsm, 10)).filter(g => g).sort((a, b) => a - b);
+  sel.innerHTML = (gsms.length ? '' : '<option value="">— none on this paper —</option>') +
+    gsms.map(g => `<option value="${g}">${g}gsm</option>`).join('');
+  if (gsms.length) sel.value = String(gsms[0]);
 }
 
 function renderSheetRatesGrid() {
+  const family    = document.getElementById('sr_familySelect').value;
   const paperName = document.getElementById('sr_paperSelect').value;
+  const weightGsm = parseInt(document.getElementById('sr_weightSelect').value, 10);
   const container = document.getElementById('sheetRatesGrid');
   const saveBtn = document.getElementById('sr_saveBtn');
-  if (!paperName) {
-    container.innerHTML = '<div class="empty"><span class="empty-icon">📊</span><div class="empty-text">Pick a paper above to start entering rates</div></div>';
+  if (!family || !paperName || !weightGsm) {
+    container.innerHTML = '<div class="empty"><span class="empty-icon">📊</span><div class="empty-text">Pick a family, paper and weight above to start entering rates</div></div>';
     saveBtn.disabled = true;
     return;
   }
@@ -3825,12 +3873,14 @@ function renderSheetRatesGrid() {
     return;
   }
   saveBtn.disabled = false;
-  // Build lookup of existing rates for this paper: key = "size|qty" → cost
+  // Build lookup of existing rates for this family/paper/weight: key = "size|qty" → cost
   const existing = {};
-  sheetRates.filter(r => r.paper_name === paperName).forEach(r => {
+  sheetRates.filter(r => r.paper_name === paperName &&
+                         r.supplier_family === family &&
+                         parseInt(r.weight_gsm, 10) === weightGsm).forEach(r => {
     existing[`${r.size}|${r.quantity}`] = r.cost;
   });
-  const note = `<p style="font-size:11px;color:rgba(250,247,242,.5);margin:0 0 12px;">Showing cost grid for <strong style="color:var(--gold);">${paperName}</strong>. Enter your raw printer cost (£) per (size × quantity). Leave blank for combinations you don't offer. Margin is applied per-product at publish time, so the same cost cell sells at different prices depending on which product the customer is buying.</p>`;
+  const note = `<p style="font-size:11px;color:rgba(250,247,242,.5);margin:0 0 12px;">Showing cost grid for <strong style="color:var(--gold);">${paperName} ${weightGsm}gsm</strong> as <strong style="color:var(--gold);">${family}</strong>. Enter your raw printer cost (£) per (size × quantity). Leave blank for combinations you don't offer. Margin is applied per-product at publish time, so the same cost cell sells at different prices depending on which product the customer is buying.</p>`;
   let table = '<div style="overflow-x:auto;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;">';
   table += note;
   table += '<table style="width:100%;border-collapse:separate;border-spacing:8px 6px;font-size:12px;">';
@@ -3853,8 +3903,10 @@ function renderSheetRatesGrid() {
 }
 
 async function saveSheetRates() {
+  const family    = document.getElementById('sr_familySelect').value;
   const paperName = document.getElementById('sr_paperSelect').value;
-  if (!paperName) return;
+  const weightGsm = parseInt(document.getElementById('sr_weightSelect').value, 10);
+  if (!family || !paperName || !weightGsm) return;
   const cells = [...document.querySelectorAll('#sheetRatesGrid input.sr-cell')];
   const newRates = [];
   cells.forEach(cell => {
@@ -3863,16 +3915,22 @@ async function saveSheetRates() {
     const cost = parseFloat(v);
     if (isNaN(cost) || cost < 0) return;
     newRates.push({
-      paper_name: paperName,
-      size:       cell.dataset.size,
-      quantity:   parseInt(cell.dataset.qty, 10),
-      cost:       cost
+      supplier_family: family,
+      paper_name:      paperName,
+      weight_gsm:      weightGsm,
+      size:            cell.dataset.size,
+      quantity:        parseInt(cell.dataset.qty, 10),
+      cost:            cost
     });
   });
   try {
-    // Replace strategy: delete all sheet_rates for this paper, then insert new ones.
+    // Replace strategy, scoped to exactly the grid on screen: this family, this
+    // paper, this weight. Deleting by paper alone would wipe the other weights
+    // and the other families, which all share the paper name.
     // PostgREST URL-encoding: paper_name might contain spaces, which need encoding.
-    await sbFetch(`sheet_rates?paper_name=eq.${encodeURIComponent(paperName)}`, { method: 'DELETE' });
+    await sbFetch(`sheet_rates?supplier_family=eq.${encodeURIComponent(family)}` +
+                  `&paper_name=eq.${encodeURIComponent(paperName)}` +
+                  `&weight_gsm=eq.${weightGsm}`, { method: 'DELETE' });
     if (newRates.length) {
       await sbFetch('sheet_rates', {
         method: 'POST',
@@ -3883,7 +3941,7 @@ async function saveSheetRates() {
     // Reload from server
     await loadSheetRatesFromSupabase();
     renderSheetRatesGrid();
-    toast(`Saved ${newRates.length} sheet rate${newRates.length!==1?'s':''} for ${paperName} ✓`);
+    toast(`Saved ${newRates.length} rate${newRates.length!==1?'s':''} for ${paperName} ${weightGsm}gsm ✓`);
   } catch (err) {
     toast('Save failed: ' + err.message);
   }
@@ -3905,16 +3963,32 @@ function validateForPublish() {
   productTypes.filter(p => p.active !== false).forEach(p => {
     const sizes    = Array.isArray(p.available_sizes)    ? p.available_sizes    : [];
     const papersOk = Array.isArray(p.available_papers)   ? p.available_papers   : [];
-    const finishes = Array.isArray(p.available_finishes) ? p.available_finishes : [];
+    const family   = p.supplier_family || '';
     if (!sizes.length)    issues.push({ level: 'warning', product: p.name, message: 'no available sizes ticked — customers can\'t configure this product' });
     if (!papersOk.length) issues.push({ level: 'warning', product: p.name, message: 'no available papers ticked' });
+    if (!family)          issues.push({ level: 'error',   product: p.name, message: 'no product family set — nothing can be priced without it' });
     if (p.margin_pct == null || isNaN(p.margin_pct)) issues.push({ level: 'warning', product: p.name, message: 'no margin set; will use 0% (sell = cost)' });
-    // Check if every paper × size ticked has at least one sheet rate
+    if (!family) return;
+    // Every paper × weight × size ticked needs a rate in this family. Weights
+    // come from the stock, and not every weight exists on every route — the
+    // folded card route carries Uncoated at 300gsm only, for instance.
     papersOk.forEach(paperName => {
-      sizes.forEach(size => {
-        const anyRate = sheetRates.some(r => r.paper_name === paperName && r.size === size);
-        if (!anyRate) issues.push({ level: 'warning', product: p.name, message: `no sheet rates for ${paperName} × ${size}` });
-      });
+      const stock = (papers || []).find(x => x.name === paperName);
+      const gsms = (stock && Array.isArray(stock.weights) ? stock.weights : [])
+                     .map(w => parseInt(w.gsm, 10)).filter(g => g);
+      if (!gsms.length) { issues.push({ level: 'warning', product: p.name, message: `${paperName} has no weights set` }); return; }
+      const gaps = [];
+      gsms.forEach(g => sizes.forEach(size => {
+        const anyRate = sheetRates.some(r => r.paper_name === paperName &&
+                                             r.supplier_family === family &&
+                                             parseInt(r.weight_gsm, 10) === g &&
+                                             r.size === size);
+        if (!anyRate) gaps.push(`${g}gsm × ${size}`);
+      }));
+      // One line per paper rather than one per gap, or 21 products of gaps
+      // becomes an unreadable wall.
+      if (gaps.length) issues.push({ level: 'warning', product: p.name,
+        message: `${paperName}: no rates for ${gaps.slice(0,6).join(', ')}${gaps.length>6?` and ${gaps.length-6} more`:''}` });
     });
   });
   return issues;
@@ -3972,12 +4046,17 @@ async function publishHierarchical() {
         const sizes    = Array.isArray(p.available_sizes)    ? p.available_sizes    : [];
         const papersOk = Array.isArray(p.available_papers)   ? p.available_papers   : [];
         const finishes = Array.isArray(p.available_finishes) ? p.available_finishes : [];
-        // Sheet sells: only for combos that exist in sheet_rates AND are in product's available_*
+        const family   = p.supplier_family || '';
+        // Sheet sells: only rates in this product's family, on a paper and size
+        // it offers. The weight rides along, because it changes the price.
         const sheetSells = [];
         sheetRates.forEach(r => {
-          if (papersOk.includes(r.paper_name) && sizes.includes(r.size)) {
+          if (r.supplier_family === family &&
+              papersOk.includes(r.paper_name) &&
+              sizes.includes(r.size)) {
             sheetSells.push({
               paper: r.paper_name,
+              gsm:   parseInt(r.weight_gsm, 10) || null,
               size:  r.size,
               qty:   r.quantity,
               sell:  parseFloat((r.cost * multiplier).toFixed(2))
@@ -3997,6 +4076,7 @@ async function publishHierarchical() {
           slug:               p.slug,
           name:               p.name,
           margin_pct:         margin,
+          supplier_family:    family,
           available_sizes:    sizes,
           available_papers:   papersOk,
           available_finishes: finishes,
@@ -4004,9 +4084,23 @@ async function publishHierarchical() {
           finish_sells:       finishSells
         };
       });
+
+    // The papers travel with the prices so the site can draw the thickness
+    // picker and decide which finishes to offer without a second round trip.
+    // Finishing is a property of the paper, not the product: the Fedrigoni
+    // stocks cannot be foiled or laminated at all.
+    const paperCatalogue = (papers || []).filter(p => p.active !== false).map(p => ({
+      name:         p.name,
+      description:  p.description || p.subtitle || '',
+      finish_label: p.finish_label || '',
+      weights:      Array.isArray(p.weights) ? p.weights : [],
+      finishes:     Array.isArray(p.finishes) ? p.finishes : []
+    }));
+
     const payload = {
-      schema_version: 2,
+      schema_version: 3,
       published_at:   new Date().toISOString(),
+      papers:         paperCatalogue,
       products
     };
     // Insert/update the singleton pricing_config row.

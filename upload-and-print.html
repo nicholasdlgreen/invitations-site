@@ -1291,8 +1291,11 @@ async function loadSiteData() {
       if (rows && rows.length && rows[0].payload) {
         const payload = rows[0].payload;
         // New hierarchical schema (Phase 5): payload.products[] keyed by slug
-        if (payload.schema_version === 2 && Array.isArray(payload.products)) {
+        if (payload.schema_version >= 2 && Array.isArray(payload.products)) {
           currentProduct = payload.products.find(p => p.slug === PRODUCT.slug) || null;
+          // schema 3 carries the paper catalogue alongside the prices, so the
+          // thickness picker and the finish list can both come from one fetch.
+          if (Array.isArray(payload.papers)) publishedPapers = payload.papers;
         }
         // Old per-combination schema: payload.prices[] (kept as fallback)
         else if (Array.isArray(payload.prices)) {
@@ -1390,19 +1393,35 @@ let publishedPrices = [];
 // Phase 5 (new schema): currentProduct holds this product's entry from the new
 // pricing_config payload (schema_version=2). Has shape:
 //   { slug, name, margin_pct, available_sizes, available_papers, available_finishes,
-//     sheet_sells:  [{paper, size, qty, sell}, ...],
+//     sheet_sells:  [{paper, gsm, size, qty, sell}, ...],
 //     finish_sells: [{name, sell}, ...] }
 // Null if no new-schema publish has happened yet → code falls back to old logic.
 let currentProduct = null;
+// schema 3: the paper catalogue as published, carrying each stock's weights and
+// which finishes it can take. Finishing is a property of the paper, not the
+// product — the Fedrigoni stocks cannot be foiled or laminated at all.
+let publishedPapers = [];
 
 // Phase 5 lookups: read pre-computed sell prices from currentProduct.
 // Return null if not found, so caller can fall back to old logic or formula.
-function lookupSheetSell(paper, size, qty) {
+function lookupSheetSell(paper, size, qty, gsm) {
   if (!currentProduct || !Array.isArray(currentProduct.sheet_sells)) return null;
+  const want = parseInt(gsm, 10);
   const match = currentProduct.sheet_sells.find(s =>
-    s.paper === paper && s.size === size && parseInt(s.qty, 10) === parseInt(qty, 10)
+    s.paper === paper && s.size === size && parseInt(s.qty, 10) === parseInt(qty, 10) &&
+    // Rows published before weights existed carry no gsm; treat those as a
+    // match for any weight rather than pricing nothing at all.
+    (s.gsm == null || !want || parseInt(s.gsm, 10) === want)
   );
   return match ? parseFloat(match.sell) : null;
+}
+
+// The gsm the customer currently has chosen, for the paper on screen.
+function selectedGsm() {
+  const paper = CONFIG.papers.find(p => p.id === selectedPaper);
+  if (!paper || !Array.isArray(paper.weights)) return null;
+  const w = paper.weights.find(x => x.id === selectedWeight) || paper.weights[0];
+  return w ? (parseInt(w.gsm, 10) || null) : null;
 }
 
 function lookupFinishSell(name) {
@@ -2228,6 +2247,26 @@ function renderFinishGrid() {
   if (allowed && allowed.length) {
     types = types.filter(t => allowed.includes((t.name||'').toLowerCase().trim()));
   }
+  // ...then narrow again to what the CHOSEN PAPER can physically take. The
+  // printer's luxury Fedrigoni range cannot be foiled, laminated or spot-UV'd
+  // at all, so the finishing options have to disappear when one is selected
+  // rather than being offered and failing later.
+  const chosen = CONFIG.papers.find(p => p.id === selectedPaper);
+  const paperCaps = chosen && publishedPapers.length
+    ? (publishedPapers.find(pp => pp.name === chosen.name) || {}).finishes
+    : null;
+  if (Array.isArray(paperCaps)) {
+    const caps = paperCaps.map(f => (f||'').toLowerCase().trim());
+    types = types.filter(t => caps.includes((t.name||'').toLowerCase().trim()));
+    // Anything already chosen on a paper that cannot take it must be dropped,
+    // or a stale selection would keep being priced and sent to the printer.
+    Object.keys(selectedFinishes).forEach(k => {
+      if (!caps.includes(k.toLowerCase().trim())) delete selectedFinishes[k];
+    });
+    const stillReal = Object.keys(selectedFinishes).map(k => selectedFinishes[k])
+                        .find(v => v && v.toLowerCase() !== 'none');
+    selectedFinish = stillReal || 'None';
+  }
   // only show types that have real options (more than just "None")
   types = types.filter(t => (t.options||[]).filter(o => o.name && o.name.toLowerCase() !== 'none').length > 0);
 
@@ -2279,6 +2318,9 @@ function selectPaperOpt(id){
   document.querySelectorAll('.paper-opt').forEach(el=>el.classList.remove('selected'));
   if(event&&event.currentTarget) event.currentTarget.classList.add('selected');
   renderWeightPicker();
+  // Which finishes are possible depends on the paper, so the grid is rebuilt
+  // here rather than only when the product loads.
+  if (typeof renderFinishGrid === 'function') renderFinishGrid();
   updatePrice();
 }
 
@@ -2501,7 +2543,7 @@ function updatePrice(){
   // Phase 5 path: try new schema (currentProduct.sheet_sells + finish_sells).
   // Falls back to old findMatchingPrice, then to default formula.
   let base, upgrade;
-  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty);
+  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty, selectedGsm());
   if (newSheetSell != null) {
     const finishSell = lookupFinishSell(selectedFinish);
     base = newSheetSell + finishSell; // Both are sell prices already with margin applied
