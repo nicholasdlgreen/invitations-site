@@ -67,3 +67,17 @@
 #
 # [functions."send-review-requests-due"]
 #   schedule = "0 9 * * *"
+
+# ─── SUPPLIER PRICE WATCH ───────────────────────────────────
+# PrintedEasy change their prices without notice — their own terms say so —
+# and we buy at a fixed 20% off their list. So a rise at their end lands
+# silently in our cost while we carry on selling at last week's price.
+#
+# This samples about twenty prices every Monday morning and emails if any have
+# moved, or if a stock or weight has come or gone from their range. It changes
+# nothing: a human runs tools/printedeasy_refresh.py and then publishes.
+#
+# Needs SUPABASE_SERVICE_KEY, RESEND_API_KEY and FROM_EMAIL, which are already
+# set. ALERT_EMAIL is optional and falls back to FROM_EMAIL.
+[functions."printedeasy-price-watch"]
+  schedule = "0 8 * * 1"
