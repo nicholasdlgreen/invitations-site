@@ -19,9 +19,27 @@
 //   renderCartDrawer()  — re-render drawer contents
 
 (function () {
-  // Hydrate cart from localStorage
+  // Hydrate cart from localStorage.
+  //
+  // Baskets can outlive the code that wrote them — a customer may have a row
+  // saved by an older build of the site, missing a field this one expects.
+  // One bad row used to throw inside renderCartDrawer(), which meant the
+  // basket button did nothing at all and said nothing about why. So anything
+  // that isn't a usable row is dropped here, once, on the way in.
   let cart = [];
-  try { cart = JSON.parse(localStorage.getItem('inv_cart') || '[]'); } catch (e) { cart = []; }
+  try {
+    const raw = JSON.parse(localStorage.getItem('inv_cart') || '[]');
+    if (Array.isArray(raw)) {
+      cart = raw.filter((it) => it && typeof it === 'object').map((it) => {
+        const total = Number(it.total);
+        return Object.assign({}, it, {
+          name: it.name || 'Your order',
+          qty: it.qty || 0,
+          total: isFinite(total) ? total : 0
+        });
+      });
+    }
+  } catch (e) { cart = []; }
 
   function saveCart() {
     localStorage.setItem('inv_cart', JSON.stringify(cart));
@@ -41,7 +59,10 @@
   }
 
   function openCart() {
-    renderCartDrawer();
+    // Draw the contents if we can, but never let a rendering problem stop the
+    // drawer opening — an empty-looking basket is recoverable, a dead button
+    // is not.
+    try { renderCartDrawer(); } catch (e) { console.error('cart render failed', e); }
     const bg = document.getElementById('cartBg');
     const drawer = document.getElementById('cartDrawer');
     if (bg) bg.classList.add('open');

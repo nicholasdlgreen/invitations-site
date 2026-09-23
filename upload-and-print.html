@@ -4162,20 +4162,29 @@ function googleCustomerReviewsOptIn(order){
 }
 
 // ── ONE BASKET, NOT TWO ───────────────────────────────────
-// Every other page needs the floating basket drawer, because it is the only
-// basket they have. This page is different: step 4 IS the basket, with the
+// The basket button must do the same thing on every page of the site: slide
+// the drawer out over whatever you were doing, without losing your place.
+// That is true here too — with one exception. Step 4 IS the basket, with the
 // items, the total, the "use this design on these too" offer and the route to
-// checkout. Opening a drawer on top of it gives the customer two baskets that
-// disagree about which one to trust, and the drawer's own checkout button
-// jumps straight to payment — skipping the basket step and everything on it.
+// checkout. Sliding a drawer over it would show the customer two baskets that
+// disagree about which one to trust, so on step 4 the button does nothing.
 //
-// So here the header basket goes to step 4 instead of opening the drawer.
+// The drawer's own checkout button is still redirected, because it jumps
+// straight to payment and would skip step 4 and everything on it.
 // cart.js loads before this script, so this override wins.
 (function oneBasketOnly(){
   const drawerCheckout = window.goToCheckout;
+  const drawerOpen = window.openCart;
 
   window.openCart = function(){
-    if (typeof closeCart === 'function') { try { closeCart(); } catch(e){} }
+    // Already looking at the basket — don't stack a second one on top of it.
+    // Scroll it into view instead, so the click still does something visible.
+    if (currentStep === 4) {
+      const panel = document.getElementById('step4');
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (typeof drawerOpen === 'function') { drawerOpen(); return; }
     goStep(4);
   };
 
