@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Step 3 preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@200;300;400;500&display=swap">
+<link rel="stylesheet" href="/step3/step3.css">
+<style>
+  body{margin:0;background:#FAF7F2;font-family:'Jost',system-ui,sans-serif;color:#3D2E24;}
+  .hdr{padding:20px 30px 0;max-width:1280px;margin:0 auto;}
+  .hdr h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:25px;margin:0 0 4px;}
+  .hdr p{font-size:12.5px;color:#7A6558;margin:0 0 4px;line-height:1.6;}
+  .hdr code{background:#fff;border:1px solid #EFE9E1;border-radius:4px;padding:1px 5px;font-size:11.5px;}
+  .wrap{max-width:1280px;margin:0 auto;padding:22px 30px 60px;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>Step 3 — direction A</h1>
+  <p>Live data from the database. Same <code>step3.css</code>, <code>step3.html</code> and
+     <code>step3.js</code> the real page loads, so this and the shop cannot drift apart.</p>
+  <p id="state" style="color:#A08E7E"></p>
+</div>
+<div class="wrap" id="mount"></div>
+
+<script src="/step3/step3.js"></script>
+<script src="/step3/step3-model.js"></script>
+<script>
+const SB  = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';   // public anon key, same one the shop uses
+const SLUG = new URLSearchParams(location.search).get('product') || 'wedding-invitations';
+
+let DATA = { papers: [], envelopes: [], finishTypes: [], product: null, published: null, deliveries: [] };
+let S = { paper: null, weight: null, finishes: {}, envOn: false, env: null, qty: 25, del: 0, size: 'A5', pricedAt: null, subject: { kind: 'paper' } };
+
+async function get(path) {
+  const r = await fetch(SB + '/rest/v1/' + path, { headers: { apikey: KEY, Authorization: 'Bearer ' + KEY } });
+  return r.ok ? r.json() : [];
+}
+
+// ---- the same lookups the shop uses -------------------------------------
+function sheetRows() { return (DATA.product && DATA.product.sheet_sells) || []; }
+function priceFor(paperName, gsm, qty) {
+  const want = parseInt(gsm, 10);
+  const exact = sheetRows().find(r => r.paper === paperName && r.size === S.size &&
+      parseInt(r.qty, 10) === parseInt(qty, 10) && (r.gsm == null || !want || parseInt(r.gsm, 10) === want));
+  if (exact) return { sell: parseFloat(exact.sell), pricedAt: qty, exact: true };
+  const steps = [...new Set(sheetRows().filter(r => r.paper === paperName && r.size === S.size)
+      .map(r => parseInt(r.qty, 10)))].filter(Number.isFinite).sort((a, b) => a - b);
+  const up = steps.find(n => n >= qty);
+  if (up == null) return null;
+  const row = sheetRows().find(r => r.paper === paperName && r.size === S.size &&
+      parseInt(r.qty, 10) === up && (r.gsm == null || !want || parseInt(r.gsm, 10) === want));
+  return row ? { sell: parseFloat(row.sell), pricedAt: up, exact: false } : null;
+}
+function finishCost(type) {
+  const f = ((DATA.product && DATA.product.finish_sells) || []).find(x => x.name === type);
+  return f ? parseFloat(f.sell) : 0;
+}
+function paperCaps(name) {
+  const pp = ((DATA.published && DATA.published.papers) || []).find(p => p.name === name);
+  return pp && Array.isArray(pp.finishes) ? pp.finishes : [];
+}
+function weightsFor(p) {
+  return (p.weights || []).filter(w => priceFor(p.name, parseInt(w.gsm, 10), S.qty));
+}
+function imageFor(name) {
+  const slug = { 'Uncoated':'uncoated','Silk':'silk','Ice White':'icewhite','Recycled Uncoated':'recycled',
+    'Tintoretto Gesso':'tintoretto','Nettuno Bianco':'nettuno','Acquerello Bianco':'acquerello',
+    'Sirio Pearl Polar Dawn':'polardawn' }[name];
+  return slug ? '/img/paper/' + slug + '.jpg' : null;
+}
+
+function draw() {
+  const papers = DATA.papers;
+  const paper = papers.find(p => p.id === S.paper) || papers[0];
+  if (!paper) return;
+  const ws = weightsFor(paper);
+  const w = ws.find(x => x.id === S.weight) || ws.find(x => x.popular) || ws[0];
+  const gsm = w ? parseInt(w.gsm, 10) : null;
+
+  const r = priceFor(paper.name, gsm, S.qty);
+  S.pricedAt = r ? r.pricedAt : null;
+  let total = r ? r.sell : 0;
+  Object.keys(S.finishes).forEach(t => {
+    if (S.finishes[t] && S.finishes[t].toLowerCase() !== 'none') total += finishCost(t);
+  });
+  if (S.envOn && S.env) total += S.qty * 0.35;
+  const del = DATA.deliveries[S.del];
+  if (del) total += (del.cost || 0);
+
+  // the words follow whatever was last clicked
+  let copy;
+  if (S.subject.kind === 'finish') {
+    const t = DATA.finishTypes.find(x => x.name === S.subject.type) || {};
+    const o = (t.options || []).find(x => x.name === S.subject.option) || {};
+    const none = String(S.subject.option).toLowerCase() === 'none';
+    copy = { name: none ? S.subject.type : S.subject.type + ' — ' + S.subject.option,
+             spec: none ? 'Not added' : '+£' + finishCost(S.subject.type).toFixed(2),
+             feel: o.description || t.description || '',
+             note: none ? 'Your card is printed on ' + paper.name + ' with no ' + S.subject.type.toLowerCase() + '.'
+                        : 'Applied to ' + paper.name + '. A one-off charge, whatever the quantity.' };
+  } else {
+    copy = { name: paper.name, spec: w ? w.gsm + 'gsm · ' + w.name : '',
+             feel: paper.subtitle || '', note: 'Your design appears here once you have uploaded it.' };
+  }
+
+  const model = Step3Model.build({
+    papers, selectedPaper: paper.id, selectedWeight: w && w.id,
+    weightsFor, priceFor, imageFor, finishCost,
+    finishTypesFor: pp => DATA.finishTypes.filter(t => paperCaps(pp.name)
+        .map(x => x.toLowerCase()).includes(t.name.toLowerCase())
+        && (t.options || []).some(o => o.name && o.name.toLowerCase() !== 'none')),
+    papersThatCanBeFinished: () => ((DATA.published && DATA.published.papers) || [])
+        .filter(p => (p.finishes || []).length).map(p => p.name),
+    selectedFinishes: S.finishes,
+    quantityLadder: () => (DATA.product && DATA.product.quantity_ladder) || [25, 50, 100, 150, 200, 250, 300, 500],
+    qty: S.qty, pricedAt: S.pricedAt, total, size: S.size,
+    envelopes: DATA.envelopes, envelopesOffered: DATA.product && DATA.product.envelopes_offered !== false,
+    envelopesOn: S.envOn, selectedEnvelope: S.env,
+    deliveries: DATA.deliveries.map((d, i) => ({ id: String(i), name: d.name, when: d.when,
+        cost: d.cost ? '+£' + d.cost.toFixed(2) : 'Free', on: i === S.del })),
+    artwork: false, art: null, copy, ctaLabel: 'Continue'
+  });
+
+  Step3.render(model);
+  document.getElementById('state').textContent =
+    SLUG + ' · ' + S.size + ' · ' + papers.length + ' papers · ladder from database: ['
+    + (((DATA.product && DATA.product.quantity_ladder) || []).join(', ')) + ']';
+}
+
+Object.assign(Step3.handlers, {
+  tier(id) {
+    const first = DATA.papers.find(p => Step3Model.tierOf(p.name) === id);
+    if (first) { S.paper = first.id; S.weight = null; S.subject = { kind: 'paper' }; draw(); }
+  },
+  paper(id) { S.paper = id; S.weight = null; S.subject = { kind: 'paper' }; draw(); },
+  weight(id) { S.weight = id; S.subject = { kind: 'paper' }; draw(); },
+  finish(v) { const [t, o] = v.split(Step3.SEP); S.finishes[t] = o; S.subject = { kind: 'finish', type: t, option: o }; draw(); },
+  env(id) { if (id === 'none') { S.envOn = false; } else { S.envOn = true; S.env = id; } draw(); },
+  qty(n) { S.qty = parseInt(n, 10); draw(); },
+  qtyCustom() { const v = prompt('How many?', S.qty); const n = parseInt(v, 10); if (n > 0) { S.qty = n; draw(); } },
+  del(i) { S.del = parseInt(i, 10); draw(); }
+});
+
+(async function boot() {
+  document.getElementById('mount').innerHTML = await (await fetch('/step3/step3.html')).text();
+  const [papers, envs, fins, prods, pub] = await Promise.all([
+    get('paper_stocks?select=id,name,subtitle,weights&active=eq.true&order=display_order'),
+    get('envelopes?select=id,name,hex_color,price_each&order=display_order'),
+    get('finish_types?select=name,description,options&order=display_order'),
+    get('product_types?select=slug,available_papers,available_finishes,available_sizes,quantity_ladder,envelopes_offered&slug=eq.' + SLUG),
+    get('pricing_config?select=payload&order=published_at.desc&limit=1')   // same source the shop reads
+  ]);
+  DATA.papers = papers.map(p => ({ id: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: p.name,
+      subtitle: p.subtitle, weights: p.weights || [] }));
+  DATA.envelopes = envs.map(e => ({ id: e.id, name: e.name, hex: e.hex_color }));
+  DATA.finishTypes = fins;
+  const pt = prods[0] || {};
+  DATA.published = (pub[0] && pub[0].payload) || {};
+  const prod = ((DATA.published.products) || []).find(x => x.slug === SLUG) || {};
+  DATA.product = Object.assign({}, prod, {
+    quantity_ladder: pt.quantity_ladder, envelopes_offered: pt.envelopes_offered });
+  if (Array.isArray(pt.available_papers) && pt.available_papers.length) {
+    const allow = pt.available_papers.map(x => x.toLowerCase().trim());
+    DATA.papers = DATA.papers.filter(p => allow.includes(p.name.toLowerCase().trim()));
+  }
+  S.size = (pt.available_sizes && pt.available_sizes[0]) || 'A5';
+  DATA.deliveries = [
+    { name: 'Standard', when: 'Printed in 3 working days', cost: 0 },
+    { name: 'Express', when: 'Printed in 2 working days', cost: 20 },
+    { name: 'Express Plus', when: 'Printed next working day', cost: 40 }
+  ];
+  S.paper = DATA.papers[0] && DATA.papers[0].id;
+  draw();
+})();
+</script>
+</body>
+</html>
