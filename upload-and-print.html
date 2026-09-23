@@ -16,7 +16,7 @@
 <style>
 /* ── UPLOAD FLOW ── */
 .upload-wrap{max-width:760px;margin:0 auto;padding:28px 32px 100px;}
-.step-bar{display:flex;align-items:center;gap:0;margin-bottom:34px;}
+.step-bar{display:flex;align-items:center;gap:0;margin-bottom:34px;position:sticky;top:0;z-index:20;background:var(--cream);padding:14px 0 12px;margin-top:-14px;}
 .step-item{display:flex;align-items:center;gap:12px;flex:1;}
 .step-item:last-child{flex:0;}
 .step-num{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);color:var(--pale);font-weight:500;flex-shrink:0;transition:all .3s;background:var(--white);}
@@ -93,8 +93,18 @@
    Replaces six stacked full-width cards that ran to 3.6 screens. */
 .upload-wrap.wide{max-width:1200px;}
 .cfg{display:grid;grid-template-columns:minmax(330px,392px) minmax(0,1fr);gap:26px;align-items:start;}
-.cfg-preview{position:sticky;top:20px;background:var(--white);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
-.cfg-paper{position:relative;height:330px;background:var(--cream) center/cover no-repeat;display:flex;align-items:center;justify-content:center;}
+.cfg-preview{position:sticky;top:84px;max-height:calc(100vh - 104px);background:var(--white);border:1px solid var(--border);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;}
+.cfg-preview>.cfg-paper{flex-shrink:0;transition:height .25s ease;}
+.cfg-preview.reading>.cfg-paper{height:clamp(96px,13vh,150px);}
+.cfg-paper-copy{flex:1 1 auto;min-height:0;overflow-y:auto;}
+.cfg-money{flex-shrink:0;}
+#cfgDetailFoot{flex-shrink:0;padding:0 20px;}
+#cfgDetailFoot:empty{display:none;}
+/* No fade over the copy: it greyed out the last line even when nothing was
+   cut off, which reads as a rendering fault rather than a hint. */
+.cfg-paper-copy::-webkit-scrollbar{width:5px;}
+.cfg-paper-copy::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px;}
+.cfg-paper{position:relative;height:clamp(180px,26vh,330px);background:var(--cream) center/cover no-repeat;display:flex;align-items:center;justify-content:center;}
 .cfg-paper img{max-width:62%;max-height:74%;box-shadow:0 8px 26px rgba(61,46,36,.22);background:#fff;}
 .cfg-tag{position:absolute;left:14px;bottom:12px;background:rgba(255,255,255,.92);color:var(--text);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:40px;}
 .cfg-paper-copy{padding:16px 20px 0;}
@@ -102,12 +112,12 @@
 .cfg-paper-head span:first-child{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--text);}
 .cfg-paper-head span:last-child{margin-left:auto;font-size:.72rem;color:var(--pale);}
 .cfg-paper-copy p{font-size:var(--text-sm);color:var(--soft);line-height:1.7;margin:6px 0 0;}
-.cfg-detail{max-height:186px;overflow-y:auto;margin-top:6px;}
+.cfg-detail{margin-top:6px;}
 .cfg-detail::-webkit-scrollbar{width:5px;}
 .cfg-detail::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px;}
 .cfg-detail p{margin:0 0 9px;}
 .cfg-detail p:last-child{margin-bottom:0;}
-#cfgDetailFoot .cfg-cost{display:flex;justify-content:space-between;gap:10px;margin-top:11px;padding-top:10px;border-top:1px solid var(--border);font-size:var(--text-sm);color:var(--text);}
+#cfgDetailFoot .cfg-cost{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--border);font-size:var(--text-sm);color:var(--text);}
 #cfgDetailFoot .cfg-cost b{font-weight:400;color:var(--gold);}
 .cfg-back{background:none;border:none;padding:0;margin-top:11px;color:var(--gold);font-family:inherit;font-size:var(--text-xs);letter-spacing:.06em;cursor:pointer;}
 .cfg-fine{font-size:.72rem;color:var(--pale);line-height:1.65;margin:9px 0 0;}
@@ -823,9 +833,9 @@ was fetched and injected via innerHTML — that was the bug behind the
               <span id="cfgPaperSpec"></span>
             </div>
             <div class="cfg-detail" id="cfgDetail"></div>
-            <div id="cfgDetailFoot"></div>
             <p class="cfg-fine" id="cfgPreviewNote"></p>
           </div>
+          <div id="cfgDetailFoot"></div>
           <div class="cfg-money">
             <div class="price-row"><span>Delivery</span><span id="priceDelivery">Free</span></div>
             <div class="price-row" id="priceEnvRow" style="display:none;"><span>Envelopes</span><span id="priceEnvCost">£0.00</span></div>
@@ -833,7 +843,7 @@ was fetched and injected via innerHTML — that was the bug behind the
             <div class="price-row"><span>VAT (20%)</span><span id="priceVat">£0.00</span></div>
             <div class="price-row total"><span>Total inc. VAT</span><span id="priceTotal">£0.00</span></div>
             <button class="btn" onclick="addToCartUpload()" style="width:100%;margin-top:14px;">Add to Basket</button>
-            <button class="btn-out" onclick="goStep(2)" style="width:100%;margin-top:8px;">Back</button>
+            <button onclick="goStep(2)" style="display:block;margin:10px auto 0;background:none;border:none;color:var(--soft);font-family:inherit;font-size:var(--text-xs);letter-spacing:.08em;cursor:pointer;">← Back to your file</button>
           </div>
         </div>
 
@@ -2424,14 +2434,7 @@ function renderCfgPreview(){
   const bg = document.getElementById('cfgPaper');
   if (bg) bg.style.backgroundImage = paper.imageUrl ? `url('${paper.imageUrl}')` : '';
 
-  const nameEl = document.getElementById('cfgPaperName');
-  if (nameEl) nameEl.textContent = paper.name;
-  const specEl = document.getElementById('cfgPaperSpec');
-  if (specEl) {
-    const w = (paper.weights||[]).find(x => x.id === selectedWeight);
-    specEl.textContent = [paper.finishLabel, w && w.gsm ? w.gsm + 'gsm' : ''].filter(Boolean).join(' · ');
-  }
-  renderCfgDetail();
+  renderCfgDetail();   // owns the heading, the body and the note
 
   const img = document.getElementById('cfgArtwork');
   const tag = document.getElementById('cfgTag');
@@ -2442,9 +2445,6 @@ function renderCfgPreview(){
     else { img.removeAttribute('src'); img.style.display = 'none'; }
   }
   if (tag) tag.textContent = art ? 'Your design' : paper.name;
-  if (note) note.textContent = art
-    ? 'Your artwork shown on the paper you picked, so you can see the two together. Colours on screen are a guide, not a proof.'
-    : 'A close-up of the paper itself. Your design appears here once it is uploaded.';
 }
 
 // What the left-hand panel explains. It starts on the paper, and moves to a
@@ -2464,8 +2464,11 @@ function showPaperDetail(){
 }
 
 function renderCfgDetail(){
-  const box = document.getElementById('cfgDetail');
+  const box  = document.getElementById('cfgDetail');
   const foot = document.getElementById('cfgDetailFoot');
+  const head = document.getElementById('cfgPaperName');
+  const spec = document.getElementById('cfgPaperSpec');
+  const note = document.getElementById('cfgPreviewNote');
   if (!box) return;
   const paras = t => String(t || '').split(/\n{2,}/).filter(Boolean)
     .map(p => '<p>' + p.replace(/\n/g, ' ') + '</p>').join('');
@@ -2474,20 +2477,43 @@ function renderCfgDetail(){
     ? (CONFIG.finishTypes || []).find(t => t.name === cfgDetailMode)
     : null;
 
+  // The panel says ONE thing at a time. Showing the paper's name and the
+  // artwork note alongside an explanation of foiling left three subjects on
+  // screen at once, which read as clutter rather than help.
   if (!type) {
     const paper = (window._cfgPapers || CONFIG.papers).find(p => p.id === selectedPaper);
+    const w = paper && (paper.weights || []).find(x => x.id === selectedWeight);
+    if (head) head.textContent = paper ? paper.name : '';
+    if (spec) spec.textContent = paper
+      ? [paper.finishLabel, w && w.gsm ? w.gsm + 'gsm' : ''].filter(Boolean).join(' · ') : '';
     box.innerHTML = paras((paper && (paper.description || paper.subtitle)) || '');
+    const panel = document.querySelector('.cfg-preview');
+    if (panel) panel.classList.remove('reading');
     if (foot) foot.innerHTML = '';
+    if (note) {
+      note.style.display = '';
+      note.textContent = currentArtworkThumb()
+        ? 'Your artwork shown on the paper you picked, so you can see the two together. Colours on screen are a guide, not a proof.'
+        : 'A close-up of the paper itself. Your design appears here once it is uploaded.';
+    }
     return;
   }
 
-  // What this finish adds, said in the money the customer is actually spending.
+  const chosen = selectedFinishes[type.name] || 'None';
+  const isNone = !chosen || chosen.toLowerCase() === 'none';
+
+  const panel = document.querySelector('.cfg-preview');
+  if (panel) panel.classList.add('reading');
+  if (head) head.textContent = type.name;
+  if (spec) spec.textContent = isNone ? 'Not added' : chosen;
+  if (note) { note.style.display = 'none'; note.textContent = ''; }
+
+  box.innerHTML = paras(type.detail || type.description);
+
   // Priced by the TYPE ("Foiling"), not the option ("Gold") — the published
   // finish prices are keyed by type, and looking up the option silently
   // returns nothing.
   const sell = (typeof lookupFinishSell === 'function') ? lookupFinishSell(type.name) : 0;
-  const chosen = selectedFinishes[type.name] || 'None';
-  const isNone = !chosen || chosen.toLowerCase() === 'none';
   let cost = '';
   if (isNone) {
     cost = '<div class="cfg-cost"><span>Not added</span><b>No charge</b></div>';
@@ -2496,8 +2522,6 @@ function renderCfgDetail(){
     cost = '<div class="cfg-cost"><span>' + chosen + ' on ' + uploadQty + ' cards</span>' +
            '<b>+£' + sell.toFixed(2) + ' · ' + (each < 0.01 ? 'under 1p' : '£' + each.toFixed(2)) + ' a card</b></div>';
   }
-
-  box.innerHTML = paras(type.detail || type.description);
   if (foot) foot.innerHTML = cost +
     '<button type="button" class="cfg-back" onclick="showPaperDetail()">← Back to the paper</button>';
 }
