@@ -881,6 +881,7 @@ was fetched and injected via innerHTML — that was the bug behind the
           <div>
             <div class="rlab">5 &middot; How many</div>
             <div class="pills" id="qtyPresetPane"></div>
+            <div class="rfine" id="qtyNote"></div>
             <div id="qtyCustomPane" style="display:none;margin-top:9px;">
               <input id="qtyCustom" type="number" min="1" step="1" placeholder="Enter a number"
                      oninput="applyCustomQty(this.value)"
@@ -1422,6 +1423,12 @@ async function loadSiteData() {
         if (Array.isArray(pt.available_sizes)    && pt.available_sizes.length)    liveLists.available_sizes    = pt.available_sizes;
         if (Array.isArray(pt.available_papers)   && pt.available_papers.length)   liveLists.available_papers   = pt.available_papers;
         if (Array.isArray(pt.available_finishes) && pt.available_finishes.length) liveLists.available_finishes = pt.available_finishes;
+        // Which quantities to offer, and whether this product has envelopes at
+        // all, are both per-product decisions made in admin. A table plan does
+        // not sell in the same amounts as a save-the-date, and a menu card has
+        // no envelope.
+        if (Array.isArray(pt.quantity_ladder) && pt.quantity_ladder.length) liveLists.quantity_ladder = pt.quantity_ladder;
+        liveLists.envelopes_offered = pt.envelopes_offered !== false;
         if (Object.keys(liveLists).length) {
           currentProduct = Object.assign({}, currentProduct || {}, liveLists);
           if (typeof renderSizeCards === 'function') renderSizeCards();
@@ -1483,6 +1490,7 @@ let publishedPrices = [];
 //     finish_sells: [{name, sell}, ...] }
 // Null if no new-schema publish has happened yet → code falls back to old logic.
 let currentProduct = null;
+let lastPricedAt = null;   // the quantity the current price actually came from
 // schema 3: the paper catalogue as published, carrying each stock's weights and
 // which finishes it can take. Finishing is a property of the paper, not the
 // product — the Fedrigoni stocks cannot be foiled or laminated at all.
@@ -1490,6 +1498,25 @@ let publishedPapers = [];
 
 // Phase 5 lookups: read pre-computed sell prices from currentProduct.
 // Return null if not found, so caller can fall back to old logic or formula.
+// A typed quantity we have no published price for is priced at the next step
+// UP that we do have — never interpolated, never run through the old default
+// formula, which quoted £225 for 75 cards when 100 cost £24. Returns the
+// price and the quantity it was actually priced at, so the page can say so.
+function sheetSellAtOrAbove(paper, size, qty, gsm) {
+  const exact = lookupSheetSell(paper, size, qty, gsm);
+  if (exact != null) return { sell: exact, pricedAt: qty, exact: true };
+  if (!currentProduct || !Array.isArray(currentProduct.sheet_sells)) return null;
+  const steps = [...new Set(currentProduct.sheet_sells
+      .filter(r => r.paper === paper && r.size === size)
+      .map(r => parseInt(r.qty, 10)))].filter(n => isFinite(n)).sort((a, b) => a - b);
+  const up = steps.find(n => n >= qty);
+  // Above our largest published run we cannot quote at all; the caller then
+  // falls back as before and the customer is told to ask us.
+  if (up == null) return null;
+  const sell = lookupSheetSell(paper, size, up, gsm);
+  return sell == null ? null : { sell: sell, pricedAt: up, exact: false };
+}
+
 function lookupSheetSell(paper, size, qty, gsm) {
   if (!currentProduct || !Array.isArray(currentProduct.sheet_sells)) return null;
   const want = parseInt(gsm, 10);
@@ -2452,6 +2479,7 @@ function selectPaperOpt(id){
   if (typeof renderTierRow === 'function') renderTierRow();
   if (typeof renderPaperPills === 'function') renderPaperPills();
   renderWeightPicker();
+  if (typeof renderQtyPills === 'function') renderQtyPills();
   // Which finishes are possible depends on the paper, so the grid is rebuilt
   // here rather than only when the product loads.
   if (typeof renderFinishGrid === 'function') renderFinishGrid();
@@ -2528,7 +2556,7 @@ function selectTier(id) {
     selectedPaper = list[0].id;
     selectedWeight = null;
   }
-  renderTierRow(); renderPaperPills(); renderWeightPicker(); renderFinishGrid(); updatePrice();
+  renderTierRow(); renderPaperPills(); renderWeightPicker(); renderFinishGrid(); renderQtyPills(); updatePrice();
 }
 
 function renderPaperPills() {
@@ -2540,9 +2568,32 @@ function renderPaperPills() {
   ).join('');
 }
 
+// The rows are numbered by what the customer can actually see. A product with
+// no envelopes would otherwise read 1, 2, 3, 5, 6.
+function renumberRows() {
+  const right = document.querySelector('.pp-right');
+  if (!right) return;
+  let n = 0;
+  [...right.children].forEach(row => {
+    const lab = row.querySelector('.rlab');
+    if (!lab) return;
+    if (!lab.dataset.title) lab.dataset.title = lab.textContent.replace(/^\s*\d+\s*\u00b7\s*/, '');
+    if (row.style.display === 'none') return;
+    n += 1;
+    lab.textContent = n + ' \u00b7 ' + lab.dataset.title;
+  });
+}
+
 function renderEnvelopePills() {
   const wrap = document.getElementById('envPicker');
   if (!wrap) return;
+  // Menu cards, table numbers and signage have no envelope. Hide the whole
+  // row rather than offering something we cannot supply.
+  const row = wrap.parentElement;   // the whole row, heading included
+  const offered = !currentProduct || currentProduct.envelopes_offered !== false;
+  if (row) row.style.display = offered ? '' : 'none';
+  if (!offered) { envelopesEnabled = false; wrap.innerHTML = ''; renumberRows(); return; }
+  renumberRows();
   // "No envelopes" is a pill like any other rather than a tick box, so the row
   // reads as one question with one answer.
   wrap.innerHTML =
@@ -2556,28 +2607,59 @@ function renderEnvelopePills() {
 function setEnvelopes(on, id) {
   envelopesEnabled = !!on;
   if (on && id) selectedEnvColour = id;
-  const sec = document.getElementById('envSection');
-  if (sec) sec.style.display = on ? 'block' : 'none';
-  const chk = document.getElementById('envToggle');
-  if (chk) chk.checked = !!on;
   renderEnvelopePills();
   updatePrice();
 }
 
-const QTY_STEPS = [25,50,75,100,150,200,250,300];
+// The quantities on offer come from product_types.quantity_ladder, set per
+// product in admin. The fallback is only for a product with no ladder set.
+const QTY_FALLBACK = [25,50,100,150,200,250,300,500];
+
+function quantityLadder() {
+  const set = (currentProduct && Array.isArray(currentProduct.quantity_ladder) && currentProduct.quantity_ladder.length)
+    ? currentProduct.quantity_ladder.slice()
+    : QTY_FALLBACK.slice();
+  // A quantity we cannot price is a quantity we cannot sell. Offering one
+  // sends the customer to an invented figure the printer never quoted, which
+  // is how 75 came to be on the page with no price behind it.
+  const paper = (CONFIG.papers || []).find(p => p.id === selectedPaper);
+  if (!paper || !currentProduct || !Array.isArray(currentProduct.sheet_sells)) return set.sort((a,b)=>a-b);
+  const priced = set.filter(q => lookupSheetSell(paper.name, selectedSize, q, selectedGsm()) != null);
+  return (priced.length ? priced : set).sort((a,b)=>a-b);
+}
+
 function renderQtyPills() {
   const wrap = document.getElementById('qtyPresetPane');
   if (!wrap) return;
-  const custom = !QTY_STEPS.includes(uploadQty);
-  wrap.innerHTML = QTY_STEPS.map(q =>
+  const steps = quantityLadder();
+  const custom = !steps.includes(uploadQty);
+  wrap.innerHTML = steps.map(q =>
       `<button type="button" class="pill${uploadQty===q?' on':''}" onclick="setQty(${q})">${q}</button>`).join('')
     + `<button type="button" class="pill${custom?' on':''}" onclick="openCustomQty()">${custom?uploadQty:'Another number\u2026'}</button>`;
+  const note = document.getElementById('qtyNote');
+  if (note) {
+    const cta = document.querySelector('.pp-cta');
+    if (custom && lastPricedAt == null) {
+      note.textContent = `We cannot quote ${uploadQty} online \u2014 it is above our largest published run. Email us and we will price it.`;
+      if (cta) { cta.disabled = true; cta.style.opacity = '.45'; cta.style.cursor = 'not-allowed'; }
+      // Blank the figure too. A price we cannot stand behind should not be on
+      // screen at all, even with the button switched off.
+      const t = document.getElementById('priceTotal'); if (t) t.textContent = '\u2014';
+      const per = document.getElementById('ppPer');    if (per) per.textContent = 'Ask us for a price at this quantity';
+    } else {
+      note.textContent = (custom && lastPricedAt && lastPricedAt !== uploadQty)
+        ? `${uploadQty} is priced at our ${lastPricedAt} rate. Ask us and we will quote the exact run.`
+        : '';
+      if (cta) { cta.disabled = false; cta.style.opacity = ''; cta.style.cursor = ''; }
+    }
+  }
 }
 function setQty(q) {
   uploadQty = q;
   const pane = document.getElementById('qtyCustomPane');
   if (pane) pane.style.display = 'none';
-  renderQtyPills(); updatePrice();
+  updatePrice();
+  renderQtyPills();
 }
 function openCustomQty() {
   const pane = document.getElementById('qtyCustomPane');
@@ -2587,7 +2669,8 @@ function applyCustomQty(v) {
   const n = parseInt(v, 10);
   if (!isFinite(n) || n < 1) return;
   uploadQty = n;
-  renderQtyPills(); updatePrice();
+  updatePrice();      // works out lastPricedAt
+  renderQtyPills();   // ...which the note then reports
 }
 
 function renderWeightPicker(){
@@ -2636,14 +2719,16 @@ function selectWeightOpt(id){
   panelSubject = { kind: 'paper' };
   if (typeof renderPaperPills === 'function') renderPaperPills();
   renderWeightPicker();
+  if (typeof renderQtyPills === 'function') renderQtyPills();
   updatePrice();
 }
 
-function toggleEnvelopes(){
-  envelopesEnabled=document.getElementById('envToggle').checked;
-  document.getElementById('envSection').style.display=envelopesEnabled?'block':'none';
-  if(envelopesEnabled&&!selectedEnvColour){selectEnvColour('white');}
-  updatePrice();
+// The envelope tick box and its drawer are gone — "No envelopes" is a pill in
+// the row now. Anything still calling this (an old cached page) is routed to
+// the function that replaced it instead of throwing on a missing element.
+function toggleEnvelopes(on){
+  setEnvelopes(typeof on === 'boolean' ? on : !envelopesEnabled,
+               selectedEnvColour || (ENVELOPES[0] && ENVELOPES[0].id));
 }
 
 function selectEnvColour(id){
@@ -2655,16 +2740,10 @@ function selectEnvColour(id){
   updatePrice();
 }
 
-function switchQtyTab(tab){
-  const isPreset=tab==='preset';
-  document.getElementById('tabPreset').style.background=isPreset?'var(--gold)':'var(--white)';
-  document.getElementById('tabPreset').style.color=isPreset?'#fff':'var(--soft)';
-  document.getElementById('tabCustom').style.background=!isPreset?'var(--gold)':'var(--white)';
-  document.getElementById('tabCustom').style.color=!isPreset?'#fff':'var(--soft)';
-  document.getElementById('qtyPresetPane').style.display=isPreset?'flex':'none';
-  document.getElementById('qtyCustomPane').style.display=isPreset?'none':'block';
-  updatePrice();
-}
+// Kept as a no-op: the two-tab quantity card it drove is gone, replaced by
+// the pills and the "Another number" field. Anything still calling it (an old
+// cached page, say) should do nothing rather than throw.
+function switchQtyTab(){ }
 
 function selectChip(el,qty){
   document.querySelectorAll('.qty-chip').forEach(c=>c.classList.remove('selected'));
@@ -2801,17 +2880,18 @@ function calcBasePrice(qty){
 }
 
 function updatePrice(){
-  const customPane=document.getElementById('qtyCustomPane');
-  if(customPane&&customPane.style.display!=='none'){
-    const v=parseInt(document.getElementById('qtyCustomInput').value)||25;
-    uploadQty=Math.max(1,v);
-  }
+  // uploadQty is owned by setQty()/applyCustomQty() now. It used to be read
+  // back out of the old tabbed input here, which threw on null once that
+  // input was replaced — and took the whole price calculation down with it.
+  if (!(uploadQty > 0)) uploadQty = 25;
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
 
   // Phase 5 path: try new schema (currentProduct.sheet_sells + finish_sells).
   // Falls back to old findMatchingPrice, then to default formula.
   let base, upgrade;
-  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty, selectedGsm());
+  const stepped = sheetSellAtOrAbove(paper.name, selectedSize, uploadQty, selectedGsm());
+  const newSheetSell = stepped ? stepped.sell : null;
+  lastPricedAt = stepped ? stepped.pricedAt : null;
   if (newSheetSell != null) {
     const finishSell = totalFinishSell();
     base = newSheetSell + finishSell; // Both are sell prices already with margin applied
@@ -2959,7 +3039,9 @@ async function addToCartUpload(){
   // Pass the weight. Without it the lookup matched the first row for this
   // paper at any gsm, so the basket could charge 250gsm's price for a 400gsm
   // card the customer had just been shown a different total for.
-  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty, selectedGsm());
+  const stepped = sheetSellAtOrAbove(paper.name, selectedSize, uploadQty, selectedGsm());
+  const newSheetSell = stepped ? stepped.sell : null;
+  lastPricedAt = stepped ? stepped.pricedAt : null;
   if (newSheetSell != null) {
     const finishSell = totalFinishSell();
     base = newSheetSell + finishSell;
