@@ -2437,6 +2437,7 @@ function renderFinishGrid() {
 
 function selectFinishOpt(typeName, optName){
   selectedFinishes[typeName] = optName;
+  panelSubject = { kind: 'finish', type: typeName, option: optName };
   // keep legacy selectedFinish in sync with the FIRST non-None finish (for pricing)
   const firstReal = Object.keys(selectedFinishes).map(k=>selectedFinishes[k]).find(v => v && v.toLowerCase() !== 'none');
   selectedFinish = firstReal || 'None';
@@ -2446,6 +2447,7 @@ function selectFinishOpt(typeName, optName){
 
 function selectPaperOpt(id){
   selectedPaper=id;
+  panelSubject = { kind: 'paper' };
   selectedWeight=null;   // reset — will default to the popular weight for this stock
   if (typeof renderTierRow === 'function') renderTierRow();
   if (typeof renderPaperPills === 'function') renderPaperPills();
@@ -2519,6 +2521,7 @@ function selectTier(id) {
   const list = papersInTier(id);
   if (!list.length) return;
   selectedTier = id;
+  panelSubject = { kind: 'paper' };
   // Moving tier moves the paper with it, or the panel would still be showing
   // a paper from the tier they just left.
   if (!list.find(p => p.id === selectedPaper)) {
@@ -2630,6 +2633,7 @@ function renderWeightPicker(){
 }
 function selectWeightOpt(id){
   selectedWeight=id;
+  panelSubject = { kind: 'paper' };
   if (typeof renderPaperPills === 'function') renderPaperPills();
   renderWeightPicker();
   updatePrice();
@@ -2880,6 +2884,11 @@ function artworkThumb() {
   return null;
 }
 
+// What the text box is describing right now. The photograph and the price
+// always follow the order; the WORDS follow whatever was last clicked, and
+// only ever one thing at a time — never the old text and the new together.
+let panelSubject = { kind: 'paper' };
+
 function renderPaperPanel() {
   const paper = (CONFIG.papers || []).find(p => p.id === selectedPaper) || (CONFIG.papers || [])[0];
   if (!paper) return;
@@ -2909,10 +2918,24 @@ function renderPaperPanel() {
   // weight whatever was actually chosen — invisible on the six papers that
   // have only one weight, wrong on the two that have four.
   const w = (paper.weights || []).find(x => x.id === selectedWeight) || (paper.weights || [])[0];
-  set('ppName', paper.name);
-  set('ppSpec', w ? `${w.gsm}gsm \u00b7 ${w.name}` : '');
-  set('ppFeel', paper.subtitle || '');
-  set('ppWeightFeel', w && w.feel ? w.feel : '');
+  if (panelSubject.kind === 'finish') {
+    // Describing a finishing option: same box, same size, different words.
+    const type = (CONFIG.finishTypes || []).find(t => t.name === panelSubject.type) || {};
+    const opt  = (type.options || []).find(o => o.name === panelSubject.option) || {};
+    const isNone = String(panelSubject.option || '').toLowerCase() === 'none';
+    const price  = isNone ? 0 : lookupFinishSell(panelSubject.type);
+    set('ppName', isNone ? panelSubject.type : panelSubject.type + ' \u2014 ' + panelSubject.option);
+    set('ppSpec', isNone ? 'Not added' : (price ? '+\u00a3' + price.toFixed(2) : ''));
+    set('ppFeel', opt.description || type.description || '');
+    set('ppWeightFeel', isNone
+      ? 'Your card is printed on ' + paper.name + ' with no ' + String(panelSubject.type).toLowerCase() + '.'
+      : 'Applied to ' + paper.name + '. A one-off charge, whatever the quantity.');
+  } else {
+    set('ppName', paper.name);
+    set('ppSpec', w ? `${w.gsm}gsm \u00b7 ${w.name}` : '');
+    set('ppFeel', paper.subtitle || '');
+    set('ppWeightFeel', w && w.feel ? w.feel : '');
+  }
 
   set('ppTag', img ? (thumb ? 'Your design on ' + paper.name : paper.name)
                    : paper.name);
