@@ -1146,6 +1146,10 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     <div class="modal-title">Add Finish Type</div>
     <div class="field"><label>Type name</label><input type="text" id="fin_name" placeholder="e.g. Lamination, Foiling, Spot UV"></div>
     <div class="field"><label>Description (shown to customer)</label><input type="text" id="fin_desc" placeholder="e.g. A coating that changes the feel."></div>
+    <div class="field"><label>The longer explanation</label>
+      <textarea id="fin_detail" rows="7" placeholder="Shown beside the card when a customer opens this finish. Blank lines start a new paragraph. Say what it is, what it needs from their artwork, and anything they would be annoyed to find out later."></textarea>
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;line-height:1.6;">Foiling and Spot UV both need their own layer in the customer's artwork, and both are charged once rather than per card — that is the sort of thing worth saying here.</p>
+    </div>
     <label style="font-size:13px;color:rgba(250,247,242,.8);display:flex;align-items:center;gap:6px;margin-bottom:14px;cursor:pointer;"><input type="checkbox" id="fin_luxe"> Show a "LUXE" tag (for premium types like Foiling)</label>
 
     <div class="field">
@@ -3843,7 +3847,7 @@ function collectFinishOptions(){
 }
 
 function openFinishModal(editId) {
-  ['fin_name','fin_desc','fin_order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['fin_name','fin_desc','fin_detail','fin_order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('fin_luxe').checked = false;
   document.getElementById('fin_options').innerHTML = '';
   document.getElementById('fin_editId').value = '';
@@ -3852,6 +3856,7 @@ function openFinishModal(editId) {
     if (f) {
       document.getElementById('fin_name').value  = f.name || '';
       document.getElementById('fin_desc').value  = f.description || '';
+      document.getElementById('fin_detail').value = f.detail || '';
       document.getElementById('fin_luxe').checked = !!f.is_luxe;
       document.getElementById('fin_order').value = f.display_order != null ? f.display_order : '';
       document.getElementById('fin_editId').value = editId;
@@ -3872,6 +3877,7 @@ async function saveFinish() {
   const payload = {
     name,
     description:   document.getElementById('fin_desc').value.trim(),
+    detail:      document.getElementById('fin_detail').value.trim() || null,
     is_luxe:       document.getElementById('fin_luxe').checked,
     options:       collectFinishOptions(),
     display_order: parseInt(document.getElementById('fin_order').value, 10) || 0,
