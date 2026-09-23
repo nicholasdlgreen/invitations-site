@@ -44,6 +44,39 @@
 .preview-status{font-size:var(--text-sm);color:var(--soft);letter-spacing:.04em;}
 .preview-img,.preview-canvas{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 4px 20px rgba(61,46,36,.08);background:#fff;}
 .preview-meta{margin-top:16px;font-size:var(--text-xs);color:var(--soft);letter-spacing:.04em;text-align:center;line-height:1.6;}
+/* PAPER PANEL — step 3's left-hand column */
+/* Same trick as the file-check step: break out of the 760px column, because
+   two columns do not fit in it. */
+#step3:not(.hidden){width:min(1180px,calc(100vw - 48px));margin-left:50%;transform:translateX(-50%);}
+@media (max-width:900px){#step3:not(.hidden){width:auto;margin-left:0;transform:none;}}
+.pp{display:grid;grid-template-columns:404px minmax(0,1fr);gap:22px;align-items:stretch;}
+.pp-left{min-width:0;}
+.pp-panel{background:var(--white);border:1px solid var(--border);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;}
+/* Sticky only when the screen is tall enough to show the whole panel. On a
+   short screen a stuck panel hides its own bottom, which is where the price
+   and the button live. */
+@media (min-height:800px){.pp-panel{position:sticky;top:84px;}}
+.pp-photo{position:relative;height:356px;flex:0 0 auto;background-color:#F3EDE4;background-size:cover;background-position:center;}
+.pp-art{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:196px;background:rgba(255,255,255,.32);box-shadow:0 8px 26px rgba(61,46,36,.20);display:none;padding:6px;box-sizing:border-box;}
+.pp-art img{display:block;width:100%;height:auto;}
+.pp-nophoto{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--pale);font-size:var(--text-xs);letter-spacing:.06em;display:none;}
+.pp-tag{position:absolute;left:16px;bottom:14px;background:rgba(255,255,255,.92);color:var(--soft);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:40px;}
+.pp-copy{padding:17px 20px 0;flex:0 0 auto;}
+.pp-head{display:flex;align-items:baseline;gap:8px;}
+.pp-name{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--text);}
+.pp-spec{font-size:11.5px;color:var(--pale);margin-left:auto;white-space:nowrap;}
+.pp-feel{font-size:12.5px;color:var(--soft);line-height:1.6;margin:7px 0 0;}
+.pp-weight{font-size:12px;color:var(--pale);line-height:1.6;margin:5px 0 0;}
+.pp-note{font-size:11px;color:var(--pale);line-height:1.55;margin:10px 0 0;}
+.pp-money{margin-top:auto;padding:14px 20px 16px;}
+.pp-delivery{font-size:var(--text-xs);border-top:1px solid var(--border);padding-top:11px;}
+.pp-total{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--text);line-height:1;}
+.pp-per{font-size:11.5px;color:var(--pale);margin-top:7px;}
+.pp-total-wrap{margin-top:11px;display:flex;align-items:center;gap:12px;}
+.pp-cta{margin-left:auto;flex-shrink:0;padding-left:22px;padding-right:22px;}
+.pp-back{display:block;margin-top:12px;font-size:var(--text-xs);color:var(--soft);text-decoration:none;}
+.pp-back:hover{color:var(--gold);}
+@media (max-width:900px){.pp{grid-template-columns:1fr;}.pp-panel{position:static;}.pp-photo{height:300px;}}
 /* BLEED / TRIM / SAFE OVERLAY */
 .bleed-overlay{position:absolute;pointer-events:none;}
 .bleed-line{position:absolute;box-sizing:border-box;border-width:1px;}
@@ -732,11 +765,46 @@ was fetched and injected via innerHTML — that was the bug behind the
 
     <!-- STEP 3: PAPER, ENVELOPES & QUANTITY -->
     <div id="step3" class="hidden">
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
-        <div style="width:40px;height:40px;border-radius:10px;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:var(--text-body);flex-shrink:0;">✦</div>
-        <div style="flex:1;"><div style="font-size:var(--text-sm);font-weight:500;color:var(--text);" id="fileSummaryName">your-design.pdf</div><div style="font-size:var(--text-sm);color:var(--soft);margin-top:2px;" id="fileSummaryMeta">File ready for print</div></div>
-        <button onclick="goStep(1)" style="font-size:var(--text-xs);color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;">Change</button>
-      </div>
+      <div class="pp">
+        <div class="pp-left">
+          <div class="pp-panel">
+
+            <div class="pp-photo" id="ppPhoto">
+              <div class="pp-art" id="ppArt"><img id="ppArtImg" alt="Your design"></div>
+              <span class="pp-nophoto" id="ppNoPhoto">Photograph coming soon</span>
+              <span class="pp-tag" id="ppTag"></span>
+            </div>
+
+            <div class="pp-copy">
+              <div class="pp-head">
+                <span class="pp-name" id="ppName"></span>
+                <span class="pp-spec" id="ppSpec"></span>
+              </div>
+              <p class="pp-feel" id="ppFeel"></p>
+              <p class="pp-weight" id="ppWeightFeel"></p>
+              <p class="pp-note" id="ppNote"></p>
+            </div>
+
+            <div class="pp-money">
+              <!-- Delivery is the one line that changes with a choice they make,
+                   so it stays visible. The subtotal and VAT split is kept in the
+                   page (hidden) because updatePrice() writes to it and the
+                   basket and checkout read the same figures. -->
+              <div class="price-row pp-delivery"><span>Delivery</span><span id="priceDelivery">Free</span></div>
+              <span hidden id="priceNet">£0.00</span><span hidden id="priceVat">£0.00</span>
+              <div class="pp-total-wrap">
+                <div class="pp-total" id="priceTotal">£0.00</div>
+                <button class="btn pp-cta" onclick="addToCartUpload()">Add to Basket</button>
+              </div>
+              <!-- Full width of its own, because beside the button it wrapped
+                   and left "inc. VAT" stranded on a line by itself. -->
+              <div class="pp-per" id="ppPer"></div>
+              <a href="#" class="pp-back" onclick="goStep(2);return false;">&larr; Back to the file check</a>
+            </div>
+
+          </div>
+        </div>
+        <div class="pp-right">
 
       <div class="check-card">
         <h3>Paper stock</h3>
@@ -797,16 +865,7 @@ was fetched and injected via innerHTML — that was the bug behind the
         <p id="deliveryNote" style="font-size:var(--text-xs);color:var(--pale);margin-top:12px;line-height:1.7;"></p>
       </div>
 
-      <div class="check-card">
-<div class="price-row"><span>Delivery</span><span id="priceDelivery">Free</span></div>
-        <div class="price-row"><span>Subtotal (excl. VAT)</span><span id="priceNet">£0.00</span></div>
-        <div class="price-row"><span>VAT (20%)</span><span id="priceVat">£0.00</span></div>
-        <div class="price-row total"><span>Total inc. VAT</span><span id="priceTotal">£0.00</span></div>
-      </div>
-
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <button class="btn" onclick="addToCartUpload()">Add to Basket</button>
-        <button class="btn-out" onclick="goStep(2)">Back</button>
+        </div>
       </div>
     </div>
 
@@ -2653,6 +2712,79 @@ function updatePrice(){
   setText('priceNet',   '£'+subtotalEx.toFixed(2));
   setText('priceVat',   '£'+vat.toFixed(2));
   setText('priceTotal', '£'+total.toFixed(2));
+
+  // The panel mirrors whatever was just worked out above.
+  renderPaperPanel();
+}
+
+// ── THE PAPER PANEL ───────────────────────────────────────
+// The left-hand column of step 3: the paper you chose, photographed, with
+// your own design laid over it, and what it costs. It is filled from one
+// place and says one thing at a time — whatever is currently selected.
+
+// The customer's artwork, whichever route they came in by. Returns null when
+// there is nothing to show yet, and the panel then shows the paper alone
+// rather than an empty white rectangle.
+function artworkThumb() {
+  if (designMode && designState) {
+    if (designState.thumbnail)    return designState.thumbnail;
+    if (designState.aiArtworkUrl) return designState.aiArtworkUrl;
+  }
+  // The upload route already renders the file for the quality check on step 2.
+  // Reuse that render rather than doing the work twice.
+  if (currentFile) {
+    const cv = document.getElementById('previewCanvas');
+    if (cv && cv.style.display !== 'none' && cv.width) {
+      try { return cv.toDataURL('image/png'); } catch (e) {}
+    }
+    const im = document.getElementById('previewImg');
+    if (im && im.style.display !== 'none' && im.src) return im.src;
+  }
+  return null;
+}
+
+function renderPaperPanel() {
+  const paper = (CONFIG.papers || []).find(p => p.id === selectedPaper) || (CONFIG.papers || [])[0];
+  if (!paper) return;
+
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+
+  // The photograph. A paper we have no picture of keeps the cream background
+  // rather than borrowing another paper's texture.
+  const photo = document.getElementById('ppPhoto');
+  const img = paperImage(paper.name);
+  if (photo) photo.style.backgroundImage = img ? `url('${img}')` : 'none';
+  const noPhoto = document.getElementById('ppNoPhoto');
+  if (noPhoto) noPhoto.style.display = img ? 'none' : 'block';
+
+  // The artwork, laid over the paper.
+  const art = document.getElementById('ppArt');
+  const artImg = document.getElementById('ppArtImg');
+  const thumb = artworkThumb();
+  if (art && artImg) {
+    if (thumb) { artImg.src = thumb; art.style.display = 'block'; }
+    else { art.style.display = 'none'; }
+  }
+
+  // Name, and the weight in words as well as numbers.
+  const w = (paper.weights || []).find(x => x.gsm === selectedWeight) || (paper.weights || [])[0];
+  set('ppName', paper.name);
+  set('ppSpec', w ? `${w.gsm}gsm \u00b7 ${w.name}` : '');
+  set('ppFeel', paper.subtitle || '');
+  set('ppWeightFeel', w && w.feel ? w.feel : '');
+
+  set('ppTag', img ? (thumb ? 'Your design on ' + paper.name : paper.name)
+                   : paper.name);
+  set('ppNote', thumb
+    ? 'Shown on screen \u2014 colour and texture vary from the printed card.'
+    : 'Your design appears here once you have uploaded it.');
+
+  // Per-card line, read off the total the pricing function just wrote so the
+  // two can never disagree.
+  const totalEl = document.getElementById('priceTotal');
+  const total = totalEl ? parseFloat(String(totalEl.textContent).replace(/[^0-9.]/g, '')) : 0;
+  const per = (uploadQty && isFinite(total)) ? (total / uploadQty) : 0;
+  set('ppPer', uploadQty ? `\u00a3${per.toFixed(2)} a card \u00b7 ${uploadQty} \u00d7 ${selectedSize || ''} \u00b7 inc. VAT`.trim() : '');
 }
 
 async function addToCartUpload(){
