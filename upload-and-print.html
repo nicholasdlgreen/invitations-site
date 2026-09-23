@@ -1639,6 +1639,9 @@ function selectSize(id){
   document.getElementById('sizeNote').style.display='none';
   const dz=document.getElementById('dropZone');
   dz.style.opacity='1'; dz.style.pointerEvents='auto';
+  // Which weights are buyable can differ by size, so keep the picker honest
+  // even though the size is normally chosen a step before the paper.
+  if(typeof renderWeightPicker === 'function' && selectedPaper) renderWeightPicker();
 }
 
 // ── FILE UPLOAD ───────────────────────────────────────────
@@ -2324,13 +2327,37 @@ function selectPaperOpt(id){
   updatePrice();
 }
 
+// The weights of a stock that this product can actually be bought in. Falls
+// back to every weight on the stock when nothing is published yet, so an
+// unpriced site still shows the full choice rather than an empty picker.
+function availableWeightsFor(stock){
+  const all = Array.isArray(stock.weights) ? stock.weights : [];
+  if(!currentProduct || !Array.isArray(currentProduct.sheet_sells) || !currentProduct.sheet_sells.length) return all;
+  const priced = new Set(currentProduct.sheet_sells
+    .filter(s => s.paper === stock.name && (!selectedSize || s.size === selectedSize) && s.gsm != null)
+    .map(s => parseInt(s.gsm, 10)));
+  // Rows published before weights existed carry no gsm at all; treat those as
+  // "any weight goes" rather than hiding the picker entirely.
+  if(!priced.size) return all;
+  const usable = all.filter(w => priced.has(parseInt(w.gsm, 10)));
+  return usable.length ? usable : all;
+}
+
 // Render the weight options for the currently-selected stock (no pricing shown).
 function renderWeightPicker(){
   const wrap = document.getElementById('weightPicker');
   if(!wrap) return;
   const stock = CONFIG.papers.find(p=>p.id===selectedPaper);
   if(!stock || !stock.weights || !stock.weights.length){ wrap.innerHTML=''; return; }
-  const weights = stock.weights;
+
+  // Which weights this stock comes in is a property of the paper, but which we
+  // can actually BUY depends on the product: the printer carries Uncoated at
+  // four weights as a flat card and at 300gsm only as a folded card. The
+  // published prices are the honest answer, so offer nothing that has no price
+  // — otherwise the customer picks 400gsm and we cannot place the order.
+  const weights = availableWeightsFor(stock);
+  if(!weights.length){ wrap.innerHTML=''; return; }
+
   // default to the popular weight, or the first
   if(!selectedWeight || !weights.find(w=>w.id===selectedWeight)){
     const pop = weights.find(w=>w.popular);
