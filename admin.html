@@ -4246,13 +4246,31 @@ async function publishHierarchical() {
         const papersOk = Array.isArray(p.available_papers)   ? p.available_papers   : [];
         const finishes = Array.isArray(p.available_finishes) ? p.available_finishes : [];
         const family   = p.supplier_family || '';
-        // Sheet sells: only rates in this product's family, on a paper and size
-        // it offers. The weight rides along, because it changes the price.
+        // Sheet sells: only rates in this product's family, on a paper, size
+        // AND weight it actually offers.
+        //
+        // sheet_rates mirrors what PrintedEasy charge, so it holds weights we
+        // have decided not to sell — Cartonboard 280gsm costs three times the
+        // 255, so we dropped it from the paper rather than from the costs.
+        // Without this check those prices would still ship in the payload,
+        // where nothing can reach them and they would quietly go stale.
+        const weightsOffered = {};
+        (papers || []).forEach(p => {
+          weightsOffered[p.name] = new Set(
+            (Array.isArray(p.weights) ? p.weights : [])
+              .map(w => parseInt(w && w.gsm, 10)).filter(Boolean));
+        });
+        const offersWeight = (paper, gsm) => {
+          const set = weightsOffered[paper];
+          return !set || !set.size ? true : set.has(gsm);
+        };
+
         const sheetSells = [];
         sheetRates.forEach(r => {
           if (r.supplier_family === family &&
               papersOk.includes(r.paper_name) &&
-              sizes.includes(r.size)) {
+              sizes.includes(r.size) &&
+              offersWeight(r.paper_name, parseInt(r.weight_gsm, 10))) {
             sheetSells.push({
               paper: r.paper_name,
               gsm:   parseInt(r.weight_gsm, 10) || null,
