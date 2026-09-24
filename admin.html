@@ -4198,11 +4198,45 @@ function renderPublishStatus() {
   valDiv.innerHTML = html;
 }
 
+// PrintedEasy quote in whole pounds, so their curve is a staircase rather than
+// a line, and once in a while a tread goes backwards: 475 folded A5 cards cost
+// £2.40 less than 450 of them. Ten rungs out of 3,715 do this, seven of them
+// down at 20-30 where most wedding orders actually sit.
+//
+// We mirror their costs exactly — that is the whole point of sheet_rates, and
+// the Monday price watch diffs against it — so the backward treads are real
+// and stay in the cost table. What we will not do is quote a customer more for
+// fewer cards. Walking each curve down from the largest quantity and never
+// letting a price stand above the one above it removes exactly those rungs and
+// leaves every other price alone. It can only ever lower a price.
+//
+// Returns how many it flattened, so publishing says so out loud.
+function noBackwardSteps(sells) {
+  const curves = new Map();
+  sells.forEach(r => {
+    const k = r.paper + '|' + r.gsm + '|' + r.size;
+    if (!curves.has(k)) curves.set(k, []);
+    curves.get(k).push(r);
+  });
+  let flattened = 0;
+  curves.forEach(rows => {
+    rows.sort((a, b) => b.qty - a.qty);            // largest quantity first
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i].sell > rows[i - 1].sell) {
+        rows[i].sell = rows[i - 1].sell;
+        flattened++;
+      }
+    }
+  });
+  return flattened;
+}
+
 async function publishHierarchical() {
   const btn = document.getElementById('pub_btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
   try {
     // Build snapshot
+    let flattenedSteps = 0;
     const products = (productTypes || [])
       .filter(p => p.active !== false)
       .map(p => {
@@ -4228,6 +4262,7 @@ async function publishHierarchical() {
             });
           }
         });
+        flattenedSteps += noBackwardSteps(sheetSells);
         // Finish sells: for each finish ticked on this product
         const finishSells = finishes.map(name => {
           const fo = (finishOptions || []).find(f => f.name === name);
@@ -4279,7 +4314,8 @@ async function publishHierarchical() {
       body: JSON.stringify({ id: 'singleton', payload, published_at: new Date().toISOString() })
     });
     const totalSells = products.reduce((sum, p) => sum + p.sheet_sells.length, 0);
-    toast(`Published ✓ — ${products.length} product${products.length!==1?'s':''}, ${totalSells} sell price${totalSells!==1?'s':''}`);
+    const stepNote = flattenedSteps ? `, ${flattenedSteps} backward step${flattenedSteps!==1?'s':''} flattened` : '';
+    toast(`Published ✓ — ${products.length} product${products.length!==1?'s':''}, ${totalSells} sell price${totalSells!==1?'s':''}${stepNote}`);
     renderPublishStatus();
   } catch (err) {
     toast('Publish failed: ' + err.message);
