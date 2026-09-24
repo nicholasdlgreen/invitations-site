@@ -164,6 +164,12 @@
 <!-- pdf.js for browser-side preview + metadata (file check page) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}</script>
+
+<!-- Step 3 (paper, finishing, quantity, delivery). These are the same files
+     the preview page loads, so the approved design and the shipped one are
+     literally the same code rather than two hand-copies of each other. -->
+<link rel="stylesheet" href="/step3/step3.css">
+<script src="/step3/step3.js" defer></script>
   
 </head>
 <body>
@@ -732,82 +738,21 @@ was fetched and injected via innerHTML — that was the bug behind the
 
     <!-- STEP 3: PAPER, ENVELOPES & QUANTITY -->
     <div id="step3" class="hidden">
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
-        <div style="width:40px;height:40px;border-radius:10px;background:var(--cream);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:var(--text-body);flex-shrink:0;">✦</div>
-        <div style="flex:1;"><div style="font-size:var(--text-sm);font-weight:500;color:var(--text);" id="fileSummaryName">your-design.pdf</div><div style="font-size:var(--text-sm);color:var(--soft);margin-top:2px;" id="fileSummaryMeta">File ready for print</div></div>
-        <button onclick="goStep(1)" style="font-size:var(--text-xs);color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;">Change</button>
-      </div>
+      <!-- The step is drawn by /step3/step3.js from /step3/step3.html and
+           /step3/step3.css. Those same three files are what the preview page
+           loads, which is what stops the approved design and the shipped one
+           drifting apart. The adapter that feeds them live data is further
+           down this file, in mountStep3(). -->
+      <div id="step3Mount"></div>
 
-      <div class="check-card">
-        <h3>Paper stock</h3>
-        <div class="paper-grid" id="paperGrid"></div>
-        <div id="weightPicker" style="margin-top:18px;"></div>
-      </div>
-
-      <div class="check-card" id="finishCard" style="display:none;">
-        <h3>Finishing</h3>
-        <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:16px;line-height:1.8;">Optional finishing touches that elevate the final piece.</p>
-        <div id="finishGrid" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
-      </div>
-
-      <div class="check-card">
-        <h3>Envelopes</h3>
-        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:16px;border:1.5px solid var(--border);border-radius:14px;transition:border-color .25s;" id="envToggleWrap">
-          <input type="checkbox" id="envToggle" onchange="toggleEnvelopes()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
-          <div><div style="font-size:var(--text-sm);color:var(--text);font-weight:400;">Add matching envelopes</div><div style="font-size:var(--text-xs);color:var(--pale);margin-top:2px;">Premium gummed · Priced per envelope</div></div>
-        </label>
-        <div id="envSection" style="display:none;margin-top:16px;">
-          <div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;font-weight:500;">Choose colour</div>
-          <div id="envPicker" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
-          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:var(--text-sm);color:var(--soft);">Envelope total</span>
-            <span style="font-size:var(--text-sm);color:var(--gold);font-weight:500;" id="envLineTotal">£0.00</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="check-card">
-        <h3>Quantity</h3>
-        <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:20px;line-height:1.8;">We recommend ordering a few extras — reprinting a small batch later costs more per unit.</p>
-        <div style="display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;">
-          <button id="tabPreset" onclick="switchQtyTab('preset')" style="flex:1;padding:10px;border:none;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Choose amount</button>
-          <button id="tabCustom" onclick="switchQtyTab('custom')" style="flex:1;padding:10px;border:none;background:var(--white);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;">Enter exact amount</button>
-        </div>
-        <div id="qtyPresetPane" style="display:flex;flex-wrap:wrap;gap:10px;">
-          <div class="qty-chip selected" onclick="selectChip(this,25)">25</div>
-          <div class="qty-chip" onclick="selectChip(this,50)">50</div>
-          <div class="qty-chip" onclick="selectChip(this,75)">75</div>
-          <div class="qty-chip" onclick="selectChip(this,100)">100</div>
-          <div class="qty-chip" onclick="selectChip(this,150)">150</div>
-          <div class="qty-chip" onclick="selectChip(this,200)">200</div>
-          <div class="qty-chip" onclick="selectChip(this,250)">250</div>
-          <div class="qty-chip" onclick="selectChip(this,300)">300</div>
-        </div>
-        <div id="qtyCustomPane" style="display:none;">
-          <input type="number" id="qtyCustomInput" class="form-input" min="1" placeholder="e.g. 85" oninput="updatePrice()" style="max-width:200px;font-size:1.2rem;text-align:center;padding:14px;">
-          <div class="hint" style="margin-top:8px;">Enter any amount you need.</div>
-        </div>
-      </div>
-
-      <div class="check-card">
-        <h3>Delivery</h3>
-        <!-- Built at runtime from delivery_options, so turnaround can be changed
-             without touching this page, and the dates match what the printer works to. -->
-        <div id="deliveryOptions" style="display:flex;flex-direction:column;gap:10px;"></div>
-        <p id="deliveryNote" style="font-size:var(--text-xs);color:var(--pale);margin-top:12px;line-height:1.7;"></p>
-      </div>
-
-      <div class="check-card">
-<div class="price-row"><span>Delivery</span><span id="priceDelivery">Free</span></div>
-        <div class="price-row"><span>Subtotal (excl. VAT)</span><span id="priceNet">£0.00</span></div>
-        <div class="price-row"><span>VAT (20%)</span><span id="priceVat">£0.00</span></div>
-        <div class="price-row total"><span>Total inc. VAT</span><span id="priceTotal">£0.00</span></div>
-      </div>
-
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <button class="btn" onclick="addToCartUpload()">Add to Basket</button>
-        <button class="btn-out" onclick="goStep(2)">Back</button>
-      </div>
+      <!-- updatePrice() writes into these and the basket reads the same
+           figures, so there is still only one pricing calculation on the page.
+           They are hidden because the step shows the total in its own bar. -->
+      <span hidden id="priceDelivery">Free</span>
+      <span hidden id="priceNet">£0.00</span>
+      <span hidden id="priceVat">£0.00</span>
+      <span hidden id="priceTotal">£0.00</span>
+      <span hidden id="envLineTotal">£0.00</span>
     </div>
 
     <!-- STEP 4: ADDED TO BASKET -->
@@ -1336,6 +1281,10 @@ async function loadSiteData() {
         if (Array.isArray(pt.available_sizes)    && pt.available_sizes.length)    liveLists.available_sizes    = pt.available_sizes;
         if (Array.isArray(pt.available_papers)   && pt.available_papers.length)   liveLists.available_papers   = pt.available_papers;
         if (Array.isArray(pt.available_finishes) && pt.available_finishes.length) liveLists.available_finishes = pt.available_finishes;
+        // Which quantities to offer, and whether this product has envelopes at
+        // all, are per-product decisions made in admin.
+        if (Array.isArray(pt.quantity_ladder) && pt.quantity_ladder.length) liveLists.quantity_ladder = pt.quantity_ladder;
+        liveLists.envelopes_offered = pt.envelopes_offered !== false;
         if (Object.keys(liveLists).length) {
           currentProduct = Object.assign({}, currentProduct || {}, liveLists);
           if (typeof renderSizeCards === 'function') renderSizeCards();
@@ -1629,6 +1578,9 @@ function paperImage(name, size) {
 
 let selectedPaper='smooth', selectedWeight=null, selectedFinish='None', selectedFinishes={}, uploadQty=25, checksPassed=true;
 let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
+// Goods before delivery. Delivery is a percentage of this with a floor, so
+// it has to be known before the delivery cards can show a price.
+let lastGoodsTotal = 0;
 // Design-studio mode: set in the IIFE near the bottom of this script if
 // the user came from /design-studio-customise. When true, steps 1 & 2 are
 // hidden and currentFile is a synthetic SVG built from the saved design.
@@ -2236,43 +2188,151 @@ function goStep(n){
   } else window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function initStep3(){
-  if(currentFile){
-    document.getElementById('fileSummaryName').textContent=currentFile.name;
-    document.getElementById('fileSummaryMeta').textContent=(currentFile.size/1024/1024).toFixed(1)+' MB · Ready for print';
+// ── STEP 3 ────────────────────────────────────────────────
+// The step itself is drawn by /step3/step3.js. Everything below is the
+// adapter: it hands that renderer live data and turns every click back into
+// this page's existing state and pricing, so there is still only one pricing
+// calculation and one basket.
+let _step3Ready = false;
+
+const FED_PAPERS  = ['Tintoretto Gesso','Nettuno Bianco','Acquerello Bianco','Sirio Pearl Polar Dawn'];
+const RECY_PAPERS = ['Recycled Uncoated'];
+const PAPER_FEEL  = name =>
+  FED_PAPERS.includes(name) ? 'textured' : (RECY_PAPERS.includes(name) ? 'kinder' : 'signature');
+
+// Which papers this product offers, narrowed to those we can actually price.
+function step3Papers(){
+  const { set: pub, hasWildcard } = getAvailablePapers();
+  let list = CONFIG.papers || [];
+  if (!hasWildcard && pub.size) {
+    const f = list.filter(p => pub.has((p.name||'').toLowerCase().trim()));
+    if (f.length) list = f;
   }
-  // Paper grid — filter CONFIG.papers to only those available for this product.
-  // Uses new schema (currentProduct.available_papers) first, falls back to old.
-  const { set: pubPapers, hasWildcard } = getAvailablePapers();
-  let papersToShow = CONFIG.papers;
-  if (!hasWildcard && pubPapers.size) {
-    papersToShow = CONFIG.papers.filter(p => pubPapers.has((p.name || '').toLowerCase().trim()));
-    if (!papersToShow.length) papersToShow = CONFIG.papers; // safety net
+  return list.filter(p => (availableWeightsFor(p) || []).length);
+}
+
+// What the chosen paper can physically take, narrowed to what this product
+// offers. Both rules come from the database, neither is written here.
+function step3Finishes(paperName){
+  const paper = (CONFIG.papers||[]).find(p => p.name === paperName);
+  if (!paper) return [];
+  const caps = (publishedPapers.length
+    ? ((publishedPapers.find(pp => pp.name === paper.name) || {}).finishes || [])
+    : []).map(x => (x||'').toLowerCase().trim());
+  const allowed = Array.isArray(currentProduct && currentProduct.available_finishes)
+    ? currentProduct.available_finishes.map(x => (x||'').toLowerCase().trim()) : [];
+  return (CONFIG.finishTypes || [])
+    .filter(t => caps.includes((t.name||'').toLowerCase().trim()))
+    .filter(t => !allowed.length || allowed.includes((t.name||'').toLowerCase().trim()))
+    .filter(t => (t.options||[]).some(o => o.name && o.name.toLowerCase() !== 'none'));
+}
+
+// Only quantities the printer has actually quoted for this paper and weight.
+// Offering one we cannot price is how 75 ended up on the page with an invented
+// figure behind it.
+function step3Quantities(){
+  const ladder = (currentProduct && Array.isArray(currentProduct.quantity_ladder)
+                  && currentProduct.quantity_ladder.length)
+    ? currentProduct.quantity_ladder : [25,50,100,150,200,250,300,500];
+  const paper = (CONFIG.papers||[]).find(p => p.id === selectedPaper);
+  if (!paper) return ladder;
+  const priced = ladder.filter(q => lookupSheetSell(paper.name, selectedSize, q, selectedGsm()) != null);
+  return priced.length ? priced : ladder;
+}
+
+// The customer's own artwork, whichever route they came in by. Nothing new is
+// asked of them: step 2 already renders the file for the quality check.
+function step3Artwork(){
+  if (designMode && designState) {
+    if (designState.thumbnail)    return designState.thumbnail;
+    if (designState.aiArtworkUrl) return designState.aiArtworkUrl;
   }
-  // Make sure selectedPaper is still in the visible list; if not, switch to first.
-  if (!papersToShow.find(p => p.id === selectedPaper) && papersToShow.length) {
-    selectedPaper = papersToShow[0].id;
+  const cv = document.getElementById('previewCanvas');
+  if (cv && cv.width && cv.style.display !== 'none') {
+    try { return cv.toDataURL('image/png'); } catch(e) {}
   }
-  const grid=document.getElementById('paperGrid');
-  // Stock cards (no pricing — selection only)
-  grid.innerHTML = papersToShow.map(p=>`
-    <div class="paper-opt${p.id===selectedPaper?' selected':''}" onclick="selectPaperOpt('${p.id}')">
-      <div class="paper-name">${p.name}</div>
-      <div class="paper-sub">${p.description||p.subtitle||''}</div>
-      ${p.finishLabel?`<div class="paper-finish">${p.finishLabel}</div>`:''}
-    </div>`).join('');
-  renderWeightPicker();
-  // Finish grid — show only if product has more than one finish (i.e. options beyond just "None")
-  renderFinishGrid();
-  // Envelope picker
-  const picker=document.getElementById('envPicker');
-  picker.innerHTML=ENVELOPES.map(e=>`
-    <div onclick="selectEnvColour('${e.id}')" title="${e.name}" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;">
-      <div id="env-swatch-${e.id}" style="width:36px;height:36px;border-radius:50%;background:${e.hex};border:2px solid ${selectedEnvColour===e.id?'var(--text)':e.border};transition:all .2s;transform:${selectedEnvColour===e.id?'scale(1.15)':'scale(1)'};"></div>
-      <div style="font-size:var(--text-xs);color:var(--soft);text-align:center;max-width:48px;line-height:1.3;">${e.name}</div>
-    </div>`).join('');
+  const im = document.getElementById('previewImg');
+  if (im && im.src && im.style.display !== 'none') return im.src;
+  return null;
+}
+
+function step3Adapter(){
+  return {
+    papers:     () => step3Papers().map(p => ({
+                   name: p.name, subtitle: p.subtitle, description: p.description, weights: p.weights || []
+                 })),
+    feelOf:     PAPER_FEEL,
+    imageFor:   n => paperImage(n),
+    weightsFor: p => {
+                   const full = (CONFIG.papers||[]).find(x => x.name === p.name) || p;
+                   return availableWeightsFor(full) || [];
+                 },
+    finishTypesFor: step3Finishes,
+    quantities:  step3Quantities,
+    perCardAt:   n => {
+                   const paper = (CONFIG.papers||[]).find(p => p.id === selectedPaper);
+                   if (!paper) return null;
+                   const base = lookupSheetSell(paper.name, selectedSize, n, selectedGsm());
+                   return base == null ? null : (base + totalFinishSell()) / n;
+                 },
+    deliveries: () => {
+                   const goods = (typeof lastGoodsTotal === 'number') ? lastGoodsTotal : 0;
+                   return (deliveryOptions || []).map(o => {
+                     const tooBig = o.max_order_value && goods > parseFloat(o.max_order_value);
+                     const c = deliveryPriceFor(o, goods);
+                     return { id: o.id, name: o.name, blurb: o.blurb || '',
+                              arrival: formatArrival(estimatedArrival(o)),
+                              cost: tooBig ? '—' : (c > 0 ? '+£' + c.toFixed(2) : 'Free'),
+                              disabled: !!tooBig };
+                   });
+                 },
+    money:      () => {
+                   const t = parseFloat(String(document.getElementById('priceTotal').textContent).replace(/[^0-9.]/g,''));
+                   return { total: isFinite(t) ? t : null };
+                 },
+    // Every click comes back here and is written into the page's own state,
+    // then priced by the page's own updatePrice().
+    onSelect: (S) => {
+      const paper = (CONFIG.papers||[]).find(p => p.name === S.paper);
+      if (paper) selectedPaper = paper.id;
+      if (S.weight && paper) {
+        const w = (paper.weights||[]).find(x => parseInt(x.gsm,10) === parseInt(S.weight,10));
+        if (w) selectedWeight = w.id;
+      }
+      selectedFinishes = Object.assign({}, S.finishes);
+      const firstReal = Object.keys(selectedFinishes).map(k => selectedFinishes[k])
+                          .find(v => v && v.toLowerCase() !== 'none');
+      selectedFinish = firstReal || 'None';
+      if (S.qty) uploadQty = S.qty;
+      if (S.del) selectDelivery(S.del);
+      updatePrice();
+    },
+    onAdd: () => addToCartUpload()
+  };
+}
+
+async function initStep3(){
+  if (!_step3Ready) {
+    const mount = document.getElementById('step3Mount');
+    try {
+      const r = await fetch('/step3/step3.html');
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      mount.innerHTML = await r.text();
+    } catch (e) {
+      // Better a plain message than a blank step.
+      mount.innerHTML = '<p style="font-size:var(--text-sm);color:var(--soft);padding:20px 0;">'
+        + 'We could not load this step. Please refresh the page.</p>';
+      console.error('step 3 markup failed to load', e);
+      return;
+    }
+    if (!window.Step3) { console.error('step3.js did not load'); return; }
+    Step3.init(step3Adapter());
+    _step3Ready = true;
+  }
+  Step3.setArtwork(step3Artwork());
   updatePrice();
 }
+
 
 // Render the finishing options card. Only shown if this product has finish
 // Render finish types (Lamination, Foiling, Spot UV...) from the database.
@@ -2438,10 +2498,10 @@ function selectWeightOpt(id){
   updatePrice();
 }
 
-function toggleEnvelopes(){
-  envelopesEnabled=document.getElementById('envToggle').checked;
-  document.getElementById('envSection').style.display=envelopesEnabled?'block':'none';
-  if(envelopesEnabled&&!selectedEnvColour){selectEnvColour('white');}
+// Same: the tick box and drawer are gone. Left callable so nothing throws.
+function toggleEnvelopes(on){
+  envelopesEnabled = (typeof on === 'boolean') ? on : !envelopesEnabled;
+  if (envelopesEnabled && !selectedEnvColour) selectedEnvColour = 'white';
   updatePrice();
 }
 
@@ -2454,22 +2514,13 @@ function selectEnvColour(id){
   updatePrice();
 }
 
-function switchQtyTab(tab){
-  const isPreset=tab==='preset';
-  document.getElementById('tabPreset').style.background=isPreset?'var(--gold)':'var(--white)';
-  document.getElementById('tabPreset').style.color=isPreset?'#fff':'var(--soft)';
-  document.getElementById('tabCustom').style.background=!isPreset?'var(--gold)':'var(--white)';
-  document.getElementById('tabCustom').style.color=!isPreset?'#fff':'var(--soft)';
-  document.getElementById('qtyPresetPane').style.display=isPreset?'flex':'none';
-  document.getElementById('qtyCustomPane').style.display=isPreset?'none':'block';
-  updatePrice();
-}
+// The tabbed quantity control it drove is gone — quantity is chosen in step 3
+// now. Kept as a no-op so an old cached page cannot throw here.
+function switchQtyTab(){ }
 
-function selectChip(el,qty){
-  document.querySelectorAll('.qty-chip').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  uploadQty=qty;
-  updatePrice();
+function selectChip(el, qty){
+  // The chips are gone; step 3 sets the quantity. Kept for old cached pages.
+  if (qty > 0) { uploadQty = qty; updatePrice(); }
 }
 
 // ── DELIVERY ──────────────────────────────────────────────
@@ -2601,11 +2652,9 @@ function calcBasePrice(qty){
 }
 
 function updatePrice(){
-  const customPane=document.getElementById('qtyCustomPane');
-  if(customPane&&customPane.style.display!=='none'){
-    const v=parseInt(document.getElementById('qtyCustomInput').value)||25;
-    uploadQty=Math.max(1,v);
-  }
+  // uploadQty is owned by step 3 now. It used to be read back out of a tabbed
+  // input here, which threw on null the moment that input was replaced.
+  if (!(uploadQty > 0)) uploadQty = 25;
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
 
   // Phase 5 path: try new schema (currentProduct.sheet_sells + finish_sells).
@@ -2634,6 +2683,7 @@ function updatePrice(){
     const env=ENVELOPES.find(e=>e.id===selectedEnvColour);
     if(env)envCost=Math.round(env.priceEach*uploadQty*100)/100;
   }
+  lastGoodsTotal = base+upgrade+envCost;
   const subtotalEx=(base+upgrade+envCost+deliveryCost)/1.2;
   const vat=subtotalEx*0.2;
   const total=subtotalEx+vat;
@@ -2660,7 +2710,10 @@ async function addToCartUpload(){
 
   // Same lookup chain as updatePrice() so cart total matches displayed price.
   let base, upgrade;
-  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty);
+  // Pass the weight. Without it the lookup matches the first row for this
+  // paper at ANY gsm, so the basket charged 250gsm's price for a 300gsm card
+  // the customer had just been quoted £1.60 more for.
+  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty, selectedGsm());
   if (newSheetSell != null) {
     const finishSell = totalFinishSell();
     base = newSheetSell + finishSell;
@@ -2681,6 +2734,7 @@ async function addToCartUpload(){
     const env=ENVELOPES.find(e=>e.id===selectedEnvColour);
     if(env)envCost=Math.round(env.priceEach*uploadQty*100)/100;
   }
+  lastGoodsTotal = base+upgrade+envCost;
   const subtotalEx=(base+upgrade+envCost+deliveryCost)/1.2;
   const total=(subtotalEx*1.2);
   const envLabel=envelopesEnabled&&selectedEnvColour?` + ${ENVELOPES.find(e=>e.id===selectedEnvColour)?.name} envelopes`:'';
