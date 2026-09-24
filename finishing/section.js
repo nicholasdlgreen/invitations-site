@@ -19,10 +19,19 @@
          + 'rgba(255,255,255,0) 52%),'
          + 'linear-gradient(145deg,' + a + ' 0%,' + b + ' 26%,' + c + ' 48%,' + b + ' 64%,' + d + ' 100%)';
   }
+  function metalType(dark, bright, mid) {
+    return 'linear-gradient(180deg,' + bright + ' 0%,' + mid + ' 30%,' + dark + ' 56%,'
+         + mid + ' 78%,' + bright + ' 100%)';
+  }
   var FOIL = {
     gold:   metal('#7E6018', '#FBEFC2', '#CBA52B', '#6E5414'),
     silver: metal('#6F757D', '#FBFCFD', '#C3C9D0', '#666C74'),
     rose:   metal('#8E5745', '#F6D6C6', '#D08E74', '#7E4A39')
+  };
+  var FOIL_TYPE = {
+    gold:   metalType('#8A6A1C', '#FBEFC2', '#D8B444'),
+    silver: metalType('#71777F', '#FBFCFD', '#CFD4DA'),
+    rose:   metalType('#96604D', '#F6D6C6', '#DFA88E')
   };
 
   // The printed ground under each foil, drawn from the site's own accents:
@@ -34,7 +43,15 @@
   // a soft ground they are quiet at this size, and silver quieter still. That
   // is what these foils look like on a pale card. The close-up is where they
   // read — which is why the card opens.
-  var GROUND = { gold: '#AFC3AE', silver: '#A79C92', rose: '#E0C2BB' };
+  //   gold   on eucalyptus 1.71:1   (was sage, 1.25:1 — nearly the same value)
+  //   silver on taupe      2.20:1   (was warm grey, 1.61:1)
+  //   rose   on ivory      2.25:1   (was blush, 1.62:1 — rose on pink cancels)
+  var GROUND = { gold: '#6F8478', silver: '#8E8478', rose: '#F2EADC' };
+  var PALE_ON = { gold: true, silver: true };   // grounds dark enough for pale type
+
+  // The ornament above the names, as a mask: the metal gradient shows through
+  // it, so the sprig is foil rather than a picture of foil.
+  var SPRIG = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%2042%22%3E%3Cg%20fill%3D%22%23000%22%3E%3Cpath%20d%3D%22M60.0%2034.0%20Q%2038.0%2036.0%2014.0%2012.0%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.4%22%20stroke-linecap%3D%22round%22%2F%3E%3Cellipse%20cx%3D%2250.0%22%20cy%3D%2230.5%22%20rx%3D%226.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-2.0%2050.0%2030.5%29%22%2F%3E%3Cellipse%20cx%3D%2250.0%22%20cy%3D%2237.3%22%20rx%3D%226.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%2866.0%2050.0%2037.3%29%22%2F%3E%3Cellipse%20cx%3D%2241.4%22%20cy%3D%2228.5%22%20rx%3D%225.7%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-11.0%2041.4%2028.5%29%22%2F%3E%3Cellipse%20cx%3D%2241.4%22%20cy%3D%2235.3%22%20rx%3D%225.7%22%20ry%3D%222.5%22%20transform%3D%22rotate%2857.0%2041.4%2035.3%29%22%2F%3E%3Cellipse%20cx%3D%2232.7%22%20cy%3D%2224.7%22%20rx%3D%225.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-20.0%2032.7%2024.7%29%22%2F%3E%3Cellipse%20cx%3D%2232.7%22%20cy%3D%2231.5%22%20rx%3D%225.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%2848.0%2032.7%2031.5%29%22%2F%3E%3Cellipse%20cx%3D%2223.9%22%20cy%3D%2219.0%22%20rx%3D%224.7%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-29.0%2023.9%2019.0%29%22%2F%3E%3Cellipse%20cx%3D%2223.9%22%20cy%3D%2225.8%22%20rx%3D%224.7%22%20ry%3D%222.5%22%20transform%3D%22rotate%2839.0%2023.9%2025.8%29%22%2F%3E%3Cellipse%20cx%3D%2214.9%22%20cy%3D%2211.4%22%20rx%3D%224.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-38.0%2014.9%2011.4%29%22%2F%3E%3Cellipse%20cx%3D%2214.9%22%20cy%3D%2218.2%22%20rx%3D%224.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%2830.0%2014.9%2018.2%29%22%2F%3E%3Cpath%20d%3D%22M60.0%2034.0%20Q%2082.0%2036.0%20106.0%2012.0%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.4%22%20stroke-linecap%3D%22round%22%2F%3E%3Cellipse%20cx%3D%2270.0%22%20cy%3D%2230.5%22%20rx%3D%226.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-66.0%2070.0%2030.5%29%22%2F%3E%3Cellipse%20cx%3D%2270.0%22%20cy%3D%2237.3%22%20rx%3D%226.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%282.0%2070.0%2037.3%29%22%2F%3E%3Cellipse%20cx%3D%2278.6%22%20cy%3D%2228.5%22%20rx%3D%225.7%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-57.0%2078.6%2028.5%29%22%2F%3E%3Cellipse%20cx%3D%2278.6%22%20cy%3D%2235.3%22%20rx%3D%225.7%22%20ry%3D%222.5%22%20transform%3D%22rotate%2811.0%2078.6%2035.3%29%22%2F%3E%3Cellipse%20cx%3D%2287.3%22%20cy%3D%2224.7%22%20rx%3D%225.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-48.0%2087.3%2024.7%29%22%2F%3E%3Cellipse%20cx%3D%2287.3%22%20cy%3D%2231.5%22%20rx%3D%225.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%2820.0%2087.3%2031.5%29%22%2F%3E%3Cellipse%20cx%3D%2296.1%22%20cy%3D%2219.0%22%20rx%3D%224.7%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-39.0%2096.1%2019.0%29%22%2F%3E%3Cellipse%20cx%3D%2296.1%22%20cy%3D%2225.8%22%20rx%3D%224.7%22%20ry%3D%222.5%22%20transform%3D%22rotate%2829.0%2096.1%2025.8%29%22%2F%3E%3Cellipse%20cx%3D%22105.1%22%20cy%3D%2211.4%22%20rx%3D%224.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%28-30.0%20105.1%2011.4%29%22%2F%3E%3Cellipse%20cx%3D%22105.1%22%20cy%3D%2218.2%22%20rx%3D%224.2%22%20ry%3D%222.5%22%20transform%3D%22rotate%2838.0%20105.1%2018.2%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E';
 
   function foilKey(name) {
     var o = String(name).toLowerCase();
@@ -57,10 +74,14 @@
     var mono = big ? '' : '';
     if (/foil/i.test(type)) {
       var k = foilKey(optName) || 'gold';
-      return '<span class="fs-sq" style="background:' + GROUND[k] + '">'
-        + '<span class="fs-mono" style="background-image:' + FOIL[k] + '">A&amp;T</span>'
+      var pale = PALE_ON[k];
+      return '<span class="fs-sq fs-foil" style="background:' + GROUND[k] + '">'
+        + '<span class="fs-sprig" style="background-image:' + FOIL_TYPE[k]
+        + ';-webkit-mask-image:url(\'' + SPRIG + '\');mask-image:url(\'' + SPRIG + '\')"></span>'
+        + '<span class="fs-names" style="background-image:' + FOIL_TYPE[k] + '">Amelia &amp; Thomas</span>'
         + '<span class="fs-rule" style="background:' + FOIL[k] + '"></span>'
-        + '<span class="fs-tiny" style="color:rgba(61,46,36,.58)">the fourteenth of june</span></span>';
+        + '<span class="fs-tiny" style="color:' + (pale ? 'rgba(255,255,255,.72)' : 'rgba(61,46,36,.58)')
+        + '">the fourteenth of june</span></span>';
     }
     var lk = /spot/i.test(type) ? 'uv' : lamKey(optName);
     return '<span class="fs-sq fs-l-' + lk + '" style="background-color:#F1EAE2'
@@ -91,8 +112,14 @@
     // What this product offers, narrowed to what its papers can take. A finish
     // that survives neither test never appears.
     var allowed = (opts.allowed || []).map(function (x) { return String(x).toLowerCase().trim(); });
+    var FIRST = ['foiling', 'lamination', 'spot uv'];
     var types = all
       .filter(function (t) { return !allowed.length || allowed.indexOf(t.name.toLowerCase().trim()) >= 0; })
+      .sort(function (a, b) {
+        var ia = FIRST.indexOf(a.name.toLowerCase().trim());
+        var ib = FIRST.indexOf(b.name.toLowerCase().trim());
+        return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+      })
       .filter(function (t) {
         return (t.options || []).some(function (o) { return o.name && o.name.toLowerCase() !== 'none'; });
       });
@@ -102,13 +129,21 @@
     el.innerHTML = types.map(function (t) {
       var opts2 = (t.options || []).filter(function (o) { return o.name && o.name.toLowerCase() !== 'none'; });
       return '<div class="fs-group"><div class="fs-gname">' + esc(t.name) + '</div>'
-        + '<div class="fs-gdesc">' + esc(t.description || '') + '</div>'
+        + '<div class="fs-gdesc">' + esc(t.description || '')
+        + (/foil/i.test(t.name)
+            ? ' <span class="fs-shown">Shown here on a printed card, at the size it would be pressed.</span>'
+            : (/lamin/i.test(t.name)
+                ? ' <span class="fs-shown">A laminate is a reflection, so the light has to move for you to see it \u2014 hover, or open one.</span>'
+                : '')) + '</div>'
         + '<div class="fs-row">' + opts2.map(function (o) {
             flat.push({ type: t.name, typeDesc: t.description || '', name: o.name,
                         desc: o.description || '' });
+            var label = /foil/i.test(t.name) ? o.name + ' foil'
+                      : (/spot/i.test(t.name) ? o.name.replace(/^Add /, '')
+                      : o.name + ' lamination');
             return '<button class="fs-card" type="button" data-i="' + (flat.length - 1) + '">'
               + face(t.name, o.name, false)
-              + '<span class="fs-lb">' + esc(o.name.replace(/^Add /, '')) + '</span></button>';
+              + '<span class="fs-lb">' + esc(label) + '</span></button>';
           }).join('') + '</div></div>';
     }).join('')
     + (opts.papers && opts.papers.length

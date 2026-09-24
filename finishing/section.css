@@ -6,6 +6,7 @@
 .fs-group:last-of-type{margin-bottom:0}
 .fs-gname{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--text);line-height:1.15}
 .fs-gdesc{font-size:13px;color:var(--soft);line-height:1.65;margin-top:4px}
+.fs-shown{color:var(--pale)}
 .fs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px}
 @media(max-width:880px){.fs-row{grid-template-columns:repeat(3,1fr);gap:12px}}
 @media(max-width:560px){.fs-row{grid-template-columns:repeat(2,1fr)}}
@@ -14,19 +15,28 @@
   padding:0;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 /* Square, so the row is a set of swatches rather than a stack of tall cards. */
 .fs-sq{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  container-type:inline-size;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4cqw;
   box-shadow:0 4px 14px rgba(61,46,36,.16);transition:transform .25s cubic-bezier(.2,.7,.3,1),box-shadow .25s}
 .fs-card:hover .fs-sq{transform:translateY(-3px);box-shadow:0 12px 26px rgba(61,46,36,.22)}
 .fs-card:focus-visible .fs-sq{outline:2px solid var(--gold);outline-offset:3px}
 /* The foil IS the letterform: the metal is clipped to the type, so it behaves
    like foil rather than like a coloured word. */
-.fs-mono{font-family:'Cormorant Garamond',serif;letter-spacing:.04em;font-size:30px;line-height:1.05;
+.fs-mono{font-family:'Cormorant Garamond',serif;letter-spacing:.04em;font-size:19cqw;line-height:1.05;
   -webkit-background-clip:text;background-clip:text;color:transparent;
   -webkit-text-fill-color:transparent;background-size:cover;background-position:center}
-.fs-rule{display:block;height:1.5px;width:40px}
+/* The sprig is a mask, so the metal gradient IS the ornament. */
+.fs-sprig{display:block;width:56cqw;height:19.6cqw;background-size:cover;background-position:center;
+  -webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-position:center;mask-position:center}
+.fs-names{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;
+  font-size:11.5cqw;line-height:1.1;letter-spacing:.01em;white-space:nowrap;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-fill-color:transparent;background-size:cover;background-position:center}
+.fs-rule{display:block;height:max(1px,0.9cqw);width:26cqw}
 .fs-ink{-webkit-text-fill-color:var(--text);color:var(--text);background:none}
 .fs-rule-ink{background:var(--text);opacity:.4}
-.fs-tiny{font-size:7px;letter-spacing:.18em;text-transform:uppercase}
+.fs-tiny{font-size:4.4cqw;letter-spacing:.18em;text-transform:uppercase}
 .fs-lb{font-size:11.5px;color:var(--soft);margin-top:9px;line-height:1.35}
 
 /* A laminate IS a reflection, so it can only be shown by moving light across
@@ -44,14 +54,12 @@
 
 /* the close-up — same shape and behaviour as the paper panel, so the two
    sections feel like one page */
-.fs-dialog{border:0;padding:0;border-radius:14px;max-width:420px;width:calc(100% - 40px);
+.fs-dialog{border:0;padding:0;border-radius:14px;max-width:380px;width:calc(100% - 40px);
   margin:auto;max-height:calc(100vh - 48px);overflow:auto;background:var(--white);color:var(--text)}
 .fs-dialog::backdrop{background:rgba(38,28,21,.55)}
-.fs-big{aspect-ratio:16/10;position:relative;overflow:hidden;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:14px}
-.fs-big .fs-mono{font-size:64px}
-.fs-big .fs-rule{width:84px;height:2px}
-.fs-big .fs-tiny{font-size:9px}
+/* Square in the close-up as well, so it is plainly the same card enlarged. */
+.fs-big{aspect-ratio:1/1}
+.fs-big{container-type:inline-size}
 .fs-dialog-body{padding:18px 22px 22px}
 .fs-dialog-body h3{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:1.2rem;margin:0 0 3px;color:var(--text)}
 .fs-dialog-sub{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
