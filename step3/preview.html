@@ -95,6 +95,8 @@ const finCost=t=>{const f=FINS.find(x=>x.name===t);return f?parseFloat(f.sell):0
     finishTypesFor:finishesFor,
     envelopes:()=>ENVS,
     quantities:()=>LADDER.filter(q=>priceOf(S.paper,S.weight,q)!=null),
+    quantityRange:()=>{const p=LADDER.filter(q=>priceOf(S.paper,S.weight,q)!=null);
+      return p.length?{min:p[0],max:p[p.length-1]}:null;},
     perCardAt:n=>{const b=priceOf(S.paper,S.weight,n);if(b==null)return null;
       let t=b;Object.keys(S.finishes).forEach(k=>{const v=S.finishes[k];if(v&&v.toLowerCase()!=='none')t+=finCost(k);});return t/n;},
     deliveries:()=>{const g=goods();return DELS.map(o=>{

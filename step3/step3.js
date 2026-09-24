@@ -210,15 +210,46 @@
   }
 
   // ---- 5 · how many ----------------------------------------------------------
+  // Tiles for the common amounts, and a box for anyone who needs a number that
+  // is not on them. The printer takes any quantity, so the shop does too.
   function drawQty() {
     if (!S.paper || !S.weight) { open('s3', false); renumber(); return; }
     var steps = A.quantities() || [];
-    el('qtys').innerHTML = steps.map(function (n) {
+    var onTile = steps.indexOf(S.qty) >= 0;
+    var range = (A.quantityRange && A.quantityRange()) || null;
+
+    var tiles = steps.map(function (n) {
       var per = A.perCardAt(n);
       return '<button class="qty' + (S.qty === n ? ' on' : '') + '" onclick="Step3.qty(' + n + ')">'
         + '<span class="n">' + n + '</span>'
         + '<span class="e">' + (per == null ? '' : gbp(per) + ' each') + '</span></button>';
     }).join('');
+
+    // The typed amount gets its own tile once chosen, so the page always shows
+    // what is selected rather than leaving every tile looking unpicked.
+    if (S.qty && !onTile) {
+      var per2 = A.perCardAt(S.qty);
+      tiles += '<button class="qty on qty-own">'
+        + '<span class="n">' + S.qty + '</span>'
+        + '<span class="e">' + (per2 == null ? '' : gbp(per2) + ' each') + '</span></button>';
+    }
+
+    var hint = range
+      ? 'Any number from ' + range.min + ' to ' + range.max
+      : 'Any number';
+    tiles += '<div class="qty-own-wrap">'
+      + '<label class="qty-own-lb" for="qtyOwn">A different amount</label>'
+      + '<span class="qty-own-row">'
+      + '<input id="qtyOwn" class="qty-own-in" type="number" inputmode="numeric" min="'
+      + (range ? range.min : 1) + '" max="' + (range ? range.max : 9999) + '" step="1"'
+      + ' placeholder="e.g. 87"'
+      + ' value="' + (S.qty && !onTile ? S.qty : '') + '"'
+      + ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();Step3.ownQty(this.value)}">'
+      + '<button class="qty-own-go" type="button" onclick="Step3.ownQty(document.getElementById(\'qtyOwn\').value)">Use</button>'
+      + '</span>'
+      + '<span class="qty-own-hint" id="qtyOwnHint">' + esc(hint) + '</span></div>';
+
+    el('qtys').innerHTML = tiles;
     open('s3', true); renumber();
   }
 
@@ -390,6 +421,20 @@
       advanceTo('s3'); A.onSelect(S); redraw(); renumber();
     },
     qty: function (n) { S.qty = n; advanceTo('s4'); A.onSelect(S); redraw(); renumber(); },
+    // A typed amount. Anything outside what the printer will quote is refused
+    // with the reason, rather than silently snapping to a number they did not
+    // ask for and then charging for it.
+    ownQty: function (v) {
+      var n = parseInt(String(v).replace(/[^0-9]/g, ''), 10);
+      var range = (A.quantityRange && A.quantityRange()) || { min: 1, max: 9999 };
+      var hint = el('qtyOwnHint');
+      function say(msg) { if (hint) { hint.textContent = msg; hint.className = 'qty-own-hint bad'; } }
+      if (!n || n < 1)          return say('Enter how many you need.');
+      if (n < range.min)        return say('The smallest we can print is ' + range.min + '.');
+      if (n > range.max)        return say('The most we can print in one order is ' + range.max
+                                           + '. Get in touch for more.');
+      S.qty = n; advanceTo('s4'); A.onSelect(S); redraw(); renumber();
+    },
     delivery: function (id) { S.del = id; advanceTo('s4'); A.onSelect(S); redraw(); renumber(); },
     jump: jump,
     redraw: redraw

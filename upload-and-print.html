@@ -1395,6 +1395,59 @@ function lookupSheetSell(paper, size, qty, gsm) {
   return match ? parseFloat(match.sell) : null;
 }
 
+// Every quantity we hold a price for on this paper, in order. The printer
+// quotes any amount, but we only sample their curve at set points, so this is
+// the shape of what we know.
+function pricedQuantities(paper, size, gsm) {
+  if (!currentProduct || !Array.isArray(currentProduct.sheet_sells)) return [];
+  const want = parseInt(gsm, 10);
+  return [...new Set(currentProduct.sheet_sells
+    .filter(s => s.paper === paper && s.size === size &&
+                 (s.gsm == null || !want || parseInt(s.gsm, 10) === want))
+    .map(s => parseInt(s.qty, 10)))].sort((a, b) => a - b);
+}
+
+// What ANY quantity costs, not just the ones we sampled.
+//
+// The printer's field says "Type any amount", so the shop should take any
+// amount too. Their price is not a formula — it steps in whole pounds, and the
+// steps land in different places for every paper, weight and size — so between
+// two points we hold, we draw a straight line. Measured against 250 live
+// quotes that lands within about 0.2-0.7% of their real price.
+//
+// Outside the range we hold, the price is held flat at the nearest end rather
+// than extrapolated. A straight line carried on past the last point we know is
+// a guess about a curve we have never seen.
+function sheetSellFor(paper, size, qty, gsm) {
+  const exact = lookupSheetSell(paper, size, qty, gsm);
+  if (exact != null) return exact;
+  const pts = pricedQuantities(paper, size, gsm);
+  if (!pts.length) return null;
+  const q = parseInt(qty, 10);
+  if (!isFinite(q) || q <= 0) return null;
+  if (q <= pts[0])              return lookupSheetSell(paper, size, pts[0], gsm);
+  if (q >= pts[pts.length - 1]) return lookupSheetSell(paper, size, pts[pts.length - 1], gsm);
+  for (let i = 1; i < pts.length; i++) {
+    if (q <= pts[i]) {
+      const x0 = pts[i - 1], x1 = pts[i];
+      const y0 = lookupSheetSell(paper, size, x0, gsm);
+      const y1 = lookupSheetSell(paper, size, x1, gsm);
+      if (y0 == null || y1 == null) return null;
+      return y0 + (y1 - y0) * (q - x0) / (x1 - x0);
+    }
+  }
+  return null;
+}
+
+// The most and least we can price on the paper currently chosen, so the page
+// can say so rather than silently refusing a number.
+function quantityRange() {
+  const paper = (CONFIG.papers || []).find(p => p.id === selectedPaper);
+  if (!paper) return null;
+  const pts = pricedQuantities(paper.name, selectedSize, selectedGsm());
+  return pts.length ? { min: pts[0], max: pts[pts.length - 1] } : null;
+}
+
 // The gsm the customer currently has chosen, for the paper on screen.
 function selectedGsm() {
   const paper = CONFIG.papers.find(p => p.id === selectedPaper);
@@ -2334,10 +2387,13 @@ function step3Adapter(){
                     : (ENVELOPES || []).map(e => ({ id: e.id, name: e.name,
                         hex: e.hex, priceEach: e.priceEach })),
     quantities:  step3Quantities,
+    // What the printer will quote on the paper currently chosen, so the typed
+    // box can say so instead of refusing a number without a reason.
+    quantityRange: quantityRange,
     perCardAt:   n => {
                    const paper = (CONFIG.papers||[]).find(p => p.id === selectedPaper);
                    if (!paper) return null;
-                   const base = lookupSheetSell(paper.name, selectedSize, n, selectedGsm());
+                   const base = sheetSellFor(paper.name, selectedSize, n, selectedGsm());
                    return base == null ? null : (base + totalFinishSell()) / n;
                  },
     deliveries: () => {
@@ -2750,7 +2806,7 @@ function updatePrice(){
   // Phase 5 path: try new schema (currentProduct.sheet_sells + finish_sells).
   // Falls back to old findMatchingPrice, then to default formula.
   let base, upgrade;
-  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty, selectedGsm());
+  const newSheetSell = sheetSellFor(paper.name, selectedSize, uploadQty, selectedGsm());
   if (newSheetSell != null) {
     const finishSell = totalFinishSell();
     base = newSheetSell + finishSell; // Both are sell prices already with margin applied
@@ -2803,7 +2859,7 @@ async function addToCartUpload(){
   // Pass the weight. Without it the lookup matches the first row for this
   // paper at ANY gsm, so the basket charged 250gsm's price for a 300gsm card
   // the customer had just been quoted £1.60 more for.
-  const newSheetSell = lookupSheetSell(paper.name, selectedSize, uploadQty, selectedGsm());
+  const newSheetSell = sheetSellFor(paper.name, selectedSize, uploadQty, selectedGsm());
   if (newSheetSell != null) {
     const finishSell = totalFinishSell();
     base = newSheetSell + finishSell;

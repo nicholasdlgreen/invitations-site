@@ -169,6 +169,25 @@
   #s3wrap .cant a{color:var(--gold);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
   /* ---- 3. quantity ---- */
   #s3wrap .qtys{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;}
+  /* A typed amount, for anyone whose number is not on a tile. The printer
+     quotes any quantity, so the shop takes any quantity. */
+  #s3wrap .qty-own-wrap{display:flex;flex-direction:column;justify-content:center;gap:5px;
+  border:1.5px dashed var(--line);border-radius:13px;padding:11px 14px;min-width:172px;}
+  #s3wrap .qty-own-lb{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--pale);}
+  #s3wrap .qty-own-row{display:flex;gap:7px;align-items:center;}
+  #s3wrap .qty-own-in{width:82px;font-family:inherit;font-size:15px;color:var(--text);
+  border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--white);}
+  #s3wrap .qty-own-in:focus{outline:none;border-color:var(--gold);}
+  #s3wrap .qty-own-in::-webkit-outer-spin-button,
+  #s3wrap .qty-own-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  #s3wrap .qty-own-go{font-family:inherit;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  background:var(--text);color:#fff;border:0;border-radius:40px;padding:8px 14px;cursor:pointer;}
+  #s3wrap .qty-own-go:hover{background:#2C211A;}
+  #s3wrap .qty-own-hint{font-size:10.5px;color:var(--pale);line-height:1.4;}
+  #s3wrap .qty-own-hint.bad{color:#B4543F;}
+  /* A typed amount that is not one of the tiles still shows as chosen. */
+  #s3wrap .qty.qty-own{cursor:default;}
+
   #s3wrap .qty{cursor:pointer;font-family:inherit;text-align:center;padding:11px 4px 10px;border-radius:11px;min-width:76px;
   background:var(--white);border:1.5px solid var(--line);color:var(--soft);transition:border-color .2s;}
   #s3wrap .qty:hover{border-color:var(--gold)}
