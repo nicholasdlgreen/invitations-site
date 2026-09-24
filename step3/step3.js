@@ -202,8 +202,7 @@
         return '<button class="env' + (S.env === e.id ? ' on' : '') + '"'
           + ' onclick="Step3.env(\'' + q(e.id) + '\')">'
           + '<span class="sq" style="background:' + q(e.hex || '#fff') + '"></span>'
-          + '<span class="nm">' + esc(e.name) + '</span>'
-          + '<span class="pr">' + gbp(e.priceEach) + ' each</span></button>';
+          + '<span class="nm">' + esc(e.name) + '</span></button>';
       }).join('') + '</div>';
     }
     el('envs').innerHTML = html;

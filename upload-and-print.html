@@ -21,7 +21,9 @@
    paper grain shrinks to nothing. Widen the wrap for that step only — and by
    widening rather than translating, because a transform on an ancestor would
    quietly break the sticky rail and price bar inside it. */
-body.wide-step .upload-wrap{max-width:1124px;}
+/* Padding zeroed because the step brings its own 32px. Left on, the two
+   stacked: 64px of gutter each side, which cost a phone 64px of card. */
+body.wide-step .upload-wrap{max-width:1124px;padding-left:0;padding-right:0;}
 /* The site header is sticky, so the step's own rail has to start below it or
    it slides underneath and vanishes. The real height is measured and written
    over this by setRailOffset(); 75px is only the value to paint with before
