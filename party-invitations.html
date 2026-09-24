@@ -34,7 +34,6 @@
 .lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:11px 18px;display:inline-block;margin-bottom:18px;}
 .lp-price-label{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:3px;}
 .lp-price-value{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--text);line-height:1;}
-.lp-price-meta{font-size:var(--text-xs);color:var(--soft);margin-top:5px;}
 .lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
 .lp-cta:hover{background:transparent;color:var(--gold);}
 .lp-cta::after{content:'→';transition:transform .2s;}
@@ -609,7 +608,6 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div class="lp-price-block" id="lp-price-block">
           <div class="lp-price-label">From</div>
           <div class="lp-price-value" id="lp-price-value">£—</div>
-          <div class="lp-price-meta" id="lp-price-meta">Pricing loads from your published data</div>
         </div>
         <div><button class="lp-cta" id="lp-hero-cta" type="button" onclick="openPathModal(this)">Start Your Order</button></div>
         <div class="lp-hero-reassure">
@@ -1157,11 +1155,9 @@ function pickAnchorQtys(qtys) {
 // "Our paper stocks" replaced.
 function renderPricing() {
   const priceValue = document.getElementById('lp-price-value');
-  const priceMeta  = document.getElementById('lp-price-meta');
-  if (!priceValue || !priceMeta) return;
+  if (!priceValue) return;
   if (!productPricing || !Array.isArray(productPricing.sheet_sells) || !productPricing.sheet_sells.length) {
     priceValue.textContent = '\u00a3\u2014';
-    priceMeta.textContent = 'Pricing to be confirmed';
     return;
   }
   const papers = productPricing.available_papers || [];
@@ -1175,7 +1171,6 @@ function renderPricing() {
     .filter(s => parseInt(s.qty, 10) === lowestQty)
     .map(s => parseFloat(s.sell)));
   priceValue.textContent = '\u00a3' + Math.round(cheapest);
-  priceMeta.textContent  = 'From ' + lowestQty + ' \u00b7 ' + size + ' \u00b7 Inc. VAT';
 }
 
 
