@@ -1,7 +1,8 @@
 # How Foreverprint pricing works
 
-*Last verified 23 September 2026. This is the canonical reference — if you
-change how pricing works, change this file in the same commit.*
+*Last verified 24 September 2026, when every claim below was re-checked
+against the live database. This is the canonical reference — if you change how
+pricing works, change this file in the same commit.*
 
 *A shareable summary for PrintedEasy or a production partner, drawn from this
 file, lives at https://claude.ai/code/artifact/3df5ea13-436a-4d15-920b-e423f2c1eef0
@@ -159,9 +160,24 @@ they appear.
 | Papers, weights, finishes | `paper_stocks` | admin → Pricing → Paper Stocks |
 | Which papers/sizes/family each product has | `product_types` | admin → Pricing → Product Types |
 | Finish charges | `finish_options` | admin → Pricing → Finish Options |
+| Finish names, descriptions, colours | `finish_types` | admin |
+
+**Two tables, nearly the same name, different jobs.** `finish_options` holds what
+a finish *costs*. `finish_types` holds what the customer *reads* — the name, the
+description and the colour options, which is what the product pages render.
+Changing a price in `finish_options` does not change a word on the site, and
+rewriting `finish_types` does not change a price.
 
 **No price is anywhere in the code.** Pages read the published snapshot live, so
 a price change never needs a deploy — only a Publish.
+
+That was true in principle and false in practice until 24 September: twenty of
+the twenty-one landing pages tested `schema_version === 2` while Publish writes
+3, so each one silently discarded the entire payload and showed "Pricing to be
+confirmed". No error, no warning — just no prices, on every product page, for a
+day. Fixed in `66fc506`. **A version bump in the payload is a breaking change to
+every page that reads it**; widen the test rather than raising the number next
+time.
 
 Current state: schema version 3, published 23 Sept 2026, **all margins 0** (the
 site sells at cost while we test).
@@ -191,6 +207,15 @@ diff. About 35 minutes for all 1,388 prices.
 
 **Publish.** Admin → Pricing → Publish. Read the warnings first: it lists every
 product with a gap, and a product with no family cannot be priced at all.
+
+### Where a customer now sees a price
+
+The "Simple, honest pricing" section and its quantity-by-paper table were taken
+off all 21 landing pages on 24 September and replaced by "Our paper stocks".
+**The only price on a landing page is now the hero "from" figure**, which
+renderPricing() derives from the cheapest paper at the lowest quantity. Every
+other price is quoted in the order step. If pricing needs to be visible earlier
+in the journey again, it is a new section, not a restored one.
 
 ---
 
