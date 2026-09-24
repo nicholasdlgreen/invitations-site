@@ -39,7 +39,7 @@ const IMG={'Uncoated':'uncoated','Silk':'silk','Ice White':'icewhite','Recycled 
   'Tintoretto Gesso':'tintoretto','Nettuno Bianco':'nettuno','Acquerello Bianco':'acquerello',
   'Sirio Pearl Polar Dawn':'polardawn'};
 
-let PAPERS=[],SHEETS=[],FINS=[],CAPS={},TYPES=[],SIZE='A5',LADDER=[],ALLOWF=[];
+let PAPERS=[],SHEETS=[],FINS=[],CAPS={},TYPES=[],SIZE='A5',LADDER=[],ALLOWF=[],ENVS=[];
 const get=async p=>{const r=await fetch(SB+'/rest/v1/'+p,{headers:{apikey:KEY,Authorization:'Bearer '+KEY}});return r.ok?r.json():[];};
 const priceOf=(n,g,q)=>{const w=parseInt(g,10);const r=SHEETS.find(x=>x.paper===n&&x.size===SIZE&&parseInt(x.qty,10)===q&&(x.gsm==null||!w||parseInt(x.gsm,10)===w));return r?parseFloat(r.sell):null;};
 const finCost=t=>{const f=FINS.find(x=>x.name===t);return f?parseFloat(f.sell):0;};
@@ -52,6 +52,8 @@ const finCost=t=>{const f=FINS.find(x=>x.name===t);return f?parseFloat(f.sell):0
     get('pricing_config?select=payload&order=published_at.desc&limit=1')
   ]);
   TYPES=await get('finish_types?select=name,description,options&order=display_order');
+  ENVS=(await get('envelopes?select=id,name,hex_color,price_each&active=eq.true&order=display_order'))
+        .map(e=>({id:e.id,name:e.name,hex:e.hex_color,priceEach:parseFloat(e.price_each)}));
   const payload=(pc[0]&&pc[0].payload)||{};
   const prod=((payload.products)||[]).find(x=>x.slug===SLUG)||{};
   SHEETS=prod.sheet_sells||[]; FINS=prod.finish_sells||[];
@@ -76,6 +78,7 @@ const finCost=t=>{const f=FINS.find(x=>x.name===t);return f?parseFloat(f.sell):0
   const goods=()=>{
     let t=priceOf(S.paper,S.weight,S.qty)||0;
     Object.keys(S.finishes).forEach(k=>{const v=S.finishes[k];if(v&&v.toLowerCase()!=='none')t+=finCost(k);});
+    if(S.env&&S.env!=='none'&&S.qty){const e=ENVS.find(x=>x.id===S.env);if(e)t+=e.priceEach*S.qty;}
     return t;
   };
   const DELS=[{id:'standard',name:'Standard',blurb:'Printed in 3 working days, then tracked delivery',pct:0,min:0,cap:null,days:4},
@@ -90,6 +93,7 @@ const finCost=t=>{const f=FINS.find(x=>x.name===t);return f?parseFloat(f.sell):0
     imageFor:n=>IMG[n]?'/img/paper/'+IMG[n]+'.jpg':null,
     weightsFor,
     finishTypesFor:finishesFor,
+    envelopes:()=>ENVS,
     quantities:()=>LADDER.filter(q=>priceOf(S.paper,S.weight,q)!=null),
     perCardAt:n=>{const b=priceOf(S.paper,S.weight,n);if(b==null)return null;
       let t=b;Object.keys(S.finishes).forEach(k=>{const v=S.finishes[k];if(v&&v.toLowerCase()!=='none')t+=finCost(k);});return t/n;},

@@ -13,7 +13,7 @@
   'use strict';
 
   var A = null;   // the adapter supplied by the host
-  var S = { feel: null, paper: null, weight: null, finishes: {}, qty: null,
+  var S = { feel: null, paper: null, weight: null, finishes: {}, env: null, qty: null,
             del: null, openFin: null, at: 's1' };
   var ART = null;
 
@@ -183,7 +183,34 @@
     return 'background:#EFEBE5';
   }
 
-  // ---- 4 · how many ----------------------------------------------------------
+  // ---- 4 · envelopes ---------------------------------------------------------
+  // Asked before the quantity, because the answer is yes or no — how many is
+  // settled by the card order, so we never ask for the number twice. A product
+  // the printer supplies no envelope for has no section at all.
+  function drawEnvelopes() {
+    var list = (A.envelopes && A.envelopes()) || [];
+    if (!S.paper || !S.weight || !list.length) { open('s5', false); renumber(); return; }
+    var said = S.env !== null;
+    var yes  = said && S.env !== 'none';
+    var html = '<div class="envAsk">'
+      + '<button class="' + (S.env === 'none' ? 'on' : '') + '" onclick="Step3.env(\'none\')">'
+      + 'No envelopes, thank you</button>'
+      + '<button class="' + (yes ? 'on' : '') + '" onclick="Step3.env(\'yes\')">'
+      + 'Add envelopes</button></div>';
+    if (yes) {
+      html += '<div class="envCols">' + list.map(function (e) {
+        return '<button class="env' + (S.env === e.id ? ' on' : '') + '"'
+          + ' onclick="Step3.env(\'' + q(e.id) + '\')">'
+          + '<span class="sq" style="background:' + q(e.hex || '#fff') + '"></span>'
+          + '<span class="nm">' + esc(e.name) + '</span>'
+          + '<span class="pr">' + gbp(e.priceEach) + ' each</span></button>';
+      }).join('') + '</div>';
+    }
+    el('envs').innerHTML = html;
+    open('s5', true); renumber();
+  }
+
+  // ---- 5 · how many ----------------------------------------------------------
   function drawQty() {
     if (!S.paper || !S.weight) { open('s3', false); renumber(); return; }
     var steps = A.quantities() || [];
@@ -217,7 +244,7 @@
   }
   function renumber() {
     var n = 0;
-    ['s1', 'stocks', 's2', 's3', 's4'].forEach(function (id) {
+    ['s1', 'stocks', 's2', 's5', 's3', 's4'].forEach(function (id) {
       var sec = el(id); if (!sec) return;
       var b = sec.querySelector('.num b'); if (!b) return;
       if (sec.classList.contains('locked') && id !== 's1') return;
@@ -229,10 +256,12 @@
   // steps are all there and the highlight moves along them.
   function journey() {
     var noFinish = !!S.paper && (A.finishTypesFor(S.paper) || []).length === 0;
+    var noEnv = !((A.envelopes && A.envelopes()) || []).length;
     return [
       { id: 's1', label: 'Type' },
       { id: 'stocks', label: 'Paper' },
       { id: 's2', label: 'Finishing', skip: noFinish },
+      { id: 's5', label: 'Envelopes', skip: noEnv },
       { id: 's3', label: 'How many' },
       { id: 's4', label: 'Delivery' }
     ].filter(function (x) { return !x.skip; });
@@ -255,6 +284,14 @@
         + '<b>' + (i + 1) + '</b>' + esc(x.label) + '</button>';
     }).join('') + '</div>';
   }
+  // Where the highlight goes once a paper is settled: finishing if this stock
+  // can take any, then envelopes if the product has them, then the quantity.
+  function afterPaper(name) {
+    if ((A.finishTypesFor(name) || []).length) return 's2';
+    if (((A.envelopes && A.envelopes()) || []).length) return 's5';
+    return 's3';
+  }
+
   // Only ever on a click of theirs. Nothing here moves the page by itself.
   function jump(id) {
     var e = el(id); if (!e) return;
@@ -268,10 +305,17 @@
       .map(function (k) { return S.finishes[k]; });
     var delName = '';
     (A.deliveries() || []).forEach(function (o) { if (o.id === S.del) delName = o.name; });
+    var envName = '';
+    if (S.env && S.env !== 'none') {
+      ((A.envelopes && A.envelopes()) || []).forEach(function (e) {
+        if (e.id === S.env) envName = e.name + ' envelopes';
+      });
+    }
 
     el('sum').innerHTML = (S.paper && S.weight)
       ? '<b>' + esc(S.paper) + '</b> &middot; ' + S.weight + 'gsm &middot; '
         + (picks.length ? esc(picks.join(' & ')) : 'no finishing')
+        + (envName ? ' &middot; ' + esc(envName) : '')
         + (S.qty ? ' &middot; ' + S.qty + ' cards' : '')
         + (S.qty && delName ? ' &middot; ' + esc(delName) : '')
       : '';
@@ -285,7 +329,9 @@
     drawRail();
   }
 
-  function redraw() { drawFeels(); drawStocks(); drawFinishing(); drawQty(); drawDelivery(); paint(); }
+  function redraw() {
+    drawFeels(); drawStocks(); drawFinishing(); drawEnvelopes(); drawQty(); drawDelivery(); paint();
+  }
 
   // ---- what the host calls ---------------------------------------------------
   global.Step3 = {
@@ -311,18 +357,38 @@
     },
     paper: function (n) {
       S.paper = n; S.weight = null; S.finishes = {};
-      advanceTo((A.finishTypesFor(n) || []).length ? 's2' : 's3');
+      advanceTo(afterPaper(n));
       A.onSelect(S); redraw(); renumber();
     },
     weight: function (g) {
       S.weight = g;
-      advanceTo((A.finishTypesFor(S.paper) || []).length ? 's2' : 's3');
+      advanceTo(afterPaper(S.paper));
       A.onSelect(S); redraw(); renumber();
     },
     toggleFin: function (t) { S.openFin = (S.openFin === t ? null : t); drawFinishing(); },
     finish: function (t, o) {
-      S.finishes[t] = o; S.openFin = null; advanceTo('s3');
+      S.finishes[t] = o; S.openFin = null;
+      advanceTo(((A.envelopes && A.envelopes()) || []).length ? 's5' : 's3');
       A.onSelect(S); redraw(); renumber();
+    },
+    env: function (id) {
+      var list = (A.envelopes && A.envelopes()) || [];
+      // 'yes' opens the colours without choosing one; the first colour is
+      // pre-selected so the price never moves without the customer seeing why.
+      if (id === 'yes') {
+        S.env = list.length ? list[0].id : null;
+      } else if (id === 'none') {
+        S.env = 'none';
+      } else {
+        // A colour the printer no longer stocks would otherwise sit in the
+        // state unpriced and unhighlighted: chosen as far as the page is
+        // concerned, invisible to the customer.
+        var known = false;
+        for (var i = 0; i < list.length; i++) if (list[i].id === id) known = true;
+        if (!known) return;
+        S.env = id;
+      }
+      advanceTo('s3'); A.onSelect(S); redraw(); renumber();
     },
     qty: function (n) { S.qty = n; advanceTo('s4'); A.onSelect(S); redraw(); renumber(); },
     delivery: function (id) { S.del = id; advanceTo('s4'); A.onSelect(S); redraw(); renumber(); },

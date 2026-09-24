@@ -16,6 +16,23 @@
 <style>
 /* ── UPLOAD FLOW ── */
 .upload-wrap{max-width:760px;margin:0 auto;padding:28px 32px 100px;}
+/* Step 3 was designed on a 1060px measure. Squeezed into the 760px the upload
+   and file-check steps use, the three type cards turn tall and narrow and the
+   paper grain shrinks to nothing. Widen the wrap for that step only — and by
+   widening rather than translating, because a transform on an ancestor would
+   quietly break the sticky rail and price bar inside it. */
+body.wide-step .upload-wrap{max-width:1124px;}
+/* The site header is sticky, so the step's own rail has to start below it or
+   it slides underneath and vanishes. The real height is measured and written
+   over this by setRailOffset(); 75px is only the value to paint with before
+   that runs. Guessing it is how the rail ended up 11px under the header on a
+   phone, where the header is not the shorter thing it looks. */
+body.wide-step #s3wrap{--s3-top:75px;}
+/* One number sequence at a time. The site's 1-5 bar and the step's own rail
+   both sit at the top of the page and count different things, which reads as
+   a mistake. The site bar comes back the moment you leave this step. */
+body.wide-step .step-bar{display:none;}
+
 .step-bar{display:flex;align-items:center;gap:0;margin-bottom:34px;}
 .step-item{display:flex;align-items:center;gap:12px;flex:1;}
 .step-item:last-child{flex:0;}
@@ -2144,6 +2161,9 @@ function goStep(n){
     document.getElementById('sl'+i).className='step-label'+(i===n?' active':'');
   });
   currentStep=n;
+  // Step 3 is drawn on a wider measure than the rest of the page, and hides
+  // the site's own step bar while it shows its own. See .wide-step.
+  document.body.classList.toggle('wide-step', n === 3);
   // The whole order happens on one page, so Analytics would otherwise see a
   // single page view and none of the journey. Each step is reported as its
   // own stage, which is what makes drop-off visible.
@@ -2241,15 +2261,38 @@ function step3Quantities(){
 }
 
 // The customer's own artwork, whichever route they came in by. Nothing new is
-// asked of them: step 2 already renders the file for the quality check.
+// asked of them: step 2 has already loaded and positioned the file.
+//
+// It must NOT come from #previewCanvas. That element only ever loads the file
+// for the renderer and is left display:none for good — reading it gave an
+// empty canvas, which is why the upload route showed the placeholder instead
+// of the design. The real artwork is the global proofImage, positioned by
+// artworkAdjust.
 function step3Artwork(){
   if (designMode && designState) {
     if (designState.thumbnail)    return designState.thumbnail;
     if (designState.aiArtworkUrl) return designState.aiArtworkUrl;
   }
-  const cv = document.getElementById('previewCanvas');
-  if (cv && cv.width && cv.style.display !== 'none') {
-    try { return cv.toDataURL('image/png'); } catch(e) {}
+  if (typeof proofImage !== 'undefined' && proofImage) {
+    try {
+      // Redraw through the same compositing code the proof uses, so what sits
+      // on the paper card is what will be printed — same zoom, pan, rotation
+      // and fill mode. Then cut the trim out, because bleed and crop marks
+      // belong on a press file, not on a picture of a card.
+      const spec = SIZE_SPECS[selectedSize] || SIZE_SPECS['A5'];
+      const g = proofGeometry(560 / spec.mmW, spec, false);
+      const full = document.createElement('canvas');
+      full.width  = Math.round(g.W);
+      full.height = Math.round(g.H);
+      composeArtwork(full.getContext('2d'), proofImage, g, artworkAdjust);
+      const card = document.createElement('canvas');
+      card.width  = Math.round(g.tw);
+      card.height = Math.round(g.th);
+      card.getContext('2d').drawImage(full,
+        Math.round(g.tx), Math.round(g.ty), Math.round(g.tw), Math.round(g.th),
+        0, 0, Math.round(g.tw), Math.round(g.th));
+      return card.toDataURL('image/png');
+    } catch(e) { console.error('step 3 could not draw the artwork', e); }
   }
   const im = document.getElementById('previewImg');
   if (im && im.src && im.style.display !== 'none') return im.src;
@@ -2268,6 +2311,11 @@ function step3Adapter(){
                    return availableWeightsFor(full) || [];
                  },
     finishTypesFor: step3Finishes,
+    // Empty when this product is not sold with envelopes, and the step
+    // disappears rather than offering something the printer cannot supply.
+    envelopes:  () => (currentProduct && currentProduct.envelopes_offered === false) ? []
+                    : (ENVELOPES || []).map(e => ({ id: e.id, name: e.name,
+                        hex: e.hex, priceEach: e.priceEach })),
     quantities:  step3Quantities,
     perCardAt:   n => {
                    const paper = (CONFIG.papers||[]).find(p => p.id === selectedPaper);
@@ -2303,6 +2351,8 @@ function step3Adapter(){
       const firstReal = Object.keys(selectedFinishes).map(k => selectedFinishes[k])
                           .find(v => v && v.toLowerCase() !== 'none');
       selectedFinish = firstReal || 'None';
+      envelopesEnabled = !!(S.env && S.env !== 'none');
+      selectedEnvColour = envelopesEnabled ? S.env : null;
       if (S.qty) uploadQty = S.qty;
       if (S.del) selectDelivery(S.del);
       updatePrice();
@@ -2310,6 +2360,19 @@ function step3Adapter(){
     onAdd: () => addToCartUpload()
   };
 }
+
+// How far down the step's rail has to sit: exactly the height of whatever
+// sticky chrome the page keeps above it. Measured, never assumed — the header
+// is the same 75px on a phone as on a desktop, which a guess got wrong.
+function setRailOffset(){
+  const wrap = document.getElementById('s3wrap');
+  const hdr  = document.querySelector('header');
+  if (!wrap || !hdr) return;
+  const h = (getComputedStyle(hdr).position === 'sticky' || getComputedStyle(hdr).position === 'fixed')
+    ? Math.round(hdr.getBoundingClientRect().height) : 0;
+  wrap.style.setProperty('--s3-top', h + 'px');
+}
+window.addEventListener('resize', setRailOffset);
 
 async function initStep3(){
   if (!_step3Ready) {
@@ -2326,9 +2389,19 @@ async function initStep3(){
       return;
     }
     if (!window.Step3) { console.error('step3.js did not load'); return; }
-    Step3.init(step3Adapter());
+    try {
+      Step3.init(step3Adapter());
+    } catch (e) {
+      // A half-drawn step is worse than an honest message: the customer can
+      // see paper cards and think the page works while nothing below responds.
+      mount.innerHTML = '<p style="font-size:var(--text-sm);color:var(--soft);padding:20px 0;">'
+        + 'We could not load this step. Please refresh the page.</p>';
+      console.error('step 3 failed to start', e);
+      return;
+    }
     _step3Ready = true;
   }
+  setRailOffset();
   Step3.setArtwork(step3Artwork());
   updatePrice();
 }
