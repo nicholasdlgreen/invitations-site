@@ -69,14 +69,6 @@
 .lp-show-tier{font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
 .lp-show-desc{font-size:var(--text-sm);color:var(--soft);line-height:1.7;}
 /* Finishing — dark panel, framed as craft */
-.lp-finish-panel{background:var(--text);border-radius:18px;padding:44px 40px;max-width:920px;margin:0 auto;}
-.lp-finish-panel .lp-strip-tag{color:var(--gold-lt);}
-.lp-finish-panel .lp-strip-h{color:var(--cream);}
-.lp-finish-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}
-.lp-finish-item{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:18px 22px;}
-.lp-finish-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--cream);margin-bottom:4px;}
-.lp-finish-desc{font-size:var(--text-sm);color:rgba(255,255,255,.6);line-height:1.6;}
-.lp-finish-foot{text-align:center;margin-top:22px;font-size:var(--text-sm);color:rgba(255,255,255,.55);}
 
 /* HOW IT WORKS — compact horizontal */
 .lp-how{padding:48px 0;background:var(--cream);}
@@ -151,7 +143,9 @@
 <script src="/auth.js" defer></script>
 <script src="/cart.js"></script>  
 <link rel="stylesheet" href="/papers/section.css">
+<link rel="stylesheet" href="/finishing/section.css">
 <script src="/papers/section.js" defer></script>
+<script src="/finishing/section.js" defer></script>
 </head>
 <body>
 
@@ -648,15 +642,15 @@ was fetched and injected via innerHTML — that was the bug behind the
 
 
 
-<!-- FINISHING SHOWCASE -->
-<section class="lp-strip lp-section-cream" id="lp-finishes-strip-section" style="display:none;">
+<!-- FINISHING TOUCHES -->
+<!-- Drawn by /finishing/section.js from /finishing/section.css. Square cards
+     showing the real colours; click one for a close-up. -->
+<section class="lp-strip lp-section-cream" id="lp-finishes-section" style="display:none;">
   <div class="container">
-    <div class="lp-finish-panel">
-      <span class="lp-strip-tag">Finishing touches</span>
-      <h2 class="lp-strip-h">The details that make it unforgettable</h2>
-      <div id="lp-finishes-strip" class="lp-finish-grid"></div>
-      <div class="lp-finish-foot">Add any finishing touch when you personalise your design in the studio.</div>
-    </div>
+    <span class="lp-strip-tag">Finishing touches</span>
+    <h2 class="lp-strip-h">The details that make it unforgettable</h2>
+    <p class="lp-strip-intro">Pressed, coated or raised after printing. Tap any one to see it close up.</p>
+    <div id="lp-finishes-mount"></div>
   </div>
 </section>
 
@@ -1073,7 +1067,24 @@ async function loadData() {
     PaperSection.mount(paperMount, { names, url: SUPABASE_URL, key: SUPABASE_ANON_KEY });
   }
   renderSizesStrip();
-  renderFinishesStrip();
+  // Finishing: what this product offers, narrowed again to the stocks that can
+  // physically take it. The laminate cards sit on a real paper photograph.
+  const finMount = document.getElementById('lp-finishes-mount');
+  if (finMount && window.FinishSection) {
+    const caps = {};
+    ((pricingPayload && pricingPayload.papers) || []).forEach(p => { caps[p.name] = p.finishes || []; });
+    const mine = Array.isArray(productData.available_papers) ? productData.available_papers : [];
+    const takers = mine.filter(n => (caps[n] || []).some(f => f && f.toLowerCase() !== 'none'));
+    if (takers.length) {
+      document.getElementById('lp-finishes-section').style.display = '';
+      FinishSection.mount(finMount, {
+        url: SUPABASE_URL, key: SUPABASE_ANON_KEY,
+        allowed: productData.available_finishes || [],
+        papers: takers,
+        paperSrc: (window.PaperSection && PaperSection.photo(takers[0])) || null
+      });
+    }
+  }
   renderJsonLd();
 }
 
@@ -1185,14 +1196,6 @@ function renderPricing() {
 // see the shape of the range without opening the studio. Everything is quoted
 // as a difference from the same (paper, weight, size, quantity).
 
-const FINISH_DESC = {
-  'Gold Foil': 'Mirror-bright foil, pressed into the paper — it catches the light as the envelope opens.',
-  'Foil': 'Mirror-bright foil, pressed into the paper — it catches the light as the envelope opens.',
-  'Deckle Edge': 'A soft, feathered edge with the romance of old-world, hand-torn paper.',
-  'Vellum Wrap': 'A translucent overlay that veils your design in delicate, whisper-thin elegance.',
-  'Wax Seal': 'A pressed wax seal to close the suite — the oldest mark of something worth opening.',
-  'Letterpress': 'Ink pressed deep into thick paper, leaving an impression you can feel.'
-};
 
 
 function renderSizesStrip() {
@@ -1208,19 +1211,6 @@ function renderSizesStrip() {
   document.getElementById('lp-sizes-strip-section').style.display = '';
 }
 
-function renderFinishesStrip() {
-  const finishes = ((productPricing && productPricing.available_finishes) || []).filter(f => f && f !== 'None');
-  if (!finishes.length) return;
-  const strip = document.getElementById('lp-finishes-strip');
-  strip.innerHTML = finishes.map(name => {
-    const desc = FINISH_DESC[name] || 'A premium finishing touch, added when you personalise your design.';
-    return `<div class="lp-finish-item">
-      <div class="lp-finish-name">${escapeHtml(name)}</div>
-      <div class="lp-finish-desc">${escapeHtml(desc)}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('lp-finishes-strip-section').style.display = '';
-}
 
 function renderJsonLd() {
   const ld = {
