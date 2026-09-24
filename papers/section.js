@@ -60,15 +60,14 @@
     var dlg = document.createElement('dialog');
     dlg.className = 'ps-dialog';
     dlg.innerHTML = '<div class="ps-dialog-shot"></div><div class="ps-dialog-body">'
-      + '<h3></h3><div class="ps-dialog-sub"></div><p></p><div class="ps-weights"></div>'
+      + '<h3></h3><div class="ps-dialog-sub"></div><p></p>'
       + '<button class="ps-dialog-close" type="button">Close</button></div>';
     document.body.appendChild(dlg);
 
     var shot = dlg.querySelector('.ps-dialog-shot'),
         h3   = dlg.querySelector('h3'),
         sub  = dlg.querySelector('.ps-dialog-sub'),
-        para = dlg.querySelector('p'),
-        wts  = dlg.querySelector('.ps-weights');
+        para = dlg.querySelector('p');
 
     el.addEventListener('click', function (ev) {
       var b = ev.target.closest('.ps-card'); if (!b) return;
@@ -79,9 +78,6 @@
       sub.textContent = p.subtitle;
       sub.style.display = p.subtitle ? '' : 'none';
       para.textContent = p.description;
-      wts.innerHTML = (p.weights || []).map(function (w) {
-        return '<span>' + esc(w.gsm) + 'gsm' + (w.label ? ' · ' + esc(w.label) : '') + '</span>';
-      }).join('');
       // showModal gives the focus trap and Escape for free; the fallback keeps
       // the panel usable on a browser too old for <dialog>.
       if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');

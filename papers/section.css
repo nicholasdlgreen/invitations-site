@@ -40,16 +40,15 @@
   margin:auto;max-height:calc(100vh - 48px);overflow:auto;
   background:var(--white);color:var(--text);}
 .ps-dialog::backdrop{background:rgba(38,28,21,.55);}
-.ps-dialog-shot{aspect-ratio:5/2;background-size:max(100%,760px);background-position:center;
+/* The photograph is what someone opened this panel to look at, so it takes the
+   larger share: a shade under half the panel, where it used to be a third. */
+.ps-dialog-shot{aspect-ratio:16/9;background-size:max(100%,760px);background-position:center;
   background-color:#F1EAE2;}
 .ps-dialog-body{padding:18px 22px 22px;}
 .ps-dialog-body h3{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:1.2rem;margin:0 0 3px;color:var(--text);}
 .ps-dialog-sub{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
 .ps-dialog-body p{font-size:13.5px;color:var(--soft);line-height:1.7;margin:0;}
-.ps-weights{display:flex;gap:6px;flex-wrap:wrap;margin-top:13px;}
-.ps-weights span{font-size:11px;color:var(--soft);border:1px solid var(--border);
-  border-radius:20px;padding:4px 10px;}
-.ps-dialog-close{margin-top:18px;background:var(--gold);color:#fff;border:0;font-family:'Jost',sans-serif;
+.ps-dialog-close{margin-top:16px;background:var(--gold);color:#fff;border:0;font-family:'Jost',sans-serif;
   font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:10px 22px;border-radius:40px;cursor:pointer;}
 .ps-dialog-close:hover{background:var(--brown);}
 @media (prefers-reduced-motion: reduce){.ps-cue{transition:none}}
