@@ -1353,6 +1353,36 @@ async function sbFetch(path, opts = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+// PostgREST answers a plain select with at most 1,000 rows — Supabase's
+// db-max-rows — and gives no sign that it truncated. sheet_rates passed that
+// mark quietly: 3,795 rows now, so `select=*` returned the first thousand and
+// publishing shipped a payload with large format missing altogether and every
+// card family cut back to a third of its quantities. 888 rates out of 3,795.
+//
+// So page until a page comes back short. The caller must supply a stable
+// `order=`, because offset paging over an unordered table can repeat a row on
+// one page and skip another.
+async function sbFetchAll(path, pageSize = 1000) {
+  if (!/(\?|&)order=/.test(path)) {
+    throw new Error('sbFetchAll needs an explicit order= to page safely: ' + path);
+  }
+  const sep = path.includes('?') ? '&' : '?';
+  const rows = [];
+  // Stop only on an EMPTY page, and step by the rows actually received rather
+  // than by the size asked for. Treating a short page as the end is the same
+  // trap as before wearing a different hat: if the server's own cap is lower
+  // than pageSize, page one comes back short and we would quietly keep a third
+  // of the table and believe we had all of it. One wasted request at the end is
+  // a fair price for never doing that again.
+  for (let offset = 0, guard = 0; guard < 1000; guard++) {
+    const page = await sbFetch(`${path}${sep}limit=${pageSize}&offset=${offset}`);
+    if (!Array.isArray(page) || page.length === 0) return rows;
+    rows.push(...page);
+    offset += page.length;
+  }
+  throw new Error('sbFetchAll gave up paging ' + path + ' — is offset being ignored?');
+}
+
 // ═══════════════════════════════════════════════════════
 // ADMIN — ORDERS
 // ═══════════════════════════════════════════════════════
@@ -3980,7 +4010,7 @@ let sheetRates = [];
 
 async function loadSheetRatesFromSupabase() {
   try {
-    sheetRates = await sbFetch('sheet_rates?select=*');
+    sheetRates = await sbFetchAll('sheet_rates?select=*&order=id');
     populateSheetRatesPaperSelect();
   } catch (err) {
     console.warn('Could not load sheet rates from Supabase:', err.message);
