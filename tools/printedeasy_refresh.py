@@ -90,12 +90,37 @@ def pe_size(prod, size):
         return ('custom', w, h)
     return None
 
-# Signage sells in ones and twos; cards sell in boxes. Same ladders the rates
-# were first loaded with, so a refresh lines up with what is already there.
-LADDER = {'flat-card':      [25, 50, 100, 150, 200, 250, 300, 500],
-          'folded-card':    [25, 50, 100, 150, 200, 250, 300, 500],
-          'folded-leaflet': [25, 50, 100, 150, 200, 250, 300, 500],
-          'large-format':   [1, 2, 3, 5, 10, 25, 50]}
+# Where we sample their price curve.
+#
+# PrintedEasy quote any quantity — their field says "Type any amount" — so the
+# site should too, and anything between two points we hold is interpolated.
+# That makes the choice of points the thing that decides how accurate our cost
+# is, and round numbers were a guess.
+#
+# A dense sweep on 24 September (about 250 live quotes across three
+# representative configurations) showed their curve is not a formula: it steps
+# in whole pounds, and the steps land in different places for every paper,
+# weight and size. It also showed the three families behave quite differently —
+# flat cards step every 20-30, folded cards every 10, posters every 2-3 below
+# 40 — so one ladder never suited all of them.
+#
+# Measured against those real curves, these points hold the average error to
+# about 0.2-0.7% of their price, against 0.4-0.9% on the eight points used
+# before, and — the actual point — they let us quote 10 or 87 or 340 at all.
+#
+# 475 is not a round number and is deliberate. Their price DIPS there: a folded
+# card costs £97 at 450 and £94 at 475, on both curves swept, at exactly the
+# same place. No amount of sampling either side predicts a dip, because a
+# straight line from 450 to 500 runs above it. Worth asking them whether it is
+# intended; until it changes, we sample it.
+LADDER = {'flat-card':      [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125,
+                             150, 200, 250, 300, 375, 450, 475, 500],
+          'folded-card':    [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125,
+                             150, 200, 250, 300, 375, 450, 475, 500],
+          'folded-leaflet': [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125,
+                             150, 200, 250, 300, 375, 450, 475, 500],
+          'large-format':   [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35,
+                             40, 50, 60, 70, 85, 100]}
 
 # Folded leaflets will not price without these; they are injected by their own
 # JavaScript, so they are not in the page's HTML to be read.
@@ -284,6 +309,29 @@ def main():
             done += 1
             if done % 200 == 0:
                 print(f'  {done}/{total}…', flush=True)
+
+    # The rule of the trade: the more you order, the less each one costs. It
+    # held at every ladder point on all three curves swept, so a rise is a
+    # signal — a scrape that caught their site mid-change, a stock we have
+    # mapped wrongly, or a genuine oddity of theirs like the dip at 475. It is
+    # reported, never corrected, because we do not know which of those it is.
+    climbs = []
+    for (fam, paper, gsm, size) in {(k[0], k[1], k[2], k[3]) for k in scraped}:
+        pts = sorted((q, scraped[(fam, paper, gsm, size, q)])
+                     for q in LADDER.get(fam, [])
+                     if (fam, paper, gsm, size, q) in scraped)
+        for i in range(1, len(pts)):
+            (q0, c0), (q1, c1) = pts[i - 1], pts[i]
+            if c1 / q1 > c0 / q0 + 1e-9:
+                climbs.append((fam, paper, gsm, size, q0, c0 / q0, q1, c1 / q1))
+    if climbs:
+        print(f'\nUNIT PRICE RISES WITH QUANTITY ({len(climbs)}) '
+              '— each of these costs more per item the more you buy')
+        for fam, paper, gsm, size, q0, u0, q1, u1 in climbs[:25]:
+            print(f'  {fam} {paper} {gsm}gsm {size}: '
+                  f'{q0}\u2192{q1} costs \u00a3{u0:.4f}\u2192\u00a3{u1:.4f} each')
+        if len(climbs) > 25:
+            print(f'  \u2026and {len(climbs) - 25} more')
 
     before = current_costs()
     rose = [(k, before[k], v) for k, v in scraped.items() if k in before and v > before[k] + 0.005]
