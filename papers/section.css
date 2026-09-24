@@ -1,0 +1,51 @@
+/* "Our paper stocks" — the section that replaced "Simple, honest pricing".
+   One stylesheet, loaded by every product landing page, so the section is the
+   same on all of them and a change happens once rather than twenty-one times.
+   The section chrome (.lp-strip, .lp-strip-tag, .lp-strip-h, .lp-strip-intro,
+   .container) is the page's own; only the grid and the cards are new. */
+
+.ps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:920px;margin:0 auto;}
+@media(max-width:880px){.ps-grid{grid-template-columns:1fr 1fr;gap:16px}}
+@media(max-width:520px){.ps-grid{grid-template-columns:1fr}}
+
+.ps-card{display:block;width:100%;text-align:left;font-family:inherit;background:none;border:0;
+  padding:0;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.ps-shot{display:block;position:relative;aspect-ratio:3/2;border-radius:12px;
+  border:1px solid var(--border);overflow:hidden;margin-bottom:12px;background-color:#F1EAE2;
+  /* The photographs are close-ups of the grain with no sheet edge in them, so
+     they are drawn at their own size and cropped to the box. Scaled down to fit,
+     the grain falls below a pixel and all seven stocks look like blank white. */
+  background-size:max(100%,760px);background-position:center;}
+.ps-card:hover .ps-shot{border-color:var(--gold-lt);}
+.ps-card:focus-visible .ps-shot{outline:2px solid var(--gold);outline-offset:3px;}
+.ps-name{display:block;font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);margin-bottom:2px;}
+.ps-sub{display:block;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gold);line-height:1.5;}
+/* A stock we hold no photograph for says so, rather than borrowing another
+   paper's grain — two stocks wearing the same surface is the worse lie. */
+.ps-shot-none{display:flex;align-items:center;justify-content:center;
+  background:repeating-linear-gradient(45deg,#F3EDE6,#F3EDE6 9px,#EDE5DC 9px,#EDE5DC 18px);}
+.ps-shot-none span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#9C8B7D;
+  background:rgba(255,255,255,.9);padding:6px 11px;border-radius:20px;}
+/* The cue only appears on hover or keyboard focus, so the card is quiet at rest. */
+.ps-cue{position:absolute;right:10px;bottom:10px;background:rgba(255,255,255,.93);color:var(--text);
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;border-radius:20px;
+  opacity:0;transform:translateY(4px);transition:opacity .22s,transform .22s;}
+.ps-card:hover .ps-cue,.ps-card:focus-visible .ps-cue{opacity:1;transform:none;}
+
+.ps-dialog{border:0;padding:0;border-radius:16px;max-width:620px;width:calc(100% - 40px);
+  background:var(--white);color:var(--text);}
+.ps-dialog::backdrop{background:rgba(38,28,21,.55);}
+.ps-dialog-shot{aspect-ratio:16/7;background-size:max(100%,760px);background-position:center;
+  background-color:#F1EAE2;}
+.ps-dialog-body{padding:24px 28px 28px;}
+.ps-dialog-body h3{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:1.5rem;margin:0 0 4px;color:var(--text);}
+.ps-dialog-sub{font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.ps-dialog-body p{font-size:var(--text-sm);color:var(--soft);line-height:1.75;margin:0;}
+.ps-weights{display:flex;gap:7px;flex-wrap:wrap;margin-top:16px;}
+.ps-weights span{font-size:var(--text-xs);color:var(--soft);border:1px solid var(--border);
+  border-radius:20px;padding:5px 12px;}
+.ps-dialog-close{margin-top:22px;background:var(--gold);color:#fff;border:0;font-family:'Jost',sans-serif;
+  font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;padding:12px 26px;border-radius:40px;cursor:pointer;}
+.ps-dialog-close:hover{background:var(--brown);}
+@media (prefers-reduced-motion: reduce){.ps-cue{transition:none}}

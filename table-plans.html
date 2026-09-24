@@ -56,29 +56,8 @@
 .lp-section-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,2.6vw,2.1rem);font-weight:400;line-height:1.15;text-align:center;color:var(--text);margin:0 0 8px;}
 .lp-section-h2 em{color:var(--gold);font-style:italic;}
 .lp-section-divider{width:36px;height:1px;background:var(--gold);margin:14px auto 28px;}
-.lp-anchor-grid{max-width:720px;margin:0 auto;}
-.lp-price-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.lp-price-table th{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--soft);font-weight:500;text-align:right;padding:14px 18px;background:var(--cream);}
-.lp-price-table th:first-child{text-align:left;}
-.lp-price-table td{padding:13px 18px;font-size:var(--text-body);color:var(--text);border-top:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;}
-.lp-price-table td:first-child{text-align:left;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--soft);}
-.lp-price-table tr.pt-popular td{background:rgba(184,151,106,.06);}
 .pt-badge{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold-lt);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;}
 .lp-price-note{font-size:var(--text-xs);color:var(--soft);text-align:center;margin-top:14px;line-height:1.6;}
-.lp-anchor{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:30px 28px;position:relative;}
-.lp-anchor.popular{border:2px solid var(--gold);}
-.lp-anchor-badge{position:absolute;top:-11px;left:22px;background:var(--gold);color:#fff;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;padding:5px 12px;border-radius:12px;font-weight:500;}
-.lp-anchor-tag{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;}
-.lp-anchor-price{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:400;color:var(--text);line-height:1;margin-bottom:6px;}
-.lp-anchor-qty{font-size:var(--text-sm);color:var(--soft);margin-bottom:16px;}
-.lp-anchor-spec{font-size:var(--text-xs);color:var(--pale);padding-top:16px;border-top:1px solid var(--border);}
-.lp-upgrade-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:28px 36px;max-width:680px;margin:0 auto;}
-.lp-upgrade-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;margin-bottom:6px;color:var(--text);}
-.lp-upgrade-sub{font-size:var(--text-xs);color:var(--soft);margin-bottom:18px;}
-.lp-upgrade-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--border);font-size:var(--text-sm);}
-.lp-upgrade-row:last-child{border-bottom:none;}
-.lp-upgrade-label{color:var(--soft);}
-.lp-upgrade-value{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--text);font-weight:400;}
 .lp-cta-row{text-align:center;margin-top:36px;}
 
 /* PAPER & FINISH SHOWCASE — editorial, sensory, no prices */
@@ -164,7 +143,7 @@
 
 @media(max-width:768px){
   .lp-hero-grid{grid-template-columns:1fr;gap:32px;}
-  .lp-anchor-grid,.lp-how-steps,.lp-why-grid{grid-template-columns:1fr;gap:18px;}
+  .lp-how-steps,.lp-why-grid{grid-template-columns:1fr;gap:18px;}
   .lp-strip-pills{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding:0 16px;}
   .path-modal-grid{grid-template-columns:1fr;}
   .path-modal-panel{padding:28px 24px;}
@@ -174,6 +153,8 @@
 <script src="/supabase-config.js"></script>
 <script src="/auth.js" defer></script>
 <script src="/cart.js"></script>  
+<link rel="stylesheet" href="/papers/section.css">
+<script src="/papers/section.js" defer></script>
 </head>
 <body>
 
@@ -652,34 +633,23 @@ was fetched and injected via innerHTML — that was the bug behind the
 </section>
 
 <!-- PRICING -->
-<section class="lp-section lp-section-white" id="pricing">
+<!-- OUR PAPER STOCKS -->
+<!-- Replaced the "Simple, honest pricing" section. Drawn by /papers/section.js
+     from /papers/section.css; the stocks are this product's own, and clicking
+     one opens its full description. -->
+<section class="lp-strip lp-section-white" id="lp-papers-section">
   <div class="container">
-    <span class="lp-section-tag">Pricing</span>
-    <h2 class="lp-section-h2">Simple, <em>honest pricing.</em></h2>
-    <div class="lp-section-divider"></div>
-    <div id="lp-anchor-grid" class="lp-anchor-grid">
-      <div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Loading pricing…</div>
-    </div>
-    <div id="lp-upgrade-card" class="lp-upgrade-card" style="display:none;">
-      <div class="lp-upgrade-title">Upgrade options</div>
-      <div class="lp-upgrade-sub">Adjustments to the prices above:</div>
-      <div id="lp-upgrade-rows"></div>
-    </div>
+    <span class="lp-strip-tag">Paper</span>
+    <h2 class="lp-strip-h">Our paper stocks</h2>
+    <p class="lp-strip-intro" id="lp-papers-intro"></p>
+    <div id="lp-papers-mount"></div>
     <div class="lp-cta-row">
       <button class="lp-cta" type="button" onclick="openPathModal(this)">Start Your Order</button>
     </div>
   </div>
 </section>
 
-<!-- PAPER SHOWCASE -->
-<section class="lp-strip lp-section-cream" id="lp-papers-strip-section" style="display:none;">
-  <div class="container">
-    <span class="lp-strip-tag">Choose your paper</span>
-    <h2 class="lp-strip-h">Each one a pleasure to hold</h2>
-    <p class="lp-strip-intro">The paper is what sets each option apart — from our smooth signature stock to luxurious cotton rag and textured finishes.</p>
-    <div id="lp-papers-strip" class="lp-showcase"></div>
-  </div>
-</section>
+
 
 <!-- FINISHING SHOWCASE -->
 <section class="lp-strip lp-section-cream" id="lp-finishes-strip-section" style="display:none;">
@@ -1057,7 +1027,7 @@ async function loadData() {
   }
   if (pricesRes.ok) {
     const rows = await pricesRes.json();
-    if (rows && rows.length && rows[0].payload && rows[0].payload.schema_version === 2 && Array.isArray(rows[0].payload.products)) {
+    if (rows && rows.length && rows[0].payload && rows[0].payload.schema_version >= 2 && Array.isArray(rows[0].payload.products)) {
       pricingPayload = rows[0].payload;
       productPricing = pricingPayload.products.find(p => p.slug === PRODUCT.slug) || null;
     }
@@ -1075,7 +1045,19 @@ async function loadData() {
   renderHero();
   updateModalLinks();
   renderPricing();
-  renderPapersStrip();
+  // Only the stocks this product is sold on. available_papers is the admin's
+  // own list on product_types, so the section cannot offer a paper we do not
+  // print this product on.
+  const paperMount = document.getElementById('lp-papers-mount');
+  if (paperMount && window.PaperSection) {
+    const names = Array.isArray(productData.available_papers) ? productData.available_papers : [];
+    const intro = document.getElementById('lp-papers-intro');
+    if (intro) intro.textContent = names.length === 1
+      ? 'The stock we print ' + (productData.name || PRODUCT.name).toLowerCase() + ' on.'
+      : 'The ' + names.length + ' stocks we print ' + (productData.name || PRODUCT.name).toLowerCase()
+        + ' on, and what each one feels like in the hand.';
+    PaperSection.mount(paperMount, { names, url: SUPABASE_URL, key: SUPABASE_ANON_KEY });
+  }
   renderSizesStrip();
   renderFinishesStrip();
   renderJsonLd();
@@ -1159,111 +1141,33 @@ function pickAnchorQtys(qtys) {
   return [sorted[0], sorted[Math.floor(sorted.length/2)], sorted[sorted.length-1]];
 }
 
+// The hero's "from" price, and nothing else. The quantity-by-paper table this
+// function used to draw lived in the "Simple, honest pricing" section, which
+// "Our paper stocks" replaced.
 function renderPricing() {
-  const grid = document.getElementById('lp-anchor-grid');
   const priceValue = document.getElementById('lp-price-value');
-  const priceMeta = document.getElementById('lp-price-meta');
-
+  const priceMeta  = document.getElementById('lp-price-meta');
+  if (!priceValue || !priceMeta) return;
   if (!productPricing || !Array.isArray(productPricing.sheet_sells) || !productPricing.sheet_sells.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Pricing will appear here once published in admin.</div>';
-    priceValue.textContent = '£—';
+    priceValue.textContent = '\u00a3\u2014';
     priceMeta.textContent = 'Pricing to be confirmed';
     return;
   }
   const papers = productPricing.available_papers || [];
   const sizes  = productPricing.available_sizes || [];
-  if (!papers.length || !sizes.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">Configure available sizes and papers in admin.</div>';
-    return;
-  }
-  const defaultPaper = papers[0];
-  const defaultSize  = sizes.includes('A5') ? 'A5' : sizes[0];
-  const matches = productPricing.sheet_sells.filter(s => s.paper === defaultPaper && s.size === defaultSize);
-  if (!matches.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--soft);font-size:var(--text-sm);padding:40px;">No pricing yet for ${escapeHtml(defaultPaper)} × ${escapeHtml(defaultSize)}.</div>`;
-    return;
-  }
-  const qtys = [...new Set(productPricing.sheet_sells
-      .filter(s => s.size === defaultSize && papers.includes(s.paper))
-      .map(m => parseInt(m.qty,10)))].sort((a,b)=>a-b);
-
-  // Build a price lookup: price[paper][qty]
-  const priceOf = (paper, qty) => {
-    const m = productPricing.sheet_sells.find(s => s.paper === paper && s.size === defaultSize && parseInt(s.qty,10) === qty);
-    return m ? Math.round(parseFloat(m.sell)) : null;
-  };
-
-  // Hero price = cheapest paper, lowest qty
-  const lowest = priceOf(defaultPaper, qtys[0]);
-  priceValue.textContent = `£${lowest}`;
-  priceMeta.textContent = `From ${qtys[0]} · ${escapeHtml(defaultSize)} · Inc. VAT`;
-
-  const popularQty = qtys.length >= 3 ? qtys[Math.floor(qtys.length/2)] : null;
-
-  grid.innerHTML = `
-    <table class="lp-price-table">
-      <thead><tr><th>Quantity</th>${papers.map(p => `<th>${escapeHtml(p)}</th>`).join('')}</tr></thead>
-      <tbody>
-        ${qtys.map(q => {
-          const pop = q === popularQty;
-          return `<tr${pop ? ' class="pt-popular"' : ''}>
-            <td>${q} cards${pop ? ' <span class="pt-badge">Most popular</span>' : ''}</td>
-            ${papers.map(p => { const pr = priceOf(p, q); return `<td>${pr !== null ? '£'+pr : '—'}</td>`; }).join('')}
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <div class="lp-price-note">${escapeHtml(defaultSize)} · all prices include VAT · finishing touches adjust the price in the studio</div>`;
-
-  renderUpgradeRows(productPricing, defaultPaper, defaultSize, []);
-}
-
-function renderUpgradeRows(pp, defaultPaper, defaultSize, anchors) {
-  if (!anchors.length) return;
-  const baseline = anchors[Math.floor(anchors.length / 2)];
-  const baselineQty = parseInt(baseline.qty, 10);
-  const baselineSell = parseFloat(baseline.sell);
-  const rows = [];
-
-  (pp.available_sizes || []).forEach(size => {
-    if (size === defaultSize) return;
-    const m = pp.sheet_sells.find(s => s.paper === defaultPaper && s.size === size && parseInt(s.qty,10) === baselineQty);
-    if (!m) return;
-    const delta = parseFloat(m.sell) - baselineSell;
-    if (Math.abs(delta) < 0.5) return;
-    const sign = delta > 0 ? '+' : '−';
-    const dimText = SIZE_DIMS[size] ? ` (${SIZE_DIMS[size]})` : '';
-    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${escapeHtml(size)}${dimText}</span><span class="lp-upgrade-value">${sign}£${Math.round(Math.abs(delta))}</span></div>`);
-  });
-
-  (pp.available_papers || []).forEach(paper => {
-    if (paper === defaultPaper) return;
-    const m = pp.sheet_sells.find(s => s.paper === paper && s.size === defaultSize && parseInt(s.qty,10) === baselineQty);
-    if (!m) return;
-    const delta = parseFloat(m.sell) - baselineSell;
-    if (Math.abs(delta) < 0.5) return;
-    const sign = delta > 0 ? '+' : '−';
-    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${escapeHtml(paper)} paper</span><span class="lp-upgrade-value">${sign}£${Math.round(Math.abs(delta))}</span></div>`);
-  });
-
-  (pp.finish_sells || []).forEach(f => {
-    const sell = parseFloat(f.sell) || 0;
-    if (sell <= 0) return;
-    rows.push(`<div class="lp-upgrade-row"><span class="lp-upgrade-label">${escapeHtml(f.name)} finish</span><span class="lp-upgrade-value">+£${Math.round(sell)}</span></div>`);
-  });
-
+  if (!papers.length || !sizes.length) return;
+  const size = sizes.includes('A5') ? 'A5' : sizes[0];
+  const rows = productPricing.sheet_sells.filter(s => s.size === size && papers.includes(s.paper));
   if (!rows.length) return;
-  document.getElementById('lp-upgrade-rows').innerHTML = rows.join('');
-  document.getElementById('lp-upgrade-card').style.display = '';
+  const lowestQty = Math.min.apply(null, rows.map(s => parseInt(s.qty, 10)));
+  const cheapest  = Math.min.apply(null, rows
+    .filter(s => parseInt(s.qty, 10) === lowestQty)
+    .map(s => parseFloat(s.sell)));
+  priceValue.textContent = '\u00a3' + Math.round(cheapest);
+  priceMeta.textContent  = 'From ' + lowestQty + ' \u00b7 ' + size + ' \u00b7 Inc. VAT';
 }
 
-const PAPER_DESC = {
-  'Smooth 300gsm': ['Our signature', 'Clean, crisp and substantial — a soft matte white that lets colour and detail sing.'],
-  'Smooth White': ['Our signature', 'Clean, crisp and substantial — a soft matte white that lets colour and detail sing.'],
-  'Cotton Rag': ['Premium', 'Thick, tactile and softly textured — the deep, pillowy cotton stock reserved for fine stationery.'],
-  'Textured Ivory': ['Luxe', 'A warm ivory with a fine felt-like grain and gentle weight — heirloom paper for the most special day.'],
-  'Vellum': ['Delicate', 'A translucent, whisper-thin sheet that veils your design in soft elegance.']
-};
+
 const FINISH_DESC = {
   'Gold Foil': 'Mirror-bright foil, pressed into the paper — it catches the light as the envelope opens.',
   'Foil': 'Mirror-bright foil, pressed into the paper — it catches the light as the envelope opens.',
@@ -1273,21 +1177,6 @@ const FINISH_DESC = {
   'Letterpress': 'Ink pressed deep into thick paper, leaving an impression you can feel.'
 };
 
-function renderPapersStrip() {
-  const papers = (productPricing && productPricing.available_papers) || [];
-  if (!papers.length) return;
-  const strip = document.getElementById('lp-papers-strip');
-  strip.innerHTML = papers.map(name => {
-    const meta = PAPER_DESC[name] || ['', 'A beautiful stock, chosen for its quality and feel.'];
-    return `<div class="lp-show-card">
-      <div class="lp-swatch">${escapeHtml(name)}</div>
-      <div class="lp-show-name">${escapeHtml(name)}</div>
-      ${meta[0] ? `<div class="lp-show-tier">${escapeHtml(meta[0])}</div>` : ''}
-      <div class="lp-show-desc">${escapeHtml(meta[1])}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('lp-papers-strip-section').style.display = '';
-}
 
 function renderSizesStrip() {
   const section = document.getElementById('lp-sizes-strip-section');
