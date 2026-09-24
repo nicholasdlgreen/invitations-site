@@ -1,30 +1,35 @@
-/* "Finishing touches" — the colours and surfaces themselves, nothing on a card.
+/* "Finishing touches" — foil as colour, everything else as words.
    Loaded by every product landing page alongside papers/section.css.
 
-   Sized to sit under the paper section without competing with it. The paper
-   grid is 3 columns in 920px with a 20px gap and a 12px radius, so a paper
-   card is 293 wide. A finishing swatch is 220: same left edge, same gap, same
-   radius, three across in 700 so each group fills its row exactly. Paper is
-   the larger decision and reads as the larger thing; finishing is the set of
-   options beneath it. */
+   Sized against the paper section so the two agree. The paper grid is three
+   columns in 920px, 20px gap, 12px radius, so a paper card is 293 wide. A
+   foil swatch is 220 — three across in 700px, the same left edge, the same
+   gap, the same corner radius. Paper is the larger decision and stays the
+   larger thing on the page. */
 
 .fs-group{max-width:920px;margin:0 auto 26px}
 .fs-group:last-of-type{margin-bottom:0}
 .fs-gname{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);line-height:1.2}
 .fs-gdesc{font-size:13px;color:var(--soft);line-height:1.6;margin-top:3px}
-/* Four across at the same 920px measure, so a swatch is 215 wide against the
-   paper cards' 293 — clearly secondary, and the columns still line up. */
-.fs-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:14px;max-width:700px}
+.fs-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:700px;margin-top:14px}
 @media(max-width:880px){.fs-row{gap:14px}}
-@media(max-width:520px){.fs-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.fs-row{grid-template-columns:1fr;gap:0}}
 
+/* ---- foiling: the only finish with anything to look at ---- */
 .fs-o{text-align:left}
-/* Square with the paper section's corner radius. Consistency was the ask. */
-.fs-sw{display:block;aspect-ratio:1/1;border-radius:12px;background-size:cover;
-  background-position:center;box-shadow:inset 0 0 0 1px rgba(61,46,36,.09),0 3px 10px rgba(61,46,36,.13);
+.fs-sw{display:block;aspect-ratio:1/1;border-radius:12px;
+  box-shadow:inset 0 0 0 1px rgba(61,46,36,.09),0 3px 10px rgba(61,46,36,.13);
   transition:transform .25s cubic-bezier(.2,.7,.3,1),box-shadow .25s}
 .fs-o:hover .fs-sw{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(61,46,36,.09),0 12px 22px rgba(61,46,36,.2)}
 .fs-n{display:block;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);margin-top:11px;line-height:1.2}
-.fs-d{display:block;font-size:12.5px;color:var(--soft);line-height:1.55;margin-top:3px}
+
+/* ---- lamination and spot UV: words, on the same grid ----
+   No swatch. A laminate is a reflection, so a still picture of one shows
+   nothing at all — three identical pale squares that only raise the question
+   of what you are meant to be seeing. A hairline holds the column instead. */
+.fs-t{text-align:left;border-top:1px solid var(--border);padding-top:12px}
+@media(max-width:520px){.fs-t{padding-bottom:12px}}
+.fs-tn{display:block;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);line-height:1.2}
+.fs-td{display:block;font-size:12.5px;color:var(--soft);line-height:1.6;margin-top:3px}
 
 .fs-note{max-width:920px;margin:24px auto 0;font-size:12.5px;color:var(--pale);line-height:1.7}

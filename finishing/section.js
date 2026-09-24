@@ -1,8 +1,9 @@
-// "Finishing touches" — one block showing the finishes themselves.
+// "Finishing touches" — one block. Foil shown as colour, everything else said
+// in words.
 //
 // No invitation, no monogram, no printed ground. Earlier versions built a fake
-// card and pressed fake foil into fake type, which was three pretences stacked
-// on each other and looked like it. A swatch has one job.
+// card and pressed fake foil into fake type; that was three pretences stacked
+// on each other and it read that way.
 //
 // One file, loaded by every product landing page. It draws only what the
 // product offers AND what its papers can physically take, both supplied by the
@@ -10,43 +11,34 @@
 (function (global) {
   'use strict';
 
-  // The metals are photographs of rendered crumpled foil rather than CSS
-  // gradients. A gradient is one smooth ramp with perhaps thirty levels in it;
-  // metal reads as metal through the range its folds create. It is the only
-  // reason gold, silver and rose gold are tellable apart at this size.
+  // A smooth diagonal sheen: dark at the corners, bright through the middle.
+  // Deliberately not a crumpled-foil texture — that read as tinfoil rather
+  // than as a finish, which is the opposite of what this brand sells.
+  function sheen(dark, mid, bright) {
+    return 'linear-gradient(135deg,' + dark + ' 0%,' + mid + ' 32%,' + bright + ' 50%,'
+         + mid + ' 68%,' + dark + ' 100%)';
+  }
   var FOIL = {
-    gold:   "url('/img/foil/gold.jpg')",
-    silver: "url('/img/foil/silver.jpg')",
-    rose:   "url('/img/foil/rose.jpg')"
-  };
-  // Laminates and spot UV have no texture to show, so they stay flat. Three
-  // near-identical pale squares is honest: a laminate is a reflection, and a
-  // still image of one has nothing in it.
-  var SURFACE = {
-    matt:  'linear-gradient(145deg,#EDE9E3,#E0DAD1)',
-    gloss: 'radial-gradient(circle at 32% 24%,rgba(255,255,255,.95),rgba(255,255,255,.2) 40%,'
-         + 'rgba(255,255,255,0) 62%),linear-gradient(145deg,#E9E9EC,#FFFFFF 46%,#DEDEE3)',
-    soft:  'linear-gradient(145deg,#F2EDE6,#E4DCD1)',
-    uv:    'radial-gradient(circle at 34% 26%,rgba(255,255,255,.98),rgba(255,255,255,.28) 38%,'
-         + 'rgba(255,255,255,.04) 62%),linear-gradient(145deg,#EDE9E2,#FBFAF8 45%,#E6E1D8)'
+    gold:   sheen('#8A6A1C', '#C9A536', '#FBF0C8'),
+    silver: sheen('#767C84', '#BFC5CC', '#FBFCFD'),
+    rose:   sheen('#A66B55', '#D08E74', '#F8DDD0')
   };
 
   function esc(v) {
     return String(v == null ? '' : v)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
+  // "Silk, Uncoated and Gloss", not "Silk and Uncoated and Gloss".
+  function listOf(a) {
+    if (a.length <= 1) return a[0] || '';
+    return a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+  }
 
-  function fill(type, opt) {
-    var o = String(opt).toLowerCase();
-    if (/foil/i.test(type)) {
-      if (o.indexOf('rose') >= 0)   return FOIL.rose;
-      if (o.indexOf('silver') >= 0) return FOIL.silver;
-      return FOIL.gold;
-    }
-    if (/spot/i.test(type)) return SURFACE.uv;
-    if (o.indexOf('gloss') >= 0) return SURFACE.gloss;
-    if (o.indexOf('soft') >= 0)  return SURFACE.soft;
-    return SURFACE.matt;
+  function foilOf(name) {
+    var o = String(name).toLowerCase();
+    if (o.indexOf('rose') >= 0)   return FOIL.rose;
+    if (o.indexOf('silver') >= 0) return FOIL.silver;
+    return FOIL.gold;
   }
 
   // Foiling leads: it is the one people come for and the only finish with real
@@ -83,19 +75,32 @@
       var opts2 = (t.options || []).filter(function (o) {
         return o.name && o.name.toLowerCase() !== 'none';
       });
+      var isFoil = /foil/i.test(t.name);
+
+      // A type with one option whose name only repeats the heading has nothing
+      // to add — Spot UV's single "Add Spot UV" read as "Spot UV / Spot UV".
+      // Its own description says it, so the row is dropped.
+      var bare = !isFoil && opts2.length === 1
+        && opts2[0].name.replace(/^Add\s+/i, '').toLowerCase() === t.name.toLowerCase();
+
+      var body = bare ? '' : '<div class="fs-row">' + opts2.map(function (o) {
+        if (isFoil) {
+          return '<div class="fs-o">'
+            + '<span class="fs-sw" style="background:' + foilOf(o.name) + '"></span>'
+            + '<span class="fs-n">' + esc(o.name) + ' foil</span></div>';
+        }
+        return '<div class="fs-t">'
+          + '<span class="fs-tn">' + esc(o.name.replace(/^Add\s+/i, '')) + '</span>'
+          + (o.description ? '<span class="fs-td">' + esc(o.description) + '</span>' : '')
+          + '</div>';
+      }).join('') + '</div>';
+
       return '<div class="fs-group"><div class="fs-gname">' + esc(t.name) + '</div>'
         + '<div class="fs-gdesc">' + esc(t.description || '') + '</div>'
-        + '<div class="fs-row">' + opts2.map(function (o) {
-            var label = /foil/i.test(t.name) ? o.name + ' foil' : o.name.replace(/^Add /, '');
-            return '<div class="fs-o">'
-              + '<span class="fs-sw" style="background:' + fill(t.name, o.name) + ' center/cover"></span>'
-              + '<span class="fs-n">' + esc(label) + '</span>'
-              + (o.description ? '<span class="fs-d">' + esc(o.description) + '</span>' : '')
-              + '</div>';
-          }).join('') + '</div></div>';
+        + body + '</div>';
     }).join('')
     + (opts.papers && opts.papers.length
-        ? '<p class="fs-note">Available on ' + esc(opts.papers.join(' and '))
+        ? '<p class="fs-note">Available on ' + esc(listOf(opts.papers))
           + '. Chosen when you personalise your design, and charged once for the order rather '
           + 'than per card.</p>'
         : '');
