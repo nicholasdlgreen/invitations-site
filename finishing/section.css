@@ -26,14 +26,17 @@
   -webkit-background-clip:text;background-clip:text;color:transparent;
   -webkit-text-fill-color:transparent;background-size:cover;background-position:center}
 /* The sprig is a mask, so the metal gradient IS the ornament. */
-.fs-sprig{display:block;width:56cqw;height:19.6cqw;background-size:cover;background-position:center;
+.fs-sprig{display:block;width:56cqw;height:19.6cqw;background-size:240% auto;background-position:center;
   -webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
   -webkit-mask-position:center;mask-position:center}
 .fs-names{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;
   font-size:11.5cqw;line-height:1.1;letter-spacing:.01em;white-space:nowrap;
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  -webkit-text-fill-color:transparent;background-size:cover;background-position:center}
-.fs-rule{display:block;height:max(1px,0.9cqw);width:26cqw}
+  -webkit-text-fill-color:transparent;background-position:center;
+  /* Zoomed well in, so a letter sits inside one facet instead of being cut
+     across by three creases, which is what broke the strokes up. */
+  background-size:320% auto}
+.fs-rule{display:block;height:max(1px,0.9cqw);width:26cqw;background-size:600% auto;background-position:center 40%}
 .fs-ink{-webkit-text-fill-color:var(--text);color:var(--text);background:none}
 .fs-rule-ink{background:var(--text);opacity:.4}
 .fs-tiny{font-size:4.4cqw;letter-spacing:.18em;text-transform:uppercase}

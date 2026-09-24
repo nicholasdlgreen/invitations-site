@@ -28,10 +28,15 @@
     silver: metal('#6F757D', '#FBFCFD', '#C3C9D0', '#666C74'),
     rose:   metal('#8E5745', '#F6D6C6', '#D08E74', '#7E4A39')
   };
+  // Real metal, not a gradient. A CSS gradient is one smooth ramp and can only
+  // muster about thirty levels of variation; metal reads as metal because of
+  // the range its folds create, near-black in a crease to blown white on a
+  // facet. These are rendered crumpled sheets, and they are tonally compressed
+  // so a crease falling across a thin stroke can never take it to nothing.
   var FOIL_TYPE = {
-    gold:   metalType('#8A6A1C', '#FBEFC2', '#D8B444'),
-    silver: metalType('#71777F', '#FBFCFD', '#CFD4DA'),
-    rose:   metalType('#96604D', '#F6D6C6', '#DFA88E')
+    gold:   "url('/img/foil/gold.jpg')",
+    silver: "url('/img/foil/silver.jpg')",
+    rose:   "url('/img/foil/rose.jpg')"
   };
 
   // The printed ground under each foil, drawn from the site's own accents:
@@ -43,11 +48,19 @@
   // a soft ground they are quiet at this size, and silver quieter still. That
   // is what these foils look like on a pale card. The close-up is where they
   // read — which is why the card opens.
-  //   gold   on eucalyptus 1.71:1   (was sage, 1.25:1 — nearly the same value)
-  //   silver on taupe      2.20:1   (was warm grey, 1.61:1)
-  //   rose   on ivory      2.25:1   (was blush, 1.62:1 — rose on pink cancels)
-  var GROUND = { gold: '#6F8478', silver: '#8E8478', rose: '#F2EADC' };
-  var PALE_ON = { gold: true, silver: true };   // grounds dark enough for pale type
+  // Each ground is chosen so its own metal stays legible everywhere, measured
+  // against the darkest two per cent of that foil rather than judged by eye:
+  //   gold   on deep sage   darkest stroke sits 41 levels ABOVE the ground
+  //   silver on deep taupe  59 above
+  //   rose   on deep rose   49 above
+  // Rose was tried on a pale blush first. On paper it looked right — the metal
+  // is darker than the card on average — but it straddled it: the brightest
+  // tenth of the foil was LIGHTER than the blush and disappeared into it, so
+  // the letters broke up exactly as they did on the other two. All three metals
+  // are light, so all three want a ground below them. Muted, not bold.
+  var GROUND = { gold: '#4C5D53', silver: '#5F574D', rose: '#63494A' };
+  // All three grounds are deep now, so the date line is pale on all three.
+  var PALE_ON = { gold: true, silver: true, rose: true };
 
   // The ornament above the names, as a mask: the metal gradient shows through
   // it, so the sprig is foil rather than a picture of foil.
