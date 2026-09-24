@@ -64,6 +64,8 @@ def pe_product(family, paper):
     if family == 'folded-card':    return 'greeting-cards'
     if family == 'folded-leaflet': return 'luxury-folded'
     if family == 'large-format':   return 'posters'
+    if family == 'calendar-desk':  return 'desktop-calendars'
+    if family == 'calendar-wall':  return 'wall-hanging-calendars'
     return None
 
 # Sizes they list as their own options. Anything else we buy as a custom size,
@@ -75,6 +77,10 @@ LISTED = {
     'greeting-cards': {'A6': 'A6', 'A5': 'A5', 'DL': 'DL', 'Square': '148x148'},
     'luxury-folded':  {'A5': 'A5', 'A4': 'A4', 'A3': 'A3'},
     'posters':        {'A1': 'A1', 'A2': 'A2', 'A3': 'A3', 'A4': 'A4'},
+    # Their calendar sizes carry the dimensions in the label, so these map to
+    # the exact strings their form posts.
+    'desktop-calendars':      {'A6': 'A6', 'A5': 'A5', 'DL': 'DL'},
+    'wall-hanging-calendars': {'A5': 'A5', 'A4': 'A4', 'A3': 'A3', 'A2': 'A2'},
 }
 CUSTOM_DIMS = {'Square': ('148', '148'), 'Square-210': ('210', '210'),
                'A6': ('105', '148'), 'A5': ('148', '210'), 'DL': ('99', '210'),
@@ -120,11 +126,35 @@ LADDER = {'flat-card':      [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125,
           'folded-leaflet': [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125,
                              150, 200, 250, 300, 375, 450, 475, 500],
           'large-format':   [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35,
-                             40, 50, 60, 70, 85, 100]}
+                             40, 50, 60, 70, 85, 100],
+          # A calendar is not bought by the hundred. Their own field defaults
+          # to 10, where every card product defaults to 100.
+          'calendar-desk':  [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40,
+                             50, 60, 75, 100, 150, 200],
+          'calendar-wall':  [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40,
+                             50, 60, 75, 100, 150, 200]}
 
 # Folded leaflets will not price without these; they are injected by their own
 # JavaScript, so they are not in the page's HTML to be read.
-EXTRA_FORM = {'luxury-folded': {'foldType': 'half', 'foldCount': '1',
+# A calendar has ten things to decide where a card has five, and every one of
+# them multiplies the prices we would have to hold. Copying their full option
+# set is roughly three years of continuous scraping, so the range is fixed here
+# to the one calendar we intend to sell: a year, thirteen pages, one stock,
+# printed both sides. The customer picks size, orientation and lamination, and
+# nothing else — which is also a kinder page than a spreadsheet of stocks.
+#
+# Self Cover means the cover is the same stock as the inside, so there is no
+# second paper to choose or to hold a price for.
+CALENDAR_FORM = {
+    'pages': '13', 'printed-sides': 'double',
+    'text-stock-finish': 'silk', 'text-stock-weight': '200',
+    'cover-stock-finish': 'self', 'cover-lamination': 'none',
+    'wire-colour': 'White', 'orientation': 'portrait',
+}
+
+EXTRA_FORM = {'desktop-calendars': dict(CALENDAR_FORM),
+              'wall-hanging-calendars': dict(CALENDAR_FORM, **{'back-page-facing': 'outwards'}),
+              'luxury-folded': {'foldType': 'half', 'foldCount': '1',
                                 'foldDirection': 'vertical', 'print-direction': 'outwards',
                                 'colour-type': 'full', 'drilling': '0', 'hd-printing': 'std',
                                 'low-coverage': 'no', 'pantone-printing': 'no',
