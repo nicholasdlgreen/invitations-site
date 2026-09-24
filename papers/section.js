@@ -9,10 +9,12 @@
 (function (global) {
   'use strict';
 
-  // Photographs we hold, by exact stock name as the admin writes it. Cartonboard
-  // and Gloss have none yet; those cards say so rather than borrowing a grain.
+  // Photographs we hold, by exact stock name as the admin writes it. All ten
+  // live stocks are covered; a name missing here returns null and the card says
+  // so rather than borrowing another paper's grain.
   var PHOTO = {
-    'Uncoated': 'uncoated', 'Silk': 'silk', 'Ice White': 'icewhite',
+    'Uncoated': 'uncoated', 'Silk': 'silk', 'Gloss': 'gloss',
+    'Cartonboard': 'cartonboard', 'Ice White': 'icewhite',
     'Recycled Uncoated': 'recycled', 'Tintoretto Gesso': 'tintoretto',
     'Nettuno Bianco': 'nettuno', 'Acquerello Bianco': 'acquerello',
     'Sirio Pearl Polar Dawn': 'polardawn'

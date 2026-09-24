@@ -1632,19 +1632,20 @@ loadDeliveryOptions();
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('inv_cart')||'[]'); } catch(e){ cart=[]; }
 let currentFile=null, currentStep=1, selectedSize=null;
-// Photographs of the actual stocks, shot flat and square, at two sizes: the
-// full swatch (760px) and a thumbnail (420px) for the small tier tiles.
+// Photographs of the actual stocks, shot flat, at two widths: the full swatch
+// (760px) and a thumbnail (420px) for the small tier tiles. Every crop on the
+// site is landscape, so height varies with the source and is never relied on.
 //
 // Keyed by the paper name exactly as admin stores it, because that name is
 // the join running through the whole pricing chain — papers, products, sheet
 // rates. A paper with no photograph returns null, and the caller decides what
 // to show. We never substitute a different paper's picture: someone choosing
 // a £41 Italian stock must be looking at that stock.
-//
-// No photograph yet: Cartonboard, Gloss.
 const PAPER_IMAGE = {
   'Uncoated':               'uncoated',
   'Silk':                   'silk',
+  'Gloss':                  'gloss',
+  'Cartonboard':            'cartonboard',
   'Ice White':              'icewhite',
   'Recycled Uncoated':      'recycled',
   'Tintoretto Gesso':       'tintoretto',
