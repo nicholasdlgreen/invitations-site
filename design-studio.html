@@ -103,7 +103,6 @@
 <style>
 .studio-sort{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:0 0 6px;}
 .studio-sort[hidden]{display:none;}
-.studio-sort-label{font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--soft,#7a6558);margin-right:2px;}
 .studio-sort button{padding:6px 15px;background:var(--white,#fff);border:1px solid var(--border,#e8e0d5);border-radius:60px;font-family:inherit;font-size:var(--text-xs);letter-spacing:.06em;color:var(--soft,#7a6558);cursor:pointer;transition:background .2s,color .2s,border-color .2s;}
 .studio-sort button:hover:not([aria-pressed="true"]){border-color:var(--gold-lt,#d4b896);color:var(--gold,#b8976a);}
 .studio-sort button[aria-pressed="true"]{background:var(--text,#3d2e24);color:#fff;border-color:var(--text,#3d2e24);}
@@ -584,7 +583,6 @@ was fetched and injected via innerHTML — that was the bug behind the
     </div>
 
     <div class="studio-sort" id="studio-sort" hidden>
-      <span class="studio-sort-label">Order</span>
       <button type="button" id="sort-featured" aria-pressed="true">Featured</button>
       <button type="button" id="sort-az" aria-pressed="false">A&ndash;Z</button>
     </div>
