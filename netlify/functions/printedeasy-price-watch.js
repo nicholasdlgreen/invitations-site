@@ -80,7 +80,9 @@ const LISTED = {
   'luxury-flat':    { A6: 'A6', A5: 'A5', DL: 'DL', A4: 'A4', 'Square-210': '210x210' },
   'postcards':      { A6: 'A6', A5: 'A5', DL: 'DL' },
   'greeting-cards': { A6: 'A6', A5: 'A5', DL: 'DL', Square: '148x148' },
-  'luxury-folded':  { A5: 'A5', A4: 'A4', A3: 'A3' },
+  // Finished size on our side, flat size on theirs — see the note in
+  // tools/printedeasy_refresh.py. A finished A5 is a flat A4 folded in half.
+  'luxury-folded':  { A6: 'A5', A5: 'A4', A4: 'A3' },
   'posters':        { A1: 'A1', A2: 'A2', A3: 'A3', A4: 'A4' },
   'display-boards': { A0: 'A0', A1: 'A1', A2: 'A2', A3: 'A3', A4: 'A4' }
 };

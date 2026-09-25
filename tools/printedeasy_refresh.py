@@ -93,7 +93,11 @@ LISTED = {
     'luxury-flat':    {'A6': 'A6', 'A5': 'A5', 'DL': 'DL', 'A4': 'A4', 'Square-210': '210x210'},
     'postcards':      {'A6': 'A6', 'A5': 'A5', 'DL': 'DL'},
     'greeting-cards': {'A6': 'A6', 'A5': 'A5', 'DL': 'DL', 'Square': '148x148'},
-    'luxury-folded':  {'A5': 'A5', 'A4': 'A4', 'A3': 'A3'},
+    # Their luxury-folded page asks for a FLAT size ("Unfolded document
+    # size"); their greeting-cards page asks for a FINISHED one. A size on our
+    # site always means the finished piece, so this maps ours to theirs: a
+    # finished A5 order of service is a flat A4 folded in half.
+    'luxury-folded':  {'A6': 'A5', 'A5': 'A4', 'A4': 'A3'},
     'posters':        {'A1': 'A1', 'A2': 'A2', 'A3': 'A3', 'A4': 'A4'},
     'display-boards': {'A0': 'A0', 'A1': 'A1', 'A2': 'A2', 'A3': 'A3', 'A4': 'A4'},
 }
@@ -152,8 +156,12 @@ EXTRA_FORM = {'luxury-folded': {'foldType': 'half', 'foldCount': '1',
                                 'foldDirection': 'vertical', 'print-direction': 'outwards',
                                 'colour-type': 'full', 'drilling': '0', 'hd-printing': 'std',
                                 'low-coverage': 'no', 'pantone-printing': 'no',
-                                'rgbPrinting': 'no', 'silver_ink': 'no',
-                                'printed-sides': 'double'}}
+                                'rgbPrinting': 'no', 'silver_ink': 'no'}}
+# No 'printed-sides' here on purpose. It used to say 'double', which read as a
+# decision but never took effect: price() layers pe_form() on top, and that
+# sets 'single'. Every folded rate we hold is a single-sided price. Changing it
+# is a real decision — double-sided is about 15% dearer — so it belongs in
+# pe_form() where it would actually apply, not here where it looked settled.
 
 
 # ── PrintedEasy ───────────────────────────────────────────────────────────
