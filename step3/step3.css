@@ -3,6 +3,14 @@
    cannot reach the rest of upload-and-print.html and the rest cannot reach in.
    The preview page and the shop load THIS FILE, which is what stops the two
    drifting apart the way six earlier attempts did. */
+/* These lost their selector at some point and have been floating free, closed
+   by a brace that opened nothing. The browser drops a declaration block it
+   cannot attach, so in the shop --line and --cream did not exist: every
+   `border:1.5px solid var(--line)` was invalid and quantity tiles, weight
+   buttons and delivery cards rendered with no border at all. The preview page
+   hid it, because that file declares the same names on :root itself — the very
+   drift this stylesheet's header says it exists to prevent. */
+  #s3wrap{
   --cream:#FAF7F2; --white:#fff; --line:#EFE7E0; --text:#3D2E24;
   --soft:#7A6558; --pale:#B0A098; --gold:#B8976A;
   color-scheme:light;
@@ -29,17 +37,24 @@
   #s3wrap .rl b{width:21px;height:21px;border-radius:50%;background:#ECE3DA;color:var(--soft);font-weight:400;
   display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;letter-spacing:0;
   transition:background .25s,color .25s;}
-  #s3wrap .rl.now{color:var(--text)} .rl.now b{background:var(--gold);color:#fff}
+  #s3wrap .rl.now{color:var(--text)} #s3wrap .rl.now b{background:var(--tier,var(--gold));color:#fff}
   #s3wrap .rl.done{color:var(--soft)} .rl.done b{background:var(--text);color:#fff}
   #s3wrap .rl.can:hover{color:var(--text)}
   #s3wrap .rl[disabled]{opacity:.55}
   #s3wrap .rsep{color:#DCD1C6;font-size:11px;}
   @media (max-width:760px){.rl{font-size:10px;letter-spacing:.08em}.railIn{gap:4px;padding:11px 20px}}
   #s3wrap .stage{margin-bottom:46px;}
+  /* Every card after the range takes a hint of its colour, so the choice made
+     at the top is still visible at the bottom. Kept to a border and a breath
+     of tint — the same restraint as the range pods themselves. */
+  #s3wrap .stock,#s3wrap .fin,#s3wrap .qty,#s3wrap .del,#s3wrap .env .sq,#s3wrap .opt{
+  border-color:color-mix(in srgb,var(--tier,var(--gold)) 34%,var(--line));}
+  #s3wrap .stock{border:1.5px solid color-mix(in srgb,var(--tier,var(--gold)) 34%,var(--line));
+  background:color-mix(in srgb,var(--tier,var(--gold)) 4%,var(--white));}
   #s3wrap .stage.locked{opacity:0;transform:translateY(12px);pointer-events:none;height:0;overflow:hidden;margin:0;}
   #s3wrap .stage.open{opacity:1;transform:none;transition:opacity .4s ease,transform .4s cubic-bezier(.2,.7,.3,1);}
   #s3wrap .num{display:flex;align-items:baseline;gap:12px;margin-bottom:5px;}
-  #s3wrap .num b{font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:14px;color:var(--gold);width:16px;flex-shrink:0;}
+  #s3wrap .num b{font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:14px;color:var(--tier,var(--gold));width:16px;flex-shrink:0;}
   #s3wrap h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;font-size:28px;line-height:1.12;margin:0;}
   #s3wrap .say{font-size:13px;color:var(--soft);line-height:1.6;margin:6px 0 20px 28px;max-width:620px;}
   #s3wrap .ind{margin-left:28px}
@@ -94,45 +109,9 @@
   #s3wrap .feel .tick{position:absolute;right:12px;top:12px;width:23px;height:23px;border-radius:50%;background:var(--gold);
   color:#fff;display:none;align-items:center;justify-content:center;font-size:12px;}
   #s3wrap .feel.on .tick{display:flex}
-  /* The customer's own design, lying on the paper they are choosing. Tilted a
-  touch with a real shadow so it reads as a card on a sheet, not as ink
-  printed into the photograph. */
-  /* The design PRINTED ON the paper, not floating above it. The real
-  photograph of the stock is laid over the artwork twice: once multiplied,
-  which lets the grain and the paper's own shadows fall across the design,
-  and once on soft-light, which carries the stock's colour and sheen.
-  Change the paper and the artwork visibly changes with it. */
-  /* An invitation is portrait and this frame is landscape, so there is no
-  height at which the paper margins come out even: at 78% the card sat 22px
-  from the top and bottom and 97px from the sides, nearly touching top and
-  bottom while floating in an empty band. Sized to slightly overfill the
-  height instead, so the card uses the width and the crop reads as a
-  close-up rather than an accident. The whole design, uncropped, is on the
-  big paper card at step 2. */
-  #s3wrap .inv{display:block;position:absolute;left:50%;top:50%;height:110%;padding:0;background:#fff;
-  transform:translate(-50%,-50%) rotate(-1.2deg);overflow:hidden;
-  box-shadow:0 14px 30px rgba(43,32,25,.28),0 3px 8px rgba(43,32,25,.16);
-  transition:transform .45s cubic-bezier(.2,.7,.3,1);}
-  #s3wrap .feel:hover .inv{transform:translate(-50%,-50%) rotate(0deg) scale(1.04);}
-  #s3wrap .inv img{display:block;height:100%;width:auto;}
-  #s3wrap .inv .grain,#s3wrap .inv .tone{position:absolute;inset:0;background-size:max(100%,760px);background-position:center;
-  pointer-events:none;}
-  #s3wrap .inv .grain{mix-blend-mode:multiply;opacity:.62;}
-  #s3wrap .inv .tone{mix-blend-mode:soft-light;opacity:.85;}
-  /* Nothing uploaded yet: the paper alone, said plainly. */
-  #s3wrap .await{display:block;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:150px;text-align:center;font-size:11px;line-height:1.55;color:#8A7A6C;
-  background:rgba(255,255,255,.82);padding:13px 12px;border-radius:10px;}
   /* ---- 1b. the stock: a compact card, image no longer dominating ---- */
   #s3wrap .stock{display:grid;grid-template-columns:210px minmax(0,1fr);background:var(--white);border-radius:16px;overflow:hidden;}
   #s3wrap .stock .pic{position:relative;background-size:max(100%,760px);background-position:center;background-color:#F1EAE2;min-height:248px;}
-  #s3wrap .bigart{display:block;position:absolute;left:50%;top:50%;height:80%;
-  transform:translate(-50%,-50%) rotate(-1.2deg);background:#fff;overflow:hidden;
-  box-shadow:0 16px 32px rgba(43,32,25,.30),0 3px 8px rgba(43,32,25,.16);}
-  #s3wrap .bigart img{display:block;height:100%;width:auto;}
-  #s3wrap .bigart .grain,#s3wrap .bigart .tone{position:absolute;inset:0;background-size:max(100%,760px);background-position:center;}
-  #s3wrap .bigart .grain{mix-blend-mode:multiply;opacity:.62;}
-  #s3wrap .bigart .tone{mix-blend-mode:soft-light;opacity:.85;}
   #s3wrap .stock .info{padding:20px 22px 22px;}
   #s3wrap .stock .nm{font-family:'Cormorant Garamond',Georgia,serif;font-size:23px;line-height:1.15;}
   #s3wrap .stock .ds{font-size:13.5px;color:var(--soft);line-height:1.72;margin-top:9px;max-width:52ch;}
@@ -148,14 +127,14 @@
   background-color:#F1EAE2;transition:box-shadow .2s,transform .2s;
   box-shadow:0 1px 2px rgba(61,46,36,.10),inset 0 0 0 1px rgba(61,46,36,.07);}
   #s3wrap .sw:hover span.im{transform:translateY(-2px);box-shadow:0 6px 14px rgba(61,46,36,.16),inset 0 0 0 1px rgba(61,46,36,.07);}
-  #s3wrap .sw.on span.im{box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(61,46,36,.16);}
+  #s3wrap .sw.on span.im{box-shadow:0 0 0 2px var(--tier,var(--gold)),0 6px 14px rgba(61,46,36,.16);}
   #s3wrap .sw span.tx{display:block;font-size:11.5px;color:var(--soft);margin-top:8px;line-height:1.35;}
   #s3wrap .sw.on span.tx{color:var(--text)}
   #s3wrap .opts{display:flex;gap:7px;flex-wrap:wrap;}
   #s3wrap .opt{cursor:pointer;font-family:inherit;text-align:left;padding:9px 14px;border-radius:10px;
   background:var(--white);color:var(--soft);border:1.5px solid var(--line);transition:border-color .2s;}
-  #s3wrap .opt:hover{border-color:var(--gold);}
-  #s3wrap .opt.on{background:var(--text);color:#fff;border-color:var(--text);}
+  #s3wrap .opt:hover{border-color:var(--tier,var(--gold));}
+  #s3wrap .opt.on{background:var(--tier,var(--text));color:#fff;border-color:var(--tier,var(--text));}
   #s3wrap .opt .a{display:block;font-size:13.5px;}
   #s3wrap .opt .b{display:block;font-size:10.5px;opacity:.7;margin-top:1px;}
   /* ---- 2. finishing ---- */
@@ -167,7 +146,7 @@
   #s3wrap .finBtn .h{font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:var(--text);}
   #s3wrap .finBtn .d{font-size:12px;color:var(--pale);}
   #s3wrap .finBtn .v{margin-left:auto;font-size:12.5px;color:var(--soft);}
-  #s3wrap .finBtn .v.set{color:var(--gold);}
+  #s3wrap .finBtn .v.set{color:var(--tier,var(--gold));}
   #s3wrap .finBtn .c{width:9px;height:9px;border-right:1.5px solid var(--pale);border-bottom:1.5px solid var(--pale);
   transform:rotate(45deg);margin:-4px 2px 0 4px;transition:transform .25s;flex-shrink:0;}
   #s3wrap .finRow.open .finBtn .c{transform:rotate(225deg);margin-top:2px;}
@@ -179,16 +158,14 @@
   border-radius:13px;overflow:hidden;box-shadow:0 1px 2px rgba(61,46,36,.05);
   transition:transform .24s cubic-bezier(.2,.7,.3,1),box-shadow .24s;}
   #s3wrap .fin:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(61,46,36,.11);}
-  #s3wrap .fin.on{box-shadow:0 0 0 2px var(--gold),0 10px 22px rgba(61,46,36,.11);}
+  #s3wrap .fin.on{box-shadow:0 0 0 2px var(--tier,var(--gold)),0 10px 22px rgba(61,46,36,.11);}
   #s3wrap .fin .shot{display:block;position:relative;height:112px;background-size:max(100%,760px);background-position:center;background-color:#F1EAE2;}
-  #s3wrap .fin .shot .inv{width:76px}
   /* A round disc, as Minted use — a rectangle of gradient reads as paper. */
   #s3wrap .mat{display:block;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:74px;height:74px;border-radius:50%;
   box-shadow:0 8px 18px rgba(43,32,25,.26),inset 0 0 0 1px rgba(255,255,255,.35);}
   #s3wrap .fin.on .mat{box-shadow:0 8px 18px rgba(43,32,25,.26),inset 0 0 0 1px rgba(255,255,255,.35),
-  0 0 0 3px #fff,0 0 0 5px var(--gold);}
-  #s3wrap .fin .shot .await{width:120px;font-size:10px;padding:9px}
+  0 0 0 3px #fff,0 0 0 5px var(--tier,var(--gold));}
   #s3wrap .fin .cap{display:block;padding:11px 14px 13px;}
   #s3wrap .fin .nm{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:16.5px;}
   #s3wrap .fin .sub{display:block;font-size:11.5px;color:var(--soft);line-height:1.45;margin-top:3px;min-height:30px;}
@@ -206,7 +183,7 @@
   #s3wrap .qty-own-row{display:flex;gap:7px;align-items:center;}
   #s3wrap .qty-own-in{width:82px;font-family:inherit;font-size:15px;color:var(--text);
   border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--white);}
-  #s3wrap .qty-own-in:focus{outline:none;border-color:var(--gold);}
+  #s3wrap .qty-own-in:focus{outline:none;border-color:var(--tier,var(--gold));}
   #s3wrap .qty-own-in::-webkit-outer-spin-button,
   #s3wrap .qty-own-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
   #s3wrap .qty-own-go{font-family:inherit;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
@@ -219,8 +196,8 @@
 
   #s3wrap .qty{cursor:pointer;font-family:inherit;text-align:center;padding:11px 4px 10px;border-radius:11px;min-width:76px;
   background:var(--white);border:1.5px solid var(--line);color:var(--soft);transition:border-color .2s;}
-  #s3wrap .qty:hover{border-color:var(--gold)}
-  #s3wrap .qty.on{background:var(--text);border-color:var(--text);color:#fff}
+  #s3wrap .qty:hover{border-color:var(--tier,var(--gold))}
+  #s3wrap .qty.on{background:var(--tier,var(--text));border-color:var(--tier,var(--text));color:#fff}
   #s3wrap .qty .n{display:block;font-size:15px;}
   #s3wrap .qty .e{display:block;font-size:10.5px;opacity:.72;margin-top:2px;}
   /* ---- 4. delivery ---- */
@@ -230,7 +207,7 @@
   #s3wrap .envAsk button{background:var(--white);border:1.5px solid var(--line);border-radius:40px;
   font-family:inherit;font-size:12px;letter-spacing:.02em;color:var(--soft);padding:10px 22px;cursor:pointer;
   transition:border-color .18s,background .18s,color .18s;}
-  #s3wrap .envAsk button:hover{border-color:var(--gold);color:var(--text);}
+  #s3wrap .envAsk button:hover{border-color:var(--tier,var(--gold));color:var(--text);}
   #s3wrap .envAsk button.on{border-color:var(--text);background:var(--text);color:#fff;}
   #s3wrap .envCols{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:13px;}
   #s3wrap .env{background:none;border:0;padding:0;font-family:inherit;cursor:pointer;text-align:center;}
@@ -243,13 +220,13 @@
   background:linear-gradient(160deg,rgba(255,255,255,.34),rgba(0,0,0,.05));
   clip-path:polygon(0 0,100% 0,50% 100%);border-bottom:1px solid rgba(61,46,36,.13);}
   #s3wrap .env:hover .sq{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(61,46,36,.13),0 6px 14px rgba(61,46,36,.16);}
-  #s3wrap .env.on .sq{box-shadow:0 0 0 2px var(--gold),inset 0 0 0 1px rgba(61,46,36,.13),0 6px 14px rgba(61,46,36,.16);}
+  #s3wrap .env.on .sq{box-shadow:0 0 0 2px var(--tier,var(--gold)),inset 0 0 0 1px rgba(61,46,36,.13),0 6px 14px rgba(61,46,36,.16);}
   #s3wrap .env .nm{display:block;font-size:11.5px;color:var(--soft);margin-top:8px;line-height:1.35;}
   #s3wrap .dels{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;}
   #s3wrap .del{background:var(--white);border:1.5px solid var(--line);border-radius:13px;padding:15px 17px;cursor:pointer;
   font-family:inherit;text-align:left;transition:border-color .2s;}
-  #s3wrap .del:hover{border-color:var(--gold)}
-  #s3wrap .del.on{border-color:var(--text);background:var(--text);}
+  #s3wrap .del:hover{border-color:var(--tier,var(--gold))}
+  #s3wrap .del.on{border-color:var(--tier,var(--text));background:var(--tier,var(--text));}
   #s3wrap .del.off{opacity:.45;cursor:not-allowed}
   #s3wrap .del .n{font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:var(--text);}
   #s3wrap .del .b{font-size:11.5px;color:var(--pale);line-height:1.5;margin-top:3px;}
@@ -271,7 +248,7 @@
   #s3wrap .sum b{color:var(--text);font-weight:400;}
   #s3wrap .tot{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;line-height:1;margin-left:auto;}
   #s3wrap .tot small{display:block;font-family:'Jost',sans-serif;font-size:10.5px;color:var(--pale);margin-top:3px;letter-spacing:.02em;}
-  #s3wrap .go-btn{background:var(--gold);color:#fff;border:0;font-family:inherit;font-size:11.5px;
+  #s3wrap .go-btn{background:var(--tier,var(--gold));color:#fff;border:0;font-family:inherit;font-size:11.5px;
   letter-spacing:.15em;text-transform:uppercase;padding:14px 28px;border-radius:40px;cursor:pointer;transition:background .2s;}
   #s3wrap .go-btn:hover{background:#A8875C}
   #s3wrap .go-btn[disabled]{background:#DCD1C6;cursor:default}

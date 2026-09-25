@@ -72,19 +72,11 @@
     return list[0] || null;
   }
 
-  // ---- the artwork, laid on the paper and printed through its grain ----
-  function artOn(paperName, cls) {
-    if (!ART) {
-      return '<span class="await">Your design appears here<br>once you have uploaded it</span>';
-    }
-    var t = A.imageFor(paperName);
-    var layers = t
-      ? '<span class="grain" style="background-image:url(\'' + esc(t) + '\')"></span>'
-        + '<span class="tone" style="background-image:url(\'' + esc(t) + '\')"></span>'
-      : '';
-    return '<span class="' + (cls || 'inv') + '"><img src="' + esc(ART) + '" alt="Your design">'
-         + layers + '</span>';
-  }
+  // The artwork used to be laid here and printed through the paper's grain.
+  // Measured, the difference between stocks under artwork is about 1% and does
+  // not improve with size, so it never showed what it promised — it only
+  // covered the photograph of the stock the customer came here to look at.
+  // The stock is now shown on its own, which is the one thing this step is for.
 
   // ---- 1 · the tier ---------------------------------------------------------
   // Each pod carries the real stocks in its tier, side by side. It used to show
@@ -131,10 +123,6 @@
     }).join('');
 
     el('pic').style.backgroundImage = "url('" + (A.imageFor(paper.name) || '') + "')";
-    var big = el('bigart');
-    big.outerHTML = ART ? artOn(paper.name, 'bigart') : '<span class="bigart" id="bigart"></span>';
-    if (!ART) { var b = el('bigart'); if (b) b.innerHTML = ''; }
-    else { var nb = el('s3wrap').querySelector('.pic .bigart'); if (nb) nb.id = 'bigart'; }
 
     el('pName').textContent = paper.name;
     el('pDesc').textContent = paper.description || paper.subtitle || '';
@@ -386,6 +374,15 @@
     window.scrollTo({ top: e.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
   }
 
+  // The range the customer picked colours the rest of the step, so the choice
+  // they made at the top is still visible at the bottom. One property on the
+  // wrapper; every accent reads it and falls back to gold.
+  var TIER_COLOUR = { signature: '#B8976A', luxury: '#8A6A72', kinder: '#7A8B6F' };
+  function paintTier() {
+    var w = el('s3wrap'); if (!w) return;
+    w.style.setProperty('--tier', TIER_COLOUR[S.feel] || TIER_COLOUR.signature);
+  }
+
   function paint() {
     var m = A.money() || {};
     var picks = Object.keys(S.finishes)
@@ -418,6 +415,7 @@
   }
 
   function redraw() {
+    paintTier();
     drawFeels(); drawStocks(); drawFinishing(); drawEnvelopes(); drawQty(); drawDelivery(); paint();
   }
 
@@ -456,6 +454,7 @@
         S.paper = papersIn(id)[0].name; S.weight = null; S.finishes = {};
       }
       A.onSelect(S);
+      paintTier();
       drawFeels(); drawStocks(); drawFinishing(); drawQty(); drawDelivery();
       open('stocks', true); advanceTo('stocks'); paint(); renumber();
     },
