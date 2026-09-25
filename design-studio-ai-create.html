@@ -68,8 +68,6 @@
 .ds-sw:hover{transform:scale(1.08);}
 .ds-sw.on{border-color:var(--gold);}
 .ds-sw.on::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;text-shadow:0 1px 2px rgba(0,0,0,.35);}
-.ds-freetext{width:100%;box-sizing:border-box;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);outline:none;line-height:1.6;resize:vertical;min-height:60px;}
-.ds-freetext:focus{border-color:var(--gold-lt);}
 .ds-generate{display:block;width:100%;margin-top:18px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;font-weight:500;padding:15px;border-radius:60px;cursor:pointer;transition:background .2s;}
 .ds-generate:hover{background:var(--brown);}
 .ds-brief{background:var(--text);border-radius:10px;padding:14px 16px;margin-top:14px;}
@@ -752,9 +750,6 @@ was fetched and injected via innerHTML — that was the bug behind the
             <span class="ds-sw" data-v="olive" style="background:#8A9A7B;"></span>
           </div>
 
-          <div class="ds-label">Anything else? <span style="text-transform:none;letter-spacing:0;color:var(--pale);">(optional)</span></div>
-          <textarea class="ds-freetext" id="w-story" placeholder="we met in Italy · grandmother's garden roses · a summer evening feel…"></textarea>
-
           <div class="ds-brief">
             <div class="ds-brief-label">The brief we'll send</div>
             <div class="ds-brief-text" id="ds-brief-text"></div>
@@ -1092,8 +1087,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     var touch = sel.touch.length ? 'with ' + sel.touch.join(', ') : '';
     var colour = sel.colour.length ? 'in ' + sel.colour.join(', ') : '';
     var finish = sel.finish.length ? sel.finish.join(', ') : '';
-    var ft = document.getElementById('w-story') ? document.getElementById('w-story').value.trim() : '';
-
     var s;
     if(CONFIG_BASE_PROMPT){
       // fill the config template's {placeholders}
@@ -1103,9 +1096,16 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         .replace('{touch}', touch)
         .replace('{colour}', colour)
         .replace('{finish}', finish)
-        .replace(/\s{2,}/g, ' ')       // tidy double spaces from empty placeholders
-        .replace(/\s+,/g, ',')
-        .replace('A ,', 'A ');
+        // Tidy what the empty placeholders leave behind. Order matters and it
+        // was wrong: squeezing the space before a comma first turned "A ,"
+        // into "A ," -> "A," so the next replace, which looked for "A ,",
+        // could never match and the brief opened "A, soft watercolour". It
+        // also left a space before the full stop.
+        .replace(/\s{2,}/g, ' ')          // runs of spaces from empty slots
+        .replace(/\s+([,.])/g, '$1')      // no space before comma or full stop
+        .replace(/,\s*(?=,)/g, '')        // no doubled commas
+        .replace(/^A,\s*/i, 'A ')         // "A, elegant" when the mood is empty
+        .replace(/\s+$/, '');
     } else {
       // fallback (hardcoded), but with the product noun not fixed to wedding
       var lead = (mood ? mood + ', ' : '') + style;
@@ -1115,7 +1115,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       if(finish) parts.push(finish);
       s = parts.join(', ') + '. A decorative design only, with generous clear empty space in the centre for text — no lettering or words in the image. Flat, straight-on, fills the frame, print quality.';
     }
-    if(ft) s += ' ' + ft.charAt(0).toUpperCase() + ft.slice(1) + '.';
     var briefEl = document.getElementById('ds-brief-text');
     if(briefEl) briefEl.textContent = '"' + s + '"';
     return s;
@@ -1155,7 +1154,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     });
   }
   wireChips();
-  document.getElementById('w-story').addEventListener('input', buildBrief);
 
   // ---- Stage 2: load prompt vocabulary (chips) from Supabase config ----
   // Falls back silently to the hardcoded chips if the fetch fails.
