@@ -724,9 +724,13 @@ was fetched and injected via innerHTML — that was the bug behind the
         <!-- LEFT: interactive proof of the actual print file -->
         <div class="check-card preview-card">
           <div class="proof-head">
-            <h3>Your artwork</h3>
+            <h3 id="proofTitle">Your artwork</h3>
             <button type="button" class="proof-chip on" id="guidesBtn" onclick="toggleGuides()">Print guides</button>
           </div>
+          <!-- A folded card is proofed as its front, because that is the only
+               side being printed. Without saying so, someone who chose folded
+               a step ago sees a flat card here and assumes it was lost. -->
+          <p id="proofFoldNote" style="display:none;font-size:var(--text-xs);color:var(--soft);margin:0 0 10px;line-height:1.7;"></p>
           <div id="proofStage" class="proof-stage">
             <canvas id="proofCanvas" class="proof-canvas" style="display:none"></canvas>
             <div id="previewPlaceholder" class="preview-placeholder">
@@ -1663,6 +1667,22 @@ function renderFormatToggle() {
   }
 }
 
+// The proof shows one card face. Say which face it is, whenever the format
+// changes and again when a file is checked, since either can happen first.
+function updateProofFoldNote(){
+  const title = document.getElementById('proofTitle');
+  const note  = document.getElementById('proofFoldNote');
+  const folded = selectedFold === 'folded';
+  if (title) title.textContent = folded ? 'The front of your card' : 'Your artwork';
+  if (!note) return;
+  note.style.display = folded ? '' : 'none';
+  if (folded) {
+    note.textContent = 'This is a folded card. What you see here is the front — '
+      + 'we print it and fold it for you, and the inside is left blank for your '
+      + 'own message.';
+  }
+}
+
 function selectFold(f) {
   if (f === selectedFold) return;
   selectedFold = f;
@@ -1671,6 +1691,7 @@ function selectFold(f) {
   if (selectedSize && still.size && !still.has(selectedSize)) selectedSize = null;
   selectedWeight = null;
   renderSizeCards();
+  updateProofFoldNote();
   if (typeof renderWeightPicker === 'function') renderWeightPicker();
   if (typeof updatePrice === 'function') updatePrice();
 }
@@ -1835,6 +1856,7 @@ function handleFile(file){
 
 function checkFile(file){
   resetPreviewUI();
+  updateProofFoldNote();
   document.getElementById('checkActions').classList.add('hidden');
   checksPassed = true;
 
