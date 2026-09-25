@@ -689,7 +689,7 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div class="ds-sec-body">
           <div class="ds-sec-hint">Tap the ideas you love — the more you choose, the richer the brief we send our design AI.</div>
 
-          <div class="ds-label">Style</div>
+          <div class="ds-label" data-label-for="style">Style</div>
           <div class="ds-chips" data-group="style">
             <button class="ds-chip" data-v="soft watercolour florals">watercolour</button>
             <button class="ds-chip" data-v="fine botanical linework">botanical linework</button>
@@ -702,7 +702,13 @@ was fetched and injected via innerHTML — that was the bug behind the
             <button class="ds-chip" data-v="modern editorial">modern</button>
           </div>
 
-          <div class="ds-label">Decorative touches</div>
+          <div class="ds-label" data-label-for="setting" style="display:none;">Where it's happening</div>
+          <div class="ds-chips" data-group="setting" style="display:none;"></div>
+
+          <div class="ds-label" data-label-for="season" style="display:none;">Time of year</div>
+          <div class="ds-chips" data-group="season" style="display:none;"></div>
+
+          <div class="ds-label" data-label-for="touch">Decorative touches</div>
           <div class="ds-chips" data-group="touch">
             <button class="ds-chip" data-v="trailing eucalyptus">eucalyptus</button>
             <button class="ds-chip" data-v="soft blush roses">blush roses</button>
@@ -715,7 +721,7 @@ was fetched and injected via innerHTML — that was the bug behind the
             <button class="ds-chip" data-v="deckled edges">deckled edges</button>
           </div>
 
-          <div class="ds-label">Mood</div>
+          <div class="ds-label" data-label-for="mood">Mood</div>
           <div class="ds-chips" data-group="mood">
             <button class="ds-chip" data-v="warm and romantic">warm &amp; romantic</button>
             <button class="ds-chip" data-v="soft and airy">soft &amp; airy</button>
@@ -725,7 +731,7 @@ was fetched and injected via innerHTML — that was the bug behind the
             <button class="ds-chip" data-v="grand and opulent">grand</button>
           </div>
 
-          <div class="ds-label">Light &amp; finish</div>
+          <div class="ds-label" data-label-for="finish">Light &amp; finish</div>
           <div class="ds-chips" data-group="finish">
             <button class="ds-chip" data-v="soft natural light">soft natural light</button>
             <button class="ds-chip" data-v="warm glowing light">warm glow</button>
@@ -734,7 +740,7 @@ was fetched and injected via innerHTML — that was the bug behind the
             <button class="ds-chip" data-v="a subtle painterly wash">painterly wash</button>
           </div>
 
-          <div class="ds-label">Colours</div>
+          <div class="ds-label" data-label-for="colour">Colours</div>
           <div class="ds-chips" data-group="colour" style="gap:9px;">
             <span class="ds-sw" data-v="sage green" style="background:#DDE3D3;"></span>
             <span class="ds-sw" data-v="cream" style="background:#E8DDD8;"></span>
@@ -1042,7 +1048,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
 <script>
 (function(){
-  var sel = { style:[], touch:[], mood:[], finish:[], colour:[] };
+  var sel = { style:[], setting:[], season:[], touch:[], mood:[], finish:[], colour:[] };
   var size = '5x7';
 
   // ---- size definitions: aspect ratio (width/height) per size ----
@@ -1087,12 +1093,27 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     var touch = sel.touch.length ? 'with ' + sel.touch.join(', ') : '';
     var colour = sel.colour.length ? 'in ' + sel.colour.join(', ') : '';
     var finish = sel.finish.length ? sel.finish.join(', ') : '';
+    // Setting and season carry their own prepositions in the stored phrase
+    // ("with an English country garden feeling"), so they drop straight into
+    // the template and read as a sentence when several are chosen.
+    // Each phrase carries its own preposition ("with a...", "in fresh..."), so
+    // joining two of them repeated it: "with a coastal feeling and with a
+    // vineyard feeling". Only the first one keeps it.
+    function joinPhrases(list){
+      return list.map(function(ph, i){
+        return i === 0 ? ph : ph.replace(/^(with|in|on)\s+/i, '');
+      }).join(' and ');
+    }
+    var setting = sel.setting.length ? joinPhrases(sel.setting) : '';
+    var season = sel.season.length ? joinPhrases(sel.season) : '';
     var s;
     if(CONFIG_BASE_PROMPT){
       // fill the config template's {placeholders}
       s = CONFIG_BASE_PROMPT
         .replace('{mood}', mood ? mood : '')
         .replace('{style}', style)
+        .replace('{setting}', setting)
+        .replace('{season}', season)
         .replace('{touch}', touch)
         .replace('{colour}', colour)
         .replace('{finish}', finish)
@@ -1105,11 +1126,14 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         .replace(/\s+([,.])/g, '$1')      // no space before comma or full stop
         .replace(/,\s*(?=,)/g, '')        // no doubled commas
         .replace(/^A,\s*/i, 'A ')         // "A, elegant" when the mood is empty
+        .replace(/^A (?=[aeiou])/, 'An ')  // ...which then read "A elegant"
         .replace(/\s+$/, '');
     } else {
       // fallback (hardcoded), but with the product noun not fixed to wedding
       var lead = (mood ? mood + ', ' : '') + style;
       var parts = ['A ' + lead + ' ' + CONFIG_PRODUCT_NOUN + ' design for ' + (SIZES[size] ? SIZES[size].desc : 'an invitation')];
+      if(setting) parts.push(setting);
+      if(season) parts.push(season);
       if(touch) parts.push(touch);
       if(colour) parts.push(colour);
       if(finish) parts.push(finish);
@@ -1262,7 +1286,20 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       Object.keys(sel).forEach(function(k){ sel[k] = []; });
       document.querySelectorAll('.ds-chips').forEach(function(g){
         var cat = g.dataset.group;
-        if(!byCat[cat]) return;   // leave group untouched if no config
+        var lbl = document.querySelector('.ds-label[data-label-for="' + cat + '"]');
+        if(!byCat[cat]){
+          // Setting and Season ship empty and are filled per product, so a
+          // product without them must hide the row rather than show a bare
+          // heading. Groups that carry hardcoded fallback chips are left alone
+          // so a failed fetch still renders a usable step.
+          if(!g.children.length){
+            g.style.display = 'none';
+            if(lbl) lbl.style.display = 'none';
+          }
+          return;
+        }
+        g.style.display = '';
+        if(lbl) lbl.style.display = '';
         g.innerHTML = '';
         byCat[cat].forEach(function(o){
           var el;
