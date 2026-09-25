@@ -1233,7 +1233,7 @@ async function loadSiteData() {
   try {
     const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
     const [paperRes, configRes, pricesRes, envRes, ptRes, finishTypesRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra,description,finish_label,weights&active=eq.true&order=display_order`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra,description,finish_label,weights,tier&active=eq.true&order=display_order`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/rpc/pricing_for?p_slug=${encodeURIComponent(PRODUCT.slug)}`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/envelopes?select=id,name,hex_color,border_color,price_each&active=eq.true&order=display_order`, { headers }),
@@ -1256,6 +1256,10 @@ async function loadSiteData() {
             subtitle: p.subtitle || '',
             description: p.description || p.subtitle || '',
             finishLabel: p.finish_label || '',
+            // Signature, Luxury or Eco. CONFIG.papers is this direct read of
+            // paper_stocks, not the published catalogue, so the column has to
+            // be asked for by name here as well — it is named in the select.
+            tier: p.tier || 'signature',
             weights: weights,
             priceExtra: parseFloat(p.price_extra) || 0
           };
