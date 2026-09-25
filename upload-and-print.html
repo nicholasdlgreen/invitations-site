@@ -192,8 +192,10 @@ body.wide-step .step-bar{display:none;}
 <script src="/auth.js" defer></script>
 <script src="/cart.js"></script>
 <!-- pdf.js for browser-side preview + metadata (file check page) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}</script>
+<!-- pdf.js is 313KB and was loaded here render-blocking, so it held up the
+     first paint on every visit. It is only needed if someone uploads a PDF,
+     which is two steps later and may never happen — so it loads on demand
+     now, from loadPdfJs() further down. -->
 
 <!-- Step 3 (paper, finishing, quantity, delivery). These are the same files
      the preview page loads, so the approved design and the shipped one are
@@ -1233,7 +1235,7 @@ async function loadSiteData() {
     const [paperRes, configRes, pricesRes, envRes, ptRes, finishTypesRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/paper_stocks?select=id,name,subtitle,price_extra,description,finish_label,weights&active=eq.true&order=display_order`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.pricing&select=data`, { headers }),
-      fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/pricing_for?p_slug=${encodeURIComponent(PRODUCT.slug)}`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/envelopes?select=id,name,hex_color,border_color,price_each&active=eq.true&order=display_order`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
       fetch(`${SUPABASE_URL}/rest/v1/finish_types?select=*&active=eq.true&order=display_order`, { headers })
@@ -1941,6 +1943,7 @@ async function buildAndRunChecks(file, info){
   const spec = SIZE_SPECS[selectedSize] || SIZE_SPECS['A5'];
 
   // 3. PDF PATH — use pdf.js for preview + metadata
+  if (isPdf) await loadPdfJs().catch(function(e){ console.warn('[check]', e.message); });
   if (isPdf && window.pdfjsLib){
     setPreviewStatus('Rendering your PDF preview…');
     try {
@@ -3475,6 +3478,26 @@ function buildPrintReadyRaster(file, sizeKey, opts){
 // pdf-lib is only needed at the moment we build a print file, so load it lazily.
 const PDFLIB_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
 let _pdfLibPromise = null;
+const PDFJS_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let _pdfJsPromise = null;
+// Fetched the first time a PDF is actually handled, not on page load.
+function loadPdfJs(){
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (_pdfJsPromise) return _pdfJsPromise;
+  _pdfJsPromise = new Promise(function(resolve, reject){
+    const sc = document.createElement('script');
+    sc.src = PDFJS_SRC;
+    sc.onload = function(){
+      if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+      resolve(window.pdfjsLib);
+    };
+    sc.onerror = function(){ reject(new Error('pdf.js failed to load')); };
+    document.head.appendChild(sc);
+  });
+  return _pdfJsPromise;
+}
+
 function loadPdfLib(){
   if (window.PDFLib) return Promise.resolve(window.PDFLib);
   if (_pdfLibPromise) return _pdfLibPromise;
@@ -3501,8 +3524,9 @@ function loadPdfLib(){
 // bleed can go down the same mirror-the-edges path as an uploaded image.
 // Cheap: page 1's size in mm, without rendering anything.
 async function readPdfPageMm(file){
-  if (!window.pdfjsLib) return null;
   try {
+    await loadPdfJs();
+    if (!window.pdfjsLib) return null;
     const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
     const vp = (await pdf.getPage(1)).getViewport({ scale: 1.0 });
     return { w: vp.width * 25.4 / 72, h: vp.height * 25.4 / 72 };
@@ -3513,8 +3537,9 @@ async function readPdfPageMm(file){
 }
 
 async function rasterisePdfPage(file, sizeKey, dpi){
-  if (!window.pdfjsLib) return null;
   try {
+    await loadPdfJs();
+    if (!window.pdfjsLib) return null;
     const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
     const page = await pdf.getPage(1);
     const base = page.getViewport({ scale: 1.0 });          // 72 dpi

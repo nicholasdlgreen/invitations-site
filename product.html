@@ -1021,7 +1021,7 @@ async function loadData() {
   const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
   const [ptRes, pricesRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
-    fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/pricing_for?p_slug=${encodeURIComponent(PRODUCT.slug)}`, { headers })
   ]);
   // Did Supabase actually answer? A failed request and a genuine "no such
   // product" look the same from here, and they must not be treated the same.

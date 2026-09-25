@@ -821,7 +821,7 @@ const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
 
 let allProducts = [];      // unsorted master list from Supabase
-let pricingPayload = null; // latest pricing_config for "from £X" prices
+let fromPrices = null;     // { slug: lowest sell price }, from the from_prices() function
 let currentSort = 'alpha'; // the only order we offer — Featured and Newest were removed
 let currentCat  = null;    // category filter from ?cat= URL param
 
@@ -837,15 +837,12 @@ function escapeHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// Look up the lowest sell price for a product from published pricing.
+// Look up the lowest sell price for a product. Worked out by the database
+// now, so this page never sees a sheet rate.
 function getStartingPrice(slug) {
-  if (!pricingPayload || !Array.isArray(pricingPayload.products)) return null;
-  const pp = pricingPayload.products.find(p => p.slug === slug);
-  if (!pp || !Array.isArray(pp.sheet_sells) || !pp.sheet_sells.length) return null;
-  return pp.sheet_sells.reduce((min, s) => {
-    const v = parseFloat(s.sell);
-    return (min === null || v < min) ? v : min;
-  }, null);
+  if (!fromPrices) return null;
+  const v = fromPrices[slug];
+  return (v == null) ? null : parseFloat(v);
 }
 
 // Filter products by category (if currentCat is set)
@@ -976,7 +973,10 @@ async function loadData() {
   // CHANGED: select now includes `category` so we can filter on it
   const [ptRes, pricesRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/product_types?active=eq.true&select=slug,name,tagline,hero_image_url,display_order,created_at,category`, { headers }),
-    fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
+    // Just the lowest price per product. This page shows "from £X" and
+    // nothing else from pricing, and the whole payload is 2.8MB — it was
+    // downloading all of it to work out twenty-one numbers.
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/from_prices`, { headers })
   ]);
 
   if (ptRes.ok) {
@@ -987,9 +987,14 @@ async function loadData() {
     allProducts = fallbackRes.ok ? await fallbackRes.json() : [];
   }
   if (pricesRes.ok) {
+    // [{slug, from_price}] — turned into a lookup. This used to read the whole
+    // payload and only accept schema_version === 2; the published version has
+    // been 3 for some time, so the test quietly failed and this page has been
+    // showing no "from" prices at all.
     const rows = await pricesRes.json();
-    if (rows && rows.length && rows[0].payload && rows[0].payload.schema_version === 2) {
-      pricingPayload = rows[0].payload;
+    if (Array.isArray(rows)) {
+      fromPrices = {};
+      rows.forEach(r => { if (r && r.slug) fromPrices[r.slug] = r.from_price; });
     }
   }
 

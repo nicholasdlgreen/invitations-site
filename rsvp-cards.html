@@ -57,6 +57,7 @@
 .lp-section-divider{width:36px;height:1px;background:var(--gold);margin:14px auto 28px;}
 .pt-badge{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold-lt);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;}
 .lp-price-note{font-size:var(--text-xs);color:var(--soft);text-align:center;margin-top:14px;line-height:1.6;}
+.pt-gsm{display:block;font-size:.72rem;font-weight:400;letter-spacing:.04em;color:var(--soft);margin-top:2px;text-transform:none;}
 .lp-cta-row{text-align:center;margin-top:36px;}
 
 /* PAPER & FINISH SHOWCASE — editorial, sensory, no prices */
@@ -1007,7 +1008,7 @@ async function loadData() {
   const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
   const [ptRes, pricesRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
-    fetch(`${SUPABASE_URL}/rest/v1/pricing_config?select=payload&order=published_at.desc&limit=1`, { headers })
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/pricing_for?p_slug=${encodeURIComponent(PRODUCT.slug)}`, { headers })
   ]);
   // Did Supabase actually answer? A failed request and a genuine "no such
   // product" look the same from here, and they must not be treated the same.
@@ -1173,6 +1174,9 @@ function renderPricing() {
   priceValue.textContent = '\u00a3' + Math.round(cheapest);
 }
 
+// What the other choices cost, against one baseline order, so a customer can
+// see the shape of the range without opening the studio. Everything is quoted
+// as a difference from the same (paper, weight, size, quantity).
 
 
 
