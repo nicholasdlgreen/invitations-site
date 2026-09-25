@@ -1,0 +1,19 @@
+# This repo had no .gitignore at all, which meant `git add -A` swept in
+# anything sitting in the working tree — including generated images and,
+# worse, any API key dropped in here. Keys belong outside the repo
+# (~/.foreverprint-fal-key); these rules are the second line of defence.
+
+# throwaway working files: generated image variants, test pages
+scratch/
+
+# credentials — never, under any name
+.env
+.env.*
+*.key
+*-key
+*.pem
+fal-key*
+service-key*
+
+.DS_Store
+node_modules/
