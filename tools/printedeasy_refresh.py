@@ -53,17 +53,37 @@ PE_STOCK = {
     'Tintoretto Gesso': 'tintoretto', 'Nettuno Bianco': 'nettuno',
     'Acquerello Bianco': 'acquerello', 'Sirio Pearl Polar Dawn': 'polardawn',
     'Recycled Uncoated': 'recycled',
+    # Display boards call the material a substrate, not a stock finish. The
+    # form field differs too, which pe_extras() below knows about.
+    'Foamex 5mm': 'foamex5mm',
 }
 # The Fedrigoni range only exists on their Luxury products, which cannot be
 # finished at all. Everything else comes off a route that can be foiled.
 LUXURY = {'Tintoretto Gesso', 'Nettuno Bianco', 'Acquerello Bianco',
           'Sirio Pearl Polar Dawn', 'Recycled Uncoated'}
 
+def pe_form(family, paper, gsm):
+    """The option fields that identify a stock, which differ by product.
+
+    Cards are picked by stock-finish plus a weight in gsm. Display boards are
+    picked by substrate alone — the thickness is part of the substrate name —
+    and carry their own options, all pinned to the plain, unfinished board.
+    Lamination and drilled holes are priced separately as finishes, so they
+    must stay off here or every rate would silently include them.
+    """
+    if family == 'display-board':
+        return {'substrate': PE_STOCK[paper], 'printed-sides': 'single',
+                'lamination': 'none', 'wrap-mounting': 'no', 'drilled-holes': 'none'}
+    return {'stock-finish': PE_STOCK[paper], 'stock-weight': gsm,
+            'printed-sides': 'single'}
+
+
 def pe_product(family, paper):
     if family == 'flat-card':      return 'luxury-flat' if paper in LUXURY else 'postcards'
     if family == 'folded-card':    return 'greeting-cards'
     if family == 'folded-leaflet': return 'luxury-folded'
     if family == 'large-format':   return 'posters'
+    if family == 'display-board':  return 'display-boards'
     return None
 
 # Sizes they list as their own options. Anything else we buy as a custom size,
@@ -75,6 +95,7 @@ LISTED = {
     'greeting-cards': {'A6': 'A6', 'A5': 'A5', 'DL': 'DL', 'Square': '148x148'},
     'luxury-folded':  {'A5': 'A5', 'A4': 'A4', 'A3': 'A3'},
     'posters':        {'A1': 'A1', 'A2': 'A2', 'A3': 'A3', 'A4': 'A4'},
+    'display-boards': {'A0': 'A0', 'A1': 'A1', 'A2': 'A2', 'A3': 'A3', 'A4': 'A4'},
 }
 CUSTOM_DIMS = {'Square': ('148', '148'), 'Square-210': ('210', '210'),
                'A6': ('105', '148'), 'A5': ('148', '210'), 'DL': ('99', '210'),
@@ -120,7 +141,10 @@ LADDER = {'flat-card':      [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125,
           'folded-leaflet': [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125,
                              150, 200, 250, 300, 375, 450, 475, 500],
           'large-format':   [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35,
-                             40, 50, 60, 70, 85, 100]}
+                             40, 50, 60, 70, 85, 100],
+          # A wedding buys one table plan and one welcome sign. Dense at the
+          # bottom, thinning out where nobody orders.
+          'display-board':  [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40, 50]}
 
 # Folded leaflets will not price without these; they are injected by their own
 # JavaScript, so they are not in the page's HTML to be read.
@@ -296,8 +320,7 @@ def main():
         for qty in LADDER.get(fam, []):
             try:
                 d = pe.price(prod, size=s, width=w, height=h, quantity=qty,
-                             **{'stock-finish': PE_STOCK[paper], 'stock-weight': gsm,
-                                'printed-sides': 'single'})
+                             **pe_form(fam, paper, gsm))
                 lst = d.get('totalSellingPrice')
                 # A zero means they do not offer that combination at all, which
                 # is different from it being free.

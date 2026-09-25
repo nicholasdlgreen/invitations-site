@@ -1645,6 +1645,7 @@ const PAPER_IMAGE = {
   'Uncoated':               'uncoated',
   'Silk':                   'silk',
   'Gloss':                  'gloss',
+  'Foamex 5mm':             'foamex',
   'Cartonboard':            'cartonboard',
   'Ice White':              'icewhite',
   'Recycled Uncoated':      'recycled',
@@ -2891,7 +2892,8 @@ async function addToCartUpload(){
   if (paper.weights && selectedWeight) {
     var w = paper.weights.find(function(x){ return x.id === selectedWeight; });
     if (w && (w.name || w.gsm)) {
-      paperLabel += ' · ' + (w.name || '') + (w.gsm ? ' ' + w.gsm + 'gsm' : '');
+      // gsm for paper, mm for a display board — the weight says which it is
+      paperLabel += ' · ' + (w.name || '') + (w.gsm ? ' ' + w.gsm + (w.unit || 'gsm') : '');
     }
   }
   if (selectedFinish && selectedFinish !== 'None') paperLabel += ' · ' + selectedFinish;

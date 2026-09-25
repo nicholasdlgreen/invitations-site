@@ -47,16 +47,32 @@ const PE_STOCK = {
   'Cartonboard': 'cartonboard', 'Ice White': 'icewhite',
   'Tintoretto Gesso': 'tintoretto', 'Nettuno Bianco': 'nettuno',
   'Acquerello Bianco': 'acquerello', 'Sirio Pearl Polar Dawn': 'polardawn',
-  'Recycled Uncoated': 'recycled'
+  'Recycled Uncoated': 'recycled',
+  // Boards are chosen by substrate, and the thickness is part of its name.
+  'Foamex 5mm': 'foamex5mm'
 };
 const LUXURY = new Set(['Tintoretto Gesso', 'Nettuno Bianco', 'Acquerello Bianco',
                         'Sirio Pearl Polar Dawn', 'Recycled Uncoated']);
+
+// The fields that identify a stock differ by product: cards are a finish plus
+// a weight in gsm, boards are a substrate whose name carries the thickness.
+// Boards are priced plain here — lamination and drilled holes are separate
+// finishes, and including them would make every rate look as if it had moved.
+// Keep this in step with pe_form() in tools/printedeasy_refresh.py.
+function peForm(family, stock, gsm) {
+  if (family === 'display-board') {
+    return { substrate: stock, 'printed-sides': 'single', lamination: 'none',
+             'wrap-mounting': 'no', 'drilled-holes': 'none' };
+  }
+  return { 'stock-finish': stock, 'stock-weight': gsm, 'printed-sides': 'single' };
+}
 
 function peProduct(family, paper) {
   if (family === 'flat-card')      return LUXURY.has(paper) ? 'luxury-flat' : 'postcards';
   if (family === 'folded-card')    return 'greeting-cards';
   if (family === 'folded-leaflet') return 'luxury-folded';
   if (family === 'large-format')   return 'posters';
+  if (family === 'display-board')  return 'display-boards';
   return null;
 }
 
@@ -65,7 +81,8 @@ const LISTED = {
   'postcards':      { A6: 'A6', A5: 'A5', DL: 'DL' },
   'greeting-cards': { A6: 'A6', A5: 'A5', DL: 'DL', Square: '148x148' },
   'luxury-folded':  { A5: 'A5', A4: 'A4', A3: 'A3' },
-  'posters':        { A1: 'A1', A2: 'A2', A3: 'A3', A4: 'A4' }
+  'posters':        { A1: 'A1', A2: 'A2', A3: 'A3', A4: 'A4' },
+  'display-boards': { A0: 'A0', A1: 'A1', A2: 'A2', A3: 'A3', A4: 'A4' }
 };
 const CUSTOM_DIMS = { Square: ['148', '148'], 'Square-210': ['210', '210'],
                       A6: ['105', '148'], A5: ['148', '210'], DL: ['99', '210'],
@@ -206,6 +223,25 @@ async function sb(path) {
   return res.json();
 }
 
+// PostgREST caps a response at 1,000 rows whatever limit you ask for, and says
+// nothing about having truncated. This watch was asking for limit=2000 and
+// quietly checking a quarter of the rates — so a price rise in a family that
+// sorted late would never have been seen. Page until a page comes back empty,
+// stepping by the rows actually received rather than the size requested,
+// because a server capping lower than pageSize returns a short first page and
+// stopping on that would be the same bug again. Needs a stable order=.
+async function sbAll(path, pageSize = 1000) {
+  const sep = path.includes('?') ? '&' : '?';
+  const rows = [];
+  for (let offset = 0, guard = 0; guard < 1000; guard++) {
+    const page = await sb(`${path}${sep}limit=${pageSize}&offset=${offset}`);
+    if (!Array.isArray(page) || page.length === 0) return rows;
+    rows.push(...page);
+    offset += page.length;
+  }
+  throw new Error('sbAll gave up paging ' + path);
+}
+
 // A spread rather than a random handful: every family, and within it a mix of
 // papers and quantities, so drift in one corner cannot hide behind the rest.
 function pickSample(rows, n) {
@@ -252,7 +288,7 @@ exports.handler = async () => {
 
   let rates;
   try {
-    rates = await sb('sheet_rates?select=supplier_family,paper_name,weight_gsm,size,quantity,cost&limit=2000');
+    rates = await sbAll('sheet_rates?select=supplier_family,paper_name,weight_gsm,size,quantity,cost&order=id');
   } catch (err) {
     console.error('[price-watch] could not read sheet_rates:', err.message);
     return { statusCode: 500, body: err.message };
@@ -276,7 +312,7 @@ exports.handler = async () => {
     try {
       const theirs = await listPrice(prod, {
         size: dims.size, width: dims.width, height: dims.height, quantity: r.quantity,
-        'stock-finish': stock, 'stock-weight': r.weight_gsm, 'printed-sides': 'single'
+        ...peForm(r.supplier_family, stock, r.weight_gsm)
       });
       checked++;
       const expected = Number(r.cost) / (1 - DISCOUNT);
@@ -284,7 +320,8 @@ exports.handler = async () => {
         moved.push({ ...r, expected, theirs, newCost: theirs ? theirs * (1 - DISCOUNT) : null });
       }
     } catch (err) {
-      errors.push(`${r.paper_name} ${r.weight_gsm}gsm ${r.size} x${r.quantity}: ${err.message}`);
+      const unit = r.supplier_family === 'display-board' ? 'mm' : 'gsm';
+      errors.push(`${r.paper_name} ${r.weight_gsm}${unit} ${r.size} x${r.quantity}: ${err.message}`);
     }
     await new Promise(r2 => setTimeout(r2, PACE_MS));
   }

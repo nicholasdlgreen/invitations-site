@@ -28,6 +28,12 @@
   ];
 
   function el(id) { return document.getElementById(id); }
+  // Most stocks are paper and measured in gsm; a display board is measured in
+  // millimetres of thickness. The weight carries its own unit so "5mm" never
+  // comes out as "5gsm".
+  function unitOf(w) { return (w && w.unit) || 'gsm'; }
+  function thickness(w) { return w ? w.gsm + unitOf(w) : ''; }
+
   function esc(v) {
     return String(v == null ? '' : v)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -107,13 +113,18 @@
       for (var k = 0; k < ws.length; k++) if (ws[k].popular) pop = ws[k];
       S.weight = (pop || ws[0] || {}).gsm;
     }
+    for (var u = 0; u < ws.length; u++) {
+      if (ws[u].gsm === S.weight) S.weightUnit = unitOf(ws[u]);
+    }
     el('weights').innerHTML = ws.length > 1
       ? '<div class="opts">' + ws.map(function (w) {
           return '<button class="opt' + (w.gsm === S.weight ? ' on' : '') + '" onclick="Step3.weight(' + w.gsm + ')">'
-            + '<span class="a">' + w.gsm + 'gsm</span><span class="b">' + esc(w.name || '') + '</span></button>';
+            + '<span class="a">' + thickness(w) + '</span><span class="b">' + esc(w.name || '') + '</span></button>';
         }).join('') + '</div>'
-      : '<div class="one">' + (ws[0] ? ws[0].gsm + 'gsm' + (ws[0].name ? ' · ' + ws[0].name : '') : '')
-        + ' — the only weight this paper comes in.</div>';
+      : '<div class="one">' + (ws[0] ? thickness(ws[0]) + (ws[0].name ? ' · ' + ws[0].name : '') : '')
+        + (ws[0] && unitOf(ws[0]) === 'mm'
+            ? ' — the thickness this board comes in.</div>'
+            : ' — the only weight this paper comes in.</div>');
   }
 
   // ---- 3 · finishing ---------------------------------------------------------
@@ -343,7 +354,7 @@
     }
 
     el('sum').innerHTML = (S.paper && S.weight)
-      ? '<b>' + esc(S.paper) + '</b> &middot; ' + S.weight + 'gsm &middot; '
+      ? '<b>' + esc(S.paper) + '</b> &middot; ' + S.weight + (S.weightUnit || 'gsm') + ' &middot; '
         + (picks.length ? esc(picks.join(' & ')) : 'no finishing')
         + (envName ? ' &middot; ' + esc(envName) : '')
         + (S.qty ? ' &middot; ' + S.qty + ' cards' : '')

@@ -14,6 +14,7 @@
   // so rather than borrowing another paper's grain.
   var PHOTO = {
     'Uncoated': 'uncoated', 'Silk': 'silk', 'Gloss': 'gloss',
+    'Foamex 5mm': 'foamex',
     'Cartonboard': 'cartonboard', 'Ice White': 'icewhite',
     'Recycled Uncoated': 'recycled', 'Tintoretto Gesso': 'tintoretto',
     'Nettuno Bianco': 'nettuno', 'Acquerello Bianco': 'acquerello',
@@ -25,6 +26,14 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
   function photo(name) { return PHOTO[name] ? '/img/paper/' + PHOTO[name] + '.jpg' : null; }
+
+  // Paper is measured in gsm, board in millimetres of thickness. The weight
+  // carries its own unit, so the stock says which it is without a second list
+  // here to keep in step.
+  function isBoard(p) {
+    var ws = p.weights || [];
+    return ws.length > 0 && ws.every(function (w) { return w && w.unit === 'mm'; });
+  }
 
   // opts: { names: [stock names this product is sold on], url, key, intro }
   async function mount(el, opts) {
@@ -47,6 +56,24 @@
       return { name: n, subtitle: (s && s.subtitle) || '', description: (s && s.description) || '',
                weights: (s && s.weights) || [], src: photo(n) };
     });
+
+    // "Our paper stocks" is wrong over a sheet of foamex. A stock measured in
+    // millimetres is a board, and the section says so itself rather than every
+    // product page having to know. Any future board gets this for free.
+    if (papers.length && papers.every(isBoard)) {
+      var sec = el.closest('section');
+      var h = sec && sec.querySelector('.lp-strip-h');
+      if (h) h.textContent = papers.length > 1 ? 'Our boards' : 'Our board';
+      var tag = sec && sec.querySelector('.lp-strip-tag');
+      if (tag && /^paper$/i.test(tag.textContent.trim())) tag.textContent = 'Board';
+      var intro = document.getElementById('lp-papers-intro');
+      if (intro && intro.textContent) {
+        intro.textContent = intro.textContent
+          .replace(/^The stock\b/, 'The board')
+          .replace(/^The (\d+) stocks\b/, 'The $1 boards')
+          .replace(/ and what each one feels like in the hand\.$/, '.');
+      }
+    }
 
     el.innerHTML = '<div class="ps-grid">' + papers.map(function (p, i) {
       return '<button class="ps-card" type="button" data-i="' + i + '">'
