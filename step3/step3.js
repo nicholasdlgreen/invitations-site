@@ -47,6 +47,23 @@
   function liveFeels() {
     return FEELS.filter(function (f) { return papersIn(f.id).length; });
   }
+  // A product sold on a single stock — a welcome sign on one board — has
+  // nothing to decide here. Asking anyway puts a click and a whole step in
+  // front of the only real question, which is how many.
+  function soleFeel() {
+    var f = liveFeels();
+    return f.length === 1 ? f[0].id : null;
+  }
+  // True when the stock step has no choice in it either: one paper, one
+  // weight. It still draws, because seeing the design on the stock is the
+  // point of it, but it is not something the customer has to answer.
+  function stockIsFixed() {
+    if (!soleFeel()) return false;
+    var mine = papersIn(soleFeel());
+    if (mine.length !== 1) return false;
+    var ws = (A.weightsFor && A.weightsFor(mine[0])) || [];
+    return ws.length <= 1;
+  }
   function currentPaper() {
     var list = A.papers() || [];
     for (var i = 0; i < list.length; i++) if (list[i].name === S.paper) return list[i];
@@ -84,6 +101,8 @@
   // ---- 2 · the paper and its weight -----------------------------------------
   function drawStocks() {
     if (!S.feel) return;
+    var head = el('stocks') && el('stocks').querySelector('.num h2');
+    if (head) head.textContent = stockLabel() === 'Board' ? 'Your board' : 'Your paper';
     var mine = papersIn(S.feel);
     if (!mine.length) return;
     var paper = null;
@@ -254,7 +273,10 @@
       + '<input id="qtyOwn" class="qty-own-in" type="number" inputmode="numeric" min="'
       + (range ? range.min : 1) + '" max="' + (range ? range.max : 9999) + '" step="1"'
       + ' placeholder="e.g. 87"'
-      + ' value="' + (S.qty && !onTile ? S.qty : '') + '"'
+      // Left empty on purpose. Once a typed amount has its own tile, repeating
+      // it in the box reads as two orders of the same thing — 87 beside 87.
+      // The tile is the record of the choice; the box is for changing it.
+      + ' value=""'
       + ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();Step3.ownQty(this.value)}">'
       + '<button class="qty-own-go" type="button" onclick="Step3.ownQty(document.getElementById(\'qtyOwn\').value)">Use</button>'
       + '</span>'
@@ -287,6 +309,9 @@
     var n = 0;
     ['s1', 'stocks', 's2', 's5', 's3', 's4'].forEach(function (id) {
       var sec = el(id); if (!sec) return;
+      // A step hidden because it had nothing to decide must not take a number
+      // with it, or the first thing on screen is headed 2.
+      if (sec.style.display === 'none') return;
       var b = sec.querySelector('.num b'); if (!b) return;
       if (sec.classList.contains('locked') && id !== 's1') return;
       n += 1; b.textContent = n;
@@ -299,13 +324,20 @@
     var noFinish = !!S.paper && (A.finishTypesFor(S.paper) || []).length === 0;
     var noEnv = !((A.envelopes && A.envelopes()) || []).length;
     return [
-      { id: 's1', label: 'Type' },
-      { id: 'stocks', label: 'Paper' },
+      { id: 's1', label: 'Type', skip: !!soleFeel() },
+      { id: 'stocks', label: stockLabel() },
       { id: 's2', label: 'Finishing', skip: noFinish },
       { id: 's5', label: 'Envelopes', skip: noEnv },
       { id: 's3', label: 'How many' },
       { id: 's4', label: 'Delivery' }
     ].filter(function (x) { return !x.skip; });
+  }
+  // "Paper" over a sheet of foamex is wrong. The weight carries its unit, so
+  // the stock says which it is without a second list to keep in step.
+  function stockLabel() {
+    var p = currentPaper();
+    var ws = (p && A.weightsFor && A.weightsFor(p)) || [];
+    return ws.length && ws.every(function (w) { return w && w.unit === 'mm'; }) ? 'Board' : 'Paper';
   }
   function advanceTo(id) {
     var ids = journey().map(function (x) { return x.id; });
@@ -378,10 +410,26 @@
   global.Step3 = {
     init: function (adapter) {
       A = adapter;
-      var f = liveFeels()[0];
-      if (f && !S.feel) { /* nothing chosen yet — the type cards lead */ }
       el('add').onclick = function () { if (A.onAdd) A.onAdd(); };
-      drawFeels(); paint(); renumber();
+
+      // Settle whatever the customer has no say in, so the page opens on the
+      // first thing they actually choose rather than on a card with one option.
+      var only = soleFeel();
+      if (only && !S.feel) {
+        S.feel = only;
+        S.paper = (papersIn(only)[0] || {}).name || null;
+        if (el('s1')) el('s1').style.display = 'none';
+        redraw();
+        // drawStocks settles the weight when there is only one, so the
+        // quantity step can open behind it.
+        open('stocks', true);
+        advanceTo(stockIsFixed() ? afterPaper(S.paper) : 'stocks');
+        if (stockIsFixed()) { drawFinishing(); drawEnvelopes(); drawQty(); }
+        A.onSelect(S);
+      } else {
+        drawFeels();
+      }
+      paint(); renumber();
     },
     setArtwork: function (url) { ART = url || null; redraw(); },
     state: S,
