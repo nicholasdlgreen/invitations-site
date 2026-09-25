@@ -90,7 +90,8 @@ def pe_product(family, paper):
 # which prices identically — our 148mm square is not on their menu but costs
 # the same as asking for 148x148.
 LISTED = {
-    'luxury-flat':    {'A6': 'A6', 'A5': 'A5', 'DL': 'DL', 'A4': 'A4', 'Square-210': '210x210'},
+    'luxury-flat':    {'A6': 'A6', 'A5': 'A5', 'DL': 'DL', 'A4': 'A4', 'Square-210': '210x210',
+                       'business-card': '85x55'},
     'postcards':      {'A6': 'A6', 'A5': 'A5', 'DL': 'DL'},
     'greeting-cards': {'A6': 'A6', 'A5': 'A5', 'DL': 'DL', 'Square': '148x148'},
     # Their luxury-folded page asks for a FLAT size ("Unfolded document
@@ -103,7 +104,13 @@ LISTED = {
 }
 CUSTOM_DIMS = {'Square': ('148', '148'), 'Square-210': ('210', '210'),
                'A6': ('105', '148'), 'A5': ('148', '210'), 'DL': ('99', '210'),
-               'A4': ('210', '297'), 'A3': ('297', '420')}
+               'A4': ('210', '297'), 'A3': ('297', '420'),
+               # Place cards. Listed on luxury-flat, absent from the postcards
+               # menu — but asking for it as a custom size quotes fine, and a
+               # custom 85x55 on luxury-flat returns exactly the listed price
+               # (29.00 both ways, checked 2026-09-25). Their menu is what they
+               # advertise, not the limit of what they will print.
+               'business-card': ('85', '55')}
 
 def pe_size(prod, size):
     """(size, width, height) for their form, or None if we cannot buy it there."""

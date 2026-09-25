@@ -10,8 +10,11 @@
 <meta property="og:title" content="Greeting Cards | Foreverprint"/>
 <meta property="og:description" content="Personalised greeting cards printed in the UK on quality stock. Upload your own design or make one with us, for thank yous or just because."/>
 <meta property="og:url" content="https://foreverprint.com/greeting-cards"/>
+<meta property="og:image" content="https://foreverprint.com/greeting-cards-hero.jpg"/>
+<meta name="twitter:card" content="summary_large_image"/>
 <meta property="og:type" content="product"/>
 <meta property="og:site_name" content="Foreverprint"/>
+<link rel="preload" as="image" href="/.netlify/images?url=/greeting-cards-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75" imagesrcset="/.netlify/images?url=/greeting-cards-hero.jpg&amp;w=400&amp;fm=webp&amp;q=75 400w, /.netlify/images?url=/greeting-cards-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75 800w, /.netlify/images?url=/greeting-cards-hero.jpg&amp;w=1200&amp;fm=webp&amp;q=75 1200w" imagesizes="(max-width: 768px) 92vw, 44vw"/>
 <link rel="preconnect" href="https://jvcpzmumkyjdyibmwlsd.supabase.co" crossorigin/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link rel="dns-prefetch" href="https://www.googletagmanager.com"/>
@@ -423,6 +426,7 @@ nav a:hover,nav a.active{color:var(--gold);}
       <a href="/table-plans">Table Plans</a>
       <a href="/table-numbers">Table Numbers</a>
       <a href="/menu-cards">Menu Cards</a>
+      <a href="/place-cards">Place Cards</a>
       <a href="/thank-you-cards">Thank You Cards</a>
       <a href="/products.html?cat=weddings" class="mega-viewall">View all →</a>
     </div>
@@ -433,6 +437,8 @@ nav a:hover,nav a.active{color:var(--gold);}
       <a href="/birthday-invitations">Birthday Invitations</a>
       <a href="/engagement-party-invitations">Engagement Party Invitations</a>
       <a href="/baby-shower-invitations">Baby Shower Invitations</a>
+      <a href="/christmas-cards">Christmas Cards</a>
+      <a href="/greeting-cards">Greeting Cards</a>
       <a href="/products.html?cat=celebrations" class="mega-viewall">View all →</a>
     </div>
     <div class="mega-col">
@@ -616,7 +622,7 @@ was fetched and injected via innerHTML — that was the bug behind the
         </div>
       </div>
       <div>
-        <div id="lp-hero-img-wrap"></div>
+        <div id="lp-hero-img-wrap"><img class="lp-hero-img" data-prerendered src="/.netlify/images?url=/greeting-cards-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75" srcset="/.netlify/images?url=/greeting-cards-hero.jpg&amp;w=400&amp;fm=webp&amp;q=75 400w, /.netlify/images?url=/greeting-cards-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75 800w, /.netlify/images?url=/greeting-cards-hero.jpg&amp;w=1200&amp;fm=webp&amp;q=75 1200w" sizes="(max-width: 768px) 92vw, 44vw" alt="Greeting Cards" width="800" height="644" fetchpriority="high" decoding="async"/></div>
       </div>
     </div>
   </div>
@@ -967,7 +973,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
 <!-- JSON-LD: Product schema (no inline price; price is JS-rendered, would
      violate Google's structured-data-must-match-HTML rule. Add Offer.price
      when we move to build-time pre-rendering for Google Shopping.) -->
-<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Greeting Cards", "url": "https://foreverprint.com/greeting-cards", "brand": {"@type": "Brand", "name": "Foreverprint"}, "description": "Personalised greeting cards printed in the UK on quality stock. Upload your own design or make one with us, for thank yous or just because."}</script>
+<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Greeting Cards", "url": "https://foreverprint.com/greeting-cards", "brand": {"@type": "Brand", "name": "Foreverprint"}, "description": "Personalised greeting cards printed in the UK on quality stock. Upload your own design or make one with us, for thank yous or just because.", "image": "https://foreverprint.com/greeting-cards-hero.jpg"}</script>
 <script type="application/ld+json" id="ld-faq">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What are personalised greeting cards used for?", "acceptedAnswer": {"@type": "Answer", "text": "Most often for occasions where the card itself is the point: a photograph sent to family, Christmas cards to a long list, thank you cards after an event, or a business sending something to clients rather than an email."}}, {"@type": "Question", "name": "How many greeting cards should we order?", "acceptedAnswer": {"@type": "Answer", "text": "Count households rather than individuals. For Christmas, working from last year's list is the usual method, with a few spares for people who send one first and are not on it."}}, {"@type": "Question", "name": "Should the message be printed inside or handwritten?", "acceptedAnswer": {"@type": "Answer", "text": "A handwritten message is usual for personal cards, so the printed side stays simple. A printed message inside is more common for business cards sent in volume, where writing each one individually is not practical."}}, {"@type": "Question", "name": "When should Christmas cards be ordered?", "acceptedAnswer": {"@type": "Answer", "text": "Late November for UK posting is comfortable, and earlier for cards going overseas. Ordering in October is worth considering, since printing and postal services both get busier through December."}}, {"@type": "Question", "name": "Can we print a photo on a greeting card?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. A high-resolution photograph prints well at card size; images saved from social media are often too compressed. Every file is checked for size and resolution before it goes to print."}}, {"@type": "Question", "name": "Do greeting cards come with envelopes?", "acceptedAnswer": {"@type": "Answer", "text": "Envelope options are shown with the sizes when ordering, so cards and envelopes can be bought together rather than sourced separately once the cards arrive."}}]}</script>
 
 <script>

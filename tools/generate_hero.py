@@ -38,6 +38,27 @@ NO_TEXT = (
 )
 
 SUBJECTS = {
+    'place-cards':
+        # Two things fought us here. The model writes a name on a place card
+        # whatever NO_TEXT says (the first attempts read "iam deula" and
+        # "pare ll.."), so the card is described as blank and awaiting
+        # calligraphy — something to draw rather than something to suppress.
+        # And it defaults to a tent fold, which we do not sell: PrintedEasy's
+        # folded route has no 85x55 at all, so ours is a flat card.
+        "A single small luxury wedding place card, 85x55mm, FLAT and unfolded — a "
+        "single thin sheet of card, not a tent, not standing up — resting on a "
+        "folded white linen napkin on a gold-rimmed plate at a beautifully laid "
+        "table. Photographed slightly from above. The card is BLANK and unwritten: "
+        "the guest's name has not been added yet and the writing area is completely "
+        "empty cream paper. Its only decoration is a fine sprig of eucalyptus at the "
+        "left edge and a thin gold rule. A lit taper candle and eucalyptus run "
+        "softly out of focus behind.",
+    'christmas-cards':
+        "A single folded luxury Christmas card standing upright on a pale linen "
+        "tablecloth. Thick textured cotton paper printed with a winter wreath of "
+        "fir, holly and red berries with fine gold detailing. Beside it a sprig of "
+        "pine, a cream silk ribbon and one lit candle, warm and softly out of "
+        "focus. A matching envelope rests behind it.",
     'greeting-cards':
         "A single luxury greeting card standing upright on a pale cream linen "
         "tablecloth. Thick textured cotton paper with a subtle deckled edge, "
