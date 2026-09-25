@@ -3421,41 +3421,98 @@ async function rasterisePdfPage(file, sizeKey, dpi){
 
 // Customer PDF that ALREADY has 3mm bleed: keep it as vector (no quality loss),
 // just place it on a correctly-sized page and add crop marks and boxes.
+// A folded leaflet is printed on a flat sheet twice the finished width and
+// folded down the middle: left panel the back, right panel the front.
+//
+// Only this family imposes. PrintedEasy's luxury-folded form asks for the flat
+// sheet in so many words — "Choose a Flat Size (Unfolded document size)" —
+// while their greeting cards ask for the finished size, which is what we
+// already send. So folded cards are left exactly as they were.
+//
+// The customer never meets any of this. They upload at the size they will
+// hold, the same as every other product, and the sheet is our problem.
+function foldedSheetFor(spec){
+  const fam = (currentProduct && currentProduct.supplier_family) || '';
+  if (fam !== 'folded-leaflet' || !spec) return null;
+  return { panelMmW: spec.mmW, mmW: spec.mmW * 2, mmH: spec.mmH };
+}
+
+// The one place the press page is laid out, so the vector and raster routes
+// cannot drift apart. drawArt places the artwork in the rectangle it is given.
+// Unfolded, that rectangle is the whole sheet and this behaves exactly as it
+// did before the fold existed.
+function layOutPressPage(doc, rgb, spec, drawArt){
+  const MM = 72 / 25.4, b = PRINT_BLEED_MM, m = PRINT_MARKS_MM;
+  const fold = foldedSheetFor(spec);
+  const sheetMmW = fold ? fold.mmW : spec.mmW;
+  const sheetMmH = spec.mmH;
+
+  const pageW = (sheetMmW + 2*b + 2*m) * MM, pageH = (sheetMmH + 2*b + 2*m) * MM;
+  const trimX = (m + b) * MM, trimY = (m + b) * MM;
+  const trimW = sheetMmW * MM, trimH = sheetMmH * MM;
+  const page = doc.addPage([pageW, pageH]);
+
+  // Folded, the artwork fills the front panel only; its left bleed runs over
+  // the fold and is covered again below.
+  const artMmW = fold ? fold.panelMmW : spec.mmW;
+  const artX = (fold ? m + fold.panelMmW : m) * MM;
+  drawArt(page, { x: artX, y: m * MM,
+                  width: (artMmW + 2*b) * MM, height: (sheetMmH + 2*b) * MM });
+
+  let foldX = null;
+  if (fold) {
+    foldX = (m + b + fold.panelMmW) * MM;
+    // Without this the front panel's 3mm bleed carries a strip of the design
+    // across the fold onto a back that is meant to be blank.
+    page.drawRectangle({ x: 0, y: 0, width: foldX, height: pageH, color: rgb(1,1,1) });
+  }
+
+  const gap = b * MM, len = 4 * MM;
+  [[trimX,trimY],[trimX+trimW,trimY],[trimX,trimY+trimH],[trimX+trimW,trimY+trimH]]
+    .forEach(function(pt,i){
+      const right = (i===1||i===3), top = (i===2||i===3);
+      page.drawLine({ start:{x: right?pt[0]+gap:pt[0]-gap, y: pt[1]},
+                      end:{x: right?pt[0]+gap+len:pt[0]-gap-len, y: pt[1]},
+                      thickness:0.25, color: rgb(0,0,0) });
+      page.drawLine({ start:{x: pt[0], y: top?pt[1]+gap:pt[1]-gap},
+                      end:{x: pt[0], y: top?pt[1]+gap+len:pt[1]-gap-len},
+                      thickness:0.25, color: rgb(0,0,0) });
+    });
+
+  // Fold marks: ticks outside the trim, top and bottom, so the finisher knows
+  // where the crease goes and does not read the sheet as two cards.
+  if (foldX != null) {
+    page.drawLine({ start:{x: foldX, y: trimY - gap}, end:{x: foldX, y: trimY - gap - len},
+                    thickness:0.25, color: rgb(0,0,0) });
+    page.drawLine({ start:{x: foldX, y: trimY + trimH + gap},
+                    end:{x: foldX, y: trimY + trimH + gap + len},
+                    thickness:0.25, color: rgb(0,0,0) });
+  }
+
+  page.setTrimBox(trimX, trimY, trimW, trimH);
+  page.setBleedBox(m * MM, m * MM, (sheetMmW + 2*b) * MM, (sheetMmH + 2*b) * MM);
+  return { page, sheetMmW, sheetMmH, folded: !!fold,
+           pageMm: { w: sheetMmW + 2*b + 2*m, h: sheetMmH + 2*b + 2*m } };
+}
+
 async function buildPrintReadyPdfFromVector(file, sizeKey){
   const spec = SIZE_SPECS[sizeKey];
   if (!spec) return null;
   try {
     const PDFLibRef = await loadPdfLib();
     const { PDFDocument, rgb } = PDFLibRef;
-    const MM = 72 / 25.4, b = PRINT_BLEED_MM, m = PRINT_MARKS_MM;
-    const pageW = (spec.mmW + 2*b + 2*m) * MM, pageH = (spec.mmH + 2*b + 2*m) * MM;
-    const artW  = (spec.mmW + 2*b) * MM,       artH  = (spec.mmH + 2*b) * MM;
-    const trimX = (m + b) * MM, trimY = (m + b) * MM;
-    const trimW = spec.mmW * MM, trimH = spec.mmH * MM;
-
     const doc = await PDFDocument.create();
-    const page = doc.addPage([pageW, pageH]);
     const [embedded] = await doc.embedPdf(await file.arrayBuffer(), [0]);
-    page.drawPage(embedded, { x: m * MM, y: m * MM, width: artW, height: artH });
-
-    const gap = b * MM, len = 4 * MM;
-    [[trimX,trimY],[trimX+trimW,trimY],[trimX,trimY+trimH],[trimX+trimW,trimY+trimH]]
-      .forEach(function(pt,i){
-        const right = (i===1||i===3), top = (i===2||i===3);
-        page.drawLine({ start:{x: right?pt[0]+gap:pt[0]-gap, y: pt[1]},
-                        end:{x: right?pt[0]+gap+len:pt[0]-gap-len, y: pt[1]},
-                        thickness:0.25, color: rgb(0,0,0) });
-        page.drawLine({ start:{x: pt[0], y: top?pt[1]+gap:pt[1]-gap},
-                        end:{x: pt[0], y: top?pt[1]+gap+len:pt[1]-gap-len},
-                        thickness:0.25, color: rgb(0,0,0) });
-      });
-    page.setTrimBox(trimX, trimY, trimW, trimH);
-    page.setBleedBox(m * MM, m * MM, artW, artH);
+    const laid = layOutPressPage(doc, rgb, spec, function (page, box) {
+      page.drawPage(embedded, box);
+    });
     const bytes = await doc.save();
-    console.log('[print-pdf] vector passthrough — customer PDF kept as vector');
+    console.log('[print-pdf] vector passthrough — customer PDF kept as vector'
+                + (laid.folded ? ', imposed on a folded sheet' : ''));
     return { blob: new Blob([bytes], { type:'application/pdf' }),
-             trimMm: { w: spec.mmW, h: spec.mmH },
-             pageMm: { w: spec.mmW + 2*b + 2*m, h: spec.mmH + 2*b + 2*m },
+             trimMm: { w: laid.sheetMmW, h: laid.sheetMmH },
+             pageMm: laid.pageMm,
+             folded: laid.folded,
              route: 'vector' };
   } catch(e){
     console.warn('[print-pdf] vector passthrough failed:', e.message);
@@ -3501,40 +3558,19 @@ async function buildPrintReadyPdfFromImage(file, sizeKey){
 
   const PDFLibRef = await loadPdfLib();
   const { PDFDocument, rgb } = PDFLibRef;
-  const MM = 72 / 25.4;
-  const b = PRINT_BLEED_MM, m = PRINT_MARKS_MM;
-
-  const pageW = (spec.mmW + 2*b + 2*m) * MM, pageH = (spec.mmH + 2*b + 2*m) * MM;
-  const artW  = (spec.mmW + 2*b) * MM,       artH  = (spec.mmH + 2*b) * MM;
-  const trimX = (m + b) * MM,                trimY = (m + b) * MM;
-  const trimW = spec.mmW * MM,               trimH = spec.mmH * MM;
 
   const doc = await PDFDocument.create();
-  const page = doc.addPage([pageW, pageH]);
   const img = await doc.embedJpg(await raster.blob.arrayBuffer());
-  page.drawImage(img, { x: m * MM, y: m * MM, width: artW, height: artH });
-
-  // Crop marks: start at the bleed edge, run 4mm outward, hairline black.
-  const gap = b * MM, len = 4 * MM;
-  [[trimX, trimY], [trimX + trimW, trimY], [trimX, trimY + trimH], [trimX + trimW, trimY + trimH]]
-    .forEach(function(pt, i){
-      const right = (i === 1 || i === 3), top = (i === 2 || i === 3);
-      page.drawLine({ start:{ x: right ? pt[0]+gap : pt[0]-gap, y: pt[1] },
-                      end:  { x: right ? pt[0]+gap+len : pt[0]-gap-len, y: pt[1] },
-                      thickness: 0.25, color: rgb(0,0,0) });
-      page.drawLine({ start:{ x: pt[0], y: top ? pt[1]+gap : pt[1]-gap },
-                      end:  { x: pt[0], y: top ? pt[1]+gap+len : pt[1]-gap-len },
-                      thickness: 0.25, color: rgb(0,0,0) });
-    });
-
-  page.setTrimBox(trimX, trimY, trimW, trimH);
-  page.setBleedBox(m * MM, m * MM, artW, artH);
+  const laid = layOutPressPage(doc, rgb, spec, function (page, box) {
+    page.drawImage(img, box);
+  });
 
   const bytes = await doc.save();
   return {
     blob: new Blob([bytes], { type: 'application/pdf' }),
-    trimMm: { w: spec.mmW, h: spec.mmH },
-    pageMm: { w: spec.mmW + 2*b + 2*m, h: spec.mmH + 2*b + 2*m },
+    trimMm: { w: laid.sheetMmW, h: laid.sheetMmH },
+    pageMm: laid.pageMm,
+    folded: laid.folded,
     rasterPx: raster.px,
     route: 'image'
   };
