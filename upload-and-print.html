@@ -678,7 +678,12 @@ was fetched and injected via innerHTML — that was the bug behind the
         <p style="font-size:var(--text-sm);color:var(--soft);margin-bottom:16px;line-height:1.7;">Pick a size to unlock the upload.</p>
         <!-- Size cards are built at runtime from the print_sizes table, so a size
              added in admin appears here without a code change. -->
+        <!-- Flat or folded. Built at runtime and hidden entirely unless this
+             product is sold both ways. It sits here, before the upload,
+             because it changes what the artwork has to be. -->
+        <div id="format-toggle" style="display:none;margin-bottom:16px;"></div>
         <div id="size-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;"></div>
+        <p id="format-note" style="display:none;font-size:var(--text-xs);color:var(--pale);margin:10px 0 0;line-height:1.7;"></p>
         <p id="sizeNote" style="font-size:var(--text-sm);color:var(--pale);margin-top:14px;text-align:center;">↑ Select a size above to unlock the upload</p>
       </div>
 
@@ -1315,6 +1320,11 @@ async function loadSiteData() {
         // all, are per-product decisions made in admin.
         if (Array.isArray(pt.quantity_ladder) && pt.quantity_ladder.length) liveLists.quantity_ladder = pt.quantity_ladder;
         liveLists.envelopes_offered = pt.envelopes_offered !== false;
+        // Whether this product is also sold folded, and which family prints it
+        // that way. Read live rather than waiting for a publish, so turning the
+        // option on in admin shows up straight away — the prices behind it
+        // still come from the published snapshot.
+        if (pt.folded_family) liveLists.folded_family = pt.folded_family;
         if (Object.keys(liveLists).length) {
           currentProduct = Object.assign({}, currentProduct || {}, liveLists);
           if (typeof renderSizeCards === 'function') renderSizeCards();
@@ -1386,12 +1396,32 @@ let currentProduct = null;
 // product — the Fedrigoni stocks cannot be foiled or laminated at all.
 let publishedPapers = [];
 
+// Every published price for the format the customer has chosen. Flat and
+// folded are different products at the printer with different papers, sizes
+// and prices, so everything downstream — the sizes offered, the papers, the
+// weights, the price itself — reads through here and narrows by itself.
+//
+// Rows published before folding existed carry no fold at all. Those are flat.
+function sheetSells() {
+  const all = (currentProduct && currentProduct.sheet_sells) || [];
+  if (!Array.isArray(all)) return [];
+  return all.filter(s => (s.fold || 'flat') === selectedFold);
+}
+
+// Does this product offer the choice at all, and in which formats?
+function foldsOffered() {
+  const all = (currentProduct && currentProduct.sheet_sells) || [];
+  if (!Array.isArray(all) || !all.length) return ['flat'];
+  const seen = new Set(all.map(s => s.fold || 'flat'));
+  return ['flat', 'folded'].filter(f => seen.has(f));
+}
+
 // Phase 5 lookups: read pre-computed sell prices from currentProduct.
 // Return null if not found, so caller can fall back to old logic or formula.
 function lookupSheetSell(paper, size, qty, gsm) {
   if (!currentProduct || !Array.isArray(currentProduct.sheet_sells)) return null;
   const want = parseInt(gsm, 10);
-  const match = currentProduct.sheet_sells.find(s =>
+  const match = sheetSells().find(s =>
     s.paper === paper && s.size === size && parseInt(s.qty, 10) === parseInt(qty, 10) &&
     // Rows published before weights existed carry no gsm; treat those as a
     // match for any weight rather than pricing nothing at all.
@@ -1406,7 +1436,7 @@ function lookupSheetSell(paper, size, qty, gsm) {
 function pricedQuantities(paper, size, gsm) {
   if (!currentProduct || !Array.isArray(currentProduct.sheet_sells)) return [];
   const want = parseInt(gsm, 10);
-  return [...new Set(currentProduct.sheet_sells
+  return [...new Set(sheetSells()
     .filter(s => s.paper === paper && s.size === size &&
                  (s.gsm == null || !want || parseInt(s.gsm, 10) === want))
     .map(s => parseInt(s.qty, 10)))].sort((a, b) => a - b);
@@ -1530,8 +1560,14 @@ function findMatchingPrice(productType, size, paperName, finish, qty) {
 // If neither available, leave all 5 sizes visible (default).
 
 function getAvailableSizes() {
+  // Only the sizes this format is priced in. Square-210 has no folded
+  // equivalent at the printer, so choosing folded takes it off the list
+  // rather than offering a card we cannot make.
+  const priced = new Set(sheetSells().map(s => s.size).filter(Boolean));
   if (currentProduct && Array.isArray(currentProduct.available_sizes) && currentProduct.available_sizes.length) {
-    return new Set(currentProduct.available_sizes);
+    const own = currentProduct.available_sizes;
+    const narrowed = priced.size ? own.filter(k => priced.has(k)) : own;
+    return new Set(narrowed.length ? narrowed : own);
   }
   // Fallback to old behaviour
   const set = new Set();
@@ -1595,9 +1631,54 @@ async function loadPrintSizes() {
 }
 
 // Build the size cards for this product: sizes it offers, that are switched on.
+// Flat or folded, drawn only when the product is sold both ways. Choosing a
+// format re-renders the sizes, because they differ, and drops a chosen size
+// the other format cannot do rather than carrying it silently forward.
+function renderFormatToggle() {
+  const box = document.getElementById('format-toggle');
+  const note = document.getElementById('format-note');
+  if (!box) return;
+  const folds = foldsOffered();
+  if (folds.length < 2) { box.style.display = 'none'; if (note) note.style.display = 'none'; return; }
+
+  const LABEL = { flat: 'Flat card', folded: 'Folded card' };
+  box.style.display = '';
+  box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
+    + 'background:var(--white);padding:4px;">'
+    + folds.map(f => {
+        const on = f === selectedFold;
+        return '<button type="button" onclick="selectFold(\'' + f + '\')" '
+          + 'style="font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:8px 20px;'
+          + 'border-radius:999px;transition:all .2s;'
+          + (on ? 'background:var(--gold);color:#fff;' : 'background:none;color:var(--soft);')
+          + '">' + LABEL[f] + '</button>';
+      }).join('')
+    + '</div>';
+
+  if (note) {
+    note.style.display = '';
+    note.textContent = selectedFold === 'folded'
+      ? 'Your artwork is the front of the card. We print it and fold it for you — the inside is left blank for your own message. The size shown is the finished card.'
+      : 'A single flat card, printed on one side. The size shown is the card itself.';
+  }
+}
+
+function selectFold(f) {
+  if (f === selectedFold) return;
+  selectedFold = f;
+  // A size the other format cannot do must not survive the switch.
+  const still = getAvailableSizes();
+  if (selectedSize && still.size && !still.has(selectedSize)) selectedSize = null;
+  selectedWeight = null;
+  renderSizeCards();
+  if (typeof renderWeightPicker === 'function') renderWeightPicker();
+  if (typeof updatePrice === 'function') updatePrice();
+}
+
 function renderSizeCards() {
   const grid = document.getElementById('size-grid');
   if (!grid) return;
+  renderFormatToggle();
   const available = getAvailableSizes();
   let keys = Object.keys(SIZE_SPECS);
   if (available.size) keys = keys.filter(k => available.has(k));
@@ -1613,7 +1694,10 @@ function renderSizeCards() {
     const esc = String(k).replace(/"/g, '&quot;');
     return `<div id="size-opt-${esc}" onclick="selectSize('${esc}')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;">
       <div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;">
-        <div id="size-rect-${esc}" style="width:${w}px;height:${h}px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;"></div>
+        <div id="size-rect-${esc}" style="width:${w}px;height:${h}px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;position:relative;">${
+        selectedFold === 'folded'
+          ? '<span style="position:absolute;left:50%;top:0;bottom:0;border-left:1.5px dashed var(--pale);"></span>'
+          : ''}</div>
       </div>
       <div id="size-name-${esc}" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">${z.shortLabel || k}</div>
       <div style="font-size:var(--text-xs);color:var(--pale);">${Math.round(z.mmW)}×${Math.round(z.mmH)}mm</div>
@@ -1666,6 +1750,7 @@ function paperImage(name, size) {
   return (size === 'thumb' ? '/img/paper/thumb/' : '/img/paper/') + slug + '.jpg';
 }
 
+let selectedFold='flat';   // 'flat' or 'folded' — chosen at the size step
 let selectedPaper='smooth', selectedWeight=null, selectedFinish='None', selectedFinishes={}, uploadQty=25, checksPassed=true;
 let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
 // Goods before delivery. Delivery is a percentage of this with a floor, so
@@ -2586,13 +2671,24 @@ function selectPaperOpt(id){
 // unpriced site still shows the full choice rather than an empty picker.
 function availableWeightsFor(stock){
   const all = Array.isArray(stock.weights) ? stock.weights : [];
-  if(!currentProduct || !Array.isArray(currentProduct.sheet_sells) || !currentProduct.sheet_sells.length) return all;
-  const priced = new Set(currentProduct.sheet_sells
+  const rows = sheetSells();
+  // Nothing published for this format at all, so there is nothing to narrow
+  // by and the stock keeps every weight rather than losing its picker.
+  if(!rows.length) return all;
+  const priced = new Set(rows
     .filter(s => s.paper === stock.name && (!selectedSize || s.size === selectedSize) && s.gsm != null)
     .map(s => parseInt(s.gsm, 10)));
-  // Rows published before weights existed carry no gsm at all; treat those as
-  // "any weight goes" rather than hiding the picker entirely.
-  if(!priced.size) return all;
+  if(!priced.size){
+    // We do have prices for this format, so a paper with none is simply not
+    // sold this way — folded invitations are not offered on the Fedrigoni
+    // stocks. Saying "any weight goes" here, which is what this did before
+    // folding existed, would offer a card the printer cannot make.
+    //
+    // Rows published before weights existed carry no gsm at all, and those
+    // still mean "any weight": the paper is priced, we just do not know in
+    // which weights.
+    return rows.some(s => s.paper === stock.name) ? all : [];
+  }
   const usable = all.filter(w => priced.has(parseInt(w.gsm, 10)));
   return usable.length ? usable : all;
 }
@@ -2892,7 +2988,10 @@ async function addToCartUpload(){
   const total=(subtotalEx*1.2);
   const envLabel=envelopesEnabled&&selectedEnvColour?` + ${ENVELOPES.find(e=>e.id===selectedEnvColour)?.name} envelopes`:'';
   // Build paper label including finish if it's not "None"
-  let paperLabel = paper.name;
+  // Flat and folded are different products at the printer and a different
+  // thing in the hand, so the line must say which — otherwise a folded order
+  // is indistinguishable from a flat one in the basket and on the order.
+  let paperLabel = (selectedFold === 'folded' ? 'Folded · ' : '') + paper.name;
   // include the chosen weight (name + gsm) so it's recorded on the order
   if (paper.weights && selectedWeight) {
     var w = paper.weights.find(function(x){ return x.id === selectedWeight; });
@@ -2969,6 +3068,7 @@ async function addToCartUpload(){
       : (currentFile ? currentFile.name.replace(/\.[^.]+$/,'') : 'Custom Design'),
     qty: uploadQty,
     size: selectedSize,
+    fold: selectedFold,
     paper: paperLabel,
     total: total,
     icon:'✦',
@@ -3431,8 +3531,19 @@ async function rasterisePdfPage(file, sizeKey, dpi){
 //
 // The customer never meets any of this. They upload at the size they will
 // hold, the same as every other product, and the sheet is our problem.
+// Which family will actually print this. A flat card bought folded is made as
+// a greeting card, not as the flat card the product is normally sold as, and
+// the two want different artwork — so the press file has to follow the choice
+// rather than the product.
+function printingFamily(){
+  if (!currentProduct) return '';
+  return selectedFold === 'folded' && currentProduct.folded_family
+    ? currentProduct.folded_family
+    : (currentProduct.supplier_family || '');
+}
+
 function foldedSheetFor(spec){
-  const fam = (currentProduct && currentProduct.supplier_family) || '';
+  const fam = printingFamily();
   if (fam !== 'folded-leaflet' || !spec) return null;
   return { panelMmW: spec.mmW, mmW: spec.mmW * 2, mmH: spec.mmH };
 }

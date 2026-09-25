@@ -1103,6 +1103,16 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     </div>
 
     <div class="field">
+      <label>Also sold folded</label>
+      <select id="pt_foldedFamily" style="max-width:280px;">
+        <option value="">No — flat only</option>
+        <option value="folded-card">Yes, as a folded card</option>
+        <option value="folded-leaflet">Yes, as a folded leaflet</option>
+      </select>
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;line-height:1.6;">Offers the customer a choice of flat or folded at the size step. The papers and sizes on offer when folded are whichever of this product's own the folded family has rates for, so it cannot promise a fold the printer does not do.</p>
+    </div>
+
+    <div class="field">
       <label>Available Sizes</label>
       <div id="pt_availableSizes" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;min-height:42px;"></div>
     </div>
@@ -3550,6 +3560,7 @@ function openProductTypeModal(editId) {
       document.getElementById('pt_displayOrder').value    = p.display_order != null ? p.display_order : '';
       document.getElementById('pt_active').value          = p.active === false ? 'false' : 'true';
       document.getElementById('pt_supplierFamily').value  = p.supplier_family || '';
+      document.getElementById('pt_foldedFamily').value    = p.folded_family || '';
       document.getElementById('pt_editId').value          = editId;
       selectedSizes    = Array.isArray(p.available_sizes)    ? p.available_sizes    : [];
       selectedPapers   = Array.isArray(p.available_papers)   ? p.available_papers   : [];
@@ -3593,6 +3604,7 @@ async function saveProductType() {
     display_order:      parseInt(document.getElementById('pt_displayOrder').value, 10) || 0,
     active:             document.getElementById('pt_active').value === 'true',
     supplier_family:    document.getElementById('pt_supplierFamily').value || null,
+    folded_family:      document.getElementById('pt_foldedFamily').value || null,
     available_sizes:    readPtChips('pt_availableSizes'),
     available_papers:   readPtChips('pt_availablePapers'),
     available_finishes: readPtChips('pt_availableFinishes'),
@@ -4281,6 +4293,12 @@ async function publishHierarchical() {
         // Sheet sells: only rates in this product's family, on a paper, size
         // AND weight it actually offers.
         //
+        // A product that can also be sold folded is priced from a second
+        // family, and every row says which format it belongs to. The papers
+        // and sizes on offer when folded are simply whichever of this
+        // product's own that the folded family has rates for — so the fold
+        // cannot promise a paper or a size the printer does not do it in.
+        //
         // sheet_rates mirrors what PrintedEasy charge, so it holds weights we
         // have decided not to sell — Cartonboard 280gsm costs three times the
         // 255, so we dropped it from the paper rather than from the costs.
@@ -4297,13 +4315,18 @@ async function publishHierarchical() {
           return !set || !set.size ? true : set.has(gsm);
         };
 
+        const foldedFamily = p.folded_family || null;
         const sheetSells = [];
         sheetRates.forEach(r => {
-          if (r.supplier_family === family &&
+          const fold = r.supplier_family === family ? 'flat'
+                     : (foldedFamily && r.supplier_family === foldedFamily) ? 'folded'
+                     : null;
+          if (fold &&
               papersOk.includes(r.paper_name) &&
               sizes.includes(r.size) &&
               offersWeight(r.paper_name, parseInt(r.weight_gsm, 10))) {
             sheetSells.push({
+              fold:  fold,
               paper: r.paper_name,
               gsm:   parseInt(r.weight_gsm, 10) || null,
               size:  r.size,
@@ -4312,7 +4335,11 @@ async function publishHierarchical() {
             });
           }
         });
-        flattenedSteps += noBackwardSteps(sheetSells);
+        // Flat and folded are separate curves and must be flattened apart, or
+        // a cheap folded price could drag a flat one down with it.
+        ['flat', 'folded'].forEach(f => {
+          flattenedSteps += noBackwardSteps(sheetSells.filter(r => r.fold === f));
+        });
         // Finish sells: for each finish ticked on this product
         const finishSells = finishes.map(name => {
           const fo = (finishOptions || []).find(f => f.name === name);
@@ -4327,6 +4354,10 @@ async function publishHierarchical() {
           name:               p.name,
           margin_pct:         margin,
           supplier_family:    family,
+          // Which family prints the folded version, when this product offers
+          // one. The site needs it to know whether a folded order is imposed
+          // on a flat sheet or supplied at the finished size.
+          folded_family:      foldedFamily,
           available_sizes:    sizes,
           available_papers:   papersOk,
           available_finishes: finishes,
