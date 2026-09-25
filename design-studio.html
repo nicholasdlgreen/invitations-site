@@ -97,6 +97,7 @@
 </style>
 <script src="/vendor/supabase-js-2.116.0.min.js"></script>
 <script src="/auth.js"></script>
+<script src="/img-cdn.js"></script>
 <script src="/cart.js"></script>
   
 <style>
@@ -857,7 +858,12 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
       }
       el.innerHTML = rows.map(function(p){
         return '<a class="sp-card" href="/design-studio-ai-create.html?product=' + encodeURIComponent(p.slug) + '">' +
-          '<div class="sp-img">' + (p.hero_image_url ? '<img src="' + esc(p.hero_image_url) + '" alt="" loading="lazy">' : '') + '</div>' +
+          '<div class="sp-img">' + (p.hero_image_url
+            ? '<img src="' + esc(imgCdn(p.hero_image_url, 600)) + '"'
+              + ' srcset="' + esc(imgCdnSet(p.hero_image_url, 600)) + '"'
+              + ' sizes="(max-width:700px) 92vw, 300px"'
+              + ' alt="" loading="lazy" decoding="async">'
+            : '') + '</div>' +
           '<div class="sp-body"><div class="sp-name">' + esc(p.name) + '</div>' +
           (p.tagline ? '<div class="sp-tag">' + esc(p.tagline) + '</div>' : '') + '</div></a>';
       }).join('');

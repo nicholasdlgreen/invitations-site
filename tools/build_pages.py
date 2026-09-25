@@ -35,6 +35,7 @@ import json
 import os
 import re
 import sys
+import urllib.parse
 import urllib.request
 from datetime import date
 
@@ -508,7 +509,9 @@ def build_guide(template, guide, products):
         img = prod.get("hero_image_url") or ""
         cards.append(
             f'<a class="gd-card" href="/{esc(ps)}">'
-            + (f'<div class="gd-card-img"><img src="{esc(img)}" alt="" loading="lazy"></div>' if img
+            + (f'<div class="gd-card-img"><img src="{esc(cdn_img(img, 600))}" '
+               f'srcset="{esc(cdn_img(img, 600))} 600w, {esc(cdn_img(img, 1200))} 1200w" '
+               f'sizes="(max-width:700px) 92vw, 300px" alt="" loading="lazy" decoding="async"></div>' if img
                else '<div class="gd-card-img"></div>')
             + f'<div class="gd-card-name">{esc(prod.get("name") or ps)}</div></a>'
         )
@@ -703,6 +706,21 @@ def write_sitemap(slugs, guide_slugs=()):
         "\n".join(out) + "\n"
     )
     log(f"sitemap.xml: {len(slugs) + len(CORE_PAGES) + (len(guide_slugs) + 1 if guide_slugs else 0)} URLs")
+
+
+def cdn_img(url, width=600):
+    """A stored image URL, resized and served as webp by Netlify's image CDN.
+
+    The same job img-cdn.js does for cards built in the browser. Guide pages
+    are written here rather than at runtime, so they need their own copy —
+    kept deliberately identical in behaviour, including leaving off-site and
+    already-converted URLs alone.
+    """
+    if not url or url.startswith("/.netlify/images") or url.startswith(("data:", "blob:")):
+        return url
+    if url.startswith(("http://", "https://")):
+        return url
+    return f"/.netlify/images?url={urllib.parse.quote(url, safe='')}&w={width}&fm=webp&q=75"
 
 
 def main():
