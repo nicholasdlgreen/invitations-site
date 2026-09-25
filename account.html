@@ -48,7 +48,7 @@
   .field-val{font-size:var(--text-sm);color:var(--text);font-weight:400;text-align:right;}
 
   /* Orders list */
-  .order-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);}
+  .order-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);}
   .order-row:last-child{border-bottom:0;}
   .order-num{font-size:var(--text-xs);letter-spacing:.08em;color:var(--pale);}
   .order-meta{font-size:var(--text-sm);color:var(--text);}
@@ -59,6 +59,40 @@
   .order-status.paid{color:var(--ok);}
   .order-status.pending{color:var(--warn);}
   .order-status.fulfilled{color:var(--gold);}
+
+  /* Order detail — the invoice panel that opens under a row */
+  .order-row{cursor:pointer;}
+  .order-row:hover .order-num{color:var(--gold);}
+  .order-chev{font-size:var(--text-xs);color:var(--pale);transition:transform .2s;}
+  .order-row[aria-expanded="true"] .order-chev{transform:rotate(180deg);color:var(--gold);}
+  .order-row[aria-expanded="true"]{border-bottom:0;}
+  .order-detail{padding:4px 0 22px;border-bottom:1px solid var(--border);}
+  .order-detail[hidden]{display:none;}
+  .od-block{background:var(--cream);border-radius:10px;padding:16px 18px;margin-bottom:10px;}
+  .od-h{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:10px;}
+  .od-line{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline;padding:7px 0;}
+  .od-line + .od-line{border-top:1px solid var(--border);}
+  .od-name{font-size:var(--text-sm);color:var(--text);}
+  .od-spec{font-size:var(--text-xs);color:var(--soft);margin-top:3px;line-height:1.5;}
+  .od-amt{font-size:var(--text-sm);color:var(--text);white-space:nowrap;}
+  .od-sum{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:var(--text-sm);padding:5px 0;color:var(--soft);}
+  .od-sum.total{border-top:1px solid var(--border);margin-top:6px;padding-top:11px;color:var(--text);font-weight:500;font-size:var(--text-body);}
+  .od-sum.discount{color:var(--ok);}
+  .od-addr{font-size:var(--text-sm);color:var(--text);line-height:1.65;}
+  .od-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;}
+  .od-link{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border:1px solid var(--gold);color:var(--gold);border-radius:60px;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:all .2s;}
+  .od-link:hover{background:var(--gold);color:#fff;}
+  .od-note{font-size:var(--text-xs);color:var(--soft);margin-top:9px;line-height:1.6;}
+  @media(max-width:560px){
+    .od-line,.od-sum{grid-template-columns:1fr;}
+    .od-amt{text-align:left;}
+    .od-sum span:last-child{font-weight:500;}
+  }
+  @media print{
+    header,footer,.acct-sidebar,.od-actions,.order-chev,.hw-launcher,#studio-sort{display:none!important;}
+    .order-detail[hidden]{display:block!important;}
+    .od-block{background:transparent;border:1px solid #ddd;}
+  }
 
   /* Toggle */
   .toggle-row{display:flex;align-items:flex-start;gap:14px;padding:12px;background:var(--cream);border-radius:10px;}
@@ -611,7 +645,7 @@ was fetched and injected via innerHTML — that was the bug behind the
         <!-- ORDERS CARD -->
         <div class="card">
           <h2>Order history</h2>
-          <div class="card-sub">Every order placed with the email on this account. Click an order to track it.</div>
+          <div class="card-sub">Every order placed with the email on this account. Click an order to see what you ordered, what you paid and your design.</div>
           <div id="ordersList">
             <div class="loading-state">Loading your orders…</div>
           </div>
@@ -873,6 +907,25 @@ function fmtMoney(pennies){
   return '£' + n.toFixed(2);
 }
 
+// Escape anything from the database before it goes near innerHTML.
+// Order data is customer-supplied — names, addresses, uploaded filenames.
+function esc(v){
+  if (v == null) return '';
+  return String(v).replace(/[&<>"']/g, c => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+  ));
+}
+
+// Only ever link to storage we serve. An href built from a database field
+// would otherwise accept javascript: if a row were ever tampered with.
+function safeUrl(u){
+  if (!u) return null;
+  try {
+    const parsed = new URL(u, window.location.origin);
+    return (parsed.protocol === 'https:' || parsed.protocol === 'http:') ? parsed.href : null;
+  } catch(e){ return null; }
+}
+
 // Format date
 function fmtDate(iso){
   if (!iso) return '—';
@@ -955,6 +1008,107 @@ async function toggleMarketing(){
   }
 }
 
+// ─── The invoice panel under an order row ───
+// Everything here comes from my_orders(), which has already stripped the bulky
+// designState and resolved each line's product name from its slug — the raw
+// item name is the uploaded filename, which reads badly on an invoice
+// ("IMG_9288 x 50").
+function orderDetail(o){
+  const items = Array.isArray(o.items) ? o.items : [];
+
+  const lines = items.length ? items.map(it => {
+    // size / paper / finish, whichever the order actually recorded
+    const spec = [it.size, it.paper, it.finish && it.finish + ' finish']
+      .filter(Boolean).map(esc).join(' · ');
+    const qty = it.qty ? esc(it.qty) + (Number(it.qty) === 1 ? ' card' : ' cards') : '';
+    const ref = it.reference && it.reference !== it.product
+      ? '<div class="od-spec">Your file: ' + esc(it.reference) + '</div>' : '';
+    return '<div class="od-line">' +
+      '<div><div class="od-name">' + esc(it.product || 'Your order') + '</div>' +
+      (spec ? '<div class="od-spec">' + spec + '</div>' : '') +
+      (qty ? '<div class="od-spec">' + qty + '</div>' : '') + ref + '</div>' +
+      '<div class="od-amt">' + fmtMoney(it.total) + '</div></div>';
+  }).join('') : '<div class="od-spec">No line detail recorded for this order.</div>';
+
+  // Money. The columns do not share a basis, which is a trap:
+  // subtotal_before_discount and discount_amount are VAT-INCLUSIVE
+  // (75.00 - 15.00 = 60.00 = total), while subtotal is ex-VAT AFTER the
+  // discount (50.00 + 10.00 = 60.00). Printing both as "Subtotal" would show
+  // a customer 75 - 15 = 50. So the discount is shown inclusive, the way they
+  // met it at checkout, and VAT is stated under the total as UK consumer
+  // invoices do. `delivery` is descriptive text, not an amount, so it belongs
+  // with the delivery details rather than in a money column.
+  let sums = '';
+  if (o.discount_amount && Number(o.discount_amount) > 0 && o.subtotal_before_discount != null){
+    sums += '<div class="od-sum"><span>Subtotal</span><span>' + fmtMoney(o.subtotal_before_discount) + '</span></div>';
+    sums += '<div class="od-sum discount"><span>Discount' +
+            (o.discount_code ? ' (' + esc(o.discount_code) + ')' : '') +
+            '</span><span>&minus;' + fmtMoney(o.discount_amount) + '</span></div>';
+  }
+  sums += '<div class="od-sum total"><span>Total paid</span><span>' + fmtMoney(o.total) + '</span></div>';
+  if (o.vat != null && Number(o.vat) > 0)
+    sums += '<div class="od-sum"><span>Includes VAT of</span><span>' + fmtMoney(o.vat) + '</span></div>';
+
+  // Delivery
+  let delivery = '';
+  if (o.delivery_address || o.delivery || o.carrier || o.tracking || o.dispatched_at){
+    delivery = '<div class="od-block"><div class="od-h">Delivery</div>';
+    if (o.customer_name) delivery += '<div class="od-addr">' + esc(o.customer_name) + '</div>';
+    if (o.delivery_address) delivery += '<div class="od-addr">' + esc(o.delivery_address) + '</div>';
+    if (o.delivery) delivery += '<div class="od-spec">' + esc(o.delivery) + '</div>';
+    if (o.dispatched_at) delivery += '<div class="od-spec">Dispatched ' + esc(fmtDate(o.dispatched_at)) +
+      (o.carrier ? ' with ' + esc(o.carrier) : '') + '</div>';
+    if (o.delivered_at) delivery += '<div class="od-spec">Delivered ' + esc(fmtDate(o.delivered_at)) + '</div>';
+    delivery += '</div>';
+  }
+
+  // Artwork. Prefer each line's own file, fall back to the order's.
+  const art = [];
+  items.forEach((it, i) => {
+    const u = safeUrl(it.artwork_url);
+    if (u) art.push({ url: u, label: items.length > 1 ? 'Your design ' + (i + 1) : 'View your design' });
+  });
+  if (!art.length){
+    const u = safeUrl(o.artwork_url);
+    if (u) art.push({ url: u, label: 'View your design' });
+  }
+  let actions = '<div class="od-actions">';
+  art.forEach(a => {
+    actions += '<a class="od-link" href="' + esc(a.url) + '" target="_blank" rel="noopener noreferrer">' +
+               esc(a.label) + '</a>';
+  });
+  if (o.order_number)
+    actions += '<a class="od-link" href="/track-order.html?order=' +
+               encodeURIComponent(o.order_number) + '">Track this order</a>';
+  actions += '</div>';
+  // "the design we printed" — never "proof", which we do not offer
+  const note = art.length
+    ? '<div class="od-note">This is the design we have on file for this order.</div>'
+    : '<div class="od-note">No design file is attached to this order.</div>';
+
+  return '<div class="od-block"><div class="od-h">What you ordered</div>' + lines + '</div>' +
+         '<div class="od-block"><div class="od-h">What you paid</div>' + sums + '</div>' +
+         delivery +
+         actions + note;
+}
+
+// Rows behave as buttons: click, Enter or Space opens the invoice.
+function wireOrderRows(){
+  document.querySelectorAll('.order-row[data-order]').forEach(row => {
+    const panel = document.getElementById('od-' + row.dataset.order);
+    if (!panel) return;
+    const toggle = () => {
+      const open = row.getAttribute('aria-expanded') === 'true';
+      row.setAttribute('aria-expanded', String(!open));
+      panel.hidden = open;
+    };
+    row.addEventListener('click', toggle);
+    row.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); }
+    });
+  });
+}
+
 // ─── Load orders matched by customer_email ───
 // We look up orders where the customer_email field equals the signed-in user's email.
 // This will work whether RLS is enabled on the orders table or not — if RLS is on,
@@ -968,12 +1122,10 @@ async function loadOrders(){
   }
 
   try {
-    const { data, error } = await supa
-      .from('orders')
-      .select('id, order_number, customer_email, total, status, created_at')
-      .eq('customer_email', currentUser.email)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    // my_orders() narrows server-side and relies on RLS for access. Selecting
+    // the orders table directly is not viable: designState runs to ~65KB per
+    // item, so fifty orders would be megabytes to render a list of totals.
+    const { data, error } = await supa.rpc('my_orders');
 
     if (error){
       console.warn('Orders fetch failed:', error.message);
@@ -992,8 +1144,8 @@ async function loadOrders(){
       return;
     }
 
-    // Render order rows
-    container.innerHTML = data.map(o => {
+    // Render order rows, each with an invoice panel underneath
+    container.innerHTML = data.map((o, idx) => {
       const num = o.order_number || (o.id ? ('#' + String(o.id).slice(0, 8)) : '—');
       const date = fmtDate(o.created_at);
       const total = fmtMoney(o.total);
@@ -1001,18 +1153,23 @@ async function loadOrders(){
       const statusLabel = status ? (status.charAt(0).toUpperCase() + status.slice(1)) : 'Processing';
       const statusClass = status === 'paid' ? 'paid' : status === 'fulfilled' ? 'fulfilled' : status === 'pending' ? 'pending' : '';
       return `
-        <div class="order-row">
-          <div class="order-num">${num}</div>
+        <div class="order-row" role="button" tabindex="0" aria-expanded="false"
+             aria-controls="od-${idx}" data-order="${idx}">
+          <div class="order-num">${esc(num)}</div>
           <div class="order-meta">
             Order placed
-            <div class="order-date">${date}</div>
+            <div class="order-date">${esc(date)}</div>
           </div>
           <div class="order-right">
-            <div class="order-total">${total}</div>
-            <div class="order-status ${statusClass}">${statusLabel}</div>
+            <div class="order-total">${esc(total)}</div>
+            <div class="order-status ${statusClass}">${esc(statusLabel)}</div>
           </div>
-        </div>`;
+          <div class="order-chev" aria-hidden="true">▾</div>
+        </div>
+        <div class="order-detail" id="od-${idx}" hidden>${orderDetail(o)}</div>`;
     }).join('');
+
+    wireOrderRows();
   } catch(e){
     console.warn('Orders fetch error:', e.message);
     container.innerHTML = '<div class="empty-state">We couldn\'t load your orders right now.</div>';
