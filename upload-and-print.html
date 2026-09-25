@@ -1322,6 +1322,11 @@ async function loadSiteData() {
         // Override page title and meta tags if admin has set them
         const titleText = pt.meta_title || `Upload & Print ${PRODUCT.name} | Foreverprint`;
         document.title = titleText;
+        // The page's only h1 is visually hidden, so nobody sighted ever caught
+        // that it said "wedding invitations" on all 21 products. Screen readers
+        // and search engines read it, so it names the product it is selling.
+        const srH1 = document.querySelector('h1');
+        if (srH1) srH1.textContent = `Upload & print your ${String(PRODUCT.name).toLowerCase()}`;
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc && pt.meta_description) metaDesc.setAttribute('content', pt.meta_description);
         const ogTitle = document.querySelector('meta[property="og:title"]');
