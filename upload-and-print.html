@@ -2402,10 +2402,35 @@ function goStep(n){
 // calculation and one basket.
 let _step3Ready = false;
 
-const FED_PAPERS  = ['Tintoretto Gesso','Nettuno Bianco','Acquerello Bianco','Sirio Pearl Polar Dawn'];
-const RECY_PAPERS = ['Recycled Uncoated'];
-const PAPER_FEEL  = name =>
-  FED_PAPERS.includes(name) ? 'textured' : (RECY_PAPERS.includes(name) ? 'kinder' : 'signature');
+// Signature, Luxury or Eco, read from the published catalogue. This used to be
+// two hardcoded lists of paper names, which meant a stock added in admin landed
+// in Signature whatever its tier said — the tier was in the database the whole
+// time and nothing read it. A stock we somehow have no record of falls back to
+// Signature rather than vanishing from the step.
+const PAPER_TIER = name => {
+  const p = (CONFIG.papers || []).find(x => x.name === name);
+  const t = p && p.tier;
+  return (t === 'luxury' || t === 'kinder') ? t : 'signature';
+};
+
+// The cheapest published price in a tier, for the "from £X" on its pod. Uses
+// the same lookup the rest of the page prices with, so it can never quote a
+// figure the customer cannot then reach.
+function tierFromPrice(tierId){
+  const rows = sheetSells();
+  if (!rows.length) return null;
+  const names = new Set((step3Papers() || [])
+    .filter(p => PAPER_TIER(p.name) === tierId).map(p => p.name));
+  if (!names.size) return null;
+  let low = null;
+  rows.forEach(r => {
+    if (!names.has(r.paper)) return;
+    if (selectedSize && r.size !== selectedSize) return;
+    const v = parseFloat(r.sell);
+    if (!isNaN(v) && (low === null || v < low)) low = v;
+  });
+  return low;
+}
 
 // Which papers this product offers, narrowed to those we can actually price.
 function step3Papers(){
@@ -2491,7 +2516,8 @@ function step3Adapter(){
     papers:     () => step3Papers().map(p => ({
                    name: p.name, subtitle: p.subtitle, description: p.description, weights: p.weights || []
                  })),
-    feelOf:     PAPER_FEEL,
+    feelOf:     PAPER_TIER,
+    tierFrom:   tierFromPrice,
     imageFor:   n => paperImage(n),
     weightsFor: p => {
                    const full = (CONFIG.papers||[]).find(x => x.name === p.name) || p;

@@ -4374,6 +4374,13 @@ async function publishHierarchical() {
       name:         p.name,
       description:  p.description || p.subtitle || '',
       finish_label: p.finish_label || '',
+      // Signature, Luxury or Eco. The customer picks this before any paper, so
+      // it decides which stocks they are shown at all. It has always been in
+      // paper_stocks; the site duplicated it as hardcoded name lists in
+      // JavaScript, which meant a paper added in admin landed in the wrong
+      // tier silently. Published now so there is one source of it.
+      tier:         p.tier || 'signature',
+      subtitle:     p.subtitle || '',
       weights:      Array.isArray(p.weights) ? p.weights : [],
       finishes:     Array.isArray(p.finishes) ? p.finishes : []
     }));

@@ -49,7 +49,11 @@
   border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(61,46,36,.05);
   transition:transform .3s cubic-bezier(.2,.7,.3,1),box-shadow .3s;}
   #s3wrap .feel:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(61,46,36,.13);}
-  #s3wrap .feel.on{box-shadow:0 0 0 2px var(--gold),0 12px 26px rgba(61,46,36,.12);}
+  #s3wrap .feel.on{box-shadow:0 0 0 2px currentColor,0 12px 26px rgba(61,46,36,.12);}
+  #s3wrap .feel.signature.on{color:var(--gold);}
+  #s3wrap .feel.luxury.on{color:#8A6A72;}
+  #s3wrap .feel.kinder.on{color:#7A8B6F;}
+  #s3wrap .feel.on .tick{background:currentColor;}
   /* Paper photographs are 760px close-ups of the grain, with no sheet edge in
      them, so every part of the frame is usable texture. Shown with `cover`
      they were being squeezed to about a third of that — 210px of a 760px
@@ -58,6 +62,31 @@
      Drawn at natural size and cropped to the box instead, the texture reads
      at full strength whatever the box is. The max() keeps the box covered on
      the rare screen wide enough to outrun the photograph. */
+  /* The stocks in this tier, side by side and cropped into the grain at its
+     natural size — two for Signature, four for Luxury, one for Eco. No single
+     paper stands in for the rest. */
+  #s3wrap .feel .sws{display:flex;height:112px;}
+  #s3wrap .feel .sws .sw{flex:1;background-size:max(100%,760px);background-position:center;background-color:#F1EAE2;
+  border-right:1px solid rgba(255,255,255,.65);}
+  #s3wrap .feel .sws .sw:last-child{border-right:0;}
+  /* Each tier owns a colour, so the three read as a set of choices rather than
+     three identical white boxes. Kept to a tint and a border — a solid block
+     fights the serif headings and starts to look like a pricing table. */
+  #s3wrap .feel.signature{border:1.5px solid var(--gold);background:#FDFAF5;}
+  #s3wrap .feel.luxury{border:1.5px solid #8A6A72;background:#FBF7F8;}
+  #s3wrap .feel.kinder{border:1.5px solid #7A8B6F;background:#F8FAF7;}
+  #s3wrap .feel.signature .nm{color:var(--gold);}
+  #s3wrap .feel.luxury .nm{color:#8A6A72;}
+  #s3wrap .feel.kinder .nm{color:#7A8B6F;}
+  #s3wrap .feel .flag{position:absolute;top:11px;right:11px;z-index:2;font-size:9.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:#fff;padding:3px 8px;border-radius:99px;}
+  #s3wrap .feel.signature .flag{background:var(--gold);}
+  #s3wrap .feel.kinder .flag{background:#7A8B6F;}
+  #s3wrap .feel .meta{display:flex;justify-content:space-between;align-items:baseline;
+  border-top:1px solid var(--line);margin-top:12px;padding-top:10px;}
+  #s3wrap .feel .cnt{font-size:11.5px;color:var(--pale);}
+  #s3wrap .feel .frm{font-size:13.5px;color:var(--text);}
+  #s3wrap .feel .frm b{font-weight:500;}
   #s3wrap .feel .shot{display:block;position:relative;height:210px;overflow:hidden;background-size:max(100%,760px);background-position:center;background-color:#F1EAE2;}
   #s3wrap .feel .cap{display:block;padding:15px 18px 17px;}
   #s3wrap .feel .nm{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;line-height:1.15;}

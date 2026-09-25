@@ -17,14 +17,16 @@
             del: null, openFin: null, at: 's1' };
   var ART = null;
 
-  // ---- the three types. A type with no papers behind it never appears. ----
+  // Signature, Luxury and Eco — the choice that decides which stocks follow.
+  // The ids are what paper_stocks.tier stores; 'kinder' is historical and the
+  // customer sees Eco. A tier with no papers behind it never appears.
   var FEELS = [
-    { id: 'signature', name: 'Smooth and clean',
-      sub: 'Crisp, substantial and understated. What most couples choose.' },
-    { id: 'textured',  name: 'Textured and Italian',
-      sub: 'A grain you feel before you read a word. Made by Fedrigoni.' },
-    { id: 'kinder',    name: 'Kinder',
-      sub: 'Wholly recycled, flecked with natural fibre. Quietly green.' }
+    { id: 'signature', name: 'Signature', flag: 'Most popular',
+      sub: 'Smooth, crisp and substantial. Colour prints sharp and type stays clean.' },
+    { id: 'luxury',    name: 'Luxury', flag: '',
+      sub: 'Italian mill papers with a grain you feel before you read a word. Made by Fedrigoni.' },
+    { id: 'kinder',    name: 'Eco', flag: 'Kinder',
+      sub: 'Wholly recycled and thick with it, flecked with natural fibre you can see.' }
   ];
 
   function el(id) { return document.getElementById(id); }
@@ -84,17 +86,30 @@
          + layers + '</span>';
   }
 
-  // ---- 1 · type -------------------------------------------------------------
+  // ---- 1 · the tier ---------------------------------------------------------
+  // Each pod carries the real stocks in its tier, side by side. It used to show
+  // the customer's artwork printed through one stock's grain — cropped, tilted,
+  // and claiming a paper they had not chosen yet. Measured, the difference
+  // between stocks under artwork is about 1% and does not improve with size, so
+  // there was nothing to see even at full width. The swatches say more.
   function drawFeels() {
     var box = el('feels'); if (!box) return;
     box.innerHTML = liveFeels().map(function (f) {
-      var p = papersIn(f.id)[0];
-      return '<button class="feel' + (S.feel === f.id ? ' on' : '') + '" onclick="Step3.feel(\'' + f.id + '\')">'
-        + '<span class="shot" style="background-image:url(\'' + esc(A.imageFor(p.name) || '') + '\')">'
-        + artOn(p.name) + '</span>'
+      var mine = papersIn(f.id);
+      var swatches = mine.map(function (p) {
+        return '<span class="sw" style="background-image:url(\'' + esc(A.imageFor(p.name) || '') + '\')"></span>';
+      }).join('');
+      var from = (A.tierFrom && A.tierFrom(f.id)) || null;
+      var count = mine.length + (mine.length === 1 ? ' paper' : ' papers');
+      return '<button class="feel ' + f.id + (S.feel === f.id ? ' on' : '') + '" onclick="Step3.feel(\'' + f.id + '\')">'
+        + (f.flag ? '<span class="flag">' + esc(f.flag) + '</span>' : '')
+        + '<span class="sws">' + swatches + '</span>'
         + '<span class="tick">&#10003;</span>'
         + '<span class="cap"><span class="nm">' + esc(f.name) + '</span>'
-        + '<span class="sub">' + esc(f.sub) + '</span></span></button>';
+        + '<span class="sub">' + esc(f.sub) + '</span>'
+        + '<span class="meta"><span class="cnt">' + count + '</span>'
+        + (from == null ? '' : '<span class="frm">from <b>' + gbp(from) + '</b></span>')
+        + '</span></span></button>';
     }).join('');
   }
 
@@ -324,7 +339,7 @@
     var noFinish = !!S.paper && (A.finishTypesFor(S.paper) || []).length === 0;
     var noEnv = !((A.envelopes && A.envelopes()) || []).length;
     return [
-      { id: 's1', label: 'Type', skip: !!soleFeel() },
+      { id: 's1', label: 'Range', skip: !!soleFeel() },
       { id: 'stocks', label: stockLabel() },
       { id: 's2', label: 'Finishing', skip: noFinish },
       { id: 's5', label: 'Envelopes', skip: noEnv },
