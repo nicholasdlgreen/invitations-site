@@ -1083,7 +1083,10 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     <div class="field"><label>Description (paragraph on products.html card)</label><input type="text" id="pt_description" placeholder="Short paragraph about this product"></div>
     <div class="field"><label>Features (one per line, shown as bullet points)</label><textarea id="pt_features" rows="4" placeholder="Available in A5, A6, 5x7&quot;, DL and Square&#10;Choose from Smooth White, Cotton Rag or Vellum&#10;Single or double-sided printing" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#faf7f2;font-family:inherit;font-size:13px;resize:vertical;"></textarea></div>
     <div class="field"><label>Hero Image URL (used on products.html card)</label><input type="text" id="pt_heroImage" placeholder="https://..."></div>
-    <div class="field"><label>"From £…" Price Text</label><input type="text" id="pt_fromPrice" placeholder="e.g. From £150 for 50 invitations inc. VAT"></div>
+    <div class="field"><label>"From £…" quantity</label><input type="number" min="1" step="1" id="pt_displayQuantity" placeholder="50">
+      <small style="display:block;margin-top:4px;opacity:.6;line-height:1.5">The pack the grid quotes — "From £18 for 50". Our price is nearly all setup, so quoting one card reads far dearer than we are. Wedding stationery 50, other invitations 25, cards you send 10, signs 1. Blank means 1, which prints "each".</small></div>
+    <div class="field"><label>"From £…" note <span style="opacity:.55">(optional)</span></label><input type="text" id="pt_fromPrice" placeholder="e.g. envelopes included">
+      <small style="display:block;margin-top:4px;opacity:.6;line-height:1.5">A short line under the price. The price itself is always computed — this cannot overwrite it.</small></div>
 
     <!-- PRODUCT CONFIGURATION -->
     <div style="margin:24px 0 12px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-lt);font-weight:500;">Product Configuration</div>
@@ -3550,7 +3553,7 @@ function readPtChips(containerId) {
 }
 
 function openProductTypeModal(editId) {
-  const fields = ['pt_name','pt_slug','pt_tagline','pt_description','pt_features','pt_heroImage','pt_fromPrice','pt_metaTitle','pt_metaDescription','pt_displayOrder','pt_marginPct'];
+  const fields = ['pt_name','pt_slug','pt_tagline','pt_description','pt_features','pt_heroImage','pt_fromPrice','pt_displayQuantity','pt_metaTitle','pt_metaDescription','pt_displayOrder','pt_marginPct'];
   fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('pt_active').value = 'true';
   document.getElementById('pt_supplierFamily').value = '';
@@ -3576,6 +3579,7 @@ function openProductTypeModal(editId) {
       document.getElementById('pt_features').value        = p.features || '';
       document.getElementById('pt_heroImage').value       = p.hero_image_url || '';
       document.getElementById('pt_fromPrice').value       = p.from_price_text || '';
+      document.getElementById('pt_displayQuantity').value = p.display_quantity || '';
       document.getElementById('pt_metaTitle').value       = p.meta_title || '';
       document.getElementById('pt_metaDescription').value = p.meta_description || '';
       document.getElementById('pt_displayOrder').value    = p.display_order != null ? p.display_order : '';
@@ -3620,6 +3624,9 @@ async function saveProductType() {
     features:           document.getElementById('pt_features').value.trim() || null,
     hero_image_url:     document.getElementById('pt_heroImage').value.trim() || null,
     from_price_text:    document.getElementById('pt_fromPrice').value.trim() || null,
+    // Blank means 1, which the grid prints as "each" — never 0, which would
+    // divide the pack away and quote nothing.
+    display_quantity:   parseInt(document.getElementById('pt_displayQuantity').value, 10) || null,
     meta_title:         document.getElementById('pt_metaTitle').value.trim() || null,
     meta_description:   document.getElementById('pt_metaDescription').value.trim() || null,
     display_order:      parseInt(document.getElementById('pt_displayOrder').value, 10) || 0,
