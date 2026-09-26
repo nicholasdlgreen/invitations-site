@@ -2122,6 +2122,23 @@ async function refreshFaceChecks(){
     slot.dataset.faceState = res.state;
   }
   updateProceedButton();
+  refreshSidesRow();
+}
+
+function refreshSidesRow(){
+  const row = document.querySelector('.check-row[data-check="Sides"]');
+  if (!row) return;
+  const faces = sidesNeeded();
+  const got = faces.filter(function(f){ return sideFiles[f.key]; }).length;
+  const ok = got === faces.length;
+  const icon = row.querySelector('.check-icon');
+  const val  = row.querySelector('.check-val');
+  const note = row.querySelector('.check-note');
+  if (icon){ icon.className = 'check-icon ' + (ok ? 'ok' : 'err'); icon.textContent = ok ? '\u2713' : '\u2715'; }
+  if (val)  val.textContent = ok ? faces.length + ' sides' : got + ' of ' + faces.length + ' supplied';
+  if (note) note.textContent = ok
+    ? faces.map(function(f){ return f.label.toLowerCase(); }).join(', ') + ' \u2014 each checked in its own box above.'
+    : 'Every side needs artwork before this can go to print.';
 }
 
 // Every face we are going to print must be present and printable.
@@ -2318,8 +2335,22 @@ async function buildAndRunChecks(file, info){
         checks.push({status:'warn', label:'Dimensions', val: dimText, note:`Your selected size is ${spec.label} (${spec.mmW} × ${spec.mmH} mm). The file dimensions don't match — your design may be cropped, scaled, or shifted.`});
       }
 
-      // Page count check
-      if (pdfInfo.numPages === 1){
+      // Page count check.
+      //
+      // With more than one face, each one is uploaded and checked in its own
+      // box, so this row describes the whole job rather than the front file —
+      // otherwise it read "single-side invitation as expected" to someone who
+      // had just chosen double sided.
+      const faces = sidesNeeded();
+      if (faces.length > 1){
+        const got = faces.filter(function(f){ return sideFiles[f.key]; }).length;
+        checks.push(got === faces.length
+          ? { status:'ok', label:'Sides', val: faces.length + ' sides',
+              note: faces.map(function(f){ return f.label.toLowerCase(); }).join(', ')
+                    + ' — each checked in its own box above.' }
+          : { status:'err', label:'Sides', val: got + ' of ' + faces.length + ' supplied',
+              note:'Every side needs artwork before this can go to print.' });
+      } else if (pdfInfo.numPages === 1){
         checks.push({status:'ok', label:'Pages', val:'1 page', note:'Single-side invitation as expected.'});
       } else {
         checks.push({status:'warn', label:'Pages', val: pdfInfo.numPages+' pages', note:'Multi-page file detected. We\'ll use the first page unless you specify otherwise.'});
@@ -2643,7 +2674,7 @@ function drawBleedOverlay(fileWidthMm, fileHeightMm, sizeSpec){
 let _passedChecksOpen = false;
 function _checkRow(c){
   const icon = c.status==='ok'?'✓':c.status==='warn'?'!':c.status==='err'?'✕':'i';
-  return `<div class="check-row">
+  return `<div class="check-row" data-check="${c.label}">
       <div class="check-icon ${c.status}">${icon}</div>
       <div><div class="check-label">${c.label}</div><div class="check-val">${c.val}</div>${c.note?`<div class="check-note">${c.note}</div>`:''}</div>
     </div>`;
