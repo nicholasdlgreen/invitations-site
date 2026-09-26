@@ -57,6 +57,7 @@
 /* Quiet, and on its own line, so the price reads first and the VAT promise
    second — the tile must not turn into two competing numbers. */
 .product-vat{display:block;margin-top:2px;font-size:var(--text-xs);color:var(--pale);letter-spacing:.04em;font-weight:400;}
+.product-note{display:block;margin-top:2px;font-size:var(--text-xs);color:var(--pale);letter-spacing:.04em;font-weight:400;}
 .product-grid-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--soft);font-size:var(--text-sm);}
 
 /* Trust strip — moved to BELOW the grid per Baymard guidance */
@@ -934,8 +935,15 @@ function renderProducts() {
     // price paid, which needs no qualifier.
     const vatNote = (fromPrices && fromPrices[p.slug] && fromPrices[p.slug].vat)
       ? `<span class="product-vat">inc. VAT</span>` : '';
+    // An optional line under the price, set per product in admin. It is a
+    // NOTE, never the price: the figure above it is always computed, so this
+    // cannot quietly contradict the checkout the way a free-text price would.
+    // Escaped because it is free text on a public page.
+    const note = (p.from_price_text || '').trim();
+    const noteLine = note
+      ? `<span class="product-note">${escapeHtml(note)}</span>` : '';
     const priceLabel = sentence
-      ? `${sentence}${vatNote}`
+      ? `${sentence}${vatNote}${noteLine}`
       : `<span style="color:var(--pale);">Pricing on product page</span>`;
     return `
       <a class="product-card" href="/${escapeHtml(p.slug)}">
@@ -1003,7 +1011,7 @@ async function loadData() {
 
   // CHANGED: select now includes `category` so we can filter on it
   const [ptRes, pricesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/product_types?active=eq.true&select=slug,name,tagline,hero_image_url,display_order,created_at,category`, { headers }),
+    fetch(`${SUPABASE_URL}/rest/v1/product_types?active=eq.true&select=slug,name,tagline,hero_image_url,display_order,created_at,category,from_price_text`, { headers }),
     // Just the lowest price per product. This page shows "from £X" and
     // nothing else from pricing, and the whole payload is 2.8MB — it was
     // downloading all of it to work out twenty-one numbers.
