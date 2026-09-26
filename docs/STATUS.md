@@ -1,121 +1,117 @@
 # Where we are — 26 September 2026
 
-*Written at the end of the day's work. Every claim below was checked against the
-live site, the live database or a generated file, not against intention.*
+*Written at the end of the day. Every figure below was checked against the live
+site, the live database or a generated file, not against intention.*
 
-Thirty-one commits, all pushed and live. Three threads: making our pricing
-mirror PrintedEasy's, checking our product mix against competitors, and
-rebuilding the artwork journey.
+**40 commits, all pushed and live.** Three threads: making our pricing mirror
+PrintedEasy's, checking the product mix against competitors, and rebuilding the
+artwork journey — plus one incident worth reading (§5).
 
 ---
 
-## 1. Pricing that marries with PrintedEasy
+## 0. The state of things
+
+| | |
+|---|---|
+| Cost rows in `sheet_rates` | 7,389 (378 switched off) |
+| Finishing rows in `finish_rates` | **2,289**, loaded and live |
+| Published sheet prices | **56,636** |
+| Published finishing prices | **10,374** |
+| Product page payload | 536KB |
+| Envelope colours offered | **2** (was 6) |
+| **Margins** | **0 on all 23 products — the site sells at cost** |
+
+---
+
+## 1. Pricing that mirrors PrintedEasy
 
 ### Done
 
-- **Printed sides is a real dimension of the cost base.** 3,066 rates scraped.
-  The measured uplift for a printed back is **8.7% to 34.8%** depending on
-  paper, size and quantity — the code had assumed a flat 15%, which was wrong
-  everywhere.
-- **`sheet_rates.active`** — a rate can be kept for evidence but withheld from
-  customers. Publish and the Monday price watch both honour it.
-- **Folded 400gsm switched off** (378 rows). It priced below every thinner
-  weight at every size and quantity, and identically to the penny on two
-  different papers — the signature of a fallback, not a quote.
-- **The sentinel test**, written down in `PRICING.md` §4: their form is not
-  authoritative and the endpoint substitutes a default rather than refusing.
-  Cartonboard on Postcards quotes 0 at 250gsm, 46 at 255 — and **46 for a
-  nonsense 999**.
-- **Routes.** A product can now be priced on more than one PrintedEasy product,
-  with per-route stock lists, a publish guard that refuses overlapping stocks,
-  and a route index on every published rate so press geometry follows the
-  customer's chosen paper.
-- **The supplier's vocabulary moved into the database** — `pe_stock` and
-  `pe_product_overrides` on `paper_stocks`, editable in admin. It was hardcoded
-  in the Python refresh tool **and again** in the Netlify price watch.
-- **`finish_rates` table built and 2,289 rates scraped**, keyed
-  (family, finish, option, sides, size, quantity).
+- **Printed sides is a real dimension.** 3,066 rates. The measured uplift for a
+  back is **8.7% to 34.8%**, not the flat 15% the code assumed.
+- **`sheet_rates.active`** — a rate can be kept for evidence but withheld.
+- **Folded 400gsm switched off** (378 rows): it priced below every thinner
+  weight and identically on two papers — a fallback, not a quote.
+- **Routes.** A product can be priced on more than one PrintedEasy product, with
+  per-route stock lists, a publish guard against overlapping stocks, and a route
+  index on every rate so press geometry follows the chosen paper.
+- **The supplier's vocabulary is in the database** (`pe_stock`,
+  `pe_product_overrides`), not hardcoded in two files.
+- **Finishing priced the way they price it.** Per option, per side, per size,
+  per quantity — replacing one flat figure per type. Verified live: matt
+  lamination on A5 is £8.00 at 100 and £12.80 at 500, soft touch £21.60 at 500,
+  rounded corners £16.80.
+- **Envelopes cut to what they sell** — white and red. Five colours we could not
+  buy at any price are gone.
 
-### The finishing numbers, and what they cost us
+### Two things the measurements changed
 
-We charge **one flat £5** for lamination whatever is chosen. Measured, A5,
-flat-card, our cost after the 20%:
+**Rounded corners are not free.** They cost **£22** — configuring a real job on
+their site, 100 A5 goes from £25 to £50. We had been selling them at £0. My
+first measurement said free because my probe copied a checkbox's value whether
+or not it was ticked, so corners were already on in the "before" price.
 
-| Option | Sides | 25 | 500 |
-|---|---|---:|---:|
-| Matt | front | £4.80 | £7.20 |
-| Matt | both | £8.80 | £12.80 |
-| Gloss | front | £4.80 | £8.00 |
-| Soft touch | front | £5.60 | £12.00 |
-| **Soft touch** | **both** | **£9.60** | **£21.60** |
-| Anti-scuff | both | £9.60 | £20.80 |
+**Finishing is a setup charge, not a per-unit one.** A5 flat card:
 
-The configurator's own copy says lamination is applied to **both sides**. So a
-soft-touch laminated run of 500 costs us £21.60 and recovers £5 — **£16.60 lost
-before any margin**, on a single line.
+| | 10 | 100 | 500 |
+|---|---:|---:|---:|
+| Rounded corners | £17.60 | £16.80 | £17.60 |
+| — per card | 176p | 16.8p | **3.5p** |
+| Matt lamination, both sides | £8.80 | £8.00 | £12.80 |
+| — per card | 88p | 8p | **2.6p** |
+
+The total barely moves while the quantity rises fiftyfold, so finishing doubles
+the price of a hundred cards and is trivial on five hundred. **Worth a minimum
+quantity** rather than offering it at every run length. Envelopes are the
+exception — they genuinely scale, being a thing per card rather than a setup.
 
 ### Outstanding
 
-1. **Load the 2,289 finishing rates.** They are in a CSV, not in the database.
-   `finish_rates` is still empty and the site still charges the flat £5.
-2. **Gate finishes on the route.** Finishes are gated on the paper and the
-   product, neither of which knows which press the job goes to. This is live
-   now: an order of service in Fedrigoni stock is offered **Corners**, and
-   Luxury Folded cannot make them. Free, so no money is taken, but it is a
-   promise we cannot keep.
-3. **Retire `finish_options.cost_modifier`** once the rate table drives pricing.
-4. **Discover their full stock × weight matrix per route**, with the sentinel
-   test, so offering any weight they genuinely sell is an admin tick. This is
-   the last piece of the three agreed changes.
-5. **880 `large-format` rates are still unreachable** — Gloss, Silk and Uncoated
-   posters at A1–A4. Routes make it a one-line change; nobody has decided
-   whether table plans should be sold on paper as well as board.
-6. **Margins are 0 on all 23 products.** Still the only real launch blocker.
-7. **Envelopes sit outside the margin engine** — they cost 6p and we charge 35p.
-8. **The 20% discount is unconfirmed** against a real invoice.
-9. **The VAT question** with PrintedEasy — they quote Luxury Flat without VAT,
-   and that is what we sell as a wedding invitation.
+1. **Margins are 0.** The only thing between us and trading.
+2. **Load the 378 envelope rates** (scraped, in a CSV, verified). Envelopes are
+   charged one flat figure per colour, so white costs the same on an A6 as on an
+   A5 — currently over-recovering, which is the safe direction.
+3. **Gate finishes and envelopes on the route.** An order of service in
+   Fedrigoni stock is still offered Corners that Luxury Folded cannot make, and
+   red envelopes on a route that only has white.
+4. **Retire `finish_options.cost_modifier`** now the rate table drives pricing.
+5. **880 `large-format` rates are still unreachable** — routes make it a one-line
+   change, but nobody has decided whether table plans sell on paper as well as
+   board.
+6. **Confirm the 20%** against a real invoice.
+7. **The VAT question** — they quote Luxury Flat without VAT, and that is what we
+   sell as a wedding invitation.
+8. **Their full stock × weight matrix**, discovered with the sentinel test, so
+   any weight they sell is an admin tick.
 
 ---
 
-## 2. Product mix, against the competition
+## 2. Product mix
 
 ### Done
 
 - **The from-price was the price of ONE card.** Papier, Vistaprint and
-  printed.com were all checked; none of them quotes a quantity of one, and every
-  one that shows an "each" price names the quantity beside it. The grid and the
-  landing pages now quote a pack — "From £18 for 50" — from a per-product
-  `display_quantity`, and both surfaces agree.
-- **No VAT is added and none is claimed**, because we are not registered. Driven
-  from `site_config`, so registration day is one value.
-- **Quantity ladder** — entry lowered to 10, and 300 and 500 removed. The
-  free-type box still reaches 500 with a real price behind every step.
-- **Rounded corners and fold direction**, both free from the printer. Verified
-  that Luxury Flat really does carry rounded corners, so the ones live on
-  Tintoretto are deliverable.
-- **Christmas cards are flat as well as folded** — they were folded-only, which
-  is why they priced at twice an invitation.
-- **Order of service gained a standard route** alongside the luxury one. It was
-  Fedrigoni stock or nothing.
-- **Place cards and Christmas cards** added and priced.
+  printed.com all checked; none quotes a quantity of one. The grid and landing
+  pages now quote a pack — "From £18 for 50" — and agree with each other.
+- **No VAT added and none claimed**, driven from `site_config`, because we are
+  not registered.
+- **Quantity ladder** — entry 10, 300 and 500 removed; the free-type box still
+  reaches 500.
+- **Rounded corners and fold direction** offered. Fold direction verified free;
+  corners verified £22.
+- **Christmas cards flat as well as folded.**
+- **Order of service gained a standard route** alongside the luxury one.
 
 ### Outstanding
 
-1. **Lightweight stocks** — Uncoated 120 and Tintoretto 140 exist in
-   `paper_stocks` with no rates, so they never appear.
-2. **Boards are single-sided only** — signage, table plans, welcome signs.
-   Deliberately deferred.
-3. **Range gaps not yet decided**: details and enclosure cards, evening
-   invitations, belly bands, printed envelopes, hen party. Funeral and sympathy
-   undecided.
-4. **Eight product names are stored lowercase** and render that way on the grid
-   — `invitations`, `signage`, `Menu cards`, `Save the Date` and others.
-5. **"Finished by hand" appears on twelve product pages.** Nothing is finished
-   by hand; the printer machine-finishes everything. Predates this work; flagged,
-   not changed, because it is Nicholas's copy.
-6. **"Colour mode: CMYK preferred"** on the upload screen contradicts what we
-   actually send, which is RGB. We ask customers for something we then ignore.
+1. **Lightweight stocks** (Uncoated 120, Tintoretto 140) have no rates.
+2. **Boards are single-sided only.**
+3. **Range gaps undecided**: details and enclosure cards, evening invitations,
+   belly bands, printed envelopes, hen party. Funeral and sympathy open.
+4. **Eight product names stored lowercase** and rendering that way.
+5. **"Finished by hand" on twelve pages** — nothing is finished by hand.
+6. **"Colour mode: CMYK preferred"** on the upload screen, while we send RGB.
+7. **Minimum quantity on finishing** — see §1.
 
 ---
 
@@ -124,78 +120,88 @@ before any margin**, on a single line.
 ### Done
 
 - **One box per printed face**, every face checked, every face sent to press.
-- **A proof per face** — tabs with a status dot, and each face keeps its own
-  fill/fit, zoom, rotation and position.
-- **The press file uses each face's own position.** It used to build every face
+- **A proof per face**, each keeping its own fill/fit, zoom, rotation and pan.
+- **The press file uses each face's own position.** It used to impose every face
   with whichever was on screen, so zooming the front silently zoomed the back.
-  Verified on a generated PDF: two pages, both 164×226mm, each with its own
-  position.
-- **The double-sided dead end is gone.** Uploading a front hid the very boxes
-  the button then told you to use.
-- **Verdicts that explain themselves** rather than "wrong size": we scale what
-  we can and say the resulting DPI, refuse only what is genuinely too small and
-  state the pixels needed, and treat a different shape as a choice between crop
-  and border.
-- **Three places the customer can read it** — under the boxes, under the face
-  tabs, and an "Artwork size" row in the quality report, which previously
-  covered format, file size, DPI and pages and never mentioned size.
-- **Recognition when they fix it.** A corrected file used to say nothing at all.
-- **Print guides are legible** on dark artwork, and the toggle says which state
-  it is in.
-- **Red and orange buttons removed.** Neither colour was agreed and a colour
+- **The double-sided dead end is gone** — uploading a front used to hide the
+  boxes the button then told you to use.
+- **Verdicts that explain themselves**: we scale what we can and say the
+  resulting DPI, refuse only what is genuinely too small and state the pixels
+  needed, and treat a different shape as a choice between crop and border.
+- **Recognition when a problem is fixed**, and only then.
+- **Print guides legible** on dark artwork; the toggle says which state it is in.
+- **Red and orange buttons removed** — neither colour was agreed, and a colour
   cannot say "add the back".
-- **`docs/ARTWORK-SPEC.md` written** to be shared with PrintedEasy.
+- **Envelopes folded into Finishing** — one step fewer in the wizard.
+- **Abandoned faces forgotten**: choosing double sided and changing back left
+  the tabs behind, four of them if the fold had been folded.
+- **`docs/ARTWORK-SPEC.md` written** for PrintedEasy.
 
 ### Outstanding
 
-1. **Six questions for PrintedEasy**, in `ARTWORK-SPEC.md` §9. The one that
+1. **Six questions for PrintedEasy** (`ARTWORK-SPEC.md` §9). The one that
    matters most: **head to head or head to foot** for a double-sided back. We
    send both faces the same way up. If their press expects otherwise, every
    double-sided job comes back with an upside-down back.
-2. **Print one real sample.** The file maths is verified; the handover to their
-   press is not.
-3. **The proof still renders a mismatched file as though it fits**, scaled to
-   the card. The messaging now explains it, but the picture does not show it.
+2. **Print one real sample.**
+3. **The proof still renders a mismatched file as though it fits.**
 
 ---
 
-## 4. How the work is tested now — and why that changed
+## 4. How the work is tested now
 
-Mid-afternoon Nicholas stopped the work: *"This is now breaking the entire site
+Mid-afternoon the work was stopped: *"This is now breaking the entire site
 because you are not checking and testing before you give it to me to go live."*
-
-He was right. Changes were being "verified" by injecting patched functions into
-the **live** page, which tests the patch against the live DOM and never tests
-the file about to ship.
+That was correct. Changes were being "verified" by injecting patched functions
+into the **live** page, which never tests the file about to ship.
 
 There is now a local server running the real `upload-and-print.html` from a copy
-of the site. Since then it has caught, before Nicholas saw any of them:
+of the site. Since then it has caught, before any of it reached Nicholas: the
+position race in `checkFile`, the zoom control reading 100% while the canvas
+showed otherwise, the on-screen face's adjustment dropped from the press file,
+the size row wiped a moment after being added, and "a A5 card" then "an Square".
 
-- positions lost on return, through an await race in `checkFile`
-- the zoom control reading 100% while the canvas showed the customer's zoom
-- the on-screen face's adjustment dropped from the press file
-- the "Artwork size" row wiped a moment after being added
-- "a A5 card", then "an Square"
-
-Two corrections were also made to claims already given to Nicholas: a "both
-slots filled from one file" bug that was an artefact of a synthetic drop event,
-and a description of bleed as a 4% scale-up when the code in fact **mirrors**
-the outer 3mm, cropping nothing. The second had already reached
-`ARTWORK-SPEC.md` and would have gone to PrintedEasy as a question asking
-permission for something we do not do.
-
-**Keep the harness.** `node` is not installed on this machine; macOS JXA is used
-as the local JavaScript parser for syntax checks.
+`node` is not installed here; macOS JXA is used as the local JavaScript parser.
 
 ---
 
-## 5. What I would do next, in order
+## 5. The incident — an empty catalogue went live
 
-1. **Load the finishing rates and gate finishes on the route.** It closes a live
-   mis-selling (Corners on an order of service) and stops the lamination
-   under-recovery.
-2. **Set margins.** Everything else in pricing is finished and the site is
-   selling at cost.
-3. **Send `ARTWORK-SPEC.md` to PrintedEasy** and print one real sample. Both are
-   cheap and both de-risk everything else.
-4. The stock × weight matrix, then the range gaps.
+**What happened.** A publish wrote **zero prices for all 23 products**. The grid
+showed no "from" prices, the configurator offered no double-sided option, and
+every price fell back to a formula.
+
+**Three faults lined up, all mine.**
+
+1. `finish_rates` was given a policy for the Postgres `authenticated` role,
+   while every other admin-only table gates on `is_admin()`. Admin satisfies
+   `is_admin()` but is not `authenticated`, so the table was invisible to the
+   only page that needs it.
+2. `sheet_rates` and `finish_rates` were fetched in **one try block** whose catch
+   set `sheetRates = []`. The failing new table discarded 7,389 rows that had
+   loaded perfectly well.
+3. **Publish had no floor.** It built nothing and wrote nothing out, silently.
+
+**Recovery** was a hard-reload and Publish; `sheet_rates` was never touched.
+There was nothing to roll back to — `pricing_config` is a single row.
+
+**The lasting fix is the third.** Publish now refuses to write a catalogue with
+no prices and says whether the rates failed to load or the filters produced
+nothing. Any one of these alone would have been visible; together they were
+silent.
+
+**And the reason it got past me:** I verified the finishing prices after that
+publish and reported them correct, but I only queried `finish_prices` — never
+checked that `sheet_sells` still had rows. Checking the thing you changed and
+not the thing beside it is how this happens.
+
+---
+
+## 6. What I would do next, in order
+
+1. **Load the 378 envelope rates** — scraped and verified, ten minutes of work.
+2. **Set margins.** Everything else in pricing is finished.
+3. **Gate finishes and envelopes on the route** — closes two live mis-sells.
+4. **Send `ARTWORK-SPEC.md` to PrintedEasy and print one real sample.** Both
+   cheap, both de-risk everything else.
+5. The stock × weight matrix, then the range gaps.
