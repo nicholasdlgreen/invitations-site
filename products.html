@@ -928,10 +928,14 @@ function renderProducts() {
       : `<div class="product-img-placeholder">✦</div>`;
     const tagline = p.tagline || '';
     const sentence = priceSentence(p.slug);
-    // "inc. VAT" is a promise, not a footnote. Both consumer sites checked say
-    // it on every tile; the price we show is the one the checkout charges.
+    // "inc. VAT" is a claim, not a footnote, and we are not VAT registered —
+    // so the database tells us whether VAT is actually in the figure and the
+    // line appears only when it is. Until then the price shown is simply the
+    // price paid, which needs no qualifier.
+    const vatNote = (fromPrices && fromPrices[p.slug] && fromPrices[p.slug].vat)
+      ? `<span class="product-vat">inc. VAT</span>` : '';
     const priceLabel = sentence
-      ? `${sentence}<span class="product-vat">inc. VAT</span>`
+      ? `${sentence}${vatNote}`
       : `<span style="color:var(--pale);">Pricing on product page</span>`;
     return `
       <a class="product-card" href="/${escapeHtml(p.slug)}">
@@ -1028,7 +1032,11 @@ async function loadData() {
       fromPrices = {};
       rows.forEach(r => {
         if (!r || !r.slug) return;
-        fromPrices[r.slug] = { price: r.from_price, qty: r.display_quantity || 1 };
+        fromPrices[r.slug] = {
+          price: r.from_price,
+          qty:   r.display_quantity || 1,
+          vat:   r.vat_included === true
+        };
       });
     }
   }

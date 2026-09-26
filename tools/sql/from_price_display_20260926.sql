@@ -23,12 +23,20 @@
 -- "(ex VAT)". Two lessons taken from them — always name the quantity the
 -- price belongs to, and say what VAT is doing.
 --
+-- ON VAT: the business is NOT VAT registered (VAT_REGISTERED is false in
+-- admin.html), so the price we show is simply the price paid. Adding 20% would
+-- overstate it, and printing "inc. VAT" would claim something untrue. The
+-- function therefore adds nothing today and says so, via a flag in
+-- site_config so that registration is one config edit rather than a code
+-- change in two places.
+--
 -- WHAT THIS DOES
 --
 --   1. product_types.display_quantity — the quantity the grid quotes for.
---   2. from_prices() — returns the cheapest price AT that quantity, VAT
---      included, alongside the quantity itself so the page can print
---      "From £22 for 50".
+--   2. site_config.pricing.vatRegistered — false until HMRC come through.
+--   3. from_prices() — returns the cheapest price AT that quantity, alongside
+--      the quantity itself and whether VAT is in the figure, so the page can
+--      print "From £18 for 50" today and label it honestly later.
 --
 -- The basis is deliberately narrow: flat, single sided, cheapest paper, size
 -- and weight. That is the cheapest spec a customer can actually reach, which
@@ -74,10 +82,22 @@ update product_types set display_quantity = 1
 
 
 -- ---------------------------------------------------------------------------
--- 2. from_prices()
+-- 2. Are we VAT registered?
 -- ---------------------------------------------------------------------------
--- Returns one row per product: the VAT-inclusive price of display_quantity
--- units on the cheapest spec, and the quantity itself.
+-- Not yet. Until we are, the shop price is the price paid and nothing is added
+-- to it. Flip this one value on the day registration lands and every "from"
+-- price gains VAT and gains its label; no deploy needed.
+update site_config
+   set data = jsonb_set(data, '{vatRegistered}', 'false'::jsonb, true)
+ where id = 'pricing'
+   and not (data ? 'vatRegistered');
+
+
+-- ---------------------------------------------------------------------------
+-- 3. from_prices()
+-- ---------------------------------------------------------------------------
+-- Returns one row per product: the price of display_quantity units on the
+-- cheapest spec, the quantity itself, and whether VAT is inside that figure.
 --
 -- If a product has no rate at exactly display_quantity we take the nearest
 -- quantity at or above it, and failing that the largest we hold — so a
@@ -85,13 +105,18 @@ update product_types set display_quantity = 1
 -- returned is the one actually priced, never the one we wished for, because
 -- the page prints it next to the money.
 create or replace function public.from_prices()
-returns table(slug text, from_price numeric, display_quantity integer)
+returns table(slug text, from_price numeric, display_quantity integer,
+              vat_included boolean)
 language sql
 stable
 set search_path to 'public'
 as $function$
   with vat as (
-    select coalesce((data ->> 'vatRate')::numeric, 0.20) as rate
+    -- Nothing is added while we are not registered, and the caller is told so
+    -- rather than left to guess. Both values come from site_config: no rate and
+    -- no registration status is written into this function.
+    select coalesce((data ->> 'vatRegistered')::boolean, false)      as registered,
+           coalesce((data ->> 'vatRate')::numeric, 0)                as rate
     from site_config where id = 'pricing'
   ),
   rows as (
@@ -125,8 +150,10 @@ as $function$
     from want w join cheapest c on c.slug = w.slug
   )
   select p.slug,
-         round(p.sell * (1 + v.rate), 2) as from_price,
-         p.qty                           as display_quantity
+         round(p.sell * (1 + case when v.registered then v.rate else 0 end), 2)
+           as from_price,
+         p.qty        as display_quantity,
+         v.registered as vat_included
   from picked p cross join vat v
   where p.rn = 1
 $function$;
@@ -140,10 +167,16 @@ grant execute on function public.from_prices() to anon, authenticated;
 -- Run this after publishing from admin. Expect wedding invitations at 50,
 -- Christmas cards at 10, table plans at 1, and no product missing.
 --
---   select f.slug, f.display_quantity, f.from_price, pt.display_quantity as wanted
+--   select f.slug, f.display_quantity, f.from_price, f.vat_included,
+--          pt.display_quantity as wanted
 --   from from_prices() f
 --   join product_types pt on pt.slug = f.slug
 --   order by f.from_price desc;
+--
+-- vat_included must read false until HMRC registration lands. On the day it
+-- does, this is the whole change:
+--   update site_config set data = jsonb_set(data,'{vatRegistered}','true')
+--    where id='pricing';
 
 
 -- ---------------------------------------------------------------------------
@@ -151,6 +184,9 @@ grant execute on function public.from_prices() to anon, authenticated;
 -- ---------------------------------------------------------------------------
 -- Restores the old one-number-per-product behaviour. The column is left in
 -- place because dropping it loses the agreed quantities for nothing.
+--
+-- (The page copes with the old two-column shape: no quantity reads as 1 and
+-- prints "each", and no vat_included prints no VAT label.)
 --
 --   create or replace function public.from_prices()
 --   returns table(slug text, from_price numeric)
