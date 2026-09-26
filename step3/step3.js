@@ -240,10 +240,21 @@
   // the printer supplies no envelope for has no section at all.
   function drawEnvelopes() {
     var list = (A.envelopes && A.envelopes()) || [];
-    if (!S.paper || !S.weight || !list.length) { open('s5', false); renumber(); return; }
+    var wrap = el('envsWrap');
+    // Envelopes live inside Finishing now, so this shows and hides its own
+    // block rather than a whole numbered stage.
+    if (!S.paper || !S.weight || !list.length) {
+      if (wrap) wrap.style.display = 'none';
+      el('envs').innerHTML = '';
+      return;
+    }
+    if (wrap) wrap.style.display = '';
     var said = S.env !== null;
     var yes  = said && S.env !== 'none';
-    var html = '<div class="envAsk">'
+    // Its own heading, because it sits under the finishing options now and
+    // would otherwise read as two more finishing buttons.
+    var html = '<h3 class="envHead">Envelopes</h3>'
+      + '<div class="envAsk">'
       + '<button class="' + (S.env === 'none' ? 'on' : '') + '" onclick="Step3.env(\'none\')">'
       + 'No envelopes, thank you</button>'
       + '<button class="' + (yes ? 'on' : '') + '" onclick="Step3.env(\'yes\')">'
@@ -257,7 +268,6 @@
       }).join('') + '</div>';
     }
     el('envs').innerHTML = html;
-    open('s5', true); renumber();
   }
 
   // ---- 5 · how many ----------------------------------------------------------
@@ -328,7 +338,7 @@
   }
   function renumber() {
     var n = 0;
-    ['s1', 'stocks', 's2', 's5', 's3', 's4'].forEach(function (id) {
+    ['s1', 'stocks', 's2', 's3', 's4'].forEach(function (id) {
       var sec = el(id); if (!sec) return;
       // A step hidden because it had nothing to decide must not take a number
       // with it, or the first thing on screen is headed 2.
@@ -342,13 +352,16 @@
   // The whole journey from the first moment. It does not grow as you go — the
   // steps are all there and the highlight moves along them.
   function journey() {
-    var noFinish = !!S.paper && (A.finishTypesFor(S.paper) || []).length === 0;
     var noEnv = !((A.envelopes && A.envelopes()) || []).length;
+    // Finishing holds the envelopes as well, so it is only skipped when this
+    // stock can take neither.
+    var noFinish = !!S.paper
+      && (A.finishTypesFor(S.paper) || []).length === 0
+      && noEnv;
     return [
       { id: 's1', label: 'Range', skip: !!soleFeel() },
       { id: 'stocks', label: stockLabel() },
       { id: 's2', label: 'Finishing', skip: noFinish },
-      { id: 's5', label: 'Envelopes', skip: noEnv },
       { id: 's3', label: 'How many' },
       { id: 's4', label: 'Delivery' }
     ].filter(function (x) { return !x.skip; });
@@ -382,7 +395,7 @@
   // can take any, then envelopes if the product has them, then the quantity.
   function afterPaper(name) {
     if ((A.finishTypesFor(name) || []).length) return 's2';
-    if (((A.envelopes && A.envelopes()) || []).length) return 's5';
+    if (((A.envelopes && A.envelopes()) || []).length) return 's2';
     return 's3';
   }
 
@@ -489,7 +502,7 @@
     toggleFin: function (t) { S.openFin = (S.openFin === t ? null : t); drawFinishing(); },
     finish: function (t, o) {
       S.finishes[t] = o; S.openFin = null;
-      advanceTo(((A.envelopes && A.envelopes()) || []).length ? 's5' : 's3');
+      advanceTo('s3');
       A.onSelect(S); redraw(); renumber();
     },
     env: function (id) {

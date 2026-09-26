@@ -229,6 +229,11 @@
   /* ---- 4. delivery ---- */
   /* ---- envelopes ---- */
   #s3wrap .envs{display:flex;flex-direction:column;gap:16px;}
+  /* Envelopes moved inside Finishing, so the block needs a rule above it and a
+     heading of its own — without them it read as two more finishing buttons. */
+  #s3wrap .envs-wrap{margin-top:22px;padding-top:20px;border-top:1px solid var(--line);}
+  #s3wrap .envHead{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:1.15rem;
+    color:var(--text);margin:0 0 12px;}
   #s3wrap .envAsk{display:flex;gap:10px;flex-wrap:wrap;}
   #s3wrap .envAsk button{background:var(--white);border:1.5px solid var(--line);border-radius:40px;
   font-family:inherit;font-size:12px;letter-spacing:.02em;color:var(--soft);padding:10px 22px;cursor:pointer;
