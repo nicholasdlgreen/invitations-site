@@ -55,6 +55,18 @@ body.wide-step .step-bar{display:none;}
 .step-label{font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--pale);transition:color .3s;}
 .step-label.active{color:var(--text);}
 .step-line{flex:1;height:1px;background:var(--border);margin:0 16px;}
+.side-slots{display:grid;gap:12px;margin:0 0 14px;}
+.side-slot{border:1.5px dashed var(--border);border-radius:12px;padding:10px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:var(--white);}
+.side-slot:hover{border-color:var(--gold-lt);}
+.side-slot.filled{border-style:solid;border-color:var(--border);}
+.side-slot.over{border-color:var(--gold);background:var(--cream);}
+.side-slot-art{aspect-ratio:3/4;border-radius:8px;background:var(--cream);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:9px;}
+.side-slot-art img,.side-slot-art canvas{width:100%;height:100%;object-fit:contain;display:block;}
+.side-slot-label{display:block;font-size:var(--text-sm);color:var(--text);margin-bottom:2px;}
+.side-slot-state{display:block;font-size:var(--text-xs);color:var(--pale);}
+.side-slot.filled .side-slot-state{color:var(--ok);}
+.side-slot input[type=file]{display:none;}
+.side-slots-hint{font-size:var(--text-xs);color:var(--pale);text-align:center;margin:0 0 22px;line-height:1.7;}
 .drop-zone{border:1.5px dashed var(--border);border-radius:24px;padding:72px 40px;text-align:center;cursor:pointer;transition:all .3s;background:var(--white);position:relative;}
 .drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold);background:rgba(184,151,106,.04);}
 #fileInput{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
@@ -693,6 +705,9 @@ was fetched and injected via innerHTML — that was the bug behind the
         <p id="sides-note" style="display:none;font-size:var(--text-xs);color:var(--pale);margin:10px 0 0;line-height:1.7;"></p>
         <p id="sizeNote" style="font-size:var(--text-sm);color:var(--pale);margin-top:14px;text-align:center;">↑ Select a size above to unlock the upload</p>
       </div>
+
+      <div id="sideSlots" class="side-slots" style="display:none;"></div>
+      <p id="sideSlotsHint" class="side-slots-hint" style="display:none;">Already have it as one file? Drop it on any box and we'll fill them in order.</p>
 
       <div class="drop-zone" id="dropZone" style="opacity:.45;pointer-events:none;">
         <input type="file" id="fileInput" accept=".pdf,.ai,.indd,.jpg,.jpeg,.png,.tif,.tiff,.eps" onchange="handleFile(this.files[0])"/>
@@ -1705,7 +1720,7 @@ function renderFormatToggle() {
     note.style.display = '';
     note.textContent = selectedFold === 'folded'
       ? 'Your artwork is the front of the card. We print it and fold it for you — the inside is left blank for your own message. The size shown is the finished card.'
-      : 'A single flat card, printed on one side. The size shown is the card itself.';
+      : 'A single flat card. The size shown is the card itself.';
   }
 }
 
@@ -1738,7 +1753,7 @@ function renderSidesToggle() {
     if (selectedSides !== 'single') selectedSides = 'single';
     return;
   }
-  const LABEL = { single: 'Printed one side', double: 'Printed both sides' };
+  const LABEL = { single: 'Single sided', double: 'Double sided' };
   box.style.display = '';
   box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
     + 'background:var(--white);padding:4px;">'
@@ -1751,17 +1766,14 @@ function renderSidesToggle() {
           + '">' + LABEL[x] + '</button>';
       }).join('')
     + '</div>';
-  if (note) {
-    note.style.display = '';
-    note.textContent = selectedSides === 'double'
-      ? 'Printed on both sides. Worth it on round tables, where guests approach from every direction — upload artwork for the back as a second page.'
-      : 'Printed on the front only. The back is left blank.';
-  }
+  if (note) note.style.display = 'none';
 }
 
 function selectSides(x) {
   if (x === selectedSides) return;
   selectedSides = x;
+  sideFiles = {};
+  renderSideSlots();
   // A paper, weight or size only priced on the other side count must not
   // survive the switch, exactly as with the fold.
   const still = getAvailableSizes();
@@ -1785,6 +1797,8 @@ function selectFold(f) {
   // re-derived for the format just picked.
   if (!sidesOffered().includes(selectedSides)) selectedSides = 'single';
   renderSidesToggle();
+  sideFiles = {};
+  renderSideSlots();
   if (typeof renderWeightPicker === 'function') renderWeightPicker();
   if (typeof updatePrice === 'function') updatePrice();
 }
@@ -1794,6 +1808,7 @@ function renderSizeCards() {
   if (!grid) return;
   renderFormatToggle();
   renderSidesToggle();
+  renderSideSlots();
   const available = getAvailableSizes();
   let keys = Object.keys(SIZE_SPECS);
   if (available.size) keys = keys.filter(k => available.has(k));
@@ -1934,6 +1949,141 @@ const dz=document.getElementById('dropZone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
 dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+
+function esc(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── ONE BOX PER PRINTED FACE ─────────────────────────────────────────────
+// Trade printers ask for a single file with the pages in a stated order;
+// PrintedEasy and printed.com both do. That only means something to someone
+// who has laid out a print file before. Vistaprint, whose customers are
+// ordinary people, asks for one upload per face and labels each one — so that
+// is what we do. Nobody needs to know what a spread is, or which page goes
+// where. An empty box prints blank, which is plain from looking at it.
+//
+// A folded card has four faces, not two sides, which is why the folded set is
+// not simply front and back.
+const SIDE_SETS = {
+  'flat:single':   [{ key:'front', label:'Front' }],
+  'flat:double':   [{ key:'front', label:'Front' }, { key:'back', label:'Back' }],
+  'folded:single': [{ key:'front', label:'Front' }],
+  'folded:double': [{ key:'front', label:'Front' },
+                    { key:'inside-left',  label:'Inside left' },
+                    { key:'inside-right', label:'Inside right' },
+                    { key:'back', label:'Back' }]
+};
+let sideFiles = {};
+
+function sidesNeeded(){
+  return SIDE_SETS[(selectedFold || 'flat') + ':' + (selectedSides || 'single')]
+      || SIDE_SETS['flat:single'];
+}
+
+// With one face to print there is nothing to choose between, so the familiar
+// drop zone stays exactly as it was and this renders nothing at all.
+function renderSideSlots(){
+  const wrap = document.getElementById('sideSlots');
+  const hint = document.getElementById('sideSlotsHint');
+  const drop = document.getElementById('dropZone');
+  if (!wrap) return;
+  const sides = sidesNeeded();
+
+  if (sides.length < 2){
+    wrap.style.display = 'none';
+    if (hint) hint.style.display = 'none';
+    if (drop) drop.style.display = '';
+    return;
+  }
+
+  wrap.style.display = 'grid';
+  wrap.style.gridTemplateColumns = 'repeat(' + Math.min(sides.length, 4) + ',minmax(0,1fr))';
+  if (hint) hint.style.display = '';
+  if (drop) drop.style.display = 'none';
+
+  wrap.innerHTML = sides.map(function(sd){
+    const has = !!sideFiles[sd.key];
+    return '<label class="side-slot' + (has ? ' filled' : '') + '" data-side="' + sd.key + '">'
+      + '<input type="file" accept=".pdf,.ai,.indd,.jpg,.jpeg,.png,.tif,.tiff,.eps">'
+      + '<span class="side-slot-art" id="slot-art-' + sd.key + '">'
+      + (has ? '' : '<span style="font-size:var(--text-lg);color:var(--gold);">+</span>') + '</span>'
+      + '<span class="side-slot-label">' + esc(sd.label) + '</span>'
+      + '<span class="side-slot-state">' + (has ? 'Ready' : 'Add file') + '</span>'
+      + '</label>';
+  }).join('');
+
+  wrap.querySelectorAll('.side-slot').forEach(function(el){
+    const key = el.dataset.side;
+    el.querySelector('input').addEventListener('change', function(){
+      if (this.files && this.files[0]) acceptSideFile(key, this.files[0]);
+    });
+    ['dragenter','dragover'].forEach(function(t){
+      el.addEventListener(t, function(e){ e.preventDefault(); el.classList.add('over'); });
+    });
+    ['dragleave','drop'].forEach(function(t){
+      el.addEventListener(t, function(e){ e.preventDefault(); el.classList.remove('over'); });
+    });
+    el.addEventListener('drop', function(e){
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) acceptSideFile(key, f);
+    });
+    if (sideFiles[key]) drawSlotThumb(key, sideFiles[key]);
+  });
+}
+
+// The front is also kept in currentFile, so every existing single-sided path —
+// the proof, the checks, the basket, the press file — carries on working
+// untouched and only learns about the other faces where it has to.
+async function acceptSideFile(key, file){
+  const sides = sidesNeeded();
+
+  // Someone who has already made a multi-page file should not have to take it
+  // apart. One page per face, in the order the boxes are shown.
+  if (/\.pdf$/i.test(file.name) && sides.length > 1){
+    try {
+      await loadPdfJs();
+      const doc = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+      if (doc.numPages >= sides.length){
+        for (let i = 0; i < sides.length; i++) sideFiles[sides[i].key] = { file: file, page: i + 1 };
+        renderSideSlots();
+        if (sideFiles.front) handleFile(file);
+        return;
+      }
+    } catch(e){ /* not readable as a multi-page PDF; treat it as one face */ }
+  }
+
+  sideFiles[key] = { file: file, page: 1 };
+  renderSideSlots();
+  if (key === 'front') handleFile(file);
+}
+
+function drawSlotThumb(key, entry){
+  const box = document.getElementById('slot-art-' + key);
+  if (!box || !entry) return;
+  const file = entry.file;
+  if (/\.(jpe?g|png|tiff?)$/i.test(file.name)){
+    const img = new Image();
+    img.onload = function(){ box.innerHTML = ''; box.appendChild(img); };
+    img.src = URL.createObjectURL(file);
+    return;
+  }
+  if (/\.pdf$/i.test(file.name)){
+    loadPdfJs().then(async function(){
+      const doc = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+      const page = await doc.getPage(Math.min(entry.page || 1, doc.numPages));
+      const vp = page.getViewport({ scale: 1 });
+      const c = document.createElement('canvas');
+      const scale = 220 / Math.max(vp.width, vp.height);
+      const v2 = page.getViewport({ scale: scale });
+      c.width = v2.width; c.height = v2.height;
+      await page.render({ canvasContext: c.getContext('2d'), viewport: v2 }).promise;
+      box.innerHTML = ''; box.appendChild(c);
+    }).catch(function(){});
+    return;
+  }
+  box.innerHTML = '<span style="font-size:var(--text-xs);color:var(--soft);">' + esc(file.name.split('.').pop().toUpperCase()) + '</span>';
+}
 
 function handleFile(file){
   if(!file)return;
