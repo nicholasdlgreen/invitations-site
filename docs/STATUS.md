@@ -3,27 +3,43 @@
 *Written at the end of the day. Every figure below was checked against the live
 site, the live database or a generated file, not against intention.*
 
-**40 commits, all pushed and live.** Three threads: making our pricing mirror
+**43 commits, all pushed.** Three threads: making our pricing mirror
 PrintedEasy's, checking the product mix against competitors, and rebuilding the
-artwork journey — plus one incident worth reading (§5).
+artwork journey — plus two incidents worth reading (§6 and §7).
 
 ---
 
-## 0. The state of things
+## 0. Do this next
+
+**Two things, and the first is five minutes' work.**
+
+1. **Let the deploy of `50eb9ca` land**, then **hard-reload admin, sign in, and
+   press Publish.** That is what puts the 378 envelope rates in front of
+   customers; until then envelopes still charge the old flat 10p and 23p. Expect
+   roughly **4,700 envelope prices** to join the 10,374 finishing ones.
+   The deploy must go first: without it, checkout would reject the very orders
+   the publish makes possible (§2).
+2. **Set the margins.** The site sells at cost. Everything else in pricing is
+   finished and this is a decision only Nicholas can make.
+
+---
+
+## 1. The state of things
 
 | | |
 |---|---|
 | Cost rows in `sheet_rates` | 7,389 (378 switched off) |
-| Finishing rows in `finish_rates` | **2,667**, loaded and live (378 of them envelopes) |
+| Finishing rows in `finish_rates` | **2,667** (378 of them envelopes) |
 | Published sheet prices | **56,636** |
 | Published finishing prices | **10,374** |
-| Product page payload | 536KB |
+| Published envelope prices | **0 — awaiting the Publish above** |
+| Product page payload | 536KB, expect ~700KB after the publish |
 | Envelope colours offered | **2** (was 6) |
 | **Margins** | **0 on all 23 products — the site sells at cost** |
 
 ---
 
-## 1. Pricing that mirrors PrintedEasy
+## 2. Pricing that mirrors PrintedEasy
 
 ### Done
 
@@ -88,7 +104,7 @@ exception — they genuinely scale, being a thing per card rather than a setup.
 
 ---
 
-## 2. Product mix
+## 3. Product mix
 
 ### Done
 
@@ -113,11 +129,11 @@ exception — they genuinely scale, being a thing per card rather than a setup.
 4. **Eight product names stored lowercase** and rendering that way.
 5. **"Finished by hand" on twelve pages** — nothing is finished by hand.
 6. **"Colour mode: CMYK preferred"** on the upload screen, while we send RGB.
-7. **Minimum quantity on finishing** — see §1.
+7. **Minimum quantity on finishing** — see §2.
 
 ---
 
-## 3. The artwork journey
+## 4. The artwork journey
 
 ### Done
 
@@ -150,7 +166,7 @@ exception — they genuinely scale, being a thing per card rather than a setup.
 
 ---
 
-## 4. How the work is tested now
+## 5. How the work is tested now
 
 Mid-afternoon the work was stopped: *"This is now breaking the entire site
 because you are not checking and testing before you give it to me to go live."*
@@ -177,7 +193,7 @@ on.
 
 ---
 
-## 4a. The admin session expires after an hour, silently
+## 6. The admin session expires after an hour, silently
 
 Publish refused this evening: *"no prices were built for any product. No sheet
 rates are loaded."* **The guard was right and the live catalogue was never
@@ -203,7 +219,7 @@ different one taking the blame.
 
 ---
 
-## 5. The incident — an empty catalogue went live
+## 7. The incident — an empty catalogue went live
 
 **What happened.** A publish wrote **zero prices for all 23 products**. The grid
 showed no "from" prices, the configurator offered no double-sided option, and
@@ -235,10 +251,86 @@ not the thing beside it is how this happens.
 
 ---
 
-## 6. What I would do next, in order
+## 8. The full to-do list
 
-1. **Set margins.** Everything else in pricing is finished.
-2. **Gate finishes and envelopes on the route** — closes two live mis-sells.
-3. **Send `ARTWORK-SPEC.md` to PrintedEasy and print one real sample.** Both
-   cheap, both de-risk everything else.
-4. The stock × weight matrix, then the range gaps.
+Everything outstanding, in one place and in the order I would do it. The
+sections above give the reasoning; this is the list.
+
+### Tomorrow morning
+
+| # | What | Why it is first |
+|---|---|---|
+| 1 | **Deploy, hard-reload admin, Publish** | The 378 envelope rates are loaded but reach nobody until this. Deploy before publish, or checkout rejects the orders it enables. |
+| 2 | **Verify the publish** — envelope prices > 0, sheet prices still 56,636 | The empty-catalogue incident got past me because I checked the thing I changed and not the thing beside it (§7). |
+| 3 | **Set the margins** | The site sells at cost. The last real blocker, and Nicholas's decision. |
+
+### Blocking launch
+
+4. **VAT at checkout.** The grid is clean and driven by
+   `site_config.pricing.vatRegistered`, but checkout still shows "VAT (20%)"
+   and stores a VAT figure while we are not registered. Move checkout onto the
+   same flag so the two cannot disagree.
+5. **Stripe live keys, and a live-mode webhook with its own
+   `STRIPE_WEBHOOK_SECRET`.** Without the webhook, payments succeed and orders
+   stay pending.
+6. **Print one real sample** through PrintedEasy. The file maths is verified;
+   the handover to their press is not.
+7. **Send `ARTWORK-SPEC.md`** and get the six questions answered. The one that
+   matters: **head to head or head to foot** for a double-sided back. We send
+   both faces the same way up — if their press expects otherwise, every
+   double-sided job comes back upside down.
+8. **Supabase Pro** (~$25/mo). The free plan has no automatic backups, and
+   orders, customers and consent records live there.
+9. **`ALERT_EMAIL` in Netlify** for the Monday supplier price watch.
+10. **Remove the homepage holding overlay** when the decision is made to open.
+
+### Live mis-sells — small fixes, real money
+
+11. **Gate finishes and envelopes on the route.** An order of service in
+    Fedrigoni stock is offered Corners that Luxury Folded cannot make, and red
+    envelopes on a route that only stocks white.
+12. **"Finished by hand" on twelve pages.** Nothing is finished by hand.
+13. **"Colour mode: CMYK preferred"** on the upload screen, while we send RGB.
+14. **The proof still renders a mismatched file as though it fits.**
+15. **Eight product names stored lowercase** and rendering that way on the grid.
+
+### Pricing accuracy, once trading
+
+16. **Confirm the 20% supplier discount** against a real invoice.
+17. **The VAT question on their side** — they quote Luxury Flat without VAT, and
+    that is what we sell as a wedding invitation.
+18. **Their full stock × weight matrix**, found with the sentinel test, so any
+    weight they sell becomes an admin tick rather than a scrape.
+19. **Lightweight stocks** (Uncoated 120, Tintoretto 140) exist but have no
+    rates, so they never appear.
+20. **Folded 400gsm** is switched off in the data but still listed as a weight.
+    Either re-scrape it or drop it from the folded products, so the decision is
+    visible in admin rather than implicit.
+21. **880 `large-format` rates unreachable.** Routes make it a one-line change,
+    but nobody has decided whether table plans sell on paper as well as board.
+22. **A minimum quantity on finishing.** It is a setup charge: rounded corners
+    are 176p a card at 10 and 3.5p at 500, so finishing doubles the price of a
+    small order and is trivial on a large one.
+23. **Retire `finish_options.cost_modifier`** now the rate table drives pricing.
+24. **The 42 `folded-leaflet` envelope rates are unreachable** — order of
+    service is the only product on that family and has envelopes switched off.
+    Decide whether it should offer them.
+
+### Housekeeping
+
+25. **54 test orders** to clear, and ~112 junk bot signups.
+26. **`from_price_text` is empty on all 23 products and nothing reads it.**
+    Either delete the column and its admin field or wire it up as an override;
+    a writable field that renders nowhere is a trap.
+27. **`display_quantity` has no admin screen** — changing which pack the grid
+    quotes means SQL.
+28. **A JavaScript error fires on load of `upload-and-print.html`.** Harmless so
+    far, never chased, and proven not to come from any of this week's changes.
+29. **Boards are single-sided only** (signage, table plans, welcome signs),
+    deliberately deferred when double-sided went in.
+
+### Needs a decision, not a developer
+
+30. **Range gaps**: details and enclosure cards, evening invitations, belly
+    bands, printed envelopes, hen party. Funeral and sympathy still open.
+    Samples were declined.
