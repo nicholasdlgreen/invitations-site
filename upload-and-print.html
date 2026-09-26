@@ -1388,6 +1388,10 @@ async function loadSiteData() {
         // option on in admin shows up straight away — the prices behind it
         // still come from the published snapshot.
         if (pt.folded_family) liveLists.folded_family = pt.folded_family;
+        // Read live like the other lists so adding a second route shows up
+        // without waiting for a publish. The PRICES behind it still come from
+        // the snapshot, so publish after adding one.
+        if (Array.isArray(pt.routes) && pt.routes.length) liveLists.routes = pt.routes;
         if (Object.keys(liveLists).length) {
           currentProduct = Object.assign({}, currentProduct || {}, liveLists);
           if (typeof renderSizeCards === 'function') renderSizeCards();
@@ -4029,6 +4033,24 @@ async function rasterisePdfPage(file, sizeKey, dpi){
 // rather than the product.
 function printingFamily(){
   if (!currentProduct) return '';
+  // Which route the customer's actual choice sits on. Two routes may share a
+  // fold — a table plan is flat whether it is 5mm board or paper — so the fold
+  // alone cannot answer this; only the matched rate can, and it carries its
+  // route index. Geometry depends on the answer: a folded leaflet is imposed on
+  // a double-width sheet, a flat card is not.
+  const routes = Array.isArray(currentProduct.routes) ? currentProduct.routes : null;
+  if (routes && routes.length) {
+    const paper = (CONFIG.papers || []).find(x => x.id === selectedPaper);
+    if (paper) {
+      const hit = sheetSells().find(r =>
+        r.paper === paper.name && (!selectedSize || r.size === selectedSize) && r.rt != null);
+      if (hit && routes[hit.rt] && routes[hit.rt].family) return routes[hit.rt].family;
+    }
+    // Nothing chosen yet, so answer for the fold on its own.
+    const forFold = routes.find(rt => (rt.fold || 'flat') === selectedFold);
+    if (forFold && forFold.family) return forFold.family;
+  }
+  // Payloads published before routes existed.
   return selectedFold === 'folded' && currentProduct.folded_family
     ? currentProduct.folded_family
     : (currentProduct.supplier_family || '');

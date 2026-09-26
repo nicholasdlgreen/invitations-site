@@ -1116,6 +1116,12 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     </div>
 
     <div class="field">
+      <label>Also priced on <span style="opacity:.55">(optional)</span></label>
+      <div id="pt_extraRoutes" style="display:flex;flex-wrap:wrap;gap:14px;margin-top:4px;"></div>
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:8px 0 0;line-height:1.6;">A second way of making the same flat product, so it can be sold on stocks the main route does not carry &mdash; a table plan on paper as well as 5mm board. The stocks and sizes on offer are whichever that route has rates for. Two routes may share the flat format but <strong>not a stock</strong>; Publish refuses if they overlap, because the price and the press file could then disagree.</p>
+    </div>
+
+    <div class="field">
       <label>Available Sizes</label>
       <div id="pt_availableSizes" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;min-height:42px;"></div>
     </div>
@@ -3552,9 +3558,54 @@ function readPtChips(containerId) {
   return [...container.querySelectorAll('button.pt-chip.on')].map(b => b.dataset.value);
 }
 
+// Every family except the ones the two selects above already cover, offered as
+// extra flat routes. Kept as checkboxes rather than a JSON field because the
+// whole point of routes was to stop this being a database-only decision.
+const ROUTE_FAMILIES = {
+  'flat-card': 'Flat cards', 'folded-card': 'Folded cards',
+  'folded-leaflet': 'Folded leaflets', 'large-format': 'Large format',
+  'display-board': 'Display board'
+};
+
+function renderExtraRoutes(p) {
+  const box = document.getElementById('pt_extraRoutes');
+  if (!box) return;
+  const primary = (p && p.supplier_family) || '';
+  const folded  = (p && p.folded_family) || '';
+  const already = new Set(((p && Array.isArray(p.routes)) ? p.routes : [])
+    .filter(rt => rt && rt.family && rt.family !== primary && rt.family !== folded)
+    .map(rt => rt.family));
+  box.innerHTML = Object.keys(ROUTE_FAMILIES).map(fam => {
+    const on = already.has(fam) ? ' checked' : '';
+    return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(250,247,242,.8);">'
+         + '<input type="checkbox" class="pt-extra-route" value="' + fam + '"' + on + '> '
+         + ROUTE_FAMILIES[fam] + '</label>';
+  }).join('');
+}
+
+// The primary select is the flat route, the folded select is the folded one, and
+// anything ticked is another flat route. Order matters only in that the payload
+// stores an index per rate row, so the first match wins for a paper.
+function collectRoutes() {
+  const primary = document.getElementById('pt_supplierFamily').value || '';
+  const folded  = document.getElementById('pt_foldedFamily').value || '';
+  const routes = [];
+  if (primary) routes.push({ family: primary, fold: 'flat' });
+  if (folded)  routes.push({ family: folded,  fold: 'folded' });
+  document.querySelectorAll('.pt-extra-route:checked').forEach(cb => {
+    if (cb.value && cb.value !== primary && cb.value !== folded) {
+      routes.push({ family: cb.value, fold: 'flat' });
+    }
+  });
+  return routes.length ? routes : null;
+}
+
 function openProductTypeModal(editId) {
   const fields = ['pt_name','pt_slug','pt_tagline','pt_description','pt_features','pt_heroImage','pt_fromPrice','pt_displayQuantity','pt_metaTitle','pt_metaDescription','pt_displayOrder','pt_marginPct'];
   fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  // Clear the tickboxes too, or a new product inherits the routes of whichever
+  // product was open last.
+  renderExtraRoutes(null);
   document.getElementById('pt_active').value = 'true';
   document.getElementById('pt_supplierFamily').value = '';
   document.getElementById('pt_category').value = '';
@@ -3580,6 +3631,7 @@ function openProductTypeModal(editId) {
       document.getElementById('pt_heroImage').value       = p.hero_image_url || '';
       document.getElementById('pt_fromPrice').value       = p.from_price_text || '';
       document.getElementById('pt_displayQuantity').value = p.display_quantity || '';
+      renderExtraRoutes(p);
       document.getElementById('pt_metaTitle').value       = p.meta_title || '';
       document.getElementById('pt_metaDescription').value = p.meta_description || '';
       document.getElementById('pt_displayOrder').value    = p.display_order != null ? p.display_order : '';
@@ -3633,6 +3685,7 @@ async function saveProductType() {
     active:             document.getElementById('pt_active').value === 'true',
     supplier_family:    document.getElementById('pt_supplierFamily').value || null,
     folded_family:      document.getElementById('pt_foldedFamily').value || null,
+    routes:             collectRoutes(),
     available_sizes:    readPtChips('pt_availableSizes'),
     available_papers:   readPtChips('pt_availablePapers'),
     available_finishes: readPtChips('pt_availableFinishes'),
@@ -4228,6 +4281,34 @@ function validateForPublish() {
         message: `${paperName}: no rates for ${gaps.slice(0,6).join(', ')}${gaps.length>6?` and ${gaps.length-6} more`:''}` });
     });
   });
+  // Two routes may share a fold — a table plan is flat on board or on paper —
+  // but not a fold AND a paper. Every lookup downstream matches on paper and
+  // takes the first hit, so an overlap would resolve arbitrarily: the customer
+  // could be quoted for one route and the press file built for the other.
+  (productTypes || []).filter(p => p.active !== false).forEach(p => {
+    const routes = Array.isArray(p.routes) ? p.routes.filter(r => r && r.family) : [];
+    if (routes.length < 2) return;
+    const byFold = {};
+    routes.forEach(rt => {
+      const fold = rt.fold || 'flat';
+      (byFold[fold] = byFold[fold] || []).push(rt.family);
+    });
+    Object.keys(byFold).forEach(fold => {
+      const fams = byFold[fold];
+      if (fams.length < 2) return;
+      const seen = {}, clash = new Set();
+      fams.forEach(fam => {
+        (sheetRates || []).filter(r => r.supplier_family === fam).forEach(r => {
+          const k = r.paper_name + '|' + r.weight_gsm + '|' + r.size;
+          if (seen[k] && seen[k] !== fam) clash.add(r.paper_name);
+          seen[k] = fam;
+        });
+      });
+      if (clash.size) issues.push({ level: 'error', product: p.name,
+        message: `${fams.join(' and ')} both price ${[...clash].join(', ')} as "${fold}" — `
+               + 'two routes may share a fold but not a paper, or the price and the press file can disagree' });
+    });
+  });
   return issues;
 }
 
@@ -4346,12 +4427,27 @@ async function publishHierarchical() {
         };
 
         const foldedFamily = p.folded_family || null;
+        // How this product can be made. routes replaces the old two slots —
+        // supplier_family meaning "flat" and folded_family meaning "folded" —
+        // because that pair could not express "a table plan is flat on 5mm
+        // board OR on paper", which left 880 large-format rates unreachable.
+        // Anything not yet carrying routes falls back to the old pair, so no
+        // product changes behaviour until someone gives it a second route.
+        const routes = (Array.isArray(p.routes) && p.routes.length)
+          ? p.routes.filter(rt => rt && rt.family)
+          : [{ family: family, fold: 'flat' }]
+              .concat(foldedFamily ? [{ family: foldedFamily, fold: 'folded' }] : []);
+        // Which route a row came from, so the site can pick the right press
+        // geometry from the paper the customer chose rather than guessing from
+        // the fold. Two routes may share a fold; only the paper tells them
+        // apart.
+        const routeOf = new Map();
+        routes.forEach((rt, i) => { if (!routeOf.has(rt.family)) routeOf.set(rt.family, i); });
         const sidesOffered = !!p.sides_offered;
         const sheetSells = [];
         sheetRates.forEach(r => {
-          const fold = r.supplier_family === family ? 'flat'
-                     : (foldedFamily && r.supplier_family === foldedFamily) ? 'folded'
-                     : null;
+          const rtIdx = routeOf.has(r.supplier_family) ? routeOf.get(r.supplier_family) : -1;
+          const fold = rtIdx < 0 ? null : (routes[rtIdx].fold || 'flat');
           // A double-sided rate only belongs in the payload if the product
           // offers the choice — a welcome sign has no back. Without this the
           // rows ship where nothing can reach them and quietly go stale, the
@@ -4370,6 +4466,7 @@ async function publishHierarchical() {
               offersWeight(r.paper_name, parseInt(r.weight_gsm, 10))) {
             sheetSells.push({
               fold:  fold,
+              rt:    rtIdx,
               sides: r.printed_sides || 'single',
               paper: r.paper_name,
               gsm:   parseInt(r.weight_gsm, 10) || null,
@@ -4406,6 +4503,7 @@ async function publishHierarchical() {
           // one. The site needs it to know whether a folded order is imposed
           // on a flat sheet or supplied at the finished size.
           folded_family:      foldedFamily,
+          routes:             routes,
           available_sizes:    sizes,
           available_papers:   papersOk,
           available_finishes: finishes,
