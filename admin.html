@@ -4570,10 +4570,17 @@ async function publishHierarchical() {
           offeredOptions[String(t.name).toLowerCase()] =
             new Set((t.options || []).map(o => String(o.name || '').toLowerCase()));
         });
+        // Which side a finish goes on is decided by us, not the customer:
+        // every lamination option is specified "both sides", corners is one
+        // operation on the card. Publishing the other side ships rows nothing
+        // can reach — 567 of them per product on the first run, over half the
+        // finishing payload on a page that is already 600KB.
+        const sidesWanted = name => (/lamination/i.test(name) ? 'both' : 'front');
         const finishPrices = (finishRates || []).filter(r => {
           if (!finishRouteFamilies.has(r.supplier_family)) return false;
           if (!sizes.includes(r.size)) return false;
           if (!finishes.includes(r.finish_name)) return false;
+          if (r.applies_to !== sidesWanted(r.finish_name)) return false;
           const opts = offeredOptions[String(r.finish_name).toLowerCase()];
           return !opts || opts.has(String(r.option_name).toLowerCase());
         }).map(r => ({
