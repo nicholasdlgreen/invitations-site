@@ -62,7 +62,7 @@ PE_STOCK = {
 LUXURY = {'Tintoretto Gesso', 'Nettuno Bianco', 'Acquerello Bianco',
           'Sirio Pearl Polar Dawn', 'Recycled Uncoated'}
 
-def pe_form(family, paper, gsm):
+def pe_form(family, paper, gsm, sides='single'):
     """The option fields that identify a stock, which differ by product.
 
     Cards are picked by stock-finish plus a weight in gsm. Display boards are
@@ -72,10 +72,11 @@ def pe_form(family, paper, gsm):
     must stay off here or every rate would silently include them.
     """
     if family == 'display-board':
+        # A board has one face. Sides never varies here.
         return {'substrate': PE_STOCK[paper], 'printed-sides': 'single',
                 'lamination': 'none', 'wrap-mounting': 'no', 'drilled-holes': 'none'}
     return {'stock-finish': PE_STOCK[paper], 'stock-weight': gsm,
-            'printed-sides': 'single'}
+            'printed-sides': sides}
 
 
 def pe_product(family, paper):
@@ -262,11 +263,11 @@ def sb(path, method='GET', body=None, prefer=None):
 
 
 def what_we_sell():
-    """Every (family, paper, gsm, size) the site currently offers, read from the
-    database so admin stays the single source of truth for the range."""
+    """Every (family, paper, gsm, size, sides) the site currently offers, read
+    from the database so admin stays the single source of truth for the range."""
     stocks = {p['name']: p for p in sb('paper_stocks?select=name,weights,active&active=eq.true')}
-    prods = sb('product_types?select=slug,supplier_family,available_papers,available_sizes,active'
-               '&active=eq.true')
+    prods = sb('product_types?select=slug,supplier_family,available_papers,available_sizes,'
+               'sides_offered,active&active=eq.true')
     combos, no_family, unmapped = set(), set(), set()
     for p in prods:
         fam = p.get('supplier_family')
@@ -280,19 +281,24 @@ def what_we_sell():
                 unmapped.add(paper)
                 continue
             gsms = [int(w['gsm']) for w in (stocks[paper].get('weights') or []) if w.get('gsm')]
+            # Only price a back where a product actually offers one, or every
+            # refresh would double in length to keep rates nothing can reach.
+            sides_list = ['single', 'double'] if p.get('sides_offered') else ['single']
             for gsm in gsms:
                 for size in (p.get('available_sizes') or []):
-                    combos.add((fam, paper, gsm, size))
+                    for sides in sides_list:
+                        combos.add((fam, paper, gsm, size, sides))
     return sorted(combos), sorted(no_family), sorted(unmapped)
 
 
 def current_costs():
     out, offset = {}, 0
     while True:
-        page = sb(f'sheet_rates?select=supplier_family,paper_name,weight_gsm,size,quantity,cost'
-                  f'&limit=1000&offset={offset}')
+        page = sb(f'sheet_rates?select=supplier_family,paper_name,weight_gsm,size,quantity,'
+                  f'printed_sides,cost&limit=1000&offset={offset}')
         for r in page:
-            out[(r['supplier_family'], r['paper_name'], r['weight_gsm'], r['size'], r['quantity'])] = float(r['cost'])
+            out[(r['supplier_family'], r['paper_name'], r['weight_gsm'], r['size'],
+                 r['quantity'], r.get('printed_sides') or 'single')] = float(r['cost'])
         if len(page) < 1000:
             return out
         offset += 1000
@@ -318,31 +324,31 @@ def main():
     if not combos:
         sys.exit('Nothing to price.')
 
-    total = sum(len(LADDER.get(f, [])) for f, _, _, _ in combos)
+    total = sum(len(LADDER.get(c[0], [])) for c in combos)
     print(f'{len(combos)} paper/size combinations, {total} prices to fetch '
           f'(~{total * DELAY / 60:.0f} min)\n', flush=True)
 
     pe = PrintedEasy()
     scraped, skipped, failed = {}, [], []
     done = 0
-    for fam, paper, gsm, size in combos:
+    for fam, paper, gsm, size, sides in combos:
         prod = pe_product(fam, paper)
         dims = pe_size(prod, size) if prod else None
         if not dims:
-            skipped.append((fam, paper, gsm, size))
+            skipped.append((fam, paper, gsm, size, sides))
             continue
         s, w, h = dims
         for qty in LADDER.get(fam, []):
             try:
                 d = pe.price(prod, size=s, width=w, height=h, quantity=qty,
-                             **pe_form(fam, paper, gsm))
+                             **pe_form(fam, paper, gsm, sides))
                 lst = d.get('totalSellingPrice')
                 # A zero means they do not offer that combination at all, which
                 # is different from it being free.
                 if lst:
-                    scraped[(fam, paper, gsm, size, qty)] = round(float(lst) * (1 - DISCOUNT), 2)
+                    scraped[(fam, paper, gsm, size, sides, qty)] = round(float(lst) * (1 - DISCOUNT), 2)
             except Exception as e:
-                failed.append((fam, paper, gsm, size, qty, str(e)[:80]))
+                failed.append((fam, paper, gsm, size, sides, qty, str(e)[:80]))
             time.sleep(DELAY)
             done += 1
             if done % 200 == 0:
@@ -354,19 +360,19 @@ def main():
     # mapped wrongly, or a genuine oddity of theirs like the dip at 475. It is
     # reported, never corrected, because we do not know which of those it is.
     climbs = []
-    for (fam, paper, gsm, size) in {(k[0], k[1], k[2], k[3]) for k in scraped}:
-        pts = sorted((q, scraped[(fam, paper, gsm, size, q)])
+    for (fam, paper, gsm, size, sides) in {k[:5] for k in scraped}:
+        pts = sorted((q, scraped[(fam, paper, gsm, size, sides, q)])
                      for q in LADDER.get(fam, [])
-                     if (fam, paper, gsm, size, q) in scraped)
+                     if (fam, paper, gsm, size, sides, q) in scraped)
         for i in range(1, len(pts)):
             (q0, c0), (q1, c1) = pts[i - 1], pts[i]
             if c1 / q1 > c0 / q0 + 1e-9:
-                climbs.append((fam, paper, gsm, size, q0, c0 / q0, q1, c1 / q1))
+                climbs.append((fam, paper, gsm, size, sides, q0, c0 / q0, q1, c1 / q1))
     if climbs:
         print(f'\nUNIT PRICE RISES WITH QUANTITY ({len(climbs)}) '
               '— each of these costs more per item the more you buy')
-        for fam, paper, gsm, size, q0, u0, q1, u1 in climbs[:25]:
-            print(f'  {fam} {paper} {gsm}gsm {size}: '
+        for fam, paper, gsm, size, sides, q0, u0, q1, u1 in climbs[:25]:
+            print(f'  {fam} {paper} {gsm}gsm {size} {sides}-sided: '
                   f'{q0}\u2192{q1} costs \u00a3{u0:.4f}\u2192\u00a3{u1:.4f} each')
         if len(climbs) > 25:
             print(f'  \u2026and {len(climbs) - 25} more')
@@ -385,10 +391,10 @@ def main():
             if withold:
                 k, o, n = row
                 pct = (n - o) / o * 100 if o else 0
-                print(f'   {k[0]:15} {k[1]:24} {k[2]}gsm {k[3]:11} x{k[4]:<4} '
+                print(f'   {k[0]:15} {k[1]:24} {k[2]}gsm {k[3]:11} {k[4]:6} x{k[5]:<4} '
                       f'£{o:>7.2f} → £{n:>7.2f}  ({pct:+.1f}%)')
             else:
-                print(f'   {row[0]:15} {row[1]:24} {row[2]}gsm {row[3]:11} x{row[4]}')
+                print(f'   {row[0]:15} {row[1]:24} {row[2]}gsm {row[3]:11} {row[4]:6} x{row[5]}')
         if len(rows) > 25:
             print(f'   … and {len(rows) - 25} more')
 
@@ -418,9 +424,13 @@ def main():
         return
 
     rows = [{'supplier_family': k[0], 'paper_name': k[1], 'weight_gsm': k[2],
-             'size': k[3], 'quantity': k[4], 'cost': v} for k, v in scraped.items()]
+             'size': k[3], 'printed_sides': k[4], 'quantity': k[5], 'cost': v}
+            for k, v in scraped.items()]
+    # Must match sheet_rates_natural_key exactly. The old five-column index was
+    # dropped on 2026-09-26 because it could not hold a single-sided and a
+    # double-sided rate for the same card at once.
     for i in range(0, len(rows), 500):
-        sb('sheet_rates?on_conflict=supplier_family,paper_name,weight_gsm,size,quantity',
+        sb('sheet_rates?on_conflict=supplier_family,paper_name,weight_gsm,size,quantity,printed_sides',
            method='POST', body=rows[i:i + 500],
            prefer='resolution=merge-duplicates,return=minimal')
         print(f'  wrote {min(i + 500, len(rows))}/{len(rows)}', flush=True)
