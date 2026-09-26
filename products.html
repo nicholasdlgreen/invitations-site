@@ -52,7 +52,9 @@
 .product-body{padding:20px 22px 22px;flex:1;display:flex;flex-direction:column;}
 .product-name{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--text);margin:0 0 6px;line-height:1.2;}
 .product-desc{font-size:var(--text-xs);color:var(--soft);line-height:1.65;margin:0 0 14px;flex:1;}
-.product-price{font-size:var(--text-xs);color:var(--text);font-weight:500;letter-spacing:.04em;}
+/* A hairline, a shade lighter than --border, so the price is set apart from
+   the tagline without drawing a second box inside the card. */
+.product-price{font-size:var(--text-xs);color:var(--text);font-weight:500;letter-spacing:.04em;border-top:1px solid var(--hairline);padding-top:11px;}
 .product-price strong{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);font-weight:400;margin-left:4px;}
 /* Quiet, and on its own line, so the price reads first and the VAT promise
    second — the tile must not turn into two competing numbers. */
@@ -95,7 +97,7 @@
 --cream:#FAF7F2; --blush:#F0DDD8; --lav:#DDD5E8; --sage:#D1DDD0;
 --mist:#E8EBF0; --gold:#B8976A; --gold-lt:#D4B896; --brown:#6B4F3A;
 --text:#3D2E24; --soft:#7A6558; --pale:#B0A098; --white:#FFFFFF;
---border:#E8DDD8; --ok:#5A9E6F; --warn:#C97B3A; --err:#C94A3A;
+--border:#E8DDD8; --hairline:#EFE6E0; --ok:#5A9E6F; --warn:#C97B3A; --err:#C94A3A;
 /* Fluid type scale — scales smoothly from laptop to large screens.
    clamp(min, preferred, max): min is the floor (never smaller),
    max is the ceiling (never larger), preferred grows with the viewport. */
@@ -221,7 +223,7 @@ nav a:hover,nav a.active{color:var(--gold);}
 --cream:#FAF7F2; --blush:#F0DDD8; --lav:#DDD5E8; --sage:#D1DDD0;
 --mist:#E8EBF0; --gold:#B8976A; --gold-lt:#D4B896; --brown:#6B4F3A;
 --text:#3D2E24; --soft:#7A6558; --pale:#B0A098; --white:#FFFFFF;
---border:#E8DDD8; --ok:#5A9E6F; --warn:#C97B3A; --err:#C94A3A;
+--border:#E8DDD8; --hairline:#EFE6E0; --ok:#5A9E6F; --warn:#C97B3A; --err:#C94A3A;
 /* Fluid type scale — scales smoothly from laptop to large screens.
    clamp(min, preferred, max): min is the floor (never smaller),
    max is the ceiling (never larger), preferred grows with the viewport. */
