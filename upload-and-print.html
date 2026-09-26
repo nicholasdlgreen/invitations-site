@@ -1862,6 +1862,11 @@ function selectSides(x) {
   if (x === selectedSides) return;
   selectedSides = x;
   sideFiles = {};
+  // Everything remembered per face belonged to the choice being abandoned: its
+  // positions, its verdicts, which face was on screen and which had been
+  // flagged. Left behind, they described faces that no longer exist.
+  faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {};
+  activeFace = 'front';
   renderSideSlots();
   // A paper, weight or size only priced on the other side count must not
   // survive the switch, exactly as with the fold.
@@ -1888,7 +1893,13 @@ function selectFold(f) {
   if (!sidesOffered().includes(selectedSides)) selectedSides = 'single';
   renderSidesToggle();
   sideFiles = {};
+  // Same reset as the sides switch, and for a sharper reason: a folded card
+  // printed both sides has FOUR faces, so abandoning folded for flat left four
+  // tabs describing faces that no longer exist.
+  faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {};
+  activeFace = 'front';
   renderSideSlots();
+  if (typeof refreshFaceChecks === 'function') refreshFaceChecks();
   if (typeof renderWeightPicker === 'function') renderWeightPicker();
   if (typeof updatePrice === 'function') updatePrice();
 }
@@ -2088,6 +2099,9 @@ function renderSideSlots(){
   if (sides.length < 2){
     if (outer) outer.style.display = 'none';
     if (drop) drop.style.display = '';
+    // Emptied, not just hidden. Leaving the boxes in the page meant anything
+    // counting them still found two after a switch back to single sided.
+    wrap.innerHTML = '';
     return;
   }
 
@@ -2299,7 +2313,13 @@ async function faceVerdict(key){
 
 async function refreshFaceChecks(){
   const sides = sidesNeeded();
-  if (sides.length < 2) return;
+  // Draw the tabs and notices BEFORE the early return. This used to bail out
+  // first, so a customer who chose double sided and then changed back to single
+  // kept the Front and Back tabs from the choice they had abandoned.
+  renderFaceTabs();
+  renderSlotNotices();
+  renderFaceNotice();
+  if (sides.length < 2) { refreshSizeRow(); return; }
   for (const sd of sides){
     if (!sideFiles[sd.key]) continue;
     const res = await checkFace(sd.key);
