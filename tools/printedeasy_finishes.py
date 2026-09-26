@@ -125,7 +125,12 @@ FINISHES = {
         # so they are excluded rather than silently probed with a field their
         # form does not have — which would return the base price and record a
         # free finish that does not exist.
-        'families': {'flat-card', 'folded-card', 'folded-leaflet', 'large-format'},
+        # Luxury Folded carries NO lamination field: every value, sentinel
+        # included, returns the plain price. It was allowlisted here without
+        # checking and the first full run duly recorded a pile of zero-cost
+        # lamination rows — free finishes that do not exist. The guard below now
+        # catches this generally; the allowlist is the first line of defence.
+        'families': {'flat-card', 'folded-card', 'large-format'},
     },
     'corners': {
         'our_name': 'Corners',
@@ -274,6 +279,7 @@ def main():
     ap.add_argument('--only', metavar='FAMILY', help='limit to one supplier family')
     ap.add_argument('--finish', metavar='NAME', help='limit to one finish key, e.g. lamination')
     ap.add_argument('--quick', action='store_true', help='4 quantities instead of 21')
+    ap.add_argument('--csv', metavar='PATH', help='where to write the raw scrape')
     a = ap.parse_args()
 
     ladder = QUICK_LADDER if a.quick else FULL_LADDER
@@ -281,7 +287,7 @@ def main():
     finishes = [a.finish] if a.finish else list(FINISHES)
 
     pe = PrintedEasy()
-    rows, skipped, errors, substitutes = [], [], [], set()
+    rows, skipped, errors, substitutes, notoffered = [], [], [], set(), set()
 
     for family in families:
         slug = ROUTES.get(family)
@@ -308,8 +314,18 @@ def main():
                         sent = pe.price(slug, **bf, **build(SENTINEL))
                         if sent is not None and abs(sent - base) > 0.005:
                             substitutes.add(f'{family}/{fkey}/{applies_to}')
+                        # If the sentinel AND every real option price exactly
+                        # the same as the plain job, the form has no such field
+                        # and we are recording a finish the printer does not
+                        # offer. Cheaper to detect than to trust an allowlist.
+                        probes = {o: pe.price(slug, **bf, **build(v))
+                                  for o, v in spec['options'].items()}
+                        if (sent is not None and abs(sent - base) < 0.005 and
+                                all(g is not None and abs(g - base) < 0.005 for g in probes.values())):
+                            notoffered.add(f'{family}/{fkey}/{applies_to}')
+                            continue
                         for our_opt, their_opt in spec['options'].items():
-                            got = pe.price(slug, **bf, **build(their_opt))
+                            got = probes.get(our_opt)
                             if not got:
                                 skipped.append(f'{family} {fkey} {our_opt} {applies_to} {our_size} x{qty}: 0')
                                 continue
@@ -325,6 +341,10 @@ def main():
                       f'{len(skipped)} skipped, {len(errors)} errors', flush=True)
 
     print(f'\nFINISHED {len(rows)} rates, {len(skipped)} not offered, {len(errors)} errors')
+    if notoffered:
+        print('\nNOT OFFERED — the form has no such field, nothing written:')
+        for x in sorted(notoffered):
+            print('  ' + x)
     if substitutes:
         print('\nfields where an unknown value still returned a price '
               '(the endpoint substitutes a default here):')
@@ -335,8 +355,21 @@ def main():
         for s in skipped[:12]:
             print('  ' + s)
 
+    # Always keep the rows. The first full run was report-only and threw away
+    # 2,793 rates after an hour of scraping, which meant re-running to see a
+    # single number. A report that cannot be read twice is not a report.
+    import csv as _csv
+    out = a.csv or 'finish_rates_scrape.csv'
+    with open(out, 'w', newline='') as fh:
+        w = _csv.DictWriter(fh, fieldnames=['supplier_family', 'finish_name', 'option_name',
+                                           'applies_to', 'size', 'quantity', 'cost'])
+        w.writeheader()
+        w.writerows(rows)
+    print(f'\nwrote {len(rows)} rows to {out}')
+
     if not a.write:
-        print('\nReport only. Re-run with --write to apply these costs to finish_rates.')
+        print('Report only. Re-run with --write to apply these costs to finish_rates,'
+              ' or load the CSV.')
         return
 
     # Must match finish_rates_natural_key exactly.
