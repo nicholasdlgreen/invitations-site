@@ -2868,7 +2868,7 @@ function step3Finishes(paperName){
 function step3Quantities(){
   const ladder = (currentProduct && Array.isArray(currentProduct.quantity_ladder)
                   && currentProduct.quantity_ladder.length)
-    ? currentProduct.quantity_ladder : [25,50,100,150,200,250,300,500];
+    ? currentProduct.quantity_ladder : [10,25,50,100,150,200,250];
   const paper = (CONFIG.papers||[]).find(p => p.id === selectedPaper);
   if (!paper) return ladder;
   const priced = ladder.filter(q => lookupSheetSell(paper.name, selectedSize, q, selectedGsm()) != null);

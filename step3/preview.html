@@ -60,7 +60,7 @@ const finCost=t=>{const f=FINS.find(x=>x.name===t);return f?parseFloat(f.sell):0
   ((payload.papers)||[]).forEach(p=>{CAPS[p.name]=p.finishes||[];});
   const row=pt[0]||{};
   SIZE=(row.available_sizes||['A5'])[0];
-  LADDER=(row.quantity_ladder&&row.quantity_ladder.length)?row.quantity_ladder:[25,50,100,150,200,250,300,500];
+  LADDER=(row.quantity_ladder&&row.quantity_ladder.length)?row.quantity_ladder:[10,25,50,100,150,200,250];
   ALLOWF=(row.available_finishes||[]).map(x=>x.toLowerCase().trim());
   PAPERS=ps;
   const allow=(row.available_papers||[]).map(x=>x.toLowerCase().trim());
