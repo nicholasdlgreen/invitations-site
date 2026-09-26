@@ -54,6 +54,9 @@
 .product-desc{font-size:var(--text-xs);color:var(--soft);line-height:1.65;margin:0 0 14px;flex:1;}
 .product-price{font-size:var(--text-xs);color:var(--gold);font-weight:500;letter-spacing:.04em;}
 .product-price strong{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);font-weight:400;margin-left:4px;}
+/* Quiet, and on its own line, so the price reads first and the VAT promise
+   second — the tile must not turn into two competing numbers. */
+.product-vat{display:block;margin-top:2px;font-size:var(--text-xs);color:var(--pale);letter-spacing:.04em;font-weight:400;}
 .product-grid-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--soft);font-size:var(--text-sm);}
 
 /* Trust strip — moved to BELOW the grid per Baymard guidance */
@@ -825,7 +828,7 @@ const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
 
 let allProducts = [];      // unsorted master list from Supabase
-let fromPrices = null;     // { slug: lowest sell price }, from the from_prices() function
+let fromPrices = null;     // { slug: {price, qty} }, from the from_prices() function
 let currentSort = 'alpha'; // the only order we offer — Featured and Newest were removed
 let currentCat  = null;    // category filter from ?cat= URL param
 
@@ -841,12 +844,30 @@ function escapeHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// Look up the lowest sell price for a product. Worked out by the database
+// The price of a pack, and the size of that pack. Worked out by the database
 // now, so this page never sees a sheet rate.
+//
+// It quotes a quantity rather than a single card on purpose. Our prices are
+// almost all setup — one invitation and ten cost the same £17.60, five hundred
+// cost £39.20 — so the old "cheapest row anywhere" landed on a quantity of one
+// and advertised the setup fee as the price of one card. None of Papier,
+// Vistaprint or printed.com quotes a quantity of one, and all three name the
+// quantity beside the money.
 function getStartingPrice(slug) {
   if (!fromPrices) return null;
-  const v = fromPrices[slug];
-  return (v == null) ? null : parseFloat(v);
+  const row = fromPrices[slug];
+  if (!row || row.price == null) return null;
+  const price = parseFloat(row.price);
+  return isNaN(price) ? null : price;
+}
+
+// "From £22 for 50", or "From £52 each" where the natural order is one.
+function priceSentence(slug) {
+  const price = getStartingPrice(slug);
+  if (price === null) return null;
+  const qty = (fromPrices[slug] && parseInt(fromPrices[slug].qty, 10)) || 1;
+  const money = 'From <strong>£' + Math.round(price) + '</strong>';
+  return qty > 1 ? money + ' for ' + qty : money + ' each';
 }
 
 // Filter products by category (if currentCat is set)
@@ -906,9 +927,11 @@ function renderProducts() {
       ? `<img class="product-img" src="${escapeHtml(imgCdn(p.hero_image_url, 600))}" srcset="${escapeHtml(imgCdnSet(p.hero_image_url, 600))}" sizes="(max-width:700px) 92vw, 320px" alt="${escapeHtml(p.name || '')}" loading="lazy" decoding="async"/>`
       : `<div class="product-img-placeholder">✦</div>`;
     const tagline = p.tagline || '';
-    const price = getStartingPrice(p.slug);
-    const priceLabel = price !== null
-      ? `From <strong>£${Math.round(price)}</strong>`
+    const sentence = priceSentence(p.slug);
+    // "inc. VAT" is a promise, not a footnote. Both consumer sites checked say
+    // it on every tile; the price we show is the one the checkout charges.
+    const priceLabel = sentence
+      ? `${sentence}<span class="product-vat">inc. VAT</span>`
       : `<span style="color:var(--pale);">Pricing on product page</span>`;
     return `
       <a class="product-card" href="/${escapeHtml(p.slug)}">
@@ -991,14 +1014,22 @@ async function loadData() {
     allProducts = fallbackRes.ok ? await fallbackRes.json() : [];
   }
   if (pricesRes.ok) {
-    // [{slug, from_price}] — turned into a lookup. This used to read the whole
-    // payload and only accept schema_version === 2; the published version has
-    // been 3 for some time, so the test quietly failed and this page has been
-    // showing no "from" prices at all.
+    // [{slug, from_price, display_quantity}] — turned into a lookup. This used
+    // to read the whole payload and only accept schema_version === 2; the
+    // published version has been 3 for some time, so the test quietly failed
+    // and this page has been showing no "from" prices at all.
+    //
+    // display_quantity is the quantity actually priced, not the one we asked
+    // for, so the tile can never name a pack we cannot sell. A database still
+    // on the old single-column function returns no quantity, and a missing one
+    // reads as 1 — which prints "each", the honest fallback.
     const rows = await pricesRes.json();
     if (Array.isArray(rows)) {
       fromPrices = {};
-      rows.forEach(r => { if (r && r.slug) fromPrices[r.slug] = r.from_price; });
+      rows.forEach(r => {
+        if (!r || !r.slug) return;
+        fromPrices[r.slug] = { price: r.from_price, qty: r.display_quantity || 1 };
+      });
     }
   }
 

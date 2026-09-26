@@ -4350,7 +4350,14 @@ async function publishHierarchical() {
           // rows ship where nothing can reach them and quietly go stale, the
           // same trap the weight check above exists for.
           const sidesOk = (r.printed_sides || 'single') === 'single' || sidesOffered;
-          if (fold && sidesOk &&
+          // A rate switched off in sheet_rates is kept for evidence but must
+          // never reach a customer. Folded 400gsm is the reason the column
+          // exists: the scrape came back below every thinner weight and
+          // identical on two different papers, so the printer substituted
+          // something rather than creasing 400gsm card. The "from" price takes
+          // the cheapest row in the payload, so a bad cheap row does not sit
+          // quietly in a corner — it becomes the headline on the grid.
+          if (fold && sidesOk && r.active !== false &&
               papersOk.includes(r.paper_name) &&
               sizes.includes(r.size) &&
               offersWeight(r.paper_name, parseInt(r.weight_gsm, 10))) {

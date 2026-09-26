@@ -294,8 +294,10 @@ exports.handler = async () => {
     // hardcodes 'printed-sides': 'single'. Sampling a double-sided row and
     // comparing it against a single-sided quote would report a ~22% rise
     // every Monday that was never a rise.
+    // Switched-off rates are kept for evidence but are not quoted, so a drift
+    // alert on one would be a Monday email about a price nobody can buy.
     rates = await sbAll('sheet_rates?select=supplier_family,paper_name,weight_gsm,size,quantity,cost'
-                      + '&printed_sides=eq.single&order=id');
+                      + '&printed_sides=eq.single&active=is.true&order=id');
   } catch (err) {
     console.error('[price-watch] could not read sheet_rates:', err.message);
     return { statusCode: 500, body: err.message };
