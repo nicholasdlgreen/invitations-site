@@ -163,7 +163,43 @@ position race in `checkFile`, the zoom control reading 100% while the canvas
 showed otherwise, the on-screen face's adjustment dropped from the press file,
 the size row wiped a moment after being added, and "a A5 card" then "an Square".
 
-`node` is not installed here; macOS JXA is used as the local JavaScript parser.
+`node` is not installed here. macOS JXA parses JavaScript but **never settles a
+promise** — it has no microtask pump, so async code silently never runs and a
+test written against it passes by doing nothing. Use the JavaScriptCore shell
+instead, which ships with macOS and has a real event loop:
+
+```
+/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc test.js
+```
+
+It has `readFile()` and `print()`, and it is what the admin session tests run
+on.
+
+---
+
+## 4a. The admin session expires after an hour, silently
+
+Publish refused this evening: *"no prices were built for any product. No sheet
+rates are loaded."* **The guard was right and the live catalogue was never
+touched** — 56,636 sheet prices and 10,374 finishing prices still published.
+
+The cause was not the rates. `sheet_rates` holds 7,389 rows and its policy is
+correct. Admin kept only the **access token** from sign-in and threw away the
+refresh token beside it, and a Supabase access token lasts **one hour**. After
+that the page still looked signed in while every admin-only table answered 401,
+the loaders' catch blocks set the arrays empty, and Publish reported "no rates"
+— which points at the data when the truth is "you are signed out".
+
+Fixed three ways: the refresh token is kept and swapped for a fresh hour, on a
+timer and on any 401 (one shared refresh, because Supabase rotates the token and
+parallel refreshes cancel each other); a refresh that genuinely fails says the
+session has expired and shows the login screen; and Publish now names that as
+the reason instead of advising a reload that would only dump you at the login
+screen anyway. Six tests, on `jsc`.
+
+**The pattern worth keeping:** an error message that names the wrong cause costs
+more than no message. Both of today's incidents were one subsystem failing and a
+different one taking the blame.
 
 ---
 

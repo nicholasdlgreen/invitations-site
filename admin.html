@@ -1232,6 +1232,12 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 // repository is public, so anything here is public too.
 // Access needs BOTH a valid account AND a row in admin_users.
 let ADMIN_TOKEN = sessionStorage.getItem('inv_admin_token') || null;
+// The access token Supabase issues lasts an hour. Only that token was kept and
+// the refresh token beside it was thrown away, so after an hour the admin page
+// still LOOKED signed in while every admin-gated table answered 401 — and the
+// pricing screens quietly went empty rather than saying so. Keep both.
+let ADMIN_REFRESH = sessionStorage.getItem('inv_admin_refresh') || null;
+let ADMIN_SESSION_LOST = false;
 let ADMIN_EMAIL = sessionStorage.getItem('inv_admin_email') || null;
 const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
@@ -1280,8 +1286,11 @@ async function doLogin() {
     }
 
     ADMIN_TOKEN = data.access_token;
+    ADMIN_REFRESH = data.refresh_token || null;
     ADMIN_EMAIL = email;
+    ADMIN_SESSION_LOST = false;
     sessionStorage.setItem('inv_admin_token', ADMIN_TOKEN);
+    if (ADMIN_REFRESH) sessionStorage.setItem('inv_admin_refresh', ADMIN_REFRESH);
     sessionStorage.setItem('inv_admin_email', ADMIN_EMAIL);
     enterAdmin();
   } catch (e) {
@@ -1291,12 +1300,70 @@ async function doLogin() {
   }
 }
 
+let sessionTimer = null;
 function enterAdmin() {
+  ADMIN_SESSION_LOST = false;
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app-shell').classList.add('visible');
   loadOrders();
   pricingLoad();
   refreshTimer = setInterval(loadOrders, 120000);
+  // Renew before the hour is out. A pricing day runs longer than one token,
+  // and the failure was invisible: the screens stayed up and the tables
+  // behind them went blank.
+  clearInterval(sessionTimer);
+  sessionTimer = setInterval(refreshAdminSession, 45 * 60 * 1000);
+}
+
+// Trade the refresh token for a fresh hour.
+//
+// One in-flight refresh at a time. Supabase rotates the refresh token on use,
+// so two parallel refreshes race and the loser invalidates the winner — and
+// this page fires fifteen loaders at once, which is exactly the shape that
+// produces fifteen simultaneous 401s.
+let refreshInFlight = null;
+function refreshAdminSession() {
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      if (!ADMIN_REFRESH) return false;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+          body: JSON.stringify({ refresh_token: ADMIN_REFRESH })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.access_token) return false;
+        ADMIN_TOKEN = data.access_token;
+        sessionStorage.setItem('inv_admin_token', ADMIN_TOKEN);
+        if (data.refresh_token) {
+          ADMIN_REFRESH = data.refresh_token;
+          sessionStorage.setItem('inv_admin_refresh', ADMIN_REFRESH);
+        }
+        return true;
+      } catch (e) {
+        return false;
+      }
+    })().finally(() => { refreshInFlight = null; });
+  }
+  return refreshInFlight;
+}
+
+// Signed out, and nothing can be done about it here. Say so plainly and put
+// the login screen back, rather than letting the pricing screens sit there
+// looking populated while every table behind them answers with nothing.
+function adminSessionLost() {
+  if (ADMIN_SESSION_LOST) return;
+  ADMIN_SESSION_LOST = true;
+  ADMIN_TOKEN = null; ADMIN_REFRESH = null;
+  sessionStorage.removeItem('inv_admin_token');
+  sessionStorage.removeItem('inv_admin_refresh');
+  try { clearInterval(refreshTimer); } catch (e) { /* not running */ }
+  try {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('app-shell').classList.remove('visible');
+  } catch (e) { /* page not built yet */ }
+  alert('Your admin session has expired. Sign in again — nothing has been saved or published.');
 }
 
 // Come back to a still-valid session without signing in again.
@@ -1306,7 +1373,22 @@ async function restoreAdminSession() {
     const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${ADMIN_TOKEN}` }
     });
-    if (!res.ok) throw new Error('expired');
+    if (!res.ok) {
+      // An hour-old token on a reloaded page is the normal case, not a fault.
+      if (!(await refreshAdminSession())) throw new Error('expired');
+      const again = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${ADMIN_TOKEN}` }
+      });
+      if (!again.ok) throw new Error('expired');
+      const u = await again.json();
+      const ck = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?select=user_id&user_id=eq.${u.id}`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${ADMIN_TOKEN}` }
+      });
+      const rs = await ck.json().catch(() => []);
+      if (!Array.isArray(rs) || !rs.length) throw new Error('not an admin');
+      enterAdmin();
+      return;
+    }
     const user = await res.json();
     const check = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?select=user_id&user_id=eq.${user.id}`, {
       headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${ADMIN_TOKEN}` }
@@ -1316,7 +1398,9 @@ async function restoreAdminSession() {
     enterAdmin();
   } catch (e) {
     ADMIN_TOKEN = null;
+    ADMIN_REFRESH = null;
     sessionStorage.removeItem('inv_admin_token');
+    sessionStorage.removeItem('inv_admin_refresh');
     sessionStorage.removeItem('inv_admin_email');
   }
 }
@@ -1328,8 +1412,9 @@ function doLogout() {
       headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${ADMIN_TOKEN}` }
     }).catch(() => {});
   }
-  ADMIN_TOKEN = null; ADMIN_EMAIL = null;
+  ADMIN_TOKEN = null; ADMIN_EMAIL = null; ADMIN_REFRESH = null;
   sessionStorage.removeItem('inv_admin_token');
+  sessionStorage.removeItem('inv_admin_refresh');
   sessionStorage.removeItem('inv_admin_email');
   sessionStorage.removeItem('inv_admin');
   clearInterval(refreshTimer);
@@ -1364,7 +1449,7 @@ function showSection(name) {
 // ADMIN — SUPABASE
 // ═══════════════════════════════════════════════════════
 
-async function sbFetch(path, opts = {}) {
+async function sbFetch(path, opts = {}, retriedAfterRefresh) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...opts,
     headers: {
@@ -1376,6 +1461,14 @@ async function sbFetch(path, opts = {}) {
       ...(opts.headers || {}),
     },
   });
+  // An expired token is not an empty table. Renew once and go again; if that
+  // fails, say the session has gone rather than letting the caller's catch
+  // turn a signed-out admin into "no rates exist".
+  if (res.status === 401 && ADMIN_TOKEN && !retriedAfterRefresh) {
+    if (await refreshAdminSession()) return sbFetch(path, opts, true);
+    adminSessionLost();
+    throw new Error('Admin session expired — sign in again.');
+  }
   if (!res.ok) { const e = await res.text(); throw new Error(e); }
   if (res.status === 204) return null;
   const text = await res.text();
@@ -4659,10 +4752,12 @@ async function publishHierarchical() {
       (n, x) => n + ((x.sheet_sells && x.sheet_sells.length) || 0), 0);
     if (!totalSheetRows) {
       if (btn) { btn.disabled = false; btn.textContent = 'Publish'; }
-      const msg = 'Refusing to publish: no prices were built for any product. '
-                + (sheetRates && sheetRates.length
-                    ? 'The rates loaded, so this is a fault in the publish filters.'
-                    : 'No sheet rates are loaded — hard-reload this page and try again.');
+      const why = (sheetRates && sheetRates.length)
+        ? 'The rates loaded, so this is a fault in the publish filters.'
+        : (ADMIN_SESSION_LOST || !ADMIN_TOKEN)
+          ? 'Your admin session has expired, so the cost tables came back empty. Sign in again, then publish.'
+          : 'No sheet rates are loaded — hard-reload this page and try again.';
+      const msg = 'Refusing to publish: no prices were built for any product. ' + why;
       alert(msg);
       console.error('[publish] ' + msg,
                     { sheetRatesLoaded: (sheetRates || []).length, products: products.length });
