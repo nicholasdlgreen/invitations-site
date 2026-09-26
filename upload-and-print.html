@@ -1231,20 +1231,18 @@ const CONFIG = {
   ],
   pricing: { basePerFifty:150, vatRate:0.20, minQty:25, qtyStep:25 },
 };
-// ENVELOPES is `let` so loadSiteData() can replace it with rows from
-// Supabase `envelopes` table. The values below are the fallback shown
-// if the table is empty or unreachable.
+// ENVELOPES is `let` so loadSiteData() can replace it with rows from the
+// Supabase `envelopes` table. What follows is only the fallback for a first
+// paint or an unreachable database.
+//
+// It used to list ten colours — Ivory, Warm Cream, Blush Pink, Sage Green and
+// five others — none of which PrintedEasy sell and six of which were not even
+// in the table. A fallback that offers stock we cannot buy is worse than no
+// fallback: it only appears when something is already wrong, and it appears
+// looking authoritative. They sell white and red, so that is the fallback.
 let ENVELOPES = [
-  { id:'white',    name:'Brilliant White', hex:'#FFFFFF', border:'#ddd',     priceEach:0.35 },
-  { id:'ivory',    name:'Ivory',           hex:'#FAF7F2', border:'#e0dbd5',  priceEach:0.35 },
-  { id:'cream',    name:'Warm Cream',      hex:'#F5EDE0', border:'#e5d8c8',  priceEach:0.35 },
-  { id:'blush',    name:'Blush Pink',      hex:'#F0DDD8', border:'#dcc8c2',  priceEach:0.45 },
-  { id:'sage',     name:'Sage Green',      hex:'#D1DDD0', border:'#b8c8b6',  priceEach:0.45 },
-  { id:'lavender', name:'Lavender',        hex:'#DDD5E8', border:'#c8bee0',  priceEach:0.45 },
-  { id:'slate',    name:'Slate Blue',      hex:'#B0BEC8', border:'#90a0b0',  priceEach:0.50 },
-  { id:'navy',     name:'Midnight Navy',   hex:'#2C3E50', border:'#1a2a38',  priceEach:0.55 },
-  { id:'black',    name:'Matte Black',     hex:'#1C1C1C', border:'#000',     priceEach:0.55 },
-  { id:'gold',     name:'Champagne Gold',  hex:'#D4B896', border:'#b89870',  priceEach:0.60 },
+  { id:'white', name:'Brilliant White', hex:'#FFFFFF', border:'#ddd',    priceEach:0.10 },
+  { id:'red',   name:'Red',             hex:'#B3232B', border:'#8A1A21', priceEach:0.23 },
 ];
 // Sizes come from the print_sizes table (managed in admin). These defaults are
 // only a safety net for the first paint and for the rare case where Supabase is
@@ -1595,6 +1593,34 @@ function totalFinishSell() {
 // Every lamination option on this site is specified "both sides" — that is what
 // finish_types says and what the customer is shown — and the printer charges
 // front and reverse separately. Corners is a single operation on the whole card.
+// What the envelopes actually cost at this size and quantity.
+//
+// They were charged priceEach x quantity from a single number per colour, so
+// white cost the same on an A6 as on an A5. The printer charges per unit but
+// the rate still moves with size and run length — white is 5.4p an envelope on
+// A6 and up to 12p on A5 — so envelopes use the same published ladder as every
+// other finishing charge, and fall back to the flat figure only if no rate has
+// been published for this combination.
+function envelopeCost(env){
+  if (!env) return 0;
+  const qty = (typeof uploadQty !== 'undefined' && uploadQty) ? uploadQty : 0;
+  const rows = currentProduct && Array.isArray(currentProduct.finish_prices)
+    ? currentProduct.finish_prices : null;
+  if (rows && rows.length){
+    const fam = printingFamily();
+    const eq = function(a,b){ return String(a||'').toLowerCase().trim() === String(b||'').toLowerCase().trim(); };
+    const forThis = rows.filter(function(r){
+      return /^envelopes$/i.test(r.finish) && eq(r.option, env.name)
+          && (!fam || r.family === fam) && (!selectedSize || r.size === selectedSize);
+    }).sort(function(a,b){ return a.qty - b.qty; });
+    if (forThis.length){
+      const hit = forThis.find(function(r){ return r.qty >= qty; }) || forThis[forThis.length - 1];
+      return Math.round(parseFloat(hit.sell) * 100) / 100;
+    }
+  }
+  return Math.round((parseFloat(env.priceEach) || 0) * qty * 100) / 100;
+}
+
 function finishSidesFor(typeName) {
   return /lamination/i.test(typeName || '') ? 'both' : 'front';
 }
@@ -3714,7 +3740,7 @@ function updatePrice(){
   let envCost=0;
   if(envelopesEnabled&&selectedEnvColour){
     const env=ENVELOPES.find(e=>e.id===selectedEnvColour);
-    if(env)envCost=Math.round(env.priceEach*uploadQty*100)/100;
+    if(env)envCost=envelopeCost(env);
   }
   lastGoodsTotal = base+upgrade+envCost;
   const subtotalEx=(base+upgrade+envCost+deliveryCost)/1.2;
@@ -3765,7 +3791,7 @@ async function addToCartUpload(){
   let envCost=0;
   if(envelopesEnabled&&selectedEnvColour){
     const env=ENVELOPES.find(e=>e.id===selectedEnvColour);
-    if(env)envCost=Math.round(env.priceEach*uploadQty*100)/100;
+    if(env)envCost=envelopeCost(env);
   }
   lastGoodsTotal = base+upgrade+envCost;
   const subtotalEx=(base+upgrade+envCost+deliveryCost)/1.2;

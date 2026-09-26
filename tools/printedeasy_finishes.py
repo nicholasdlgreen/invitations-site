@@ -132,6 +132,19 @@ FINISHES = {
         # catches this generally; the allowlist is the first line of defence.
         'families': {'flat-card', 'folded-card', 'large-format'},
     },
+    # Envelopes are the one charge here that is genuinely PER UNIT rather than a
+    # setup fee, so the ladder matters more, not less. Option names match the
+    # envelopes table, not finish_types, because that is where they live.
+    #
+    # Red exists on Postcards and Greeting Cards but NOT on the Luxury products,
+    # so folded-leaflet is expected to yield white only — the per-option check in
+    # main() drops an option that does not move the price while its siblings do.
+    'envelopes': {
+        'our_name': 'Envelopes',
+        'options': {'Brilliant White': 'white', 'Red': 'red'},
+        'fields': {'front': lambda v: {'envelopes': v}},
+        'families': {'flat-card', 'folded-card', 'folded-leaflet'},
+    },
     'corners': {
         'our_name': 'Corners',
         'options': {'Rounded': '6'},
@@ -322,12 +335,23 @@ def main():
                                   for o, v in spec['options'].items()}
                         if (sent is not None and abs(sent - base) < 0.005 and
                                 all(g is not None and abs(g - base) < 0.005 for g in probes.values())):
-                            notoffered.add(f'{family}/{fkey}/{applies_to}')
+                            notoffered.add(f'{family}/{fkey}/{applies_to} on {our_size} (no such field)')
                             continue
+                        # Within one finish, if an option leaves the price
+                        # untouched while a sibling moves it, that option is not
+                        # being applied — the form ignored a value it does not
+                        # have. Red envelopes on the Luxury products are exactly
+                        # this, and without the check they would be recorded as
+                        # free rather than unavailable.
+                        moved = [g for g in probes.values()
+                                 if g is not None and abs(g - base) > 0.005]
                         for our_opt, their_opt in spec['options'].items():
                             got = probes.get(our_opt)
                             if not got:
                                 skipped.append(f'{family} {fkey} {our_opt} {applies_to} {our_size} x{qty}: 0')
+                                continue
+                            if moved and abs(got - base) < 0.005:
+                                notoffered.add(f'{family}/{fkey}/{our_opt} on {our_size}')
                                 continue
                             if got < base - 0.005:
                                 skipped.append(f'{family} {fkey} {our_opt} {applies_to} {our_size} x{qty}: '
