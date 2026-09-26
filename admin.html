@@ -4140,17 +4140,27 @@ let sheetRates = [];
 let finishRates = [];
 
 async function loadSheetRatesFromSupabase() {
+  // Loaded separately and caught separately. These were in one try block, and
+  // the catch set sheetRates = [] — so when the finish_rates fetch failed it
+  // threw away 7,389 sheet rates that had already loaded perfectly well, and
+  // Publish then wrote an empty catalogue for all 23 products without a word.
+  // One table failing must never discard another.
   try {
     sheetRates = await sbFetchAll('sheet_rates?select=*&order=id');
-    // Finishing priced the way the printer prices it — per option, per side,
-    // per size, per quantity. Paged like the sheet rates, because there are
-    // 2,289 of them and PostgREST stops at 1,000 without saying so.
-    finishRates = await sbFetchAll('finish_rates?select=*&active=is.true&order=id');
-    populateSheetRatesPaperSelect();
   } catch (err) {
     console.warn('Could not load sheet rates from Supabase:', err.message);
     sheetRates = [];
   }
+  try {
+    // Finishing priced the way the printer prices it — per option, per side,
+    // per size, per quantity. Paged like the sheet rates, because there are
+    // 2,289 of them and PostgREST stops at 1,000 without saying so.
+    finishRates = await sbFetchAll('finish_rates?select=*&active=is.true&order=id');
+  } catch (err) {
+    console.warn('Could not load finish rates from Supabase:', err.message);
+    finishRates = [];
+  }
+  try { populateSheetRatesPaperSelect(); } catch (err) { /* cosmetic */ }
 }
 
 function populateSheetRatesPaperSelect() {
@@ -4636,6 +4646,28 @@ async function publishHierarchical() {
       weights:      Array.isArray(p.weights) ? p.weights : [],
       finishes:     Array.isArray(p.finishes) ? p.finishes : []
     }));
+
+    // Refuse to publish a catalogue with no prices in it.
+    //
+    // On 26 September a failed load of a NEW table wiped the sheet rates in its
+    // catch block, and Publish wrote zero prices for all 23 products without a
+    // murmur. The site fell back to a formula and nobody would have known until
+    // an order came through at the wrong price. A publish that finds nothing to
+    // publish has failed, whatever the reason, and must say so rather than
+    // overwrite a good catalogue with an empty one.
+    const totalSheetRows = products.reduce(
+      (n, x) => n + ((x.sheet_sells && x.sheet_sells.length) || 0), 0);
+    if (!totalSheetRows) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Publish'; }
+      const msg = 'Refusing to publish: no prices were built for any product. '
+                + (sheetRates && sheetRates.length
+                    ? 'The rates loaded, so this is a fault in the publish filters.'
+                    : 'No sheet rates are loaded — hard-reload this page and try again.');
+      alert(msg);
+      console.error('[publish] ' + msg,
+                    { sheetRatesLoaded: (sheetRates || []).length, products: products.length });
+      return;
+    }
 
     const payload = {
       schema_version: 3,
