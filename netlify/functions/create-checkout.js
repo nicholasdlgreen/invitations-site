@@ -75,7 +75,7 @@ async function loadPricingContext() {
     const [snapRows, cfgRows, envRows, paperRows] = await Promise.all([
       supabaseSelect('pricing_config?select=payload&order=published_at.desc&limit=1'),
       supabaseSelect('site_config?id=eq.pricing&select=data'),
-      supabaseSelect('envelopes?select=id,price_each&active=eq.true'),
+      supabaseSelect('envelopes?select=id,name,price_each&active=eq.true'),
       supabaseSelect('paper_stocks?select=name,price_extra&active=eq.true')
     ]);
     const payload = snapRows?.[0]?.payload;
@@ -86,13 +86,40 @@ async function loadPricingContext() {
     }
     const cfg = cfgRows?.[0]?.data;
     if (cfg?.basePerFifty != null) ctx.basePerFifty = parseFloat(cfg.basePerFifty);
-    (envRows || []).forEach(e => { ctx.envelopes[e.id] = parseFloat(e.price_each) || 0; });
+    // Name as well as price: envelopes are priced off the published finishing
+    // ladder now, and the ladder is keyed on the colour's NAME.
+    (envRows || []).forEach(e => {
+      ctx.envelopes[e.id] = { name: e.name || '', each: parseFloat(e.price_each) || 0 };
+    });
     (paperRows || []).forEach(p => { ctx.papers[p.name] = parseFloat(p.price_extra) || 0; });
   } catch (e) {
     console.warn('[price-check] could not load pricing data:', e.message);
     return null;                       // cannot verify — see caller
   }
   return ctx;
+}
+
+// The cheapest rung of a published ladder at or above the quantity being bought.
+//
+// A product can be priced on more than one route — a wedding invitation is
+// flat-card when flat and folded-card when folded — and the two families quote
+// different figures for the same size and quantity. The basis does not carry
+// the family, so the floor takes the CHEAPEST family's rung. A floor must be
+// the least an honest order could cost; picking the dearer family would reject
+// a customer who chose the cheaper one.
+function ladderFloor(rows, want) {
+  if (!rows || !rows.length) return null;
+  const families = [...new Set(rows.map(r => r.family || ''))];
+  let least = null;
+  families.forEach(fam => {
+    const rungs = rows.filter(r => (r.family || '') === fam)
+                      .sort((a, b) => a.qty - b.qty);
+    if (!rungs.length) return;
+    const hit = rungs.find(r => r.qty >= want) || rungs[rungs.length - 1];
+    const val = parseFloat(hit.sell) || 0;
+    if (least == null || val < least) least = val;
+  });
+  return least;
 }
 
 // The least this item could legitimately cost, mirroring the site's own rules.
@@ -141,11 +168,9 @@ function floorPriceFor(item, ctx) {
           const sides = /lamination/i.test(ch.name) ? 'both' : 'front';
           const rows = product.finish_prices
             .filter(r => eq(r.finish, ch.name) && eq(r.option, ch.option)
-                      && eq(r.sides, sides) && r.size === b.size)
-            .sort((x, y) => x.qty - y.qty);
-          if (!rows.length) return;
-          const hitRow = rows.find(r => r.qty >= qty) || rows[rows.length - 1];
-          finish += parseFloat(hitRow.sell) || 0;
+                      && eq(r.sides, sides) && r.size === b.size);
+          const rung = ladderFloor(rows, qty);
+          if (rung != null) finish += rung;
         });
       } else if (Array.isArray(product.finish_sells)) {
         chosenFinishes.forEach(ch => {
@@ -166,7 +191,24 @@ function floorPriceFor(item, ctx) {
     base = Math.round((qty / 50) * ctx.basePerFifty) + (ctx.papers[b.paperName] || 0);
   }
 
-  const envelopes = b.envelopeId ? (ctx.envelopes[b.envelopeId] || 0) * qty : 0;
+  // Envelopes are priced from the same published ladder as every other
+  // finishing charge, per colour, per size, per quantity. They used to be one
+  // flat figure times the quantity, and leaving the floor on that figure would
+  // reject honest orders rather than let cheap ones through: white is 10p each
+  // in the envelopes table but £7.20 for a hundred A5 on the ladder, so the
+  // floor would have demanded £10 for something the site charges £7.20 for.
+  let envelopes = 0;
+  const env = b.envelopeId ? ctx.envelopes[b.envelopeId] : null;
+  if (env) {
+    const rows = (product && Array.isArray(product.finish_prices))
+      ? product.finish_prices.filter(r =>
+          /^envelopes$/i.test(r.finish || '') &&
+          String(r.option || '').toLowerCase().trim() === env.name.toLowerCase().trim() &&
+          r.size === b.size)
+      : [];
+    const rung = ladderFloor(rows, qty);
+    envelopes = (rung != null) ? rung : env.each * qty;
+  }
   return base + envelopes;             // delivery deliberately excluded
 }
 

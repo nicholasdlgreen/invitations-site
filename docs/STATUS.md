@@ -14,7 +14,7 @@ artwork journey — plus one incident worth reading (§5).
 | | |
 |---|---|
 | Cost rows in `sheet_rates` | 7,389 (378 switched off) |
-| Finishing rows in `finish_rates` | **2,289**, loaded and live |
+| Finishing rows in `finish_rates` | **2,667**, loaded and live (378 of them envelopes) |
 | Published sheet prices | **56,636** |
 | Published finishing prices | **10,374** |
 | Product page payload | 536KB |
@@ -43,6 +43,11 @@ artwork journey — plus one incident worth reading (§5).
   rounded corners £16.80.
 - **Envelopes cut to what they sell** — white and red. Five colours we could not
   buy at any price are gone.
+- **Envelope rates loaded** — 378 of them, priced per family, colour, size and
+  quantity like every other finishing charge. Loading them also exposed and
+  fixed a checkout bug: the price floor still charged 10p an envelope times the
+  quantity, which would have demanded £10 for a hundred A5 the site now sells
+  at £7.20 — every envelope order rejected at checkout, not let through cheap.
 
 ### Two things the measurements changed
 
@@ -68,20 +73,17 @@ exception — they genuinely scale, being a thing per card rather than a setup.
 ### Outstanding
 
 1. **Margins are 0.** The only thing between us and trading.
-2. **Load the 378 envelope rates** (scraped, in a CSV, verified). Envelopes are
-   charged one flat figure per colour, so white costs the same on an A6 as on an
-   A5 — currently over-recovering, which is the safe direction.
-3. **Gate finishes and envelopes on the route.** An order of service in
+2. **Gate finishes and envelopes on the route.** An order of service in
    Fedrigoni stock is still offered Corners that Luxury Folded cannot make, and
    red envelopes on a route that only has white.
-4. **Retire `finish_options.cost_modifier`** now the rate table drives pricing.
-5. **880 `large-format` rates are still unreachable** — routes make it a one-line
+3. **Retire `finish_options.cost_modifier`** now the rate table drives pricing.
+4. **880 `large-format` rates are still unreachable** — routes make it a one-line
    change, but nobody has decided whether table plans sell on paper as well as
    board.
-6. **Confirm the 20%** against a real invoice.
-7. **The VAT question** — they quote Luxury Flat without VAT, and that is what we
+5. **Confirm the 20%** against a real invoice.
+6. **The VAT question** — they quote Luxury Flat without VAT, and that is what we
    sell as a wedding invitation.
-8. **Their full stock × weight matrix**, discovered with the sentinel test, so
+7. **Their full stock × weight matrix**, discovered with the sentinel test, so
    any weight they sell is an admin tick.
 
 ---
@@ -199,9 +201,8 @@ not the thing beside it is how this happens.
 
 ## 6. What I would do next, in order
 
-1. **Load the 378 envelope rates** — scraped and verified, ten minutes of work.
-2. **Set margins.** Everything else in pricing is finished.
-3. **Gate finishes and envelopes on the route** — closes two live mis-sells.
-4. **Send `ARTWORK-SPEC.md` to PrintedEasy and print one real sample.** Both
+1. **Set margins.** Everything else in pricing is finished.
+2. **Gate finishes and envelopes on the route** — closes two live mis-sells.
+3. **Send `ARTWORK-SPEC.md` to PrintedEasy and print one real sample.** Both
    cheap, both de-risk everything else.
-5. The stock × weight matrix, then the range gaps.
+4. The stock × weight matrix, then the range gaps.

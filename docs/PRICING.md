@@ -353,11 +353,26 @@ than a setup fee. Measured on Postcards, their list price:
 | DL | 5.4p – 7p | 15.8p – 19p |
 | A5 | 8.8p – 12p | 21.8p – 28p |
 
-`envelopes.price_each` holds one number per colour, so it cannot express size or
-quantity and currently takes the dearest case — over-recovering slightly rather
-than selling below cost. **Two things are still wrong:** envelopes sit outside
-the margin engine entirely, and the site will offer red on a Fedrigoni stock
-that can only have white.
+**378 envelope rates are now in `finish_rates`**, loaded 26 September, keyed the
+same way as every other finishing charge — family, colour, size, quantity.
+Three families: flat-card and folded-card in both colours at A6, A5, DL and
+Square; folded-leaflet in **white only**, because Luxury Folded does not sell
+red. There is no Square-210 envelope, which is why that size has none.
+
+The per-envelope cost is stable across the ladder, as a real per-unit charge
+should be — A5 flat card, white: 9.6p at 25, 7.2p at 100, 7.0p at 500; red
+22.4p, 18.4p, 17.4p. That is the proof it is not a setup fee in disguise.
+
+`envelopes.price_each` — one flat number per colour — is now only the fallback
+for a size or family with no published rate. It was the live price until today,
+and it over-recovered: white at 10p each meant £10 for a hundred A5 against a
+£7.20 rate.
+
+**Two things still to do:** envelopes go through the product's margin like any
+other finishing rate now, but the site will still offer **red on a Fedrigoni
+stock that can only have white** — the colour list is not gated on the route.
+And the 42 `folded-leaflet` rows are currently unreachable, because the only
+product on that family, order of service, has `envelopes_offered = false`.
 
 ### Finishing is a setup charge, not a per-unit one
 
@@ -387,11 +402,11 @@ per card rather than a machine setup.
 | Papers, weights, finishes | `paper_stocks` | admin → Pricing → Paper Stocks |
 | Papers/sizes/family/quantities per product | `product_types` | admin → Pricing → Product Types |
 | What a finish **costs** today | `finish_options` (one price per type) | admin |
-| What a finish **will cost** | `finish_rates` (per option, sides, size, quantity) | `tools/printedeasy_finishes.py` |
+| What a finish and an envelope cost | `finish_rates` (per family, option, sides, size, quantity) — 2,667 rows | `tools/printedeasy_finishes.py` |
 | How a product can be made | `product_types.routes` | admin → product form |
 | The supplier's name for a stock | `paper_stocks.pe_stock`, `pe_product_overrides` | admin → Paper Stocks |
 | What a finish is **called** and its options | `finish_types` | admin |
-| Envelope retail prices | `envelopes` | admin |
+| Envelope colours, and the flat fallback price | `envelopes` | admin |
 | Which pack the grid quotes | `product_types.display_quantity` | admin → product form |
 | VAT rate and registration | `site_config.pricing` | SQL |
 
@@ -524,6 +539,6 @@ not just the input data.**
    paper.
 6. **The VAT question** in §1 — the single most valuable thing to resolve.
 7. **Confirm the 20%** against a real invoice.
-8. **Envelopes** sit outside the margin engine: they cost 6p and we charge 35p.
+8. **Envelopes** are priced off the ladder and take the product's margin like any other finishing charge. What remains is gating the colour on the route.
 9. **The checkout VAT line** still shows a split while the business is not
    registered. The grid and landing pages are already clean.
