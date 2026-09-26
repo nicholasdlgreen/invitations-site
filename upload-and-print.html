@@ -2155,27 +2155,109 @@ async function faceDimsMm(entry){
       im.src = URL.createObjectURL(file);
     });
     if (!dims) return null;
-    return { w: dims.w * 25.4 / 300, h: dims.h * 25.4 / 300, kind: 'image' };
+    // Millimetres are derived at 300 DPI, which is an assumption about intent.
+    // The pixels are the fact, and the resolution rules need them.
+    return { w: dims.w * 25.4 / 300, h: dims.h * 25.4 / 300, kind: 'image',
+             pxW: dims.w, pxH: dims.h };
   }
   return null;   // AI, INDD, TIFF — nothing we can measure in the browser
 }
 
 async function checkFace(key){
+  const v = await faceVerdict(key);
+  return { state: v.state === 'choice' ? 'warn' : v.state, text: v.short };
+}
+
+// What is actually wrong with a face, and what the customer can do about it.
+//
+// The old check compared millimetres and said "wrong size" for anything that
+// did not match, which was both over-strict and unhelpful: it blocked files we
+// can print perfectly well by scaling, it never said what size WAS wanted, and
+// it contradicted the DPI readout a few centimetres away — one part of the page
+// refusing a file while another reported it at 211 DPI.
+//
+// The rules are written down in docs/ARTWORK-SPEC.md §6. Change both together.
+// "a A5 card" reads wrong, and so does "an Square". The article depends on how
+// the label is SAID: a code like A5 or DL is read letter by letter, so A is
+// "ay" and takes "an", while Square is a word and takes "a" despite its S.
+function anSize(label){
+  const t = String(label || '').trim();
+  const isCode = /^[A-Z]\d/.test(t) || /^[A-Z]{2}\b/.test(t);
+  const an = isCode ? /^[AEFHILMNORSX]/.test(t) : /^[aeiou]/i.test(t);
+  return (an ? 'an ' : 'a ') + label;
+}
+
+async function faceVerdict(key){
   const entry = sideFiles[key];
   const spec = SIZE_SPECS[selectedSize];
-  if (!entry || !spec) return { state: 'unknown', text: 'Ready' };
+  if (!entry || !spec) return { state:'unknown', short:'Ready' };
   let d;
   try { d = await faceDimsMm(entry); } catch(e){ d = null; }
-  if (!d) return { state: 'unknown', text: 'Ready' };
+  if (!d) return { state:'unknown', short:'Ready',
+                   detail:'We cannot measure this file type in the browser. We will check it before printing.' };
 
+  const bw = spec.mmW + 2*PRINT_BLEED_MM, bh = spec.mmH + 2*PRINT_BLEED_MM;
   const tol = 2;
-  const fits = function(w, h){
-    return (Math.abs(d.w - w) <= tol && Math.abs(d.h - h) <= tol) ||
-           (Math.abs(d.w - h) <= tol && Math.abs(d.h - w) <= tol);   // rotated is fine
-  };
-  if (fits(spec.mmW + 6, spec.mmH + 6)) return { state: 'ok',   text: 'Ready, with bleed' };
-  if (fits(spec.mmW, spec.mmH))         return { state: 'warn', text: 'No bleed — we will add it' };
-  return { state: 'err', text: Math.round(d.w) + '\u00d7' + Math.round(d.h) + 'mm — wrong size' };
+  const near = function(a,b){ return Math.abs(a-b) <= tol; };
+  const fits = function(w,h){ return (near(d.w,w)&&near(d.h,h)) || (near(d.w,h)&&near(d.h,w)); };
+  const mm = function(n){ return Math.round(n); };
+
+  if (fits(bw,bh)) return { state:'ok', short:'Ready, with bleed' };
+
+  if (fits(spec.mmW, spec.mmH)){
+    return { state:'choice', kind:'nobleed', short:'No bleed — choose how to fill it',
+             detail:'This is exactly card size, with no bleed. Printers cut with a little '
+                  + 'movement either way, so we need 3mm spare all round — '
+                  + mm(bw) + '\u00d7' + mm(bh) + 'mm in total.' };
+  }
+
+  // Is it the same shape as the card? If so, scaling changes nothing but size.
+  const artRatio  = Math.max(d.w,d.h) / Math.min(d.w,d.h);
+  const cardRatio = Math.max(bw,bh)   / Math.min(bw,bh);
+  const sameShape = Math.abs(artRatio - cardRatio) / cardRatio <= 0.02;
+
+  // Resolution once scaled to the bleed size. Vector PDFs have none to lose.
+  const target = printDpiFor(spec);
+  const floor  = Math.round(target * 0.67);
+  if (d.kind === 'image' && d.pxW){
+    const longSideMm = Math.max(bw,bh);
+    const longSidePx = Math.max(d.pxW,d.pxH);
+    const dpi = Math.round(longSidePx / (longSideMm/25.4));
+    if (dpi < floor){
+      const needW = Math.ceil(bw/25.4*floor), needH = Math.ceil(bh/25.4*floor);
+      return { state:'err', kind:'toosmall',
+               short:'Too small for ' + (spec.label || selectedSize),
+               detail:'This is ' + d.pxW + '\u00d7' + d.pxH + ' pixels. At '
+                    + mm(bw) + '\u00d7' + mm(bh) + 'mm that prints at about ' + dpi
+                    + ' DPI, which is too soft. We need at least '
+                    + needW.toLocaleString() + '\u00d7' + needH.toLocaleString() + ' pixels.' };
+    }
+    if (!sameShape){
+      return { state:'choice', kind:'shape', short:'A different shape to the card',
+               detail:'This is a different shape to ' + anSize(spec.label || selectedSize)
+                    + ' card. Fill the card crops the long edges; Fit it all in leaves a '
+                    + 'border. Both are on the proof \u2014 pick whichever looks right.' };
+    }
+    return { state: dpi < target ? 'warn' : 'ok',
+             short: dpi < target ? ('We\u2019ll scale it \u2014 about ' + dpi + ' DPI')
+                                 : 'Ready \u2014 we\u2019ll scale it to fit',
+             detail:'This is ' + mm(d.w) + '\u00d7' + mm(d.h) + 'mm and the card needs '
+                  + mm(bw) + '\u00d7' + mm(bh) + 'mm. Same shape, so we will scale it up'
+                  + (dpi < target ? '. At that size it prints at about ' + dpi
+                     + ' DPI, a little softer than the ' + target + ' we recommend.' : '.') };
+  }
+
+  // A vector PDF at the wrong size: shape is all that matters.
+  if (!sameShape){
+    return { state:'choice', kind:'shape', short:'A different shape to the card',
+             detail:'This is ' + mm(d.w) + '\u00d7' + mm(d.h) + 'mm, a different shape to '
+                  + anSize(spec.label || selectedSize) + ' card, which needs ' + mm(bw) + '\u00d7'
+                  + mm(bh) + 'mm. Fill the card crops the long edges; Fit it all in leaves a border.' };
+  }
+  return { state:'ok', short:'Ready \u2014 we\u2019ll scale it to fit',
+           detail:'This is ' + mm(d.w) + '\u00d7' + mm(d.h) + 'mm and the card needs '
+                + mm(bw) + '\u00d7' + mm(bh) + 'mm. Same shape, and it is vector, so scaling '
+                + 'costs nothing.' };
 }
 
 async function refreshFaceChecks(){
