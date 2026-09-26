@@ -4137,10 +4137,15 @@ function _oldRenderFinishOptionList() {
 // ═══════════════════════════════════════════════════════
 
 let sheetRates = [];
+let finishRates = [];
 
 async function loadSheetRatesFromSupabase() {
   try {
     sheetRates = await sbFetchAll('sheet_rates?select=*&order=id');
+    // Finishing priced the way the printer prices it — per option, per side,
+    // per size, per quantity. Paged like the sheet rates, because there are
+    // 2,289 of them and PostgREST stops at 1,000 without saying so.
+    finishRates = await sbFetchAll('finish_rates?select=*&active=is.true&order=id');
     populateSheetRatesPaperSelect();
   } catch (err) {
     console.warn('Could not load sheet rates from Supabase:', err.message);
@@ -4536,7 +4541,10 @@ async function publishHierarchical() {
           flattenedSteps += noBackwardSteps(
             sheetSells.filter(r => r.fold === f && (r.sides || 'single') === sd));
         });
-        // Finish sells: for each finish ticked on this product
+        // Finish sells, the OLD flat figure: one price per finishing type,
+        // whatever the option, size or quantity. Kept only so a page served
+        // from cache before this change still prices something rather than
+        // nothing. finish_prices below supersedes it.
         const finishSells = finishes.map(name => {
           const fo = (finishOptions || []).find(f => f.name === name);
           const cost = (fo && fo.cost_modifier != null) ? parseFloat(fo.cost_modifier) : 0;
@@ -4545,6 +4553,38 @@ async function publishHierarchical() {
             sell: parseFloat((cost * multiplier).toFixed(2))
           };
         });
+
+        // Finishing priced the way the printer prices it: per option, per
+        // side, per size, per quantity. A flat £5 for lamination recovered £5
+        // on a job that costs £21.60, and rounded corners were sold as free
+        // when they cost £17.60 — PrintedEasy print the surcharge next to the
+        // option on their own page.
+        //
+        // Per product, not shared, for two reasons: margin is a product
+        // decision, so a shared table would apply the wrong one; and pricing_for
+        // filters the payload to one product, so this only costs a page the
+        // rows it actually needs.
+        const finishRouteFamilies = new Set(routes.map(rt => rt.family));
+        const offeredOptions = {};
+        (finishTypes || []).filter(t => t.active !== false).forEach(t => {
+          offeredOptions[String(t.name).toLowerCase()] =
+            new Set((t.options || []).map(o => String(o.name || '').toLowerCase()));
+        });
+        const finishPrices = (finishRates || []).filter(r => {
+          if (!finishRouteFamilies.has(r.supplier_family)) return false;
+          if (!sizes.includes(r.size)) return false;
+          if (!finishes.includes(r.finish_name)) return false;
+          const opts = offeredOptions[String(r.finish_name).toLowerCase()];
+          return !opts || opts.has(String(r.option_name).toLowerCase());
+        }).map(r => ({
+          family: r.supplier_family,
+          finish: r.finish_name,
+          option: r.option_name,
+          sides:  r.applies_to,
+          size:   r.size,
+          qty:    r.quantity,
+          sell:   parseFloat((parseFloat(r.cost) * multiplier).toFixed(2))
+        }));
         return {
           slug:               p.slug,
           name:               p.name,
@@ -4559,7 +4599,8 @@ async function publishHierarchical() {
           available_papers:   papersOk,
           available_finishes: finishes,
           sheet_sells:        sheetSells,
-          finish_sells:       finishSells
+          finish_sells:       finishSells,
+          finish_prices:      finishPrices
         };
       });
 

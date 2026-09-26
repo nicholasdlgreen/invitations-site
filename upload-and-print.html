@@ -1583,17 +1583,53 @@ function selectedGsm() {
 // holds the chosen OPTION ("Gold"), so looking it up by option name always
 // returned nothing and the customer was never charged. Sum every chosen type.
 function totalFinishSell() {
-  if (!currentProduct || !Array.isArray(currentProduct.finish_sells)) return 0;
   let sum = 0;
   Object.keys(selectedFinishes || {}).forEach(typeName => {
     const opt = selectedFinishes[typeName];
     if (!opt || String(opt).toLowerCase() === 'none') return;
-    sum += lookupFinishSell(typeName);
+    sum += lookupFinishSell(typeName, opt);
   });
   return sum;
 }
 
-function lookupFinishSell(name) {
+// Every lamination option on this site is specified "both sides" — that is what
+// finish_types says and what the customer is shown — and the printer charges
+// front and reverse separately. Corners is a single operation on the whole card.
+function finishSidesFor(typeName) {
+  return /lamination/i.test(typeName || '') ? 'both' : 'front';
+}
+
+// What a finishing choice actually costs, at the size and quantity being bought.
+//
+// This used to be one flat figure per finishing TYPE: £5 for lamination
+// whatever you chose, £0 for rounded corners. Measured against PrintedEasy's
+// own page, matt lamination on 500 A5 is £12.80 and soft touch both sides is
+// £21.60, while rounded corners are £22 — a charge they print beside the option.
+// The flat figures gave away money on every order that used them.
+function lookupFinishSell(name, option) {
+  const rows = currentProduct && Array.isArray(currentProduct.finish_prices)
+    ? currentProduct.finish_prices : null;
+
+  if (rows && rows.length) {
+    const fam   = printingFamily();
+    const sides = finishSidesFor(name);
+    const want  = (typeof uploadQty !== 'undefined' && uploadQty) ? uploadQty : 1;
+    const eq = function(a, b){ return String(a||'').toLowerCase().trim() === String(b||'').toLowerCase().trim(); };
+    const forThis = rows.filter(function(r){
+      return eq(r.finish, name) && eq(r.option, option) && eq(r.sides, sides)
+          && (!fam || r.family === fam) && (!selectedSize || r.size === selectedSize);
+    });
+    if (forThis.length){
+      // The printer quotes a ladder, not a formula. Take the rung at or above
+      // the quantity being bought, so we never under-recover; failing that the
+      // largest rung we hold.
+      forThis.sort(function(a,b){ return a.qty - b.qty; });
+      const hit = forThis.find(function(r){ return r.qty >= want; }) || forThis[forThis.length - 1];
+      return parseFloat(hit.sell) || 0;
+    }
+  }
+
+  // Payload published before finish_prices existed.
   if (!currentProduct || !Array.isArray(currentProduct.finish_sells)) return 0;
   const match = currentProduct.finish_sells.find(f => f.name === (name || 'None'));
   return match ? parseFloat(match.sell) : 0;

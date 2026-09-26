@@ -124,15 +124,32 @@ function floorPriceFor(item, ctx) {
       // floors at the price of one of them. b.finishes is a map of type to
       // option; older orders carry only b.finish, a single option name.
       let finish = 0;
-      if (Array.isArray(product.finish_sells)) {
-        const chosen = b.finishes && typeof b.finishes === 'object'
-          ? Object.keys(b.finishes).filter(k => {
-              const v = b.finishes[k];
-              return v && String(v).toLowerCase() !== 'none';
-            })
-          : [b.finish].filter(f => f && String(f).toLowerCase() !== 'none');
-        chosen.forEach(name => {
-          const row = product.finish_sells.find(f => f.name === name);
+      const chosenFinishes = b.finishes && typeof b.finishes === 'object'
+        ? Object.keys(b.finishes)
+            .filter(k => { const v = b.finishes[k]; return v && String(v).toLowerCase() !== 'none'; })
+            .map(k => ({ name: k, option: b.finishes[k] }))
+        : [b.finish].filter(f => f && String(f).toLowerCase() !== 'none')
+            .map(f => ({ name: f, option: f }));
+
+      // Finishing is priced per option, per side, per size, per quantity — the
+      // way the printer prices it. The floor has to use the same table as the
+      // site or a legitimate order is rejected at checkout, and a flat figure
+      // here would let a £21.60 soft-touch job through at a £5 floor.
+      const eq = (a, c) => String(a || '').toLowerCase().trim() === String(c || '').toLowerCase().trim();
+      if (Array.isArray(product.finish_prices) && product.finish_prices.length) {
+        chosenFinishes.forEach(ch => {
+          const sides = /lamination/i.test(ch.name) ? 'both' : 'front';
+          const rows = product.finish_prices
+            .filter(r => eq(r.finish, ch.name) && eq(r.option, ch.option)
+                      && eq(r.sides, sides) && r.size === b.size)
+            .sort((x, y) => x.qty - y.qty);
+          if (!rows.length) return;
+          const hitRow = rows.find(r => r.qty >= qty) || rows[rows.length - 1];
+          finish += parseFloat(hitRow.sell) || 0;
+        });
+      } else if (Array.isArray(product.finish_sells)) {
+        chosenFinishes.forEach(ch => {
+          const row = product.finish_sells.find(f => f.name === ch.name);
           if (row) finish += parseFloat(row.sell) || 0;
         });
       }
