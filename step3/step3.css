@@ -166,6 +166,32 @@
   box-shadow:0 8px 18px rgba(43,32,25,.26),inset 0 0 0 1px rgba(255,255,255,.35);}
   #s3wrap .fin.on .mat{box-shadow:0 8px 18px rgba(43,32,25,.26),inset 0 0 0 1px rgba(255,255,255,.35),
   0 0 0 3px #fff,0 0 0 5px var(--tier,var(--gold));}
+  /* Corners and fold are not materials, they are shapes. The disc above shows
+     what a finish is MADE of, which is right for foil and lamination and
+     meaningless here — square corners rendered as a circle. These draw the
+     card itself instead, so the option looks like what it does. */
+  #s3wrap .shape{display:block;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:56px;height:74px;background:#FCFAF7;
+  box-shadow:0 8px 18px rgba(43,32,25,.26),inset 0 0 0 1px rgba(61,46,36,.18);}
+  #s3wrap .shape.r{border-radius:11px;}
+  /* A clip-path takes the box-shadow and the outline with it, so the tent was
+     a barely-there triangle. Two panels leaning together carry their own edge
+     and read as a card standing up. */
+  #s3wrap .shape.tent{width:78px;height:54px;border-radius:0;background:none;
+  box-shadow:none;overflow:visible;}
+  #s3wrap .shape.tent::before,#s3wrap .shape.tent::after{content:'';position:absolute;
+  bottom:0;width:41px;height:54px;}
+  #s3wrap .shape.tent::before{left:0;transform-origin:100% 100%;transform:skewX(-21deg);
+  background:linear-gradient(120deg,#FFFDFA,#F1EAE0);
+  box-shadow:inset 0 0 0 1px rgba(61,46,36,.22),-4px 7px 13px rgba(43,32,25,.20);}
+  #s3wrap .shape.tent::after{right:0;transform-origin:0 100%;transform:skewX(21deg);
+  background:linear-gradient(60deg,#E6DDD1,#F6F1E9);
+  box-shadow:inset 0 0 0 1px rgba(61,46,36,.22),4px 7px 13px rgba(43,32,25,.20);}
+  #s3wrap .shape .crease{position:absolute;background:rgba(61,46,36,.30);}
+  #s3wrap .shape .crease.v{left:50%;top:6px;bottom:6px;width:1px;}
+  #s3wrap .shape .crease.h{top:50%;left:6px;right:6px;height:1px;}
+  #s3wrap .fin.on .shape{box-shadow:0 8px 18px rgba(43,32,25,.26),inset 0 0 0 1px rgba(61,46,36,.18),
+  0 0 0 3px #fff,0 0 0 5px var(--tier,var(--gold));}
   #s3wrap .fin .cap{display:block;padding:11px 14px 13px;}
   #s3wrap .fin .nm{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:16.5px;}
   #s3wrap .fin .sub{display:block;font-size:11.5px;color:var(--soft);line-height:1.45;margin-top:3px;min-height:30px;}

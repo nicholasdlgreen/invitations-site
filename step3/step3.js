@@ -180,13 +180,31 @@
               + ' onclick="Step3.finish(\'' + q(t.name) + '\',\'' + q(o.name) + '\')">'
               + '<span class="shot" style="background-image:url(\'' + esc(A.imageFor(S.paper) || '') + '\')">'
               + (none ? '<span class="none">Left plain</span>'
-                      : '<span class="mat" style="' + matStyle(t.name, o.name) + '"></span>')
+                      : (shapeSwatch(t.name, o.name)
+                         || '<span class="mat" style="' + matStyle(t.name, o.name) + '"></span>'))
               + '</span><span class="cap"><span class="nm">' + esc(o.name) + '</span>'
               + '<span class="sub">' + esc(o.description || '') + '</span></span></button>';
           }).join('')
         + '</div></div></div></div>';
     }).join('');
     open('s2', true); renumber();
+  }
+
+  // Corners and fold change the SHAPE of the card, not what it is made of, so
+  // the material disc says nothing about them — square corners came out as a
+  // circle, identical to rounded. These draw the card instead. Returns null
+  // for everything else, which falls through to the disc.
+  function shapeSwatch(type, opt) {
+    var o = String(opt).toLowerCase();
+    if (/corner/i.test(type)) {
+      return '<span class="shape' + (/round/.test(o) ? ' r' : '') + '"></span>';
+    }
+    if (/^fold$/i.test(type)) {
+      if (/tent/.test(o))  return '<span class="shape tent"></span>';
+      if (/short/.test(o)) return '<span class="shape"><i class="crease h"></i></span>';
+      return '<span class="shape"><i class="crease v"></i></span>';
+    }
+    return null;
   }
 
   // A finishing swatch shows the MATERIAL, never the customer's design wearing

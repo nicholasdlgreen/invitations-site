@@ -706,8 +706,21 @@ was fetched and injected via innerHTML — that was the bug behind the
         <p id="sizeNote" style="font-size:var(--text-sm);color:var(--pale);margin-top:14px;text-align:center;">↑ Select a size above to unlock the upload</p>
       </div>
 
-      <div id="sideSlots" class="side-slots" style="display:none;"></div>
-      <p id="sideSlotsHint" class="side-slots-hint" style="display:none;">Already have it as one file? Drop it on any box and we'll fill them in order.</p>
+      <div id="sideSlotsWrap" style="display:none;">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;margin-bottom:10px;color:var(--text);text-align:center;">Upload your artwork</div>
+        <p id="sideSlotsLead" style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin-bottom:24px;text-align:center;">Drag a file onto each side, or click to browse.</p>
+        <div id="sideSlots" class="side-slots"></div>
+        <p id="sideSlotsHint" class="side-slots-hint">Already have it as one file? Drop it on any box and we'll fill them in order.</p>
+        <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">PDF</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">AI</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">InDesign</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">PNG</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">JPG</span>
+          <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">TIFF</span>
+        </div>
+        <p style="font-size:var(--text-xs);color:var(--pale);letter-spacing:.06em;text-align:center;margin:0 0 26px;">Maximum file size 100MB · Colour mode: CMYK preferred</p>
+      </div>
 
       <div class="drop-zone" id="dropZone" style="opacity:.45;pointer-events:none;">
         <input type="file" id="fileInput" accept=".pdf,.ai,.indd,.jpg,.jpeg,.png,.tif,.tiff,.eps" onchange="handleFile(this.files[0])"/>
@@ -1991,16 +2004,24 @@ function renderSideSlots(){
   if (!wrap) return;
   const sides = sidesNeeded();
 
+  // The grid replaces the drop zone, so it has to carry what the drop zone
+  // told people — the file types, the size limit, the colour note. Losing that
+  // when the uploader splits left a bare row of boxes and less guidance than
+  // the simpler case had.
+  const outer = document.getElementById('sideSlotsWrap');
   if (sides.length < 2){
-    wrap.style.display = 'none';
-    if (hint) hint.style.display = 'none';
+    if (outer) outer.style.display = 'none';
     if (drop) drop.style.display = '';
     return;
   }
 
+  if (outer) outer.style.display = '';
   wrap.style.display = 'grid';
   wrap.style.gridTemplateColumns = 'repeat(' + Math.min(sides.length, 4) + ',minmax(0,1fr))';
-  if (hint) hint.style.display = '';
+  const lead = document.getElementById('sideSlotsLead');
+  if (lead) lead.textContent = 'This card is printed on '
+    + (sides.length === 2 ? 'both sides' : 'all ' + sides.length + ' faces')
+    + ', so we need a file for each. Drag one onto each box, or click to browse.';
   if (drop) drop.style.display = 'none';
 
   wrap.innerHTML = sides.map(function(sd){
