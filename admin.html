@@ -1048,6 +1048,14 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
     <div class="field"><label>Description (shown to customer)</label><input type="text" id="pap_desc" placeholder="e.g. Crisp & classic. Colours print vivid and sharp."></div>
     <div class="field"><label>Finish label (small text under the name)</label><input type="text" id="pap_finish" placeholder="e.g. Silk finish"></div>
 
+    <div class="field"><label>PrintedEasy stock name</label><input type="text" id="pap_peStock" placeholder="e.g. silk">
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;line-height:1.6;">Their own value for this stock, exactly as their order form spells it &mdash; <code>silk</code>, <code>tintoretto</code>, <code>foamex5mm</code>. Without it nothing can be priced from them. This used to be hardcoded in two files.</p>
+    </div>
+
+    <div class="field"><label>Bought on a different product <span style="opacity:.55">(optional)</span></label><input type="text" id="pap_peOverrides" placeholder="flat-card=luxury-flat">
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;line-height:1.6;">Only when this stock comes off a different PrintedEasy product than the family normally uses. The Fedrigoni range exists only on Luxury Flat, so it reads <code>flat-card=luxury-flat</code>. One per line for more than one.</p>
+    </div>
+
     <div class="field">
       <label>Weights (thickness options for this stock)</label>
       <div id="pap_weights"></div>
@@ -2383,7 +2391,7 @@ async function loadPapersFromSupabase() {
 }
 
 function openPaperModal(editId) {
-  ['pap_name','pap_desc','pap_finish','pap_costMod','pap_order'].forEach(id=>{ var el=document.getElementById(id); if(el) el.value=''; });
+  ['pap_name','pap_desc','pap_finish','pap_costMod','pap_order','pap_peStock','pap_peOverrides'].forEach(id=>{ var el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('pap_editId').value='';
   document.getElementById('pap_weights').innerHTML='';
   if (editId) {
@@ -2392,6 +2400,8 @@ function openPaperModal(editId) {
       document.getElementById('pap_name').value    = p.name || '';
       document.getElementById('pap_desc').value    = p.description || p.subtitle || '';
       document.getElementById('pap_finish').value  = p.finish_label || '';
+      document.getElementById('pap_peStock').value = p.pe_stock || '';
+      fillPeOverrides(p.pe_product_overrides);
       document.getElementById('pap_costMod').value = p.cost_modifier != null ? p.cost_modifier : '';
       document.getElementById('pap_order').value   = p.display_order != null ? p.display_order : '';
       document.getElementById('pap_editId').value  = editId;
@@ -2441,6 +2451,29 @@ function collectWeights(){
   return out;
 }
 
+// "flat-card=luxury-flat", one per line, into {"flat-card":"luxury-flat"}. A
+// plain text field rather than a builder because this is rare — five stocks of
+// eleven use it, and none has more than one entry.
+function parsePeOverrides() {
+  const raw = (document.getElementById('pap_peOverrides').value || '').trim();
+  if (!raw) return {};
+  const out = {};
+  raw.split(/[\n,]+/).forEach(line => {
+    const bits = line.split('=');
+    if (bits.length === 2) {
+      const k = bits[0].trim(), v = bits[1].trim();
+      if (k && v) out[k] = v;
+    }
+  });
+  return out;
+}
+
+function fillPeOverrides(obj) {
+  const el = document.getElementById('pap_peOverrides');
+  if (!el) return;
+  el.value = Object.keys(obj || {}).map(k => k + '=' + obj[k]).join('\n');
+}
+
 async function savePaper() {
   const name = document.getElementById('pap_name').value.trim();
   if (!name) { toast('Paper name required'); return; }
@@ -2452,6 +2485,8 @@ async function savePaper() {
     finish_label:  document.getElementById('pap_finish').value.trim(),
     subtitle:      document.getElementById('pap_desc').value.trim(),  // keep legacy subtitle in sync
     weights:       weights,
+    pe_stock:      document.getElementById('pap_peStock').value.trim() || null,
+    pe_product_overrides: parsePeOverrides(),
     cost_modifier: parseFloat(document.getElementById('pap_costMod').value) || 0,
     price_extra:   0,
     display_order: parseInt(document.getElementById('pap_order').value, 10) || 0,

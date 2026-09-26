@@ -47,20 +47,32 @@ SERVICE_KEY  = os.environ.get('SUPABASE_SERVICE_KEY')
 
 # Our paper names to theirs. The only place the two vocabularies meet: add a
 # paper in admin and it must appear here or the refresh cannot price it.
-PE_STOCK = {
-    'Uncoated': 'uncoated', 'Silk': 'silk', 'Gloss': 'gloss',
-    'Cartonboard': 'cartonboard', 'Ice White': 'icewhite',
-    'Tintoretto Gesso': 'tintoretto', 'Nettuno Bianco': 'nettuno',
-    'Acquerello Bianco': 'acquerello', 'Sirio Pearl Polar Dawn': 'polardawn',
-    'Recycled Uncoated': 'recycled',
-    # Display boards call the material a substrate, not a stock finish. The
-    # form field differs too, which pe_extras() below knows about.
-    'Foamex 5mm': 'foamex5mm',
-}
-# The Fedrigoni range only exists on their Luxury products, which cannot be
-# finished at all. Everything else comes off a route that can be foiled.
-LUXURY = {'Tintoretto Gesso', 'Nettuno Bianco', 'Acquerello Bianco',
-          'Sirio Pearl Polar Dawn', 'Recycled Uncoated'}
+# The supplier's vocabulary now lives on paper_stocks — pe_stock and
+# pe_product_overrides — so adding a stock PrintedEasy already sell is an admin
+# edit rather than a change to this file AND to the price watch, which held a
+# second copy that had to be kept in step. Both dicts are filled by
+# load_vocabulary() before anything is priced.
+#
+# Display boards call the material a substrate, not a stock finish; the form
+# field differs too, which pe_extras() below knows about.
+PE_STOCK = {}
+# Which of THEIR products a stock is bought on when it differs from the
+# family default. The Fedrigoni range exists only on Luxury Flat. This replaces
+# a hardcoded LUXURY set, which conflated "premium" with "bought elsewhere" —
+# two separate facts that happened to coincide.
+PE_OVERRIDES = {}
+
+
+def load_vocabulary():
+    rows = sb('paper_stocks?select=name,pe_stock,pe_product_overrides')
+    for r in rows:
+        if r.get('pe_stock'):
+            PE_STOCK[r['name']] = r['pe_stock']
+        ov = r.get('pe_product_overrides') or {}
+        if isinstance(ov, dict) and ov:
+            PE_OVERRIDES[r['name']] = ov
+    if not PE_STOCK:
+        sys.exit('paper_stocks has no pe_stock values — nothing can be priced')
 
 def pe_form(family, paper, gsm, sides='single'):
     """The option fields that identify a stock, which differ by product.
@@ -80,7 +92,10 @@ def pe_form(family, paper, gsm, sides='single'):
 
 
 def pe_product(family, paper):
-    if family == 'flat-card':      return 'luxury-flat' if paper in LUXURY else 'postcards'
+    ov = PE_OVERRIDES.get(paper, {}).get(family)
+    if ov:
+        return ov
+    if family == 'flat-card':      return 'postcards'
     if family == 'folded-card':    return 'greeting-cards'
     if family == 'folded-leaflet': return 'luxury-folded'
     if family == 'large-format':   return 'posters'
@@ -314,13 +329,16 @@ def main():
     ap.add_argument('--csv', metavar='PATH', help='also write the raw scrape here')
     args = ap.parse_args()
 
+    # The supplier's names for our stocks, straight from paper_stocks.
+    load_vocabulary()
     combos, no_family, unmapped = what_we_sell()
     if args.only:
         combos = [c for c in combos if c[0] == args.only]
     for slug in no_family:
         print(f'  ! {slug} has no product family set — cannot be priced', file=sys.stderr)
     for paper in unmapped:
-        print(f'  ! paper "{paper}" is not in PE_STOCK — add it to this script', file=sys.stderr)
+        print(f'  ! paper "{paper}" has no pe_stock set — fill it in on the '
+              f'Paper Stocks screen in admin', file=sys.stderr)
     if not combos:
         sys.exit('Nothing to price.')
 

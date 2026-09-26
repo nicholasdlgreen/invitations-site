@@ -40,19 +40,29 @@ const TOLERANCE = 0.01;      // pennies of rounding, not a real change
 const DEADLINE_MS = 7000;
 const PACE_MS = 150;
 
-// Our vocabulary to theirs. Kept in step with tools/printedeasy_refresh.py —
-// if a paper is added there it belongs here too.
-const PE_STOCK = {
-  'Uncoated': 'uncoated', 'Silk': 'silk', 'Gloss': 'gloss',
-  'Cartonboard': 'cartonboard', 'Ice White': 'icewhite',
-  'Tintoretto Gesso': 'tintoretto', 'Nettuno Bianco': 'nettuno',
-  'Acquerello Bianco': 'acquerello', 'Sirio Pearl Polar Dawn': 'polardawn',
-  'Recycled Uncoated': 'recycled',
-  // Boards are chosen by substrate, and the thickness is part of its name.
-  'Foamex 5mm': 'foamex5mm'
-};
-const LUXURY = new Set(['Tintoretto Gesso', 'Nettuno Bianco', 'Acquerello Bianco',
-                        'Sirio Pearl Polar Dawn', 'Recycled Uncoated']);
+// Our vocabulary to theirs, read from paper_stocks at run time. It used to be
+// hardcoded here AND in tools/printedeasy_refresh.py, with a comment asking
+// whoever added a paper to remember both — which is exactly the kind of
+// instruction that gets missed. Filled by loadVocabulary() before any probe.
+//
+// Boards are chosen by substrate and the thickness is part of its name, which
+// peForm() below knows about.
+const PE_STOCK = {};
+// Which of THEIR products a stock is bought on when it differs from the family
+// default; the Fedrigoni range exists only on Luxury Flat. Replaces a LUXURY
+// set that conflated "premium" with "bought elsewhere".
+const PE_OVERRIDES = {};
+
+async function loadVocabulary(sb) {
+  const rows = await sb('paper_stocks?select=name,pe_stock,pe_product_overrides');
+  (rows || []).forEach(r => {
+    if (r.pe_stock) PE_STOCK[r.name] = r.pe_stock;
+    if (r.pe_product_overrides && Object.keys(r.pe_product_overrides).length) {
+      PE_OVERRIDES[r.name] = r.pe_product_overrides;
+    }
+  });
+  return Object.keys(PE_STOCK).length;
+}
 
 // The fields that identify a stock differ by product: cards are a finish plus
 // a weight in gsm, boards are a substrate whose name carries the thickness.
@@ -68,7 +78,9 @@ function peForm(family, stock, gsm) {
 }
 
 function peProduct(family, paper) {
-  if (family === 'flat-card')      return LUXURY.has(paper) ? 'luxury-flat' : 'postcards';
+  const ov = (PE_OVERRIDES[paper] || {})[family];
+  if (ov) return ov;
+  if (family === 'flat-card')      return 'postcards';
   if (family === 'folded-card')    return 'greeting-cards';
   if (family === 'folded-leaflet') return 'luxury-folded';
   if (family === 'large-format')   return 'posters';
@@ -288,6 +300,21 @@ exports.handler = async () => {
     return { statusCode: 500, body: 'not configured' };
   }
 
+  // The supplier's names for our stocks. Without these every probe below looks
+  // up an undefined stock and the run reports nothing has changed, which is the
+  // most dangerous possible outcome for a watcher — silence that looks like
+  // good news. So a failure here stops the run rather than continuing.
+  try {
+    const known = await loadVocabulary(sb);
+    if (!known) {
+      console.error('[price-watch] paper_stocks has no pe_stock values — cannot probe');
+      return { statusCode: 500, body: 'no supplier vocabulary' };
+    }
+  } catch (err) {
+    console.error('[price-watch] could not read paper_stocks:', err.message);
+    return { statusCode: 500, body: err.message };
+  }
+
   let rates;
   try {
     // Single-sided only, because the quotes below are single-sided: pe_form
@@ -433,4 +460,4 @@ exports.handler = async () => {
 };
 
 // Exported so the mapping can be unit-checked without hitting either service.
-exports._internals = { peProduct, peSize, pickSample, readForm, PE_STOCK };
+exports._internals = { peProduct, peSize, pickSample, readForm, PE_STOCK, PE_OVERRIDES, loadVocabulary };
