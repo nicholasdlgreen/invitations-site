@@ -276,6 +276,16 @@ nav a:hover,nav a.active{color:var(--gold);}
    button red, which said "stopped" without saying what to do, and borrowed an
    alert colour that is not a button colour anywhere else on the site. */
 .proceed-reason{font-size:var(--text-xs);color:var(--soft);margin:10px 0 0;letter-spacing:.02em;}
+.proof-chip .chip-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pale);margin-right:7px;vertical-align:1px;}
+.proof-chip.on .chip-dot{background:var(--ok);}
+.face-tabs{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap;}
+.face-tab{appearance:none;background:transparent;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+.face-tab:hover{border-color:var(--gold);color:var(--text);}
+.face-tab.on{background:var(--gold);border-color:var(--gold);color:#fff;}
+.face-tab .dot{width:6px;height:6px;border-radius:50%;background:var(--pale);}
+.face-tab.ready .dot{background:var(--ok);}
+.face-tab.bad .dot{background:var(--err);}
+.face-tab.on .dot{background:#fff;}
 .btn.is-waiting{opacity:.45;box-shadow:none;}
 .btn.is-waiting:hover{background:var(--gold);box-shadow:none;}
 .container{max-width:1180px;margin:0 auto;padding:0 32px;}
@@ -408,6 +418,16 @@ nav a:hover,nav a.active{color:var(--gold);}
    button red, which said "stopped" without saying what to do, and borrowed an
    alert colour that is not a button colour anywhere else on the site. */
 .proceed-reason{font-size:var(--text-xs);color:var(--soft);margin:10px 0 0;letter-spacing:.02em;}
+.proof-chip .chip-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pale);margin-right:7px;vertical-align:1px;}
+.proof-chip.on .chip-dot{background:var(--ok);}
+.face-tabs{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap;}
+.face-tab{appearance:none;background:transparent;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+.face-tab:hover{border-color:var(--gold);color:var(--text);}
+.face-tab.on{background:var(--gold);border-color:var(--gold);color:#fff;}
+.face-tab .dot{width:6px;height:6px;border-radius:50%;background:var(--pale);}
+.face-tab.ready .dot{background:var(--ok);}
+.face-tab.bad .dot{background:var(--err);}
+.face-tab.on .dot{background:#fff;}
 .btn.is-waiting{opacity:.45;box-shadow:none;}
 .btn.is-waiting:hover{background:var(--gold);box-shadow:none;}
 .container{max-width:1180px;margin:0 auto;padding:0 32px;}
@@ -772,12 +792,16 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div class="check-card preview-card">
           <div class="proof-head">
             <h3 id="proofTitle">Your artwork</h3>
-            <button type="button" class="proof-chip on" id="guidesBtn" onclick="toggleGuides()">Print guides</button>
+            <button type="button" class="proof-chip on" id="guidesBtn" aria-pressed="true" onclick="toggleGuides()"><span class="chip-dot"></span><span id="guidesBtnText">Print guides on</span></button>
           </div>
           <!-- A folded card is proofed as its front, because that is the only
                side being printed. Without saying so, someone who chose folded
                a step ago sees a flat card here and assumes it was lost. -->
           <p id="proofFoldNote" style="display:none;font-size:var(--text-xs);color:var(--soft);margin:0 0 10px;line-height:1.7;"></p>
+          <!-- One tab per printed face. A double-sided job used to proof only the
+               front: the back could not be seen, positioned or checked here at
+               all, and it was imposed with the front's position. -->
+          <div id="faceTabs" class="face-tabs" style="display:none;"></div>
           <div id="proofStage" class="proof-stage">
             <canvas id="proofCanvas" class="proof-canvas" style="display:none"></canvas>
             <div id="previewPlaceholder" class="preview-placeholder">
@@ -2103,7 +2127,10 @@ async function acceptSideFile(key, file){
   // was a dead end: a blocked button pointing "above" at nothing.
   const ready = sides.every(function(sd){ return !!sideFiles[sd.key]; });
   if (sides.length > 1 && !ready) { updateProceedButton(); return; }
+  // Every face is in, so the proof opens on the front with a tab per face.
+  activeFace = 'front';
   if (sideFiles.front) handleFile(sideFiles.front.file);
+  renderFaceTabs();
 }
 
 // The full check panel still runs on the front, because that is what the proof
@@ -2167,6 +2194,14 @@ async function refreshFaceChecks(){
                    : 'var(--ok)';
     slot.dataset.faceState = res.state;
   }
+  // The tabs carry each face's verdict, so a customer does not have to click a
+  // face to discover it is unusable.
+  for (const sd of sides){
+    if (!sideFiles[sd.key]) { delete faceOk[sd.key]; continue; }
+    const r = await checkFace(sd.key);
+    faceOk[sd.key] = (r.state !== 'err');
+  }
+  renderFaceTabs();
   updateProceedButton();
   refreshSidesRow();
 }
@@ -2191,6 +2226,46 @@ function refreshSidesRow(){
 // Called both when the front's checks finish and whenever a face is added or
 // changed — adding a back has to be able to unblock the button, and the first
 // version only ran on the front, so it never could.
+// One tab per printed face, with a dot saying whether that face is usable.
+// The tabs are the only way to reach the back's proof, so they carry its state
+// too — otherwise a customer has to click a face to find out it is wrong.
+function renderFaceTabs(){
+  const box = document.getElementById('faceTabs');
+  if (!box) return;
+  const sides = sidesNeeded();
+  if (sides.length < 2){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'flex';
+  box.innerHTML = sides.map(function(sd){
+    const has = !!sideFiles[sd.key];
+    const ok  = has && faceOk[sd.key] === true;
+    const bad = has && faceOk[sd.key] === false;
+    return '<button type="button" class="face-tab' + (sd.key === activeFace ? ' on' : '')
+         + (ok ? ' ready' : bad ? ' bad' : '')
+         + '" onclick="switchFace(\'' + sd.key + '\')">'
+         + '<span class="dot"></span>' + esc(sd.label) + '</button>';
+  }).join('');
+}
+
+// Move the proof to another face. The position of the face being left is kept,
+// so coming back to it shows what the customer set, and the press file uses the
+// same value.
+async function switchFace(key){
+  if (key === activeFace) return;
+  const entry = sideFiles[key];
+  if (!entry) return;
+  faceAdjust[activeFace] = Object.assign({}, artworkAdjust);
+  activeFace = key;
+  renderFaceTabs();
+  // Hand the saved position over BEFORE the proof loads, rather than trying to
+  // put it back afterwards — checkFile does not await the image.
+  pendingFaceAdjust = faceAdjust[key] || null;
+  const file = await faceAsFile(entry);
+  await checkFile(file);
+}
+
+// Keep the tab dots honest as each face is checked.
+let faceOk = {};
+
 function updateProceedButton(){
   const btn = document.getElementById('proceedBtn');
   if (!btn) return;
@@ -3659,6 +3734,13 @@ function mmToPx(mm){ return Math.round(mm * PRINT_DPI / 25.4); }
 // One set of maths drives both the on-screen proof and the actual print file,
 // so what the customer positions here is exactly what comes off the press.
 let artworkAdjust = { mode:'fill', zoom:1, dx:0, dy:0, rot:0 };
+// Each printed face keeps its own position. Without this the proof, the DPI
+// readout and — worse — the PRESS FILE all used one global adjustment, so
+// zooming or rotating the front silently imposed the back the same way.
+let faceAdjust = {};
+let activeFace = 'front';
+// Handed to the next initProof so a face reopens where the customer left it.
+let pendingFaceAdjust = null;
 let proofImage = null;        // the artwork, as an Image
 let proofEditable = false;    // false for vector PDFs, which we pass through untouched
 let showGuides = true;
@@ -3723,30 +3805,46 @@ function composeArtwork(ctx, img, g, adj){
 function drawProofGuides(ctx, g){
   const mm = g.pxPerMm;
   ctx.save();
-  ctx.lineWidth = 1;
-  // crop marks, exactly where they sit on the real file
+  // Every guide is drawn twice: a pale halo underneath, then the line itself.
+  // At 1px in near-black they vanished entirely on dark artwork, so toggling
+  // them appeared to do nothing at all — which is exactly how it was reported.
+  // The halo makes them read on a navy card and on a white one alike.
+  function stroke(colour, dash, draw){
+    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(255,255,255,.75)';
+    ctx.lineWidth = 3.5;
+    draw();
+    ctx.setLineDash(dash || []);
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = 1.5;
+    draw();
+  }
+
   if (g.m > 0){
     const gap = g.b, len = 4 * mm;
-    ctx.strokeStyle = 'rgba(20,20,20,.9)';
-    ctx.beginPath();
-    [[g.tx,g.ty],[g.tx+g.tw,g.ty],[g.tx,g.ty+g.th],[g.tx+g.tw,g.ty+g.th]].forEach(function(pt,i){
-      const right = (i===1||i===3), bottom = (i===2||i===3);
-      const hx = right ? pt[0]+gap : pt[0]-gap;
-      ctx.moveTo(hx, pt[1]); ctx.lineTo(right ? hx+len : hx-len, pt[1]);
-      const vy = bottom ? pt[1]+gap : pt[1]-gap;
-      ctx.moveTo(pt[0], vy); ctx.lineTo(pt[0], bottom ? vy+len : vy-len);
-    });
-    ctx.stroke();
+    const marks = function(){
+      ctx.beginPath();
+      [[g.tx,g.ty],[g.tx+g.tw,g.ty],[g.tx,g.ty+g.th],[g.tx+g.tw,g.ty+g.th]].forEach(function(pt,i){
+        const right = (i===1||i===3), bottom = (i===2||i===3);
+        const hx = right ? pt[0]+gap : pt[0]-gap;
+        ctx.moveTo(hx, pt[1]); ctx.lineTo(right ? hx+len : hx-len, pt[1]);
+        const vy = bottom ? pt[1]+gap : pt[1]-gap;
+        ctx.moveTo(pt[0], vy); ctx.lineTo(pt[0], bottom ? vy+len : vy-len);
+      });
+      ctx.stroke();
+    };
+    stroke('rgba(20,20,20,.95)', [], marks);
   }
-  ctx.setLineDash([5,4]);
-  ctx.strokeStyle = 'rgba(200,60,60,.9)';                       // bleed edge
-  ctx.strokeRect(g.tx-g.b, g.ty-g.b, g.tw+2*g.b, g.th+2*g.b);
-  ctx.setLineDash([]);
-  ctx.strokeStyle = 'rgba(30,30,30,.9)';                        // trim (the cut)
-  ctx.strokeRect(g.tx, g.ty, g.tw, g.th);
-  ctx.setLineDash([4,4]);
-  ctx.strokeStyle = 'rgba(80,140,90,.95)';                      // safe zone, 5mm in
-  ctx.strokeRect(g.tx + 5*mm, g.ty + 5*mm, g.tw - 10*mm, g.th - 10*mm);
+
+  stroke('rgba(200,60,60,.95)', [6,4], function(){            // bleed edge
+    ctx.strokeRect(g.tx-g.b, g.ty-g.b, g.tw+2*g.b, g.th+2*g.b);
+  });
+  stroke('rgba(20,20,20,.95)', [], function(){                // trim (the cut)
+    ctx.strokeRect(g.tx, g.ty, g.tw, g.th);
+  });
+  stroke('rgba(60,130,75,1)', [5,4], function(){              // safe zone, 5mm in
+    ctx.strokeRect(g.tx + 5*mm, g.ty + 5*mm, g.tw - 10*mm, g.th - 10*mm);
+  });
   ctx.restore();
 }
 
@@ -3818,7 +3916,14 @@ function initProof(file, editable){
     img.onload = function(){
       proofImage = img;
       proofEditable = !!editable;
-      artworkAdjust = { mode:'fill', zoom:1, dx:0, dy:0, rot:0 };
+      // A face the customer has already positioned keeps that position. This
+      // reset used to be unconditional, and because checkFile starts the proof
+      // without awaiting it, restoring afterwards lost the race and the
+      // position silently went back to default.
+      artworkAdjust = pendingFaceAdjust
+        ? Object.assign({}, pendingFaceAdjust)
+        : { mode:'fill', zoom:1, dx:0, dy:0, rot:0 };
+      pendingFaceAdjust = null;
       const ph = document.getElementById('previewPlaceholder');
       if (ph) ph.style.display = 'none';
       // The old preview elements are only used to load/render the file; the
@@ -3831,10 +3936,11 @@ function initProof(file, editable){
       if (tools) tools.classList.toggle('hidden', !editable);
       const cv = document.getElementById('proofCanvas');
       if (cv) cv.classList.toggle('locked', !editable);
-      const zr = document.getElementById('zoomRange'); if (zr) zr.value = 100;
-      const zv = document.getElementById('zoomVal'); if (zv) zv.textContent = '100%';
-      document.getElementById('segFill')?.classList.add('on');
-      document.getElementById('segFit')?.classList.remove('on');
+      // Put the controls where the position actually is. This used to slam them
+      // back to Fill and 100% unconditionally, which was right for a fresh
+      // upload and wrong for a face being revisited — the canvas showed the
+      // customer's zoom while the slider claimed 100%.
+      syncAdjustControls();
       renderProof();
       // Now the artwork is actually on screen, put it in view. Doing this on
       // step change alone lands in the wrong place, because the layout is still
@@ -3856,6 +3962,17 @@ function scrollProofIntoView(){
     const y = card.getBoundingClientRect().top + window.scrollY - 70;
     window.scrollTo({ top: Math.max(0, y), behavior:'smooth' });
   });
+}
+
+// Put the fill/fit buttons and the zoom slider where the restored position
+// says they should be. Switching faces without this left the controls showing
+// the previous face's settings while the canvas showed this one's.
+function syncAdjustControls(){
+  document.getElementById('segFill')?.classList.toggle('on', artworkAdjust.mode === 'fill');
+  document.getElementById('segFit') ?.classList.toggle('on', artworkAdjust.mode === 'fit');
+  const pct = Math.round((artworkAdjust.zoom || 1) * 100);
+  const zr = document.getElementById('zoomRange'); if (zr) zr.value = pct;
+  const zv = document.getElementById('zoomVal');   if (zv) zv.textContent = pct + '%';
 }
 
 function setAdjustMode(mode){
@@ -3888,8 +4005,20 @@ function resetAdjust(){
 }
 function toggleGuides(){
   showGuides = !showGuides;
-  document.getElementById('guidesBtn')?.classList.toggle('on', showGuides);
+  syncGuidesBtn();
   renderProof();
+}
+
+// The chip read "Print guides" whether they were on or off, and it starts ON —
+// so a first click turned them OFF, the least visible direction, and looked
+// like a dead button. It now says which state it is in.
+function syncGuidesBtn(){
+  const btn = document.getElementById('guidesBtn');
+  if (!btn) return;
+  btn.classList.toggle('on', showGuides);
+  btn.setAttribute('aria-pressed', showGuides ? 'true' : 'false');
+  const t = document.getElementById('guidesBtnText');
+  if (t) t.textContent = showGuides ? 'Print guides on' : 'Print guides off';
 }
 
 // Drag to reposition
@@ -4210,6 +4339,11 @@ async function faceAsFile(entry){
 // pages are then copied into one document.
 async function buildPressFileForAllFaces(sizeKey){
   const sides = sidesNeeded();
+  // The face on screen has not been saved yet — faceAdjust only fills in when
+  // the customer switches away. Someone who positions the front and presses
+  // Continue without ever clicking Back would otherwise have their adjustment
+  // dropped from the press file.
+  if (sides.length > 1) faceAdjust[activeFace] = Object.assign({}, artworkAdjust);
   if (sides.length < 2) return buildPrintReadyPdf(currentFile, sizeKey);
 
   const L = await loadPdfLib();
@@ -4221,7 +4355,11 @@ async function buildPressFileForAllFaces(sizeKey){
       console.warn('[print-pdf] no artwork for face:', sd.key);
       return null;                      // never send a job with a face missing
     }
-    const built = await buildPrintReadyPdf(await faceAsFile(entry), sizeKey);
+    // Each face is imposed with ITS OWN position, not whichever one happened to
+    // be on screen. This defaulted to the global artworkAdjust, so a zoomed
+    // front produced a zoomed back that nobody had asked for or seen.
+    const built = await buildPrintReadyPdf(await faceAsFile(entry), sizeKey,
+                                           { adjust: faceAdjust[sd.key] || null });
     if (!built) return null;
     const doc = await L.PDFDocument.load(await built.blob.arrayBuffer());
     const pages = await out.copyPages(doc, doc.getPageIndices());
@@ -4236,7 +4374,7 @@ async function buildPressFileForAllFaces(sizeKey){
            route: first.route + ' \u00d7' + out.getPageCount() };
 }
 
-async function buildPrintReadyPdf(file, sizeKey){
+async function buildPrintReadyPdf(file, sizeKey, opts){
   const spec = SIZE_SPECS[sizeKey];
   if (!spec) { console.warn('[print-pdf] no mm spec for size:', sizeKey); return null; }
 
@@ -4254,18 +4392,23 @@ async function buildPrintReadyPdf(file, sizeKey){
     // No bleed (or the wrong size): render it so the edges can be mirrored.
     const probe = await rasterisePdfPage(file, sizeKey, 400);
     if (!probe) return null;
-    const built = await buildPrintReadyPdfFromImage(probe.file, sizeKey);
+    const built = await buildPrintReadyPdfFromImage(probe.file, sizeKey, opts);
     if (built) built.route = 'rasterised';
     return built;
   }
-  return buildPrintReadyPdfFromImage(file, sizeKey);
+  return buildPrintReadyPdfFromImage(file, sizeKey, opts);
 }
 
-async function buildPrintReadyPdfFromImage(file, sizeKey){
+async function buildPrintReadyPdfFromImage(file, sizeKey, opts){
+  opts = opts || {};
   const spec = SIZE_SPECS[sizeKey];
   if (!spec) { console.warn('[print-pdf] no mm spec for size:', sizeKey); return null; }
 
-  const raster = await buildPrintReadyRaster(file, sizeKey, { includeMarks: false });
+  // Carry this face's own position into the rasteriser. Without it the
+  // composition falls back to the global artworkAdjust — the face currently
+  // on screen — and every other face is imposed with the wrong one.
+  const raster = await buildPrintReadyRaster(file, sizeKey,
+                       { includeMarks: false, adjust: opts.adjust || null });
   if (!raster) return null;
 
   const PDFLibRef = await loadPdfLib();
