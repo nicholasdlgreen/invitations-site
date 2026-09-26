@@ -34,6 +34,7 @@
 .lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:11px 18px;display:inline-block;margin-bottom:18px;}
 .lp-price-label{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:3px;}
 .lp-price-value{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--text);line-height:1;}
+.lp-price-qty{font-size:var(--text-xs);letter-spacing:.04em;color:var(--soft);margin-top:4px;}
 .lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
 .lp-cta:hover{background:transparent;color:var(--gold);}
 .lp-cta::after{content:'→';transition:transform .2s;}
@@ -612,6 +613,7 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div class="lp-price-block" id="lp-price-block">
           <div class="lp-price-label">From</div>
           <div class="lp-price-value" id="lp-price-value">£—</div>
+          <div class="lp-price-qty" id="lp-price-qty"></div>
         </div>
         <div><button class="lp-cta" id="lp-hero-cta" type="button" onclick="openPathModal(this)">Start Your Order</button></div>
         <div class="lp-hero-reassure">
@@ -1160,21 +1162,42 @@ function pickAnchorQtys(qtys) {
 function renderPricing() {
   const priceValue = document.getElementById('lp-price-value');
   if (!priceValue) return;
+  const priceQty = document.getElementById('lp-price-qty');
   if (!productPricing || !Array.isArray(productPricing.sheet_sells) || !productPricing.sheet_sells.length) {
     priceValue.textContent = '\u00a3\u2014';
+    if (priceQty) priceQty.textContent = '';
     return;
   }
   const papers = productPricing.available_papers || [];
   const sizes  = productPricing.available_sizes || [];
   if (!papers.length || !sizes.length) return;
-  const size = sizes.includes('A5') ? 'A5' : sizes[0];
-  const rows = productPricing.sheet_sells.filter(s => s.size === size && papers.includes(s.paper));
+  // Every size, not a pinned A5. "From" has to mean the cheapest a customer
+  // can reach, and pinning A5 made this page quote £19 for 50 while /products
+  // quoted £18 for the same product in a smaller size. Two prices for one
+  // thing is worse than either number.
+  //
+  // The rest is the cheapest spec they can actually reach: flat and single
+  // sided. Rows published before fold and sides existed carry neither, and
+  // those are flat single — the same reading the configurator uses.
+  const rows = productPricing.sheet_sells.filter(s =>
+    sizes.includes(s.size) && papers.includes(s.paper) &&
+    (s.fold || 'flat') === 'flat' && (s.sides || 'single') === 'single');
   if (!rows.length) return;
-  const lowestQty = Math.min.apply(null, rows.map(s => parseInt(s.qty, 10)));
-  const cheapest  = Math.min.apply(null, rows
-    .filter(s => parseInt(s.qty, 10) === lowestQty)
+  // Quote the pack the grid quotes, not a quantity of one. Our price is almost
+  // entirely setup — one card and ten cost the same — so the lowest quantity
+  // in the table made a setup fee look like the price of a single card. This
+  // page and /products must never disagree, so both read display_quantity.
+  const target = parseInt(productData && productData.display_quantity, 10) || 1;
+  const qtys = [...new Set(rows.map(s => parseInt(s.qty, 10)))].sort((a, b) => a - b);
+  // Nearest rung at or above the target, else the largest we hold, so a
+  // missing rung can never blank the price.
+  const qty = qtys.find(q => q >= target);
+  const useQty = (qty === undefined) ? qtys[qtys.length - 1] : qty;
+  const cheapest = Math.min.apply(null, rows
+    .filter(s => parseInt(s.qty, 10) === useQty)
     .map(s => parseFloat(s.sell)));
   priceValue.textContent = '\u00a3' + Math.round(cheapest);
+  if (priceQty) priceQty.textContent = useQty > 1 ? ('for ' + useQty) : 'each';
 }
 
 // What the other choices cost, against one baseline order, so a customer can
