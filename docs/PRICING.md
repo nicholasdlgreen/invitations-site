@@ -336,15 +336,47 @@ for the **printing family**. The scrape becomes the capability list, and because
 the guard above writes nothing for a family whose form lacks the field, a route
 that cannot finish automatically offers nothing.
 
-### Envelopes bypass the margin engine
+### Envelopes
 
-PrintedEasy charge **6p** for white and **11p** for red, per unit, measured at
-100. Our `envelopes` table charges **35p to 60p** as a flat retail figure read
-straight into the basket. That is a reasonable retail price, but it is a margin
-already set while every other margin is 0 — so "the site sells at cost" is not
-strictly true, and envelopes sit outside the system that will set margin.
+**They sell two colours.** White and red on Postcards and Greeting Cards, and
+**white alone** on Luxury Flat and Luxury Folded. We were selling six —
+Lavender, Slate Blue, Midnight Navy, Matte Black and Champagne Gold could not
+be bought from them at any price. Deactivated 26 September; white and red
+remain.
 
----
+Envelopes are the one finishing charge that is genuinely **per unit** rather
+than a setup fee. Measured on Postcards, their list price:
+
+| Size | White | Red |
+|---|---:|---:|
+| A6 | 5.4p – 7p | 9.6p – 11p |
+| DL | 5.4p – 7p | 15.8p – 19p |
+| A5 | 8.8p – 12p | 21.8p – 28p |
+
+`envelopes.price_each` holds one number per colour, so it cannot express size or
+quantity and currently takes the dearest case — over-recovering slightly rather
+than selling below cost. **Two things are still wrong:** envelopes sit outside
+the margin engine entirely, and the site will offer red on a Fedrigoni stock
+that can only have white.
+
+### Finishing is a setup charge, not a per-unit one
+
+Worth stating plainly, because it decides how finishing should be sold. A5 flat
+card, our cost:
+
+| | 10 | 100 | 500 |
+|---|---:|---:|---:|
+| Rounded corners, total | £17.60 | £16.80 | £17.60 |
+| — per card | 176p | 16.8p | **3.5p** |
+| Matt lamination both sides, total | £8.80 | £8.00 | £12.80 |
+| — per card | 88p | 8p | **2.6p** |
+
+The total barely moves while the quantity rises fiftyfold. So finishing doubles
+the price of a hundred cards and is almost free on five hundred — which argues
+for a minimum quantity rather than offering it at every run length.
+
+Envelopes are the exception: they scale with quantity, because they are a thing
+per card rather than a machine setup.
 
 ## 6. Where everything lives
 
