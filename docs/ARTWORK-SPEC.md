@@ -125,17 +125,24 @@ rotated 90° is accepted as-is.
 | What the customer supplied | What we do |
 |---|---|
 | Trim size + 6mm | Accept — correct, with bleed |
-| Exactly trim size | Accept — **we add the bleed** by extending the artwork |
+| Exactly trim size | Accept — **we mirror the outer 3mm outward** to make the bleed |
 | Same proportions, different size, enough resolution | **Scale it to fit** and say the resulting DPI |
 | Same proportions, too few pixels | Refuse, and tell them the minimum pixel size |
 | Different proportions | Offer **fill** (crops) or **fit** (leaves a border) and show both on the proof |
 
-**Bleed we add ourselves is extended artwork, not white.** A customer supplying
-exactly 148 × 210mm gets their design scaled very slightly to cover 154 × 216mm.
+### How we make missing bleed
 
-> **To confirm with PrintedEasy:** where a customer gives us no bleed, is
-> scaling up by 4% to create it acceptable to you, or would you rather receive
-> the file at trim and handle it your end?
+By **mirroring**, not by scaling. The artwork is placed at trim size and the
+outer 3mm of each edge is reflected outward into the bleed, corners included
+(`mirrorEdges()`).
+
+Nothing is cropped and no white is introduced. Verified on a generated press
+file: a design with a gold stripe along its top edge produced the same gold in
+the top bleed area, and the body colour in the side bleed.
+
+> **To confirm with PrintedEasy:** mirrored bleed is standard prepress, but if
+> you would rather receive files at trim and generate bleed your end, say so
+> and we will stop doing it.
 
 ---
 
@@ -172,7 +179,7 @@ Collected from the sections above:
 2. RGB accepted, or convert to a profile you name?
 3. What is your real minimum resolution at each size?
 4. Is 5mm the right safe margin for your trimming?
-5. Is scaling up 4% to create missing bleed acceptable?
+5. Is mirrored bleed acceptable, or would you rather generate it your end?
 6. Head to head or head to foot for double-sided?
 
 ---
@@ -187,5 +194,6 @@ Collected from the sections above:
 | Per-face size check | `checkFace()` |
 | Press file | `buildPrintReadyPdf()`, `buildPressFileForAllFaces()` |
 | Safe zone and guides | `drawProofGuides()` |
+| Mirrored bleed | `mirrorEdges()` |
 
 Change a rule here and change it there in the same commit.

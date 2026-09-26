@@ -279,6 +279,14 @@ nav a:hover,nav a.active{color:var(--gold);}
 .proof-chip .chip-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pale);margin-right:7px;vertical-align:1px;}
 .proof-chip.on .chip-dot{background:var(--ok);}
 .face-tabs{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap;}
+.face-notice,.slot-note{border:1px solid var(--border);border-left:3px solid var(--pale);border-radius:0;background:var(--cream);padding:11px 14px;margin:0 0 12px;}
+.face-notice.warn,.slot-note.warn{border-left-color:var(--warn);}
+.face-notice.err,.slot-note.err{border-left-color:var(--err);}
+.face-notice.ok,.slot-note.ok{border-left-color:var(--ok);}
+.face-notice b,.slot-note b{display:block;font-weight:500;font-size:var(--text-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin-bottom:5px;}
+.face-notice span,.slot-note span{display:block;font-size:var(--text-xs);color:var(--soft);line-height:1.7;}
+.slot-notices{margin:12px 0 0;}
+.slot-note{margin:0 0 8px;}
 .face-tab{appearance:none;background:transparent;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
 .face-tab:hover{border-color:var(--gold);color:var(--text);}
 .face-tab.on{background:var(--gold);border-color:var(--gold);color:#fff;}
@@ -421,6 +429,14 @@ nav a:hover,nav a.active{color:var(--gold);}
 .proof-chip .chip-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pale);margin-right:7px;vertical-align:1px;}
 .proof-chip.on .chip-dot{background:var(--ok);}
 .face-tabs{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap;}
+.face-notice,.slot-note{border:1px solid var(--border);border-left:3px solid var(--pale);border-radius:0;background:var(--cream);padding:11px 14px;margin:0 0 12px;}
+.face-notice.warn,.slot-note.warn{border-left-color:var(--warn);}
+.face-notice.err,.slot-note.err{border-left-color:var(--err);}
+.face-notice.ok,.slot-note.ok{border-left-color:var(--ok);}
+.face-notice b,.slot-note b{display:block;font-weight:500;font-size:var(--text-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin-bottom:5px;}
+.face-notice span,.slot-note span{display:block;font-size:var(--text-xs);color:var(--soft);line-height:1.7;}
+.slot-notices{margin:12px 0 0;}
+.slot-note{margin:0 0 8px;}
 .face-tab{appearance:none;background:transparent;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
 .face-tab:hover{border-color:var(--gold);color:var(--text);}
 .face-tab.on{background:var(--gold);border-color:var(--gold);color:#fff;}
@@ -743,6 +759,7 @@ was fetched and injected via innerHTML — that was the bug behind the
         <p id="sideSlotsLead" style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin-bottom:24px;text-align:center;">Drag a file onto each side, or click to browse.</p>
         <div id="sideSlots" class="side-slots"></div>
         <p id="sideSlotsHint" class="side-slots-hint">Already have it as one file? Drop it on any box and we'll fill them in order.</p>
+    <div id="slotNotices" class="slot-notices" hidden></div>
         <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
           <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">PDF</span>
           <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">AI</span>
@@ -802,6 +819,7 @@ was fetched and injected via innerHTML — that was the bug behind the
                front: the back could not be seen, positioned or checked here at
                all, and it was imposed with the front's position. -->
           <div id="faceTabs" class="face-tabs" style="display:none;"></div>
+          <div id="faceNotice" class="face-notice" hidden></div>
           <div id="proofStage" class="proof-stage">
             <canvas id="proofCanvas" class="proof-canvas" style="display:none"></canvas>
             <div id="previewPlaceholder" class="preview-placeholder">
@@ -2205,10 +2223,13 @@ async function faceVerdict(key){
   if (fits(bw,bh)) return { state:'ok', short:'Ready, with bleed' };
 
   if (fits(spec.mmW, spec.mmH)){
-    return { state:'choice', kind:'nobleed', short:'No bleed — choose how to fill it',
+    // Not a choice. mirrorEdges() reflects the outer 3mm outward to make the
+    // bleed, so nothing is cropped and no white appears. Offering an
+    // alternative would only let the customer pick something worse.
+    return { state:'warn', kind:'nobleed', short:'No bleed — we\u2019ll make it',
              detail:'This is exactly card size, with no bleed. Printers cut with a little '
-                  + 'movement either way, so we need 3mm spare all round — '
-                  + mm(bw) + '\u00d7' + mm(bh) + 'mm in total.' };
+                  + 'movement either way, so we mirror the outer 3mm outward to fill the gap. '
+                  + 'Nothing is cropped.' };
   }
 
   // Is it the same shape as the card? If so, scaling changes nothing but size.
@@ -2279,13 +2300,44 @@ async function refreshFaceChecks(){
   // The tabs carry each face's verdict, so a customer does not have to click a
   // face to discover it is unusable.
   for (const sd of sides){
-    if (!sideFiles[sd.key]) { delete faceOk[sd.key]; continue; }
-    const r = await checkFace(sd.key);
-    faceOk[sd.key] = (r.state !== 'err');
+    if (!sideFiles[sd.key]) { delete faceOk[sd.key]; delete faceVerdicts[sd.key]; continue; }
+    const v = await faceVerdict(sd.key);
+    faceVerdicts[sd.key] = v;
+    faceOk[sd.key] = (v.state !== 'err');
   }
   renderFaceTabs();
+  renderSlotNotices();
+  renderFaceNotice();
+  refreshSizeRow();
   updateProceedButton();
   refreshSidesRow();
+}
+
+// The quality report covered format, file size, DPI and pages, and said nothing
+// about whether the artwork is the right size for the card — the very thing
+// most likely to be wrong, and the thing the boxes were refusing files over.
+// The row is patched in after render, like the Sides row above it, so it works
+// for every file type rather than only the PDF path that had a Dimensions row.
+function refreshSizeRow(){
+  const list = document.getElementById('checkResults');
+  if (!list) return;
+  const v = faceVerdicts[activeFace];
+  let row = list.querySelector('.check-row[data-check="Artwork size"]');
+  if (!v || !v.detail){ if (row) row.remove(); return; }
+  const state = v.state === 'err' ? 'err' : v.state === 'ok' ? 'ok' : 'warn';
+  const icon = state === 'ok' ? '\u2713' : state === 'err' ? '\u2715' : '!';
+  if (!row){
+    row = document.createElement('div');
+    row.className = 'check-row';
+    row.setAttribute('data-check', 'Artwork size');
+    row.innerHTML = '<div class="check-icon"></div><div><div class="check-label">Artwork size</div>'
+                  + '<div class="check-val"></div><div class="check-note"></div></div>';
+    list.insertBefore(row, list.firstChild);
+  }
+  row.querySelector('.check-icon').className = 'check-icon ' + state;
+  row.querySelector('.check-icon').textContent = icon;
+  row.querySelector('.check-val').textContent = v.short;
+  row.querySelector('.check-note').textContent = v.detail;
 }
 
 function refreshSidesRow(){
@@ -2308,6 +2360,45 @@ function refreshSidesRow(){
 // Called both when the front's checks finish and whenever a face is added or
 // changed — adding a back has to be able to unblock the button, and the first
 // version only ran on the front, so it never could.
+// The verdicts, kept so the notices and the quality report can read them
+// without measuring every file again on every render.
+let faceVerdicts = {};
+
+// A face's verdict, said in full. The boxes only had room for four words, so
+// the reason a file was refused lived nowhere the customer could read it.
+function noticeHtml(key, v, withLabel){
+  if (!v || v.state === 'ok' || !v.detail) return '';
+  const sides = sidesNeeded();
+  const label = (sides.find(function(sd){ return sd.key === key; }) || {}).label || key;
+  const cls = v.state === 'err' ? 'err' : v.state === 'warn' ? 'warn' : 'ok';
+  return '<div class="slot-note ' + cls + '">'
+       + '<b>' + esc(withLabel ? label + ' \u2014 ' + v.short : v.short) + '</b>'
+       + '<span>' + esc(v.detail) + '</span></div>';
+}
+
+// Under the two boxes: every face that has something to say.
+function renderSlotNotices(){
+  const box = document.getElementById('slotNotices');
+  if (!box) return;
+  const sides = sidesNeeded();
+  const html = sides.map(function(sd){
+    return noticeHtml(sd.key, faceVerdicts[sd.key], sides.length > 1);
+  }).join('');
+  box.innerHTML = html;
+  box.hidden = !html;
+}
+
+// Under the tabs on the proof: the face being looked at.
+function renderFaceNotice(){
+  const box = document.getElementById('faceNotice');
+  if (!box) return;
+  const v = faceVerdicts[activeFace];
+  const html = noticeHtml(activeFace, v, false);
+  box.innerHTML = html;
+  box.className = 'face-notice';
+  box.hidden = !html;
+}
+
 // One tab per printed face, with a dot saying whether that face is usable.
 // The tabs are the only way to reach the back's proof, so they carry its state
 // too — otherwise a customer has to click a face to find out it is wrong.
@@ -2338,6 +2429,8 @@ async function switchFace(key){
   faceAdjust[activeFace] = Object.assign({}, artworkAdjust);
   activeFace = key;
   renderFaceTabs();
+  renderFaceNotice();
+  refreshSizeRow();
   // Hand the saved position over BEFORE the proof loads, rather than trying to
   // put it back afterwards — checkFile does not await the image.
   pendingFaceAdjust = faceAdjust[key] || null;
@@ -2371,10 +2464,18 @@ function updateProceedButton(){
   if (sides.length > 1 && !allFacesReady()){
     btn.textContent = 'Continue to Paper & Quantity';
     btn.classList.add('is-waiting');
+    // "One of the sides" was said however many were wrong, because it counted
+    // kinds of problem rather than faces. Name them instead.
+    const broken = sides.filter(function(sd){
+      return sideFiles[sd.key] && faceOk[sd.key] === false;
+    }).map(function(sd){ return sd.label.toLowerCase(); });
     say(missing.length
       ? 'Add the ' + missing.map(function(sd){ return sd.label.toLowerCase(); }).join(' and ')
         + ' and we\u2019ll carry on.'
-      : 'One of the sides needs fixing before we can carry on.');
+      : broken.length
+        ? 'The ' + broken.join(' and the ') + ' need' + (broken.length === 1 ? 's' : '')
+          + ' a different file \u2014 see above.'
+        : 'One side still needs fixing before we can carry on.');
     btn.dataset.blocked = '1';
   } else if (!checksPassed){
     btn.textContent = 'Continue Anyway';
@@ -2922,6 +3023,10 @@ function renderChecks(checks){
        <div id="passedChecks" style="${_passedChecksOpen?'':'display:none'}">${passed.map(_checkRow).join('')}</div>`
     : '';
   document.getElementById('checkResults').innerHTML = head + needsEye.map(_checkRow).join('') + passedBlock;
+  // The artwork size row is patched in rather than built here, so it has to be
+  // re-added every time this list is rebuilt — switching face rebuilds it, and
+  // the row was being wiped a moment after it was added.
+  if (typeof refreshSizeRow === 'function') refreshSizeRow();
 }
 function togglePassedChecks(){
   _passedChecksOpen = !_passedChecksOpen;
