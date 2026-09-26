@@ -279,6 +279,9 @@ nav a:hover,nav a.active{color:var(--gold);}
 .face-notice b,.slot-note b{display:block;font-weight:500;font-size:var(--text-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin-bottom:5px;}
 .face-notice span,.slot-note span{display:block;font-size:var(--text-xs);color:var(--soft);line-height:1.7;}
 .slot-notices{margin:12px 0 0;}
+.face-notice.fixed,.slot-note.fixed{border-left-color:var(--ok);}
+.slot-note.fixed b,.face-notice.fixed b{color:var(--ok);}
+.proceed-reason.good{color:var(--text);}
 .slot-note{margin:0 0 8px;}
 .face-tab{appearance:none;background:transparent;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
 .face-tab:hover{border-color:var(--gold);color:var(--text);}
@@ -429,6 +432,9 @@ nav a:hover,nav a.active{color:var(--gold);}
 .face-notice b,.slot-note b{display:block;font-weight:500;font-size:var(--text-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin-bottom:5px;}
 .face-notice span,.slot-note span{display:block;font-size:var(--text-xs);color:var(--soft);line-height:1.7;}
 .slot-notices{margin:12px 0 0;}
+.face-notice.fixed,.slot-note.fixed{border-left-color:var(--ok);}
+.slot-note.fixed b,.face-notice.fixed b{color:var(--ok);}
+.proceed-reason.good{color:var(--text);}
 .slot-note{margin:0 0 8px;}
 .face-tab{appearance:none;background:transparent;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
 .face-tab:hover{border-color:var(--gold);color:var(--text);}
@@ -2167,7 +2173,8 @@ async function faceVerdict(key){
   const fits = function(w,h){ return (near(d.w,w)&&near(d.h,h)) || (near(d.w,h)&&near(d.h,w)); };
   const mm = function(n){ return Math.round(n); };
 
-  if (fits(bw,bh)) return { state:'ok', short:'Ready, with bleed' };
+  if (fits(bw,bh)) return { state:'ok', short:'Ready, with bleed',
+                            detail: mm(bw) + '\u00d7' + mm(bh) + 'mm with bleed. Ready to print.' };
 
   if (fits(spec.mmW, spec.mmH)){
     // Not a choice. mirrorEdges() reflects the outer 3mm outward to make the
@@ -2247,8 +2254,13 @@ async function refreshFaceChecks(){
   // The tabs carry each face's verdict, so a customer does not have to click a
   // face to discover it is unusable.
   for (const sd of sides){
-    if (!sideFiles[sd.key]) { delete faceOk[sd.key]; delete faceVerdicts[sd.key]; continue; }
+    if (!sideFiles[sd.key]) { delete faceOk[sd.key]; delete faceVerdicts[sd.key];
+                              delete faceWasBad[sd.key]; continue; }
     const v = await faceVerdict(sd.key);
+    const prev = faceVerdicts[sd.key];
+    // Sticky: once a face has been flagged, fixing it is worth saying even if
+    // the customer replaced the file twice on the way.
+    if (prev && prev.state !== 'ok') faceWasBad[sd.key] = true;
     faceVerdicts[sd.key] = v;
     faceOk[sd.key] = (v.state !== 'err');
   }
@@ -2310,14 +2322,29 @@ function refreshSidesRow(){
 // The verdicts, kept so the notices and the quality report can read them
 // without measuring every file again on every render.
 let faceVerdicts = {};
+// What each face was BEFORE this check. A face that was flagged and is now
+// fine gets an acknowledgement; a file that was right first time gets none,
+// because congratulating someone for uploading a correct file is noise while
+// confirming they fixed a problem WE raised is courtesy.
+let faceWasBad = {};
 
 // A face's verdict, said in full. The boxes only had room for four words, so
 // the reason a file was refused lived nowhere the customer could read it.
 function noticeHtml(key, v, withLabel){
-  if (!v || v.state === 'ok' || !v.detail) return '';
+  if (!v) return '';
   const sides = sidesNeeded();
   const label = (sides.find(function(sd){ return sd.key === key; }) || {}).label || key;
-  const cls = v.state === 'err' ? 'err' : v.state === 'warn' ? 'warn' : 'ok';
+
+  // Fixed: the notice answers the complaint in the place the complaint was,
+  // rather than silently disappearing and leaving success to be inferred.
+  if (v.state === 'ok' && faceWasBad[key]){
+    return '<div class="slot-note fixed">'
+         + '<b>\u2713 ' + esc(withLabel ? label + ' \u2014 that\u2019s better' : 'That\u2019s better') + '</b>'
+         + '<span>' + esc(v.detail || v.short) + '</span></div>';
+  }
+  if (v.state === 'ok' || !v.detail) return '';
+
+  const cls = v.state === 'err' ? 'err' : 'warn';
   return '<div class="slot-note ' + cls + '">'
        + '<b>' + esc(withLabel ? label + ' \u2014 ' + v.short : v.short) + '</b>'
        + '<span>' + esc(v.detail) + '</span></div>';
@@ -2406,6 +2433,7 @@ function updateProceedButton(){
     if (!reason) return;
     reason.textContent = text || '';
     reason.hidden = !text;
+    if (!/^\u2713/.test(text || '')) reason.classList.remove('good');
   };
   btn.style.background = '';
   if (sides.length > 1 && !allFacesReady()){
@@ -2432,7 +2460,19 @@ function updateProceedButton(){
   } else {
     btn.textContent = 'Continue to Paper & Quantity';
     btn.classList.remove('is-waiting');
-    say('');
+    // Everything passes. If nothing was ever wrong, say nothing — the button
+    // being live is the whole message. If something WAS wrong, close the loop.
+    const hadTrouble = sides.some(function(sd){ return faceWasBad[sd.key]; });
+    if (hadTrouble && sides.length > 1){
+      say('\u2713 Both sides ready \u2014 nothing left to fix.');
+      if (reason) reason.classList.add('good');
+    } else if (hadTrouble){
+      say('\u2713 That\u2019s everything \u2014 ready to print.');
+      if (reason) reason.classList.add('good');
+    } else {
+      say('');
+      if (reason) reason.classList.remove('good');
+    }
     btn.dataset.blocked = '';
   }
 }
