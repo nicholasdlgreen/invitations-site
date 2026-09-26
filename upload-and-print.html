@@ -3467,6 +3467,7 @@ async function addToCartUpload(){
         if (pRes.ok) {
           uploadedPrintUrl = 'https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/public/artwork/' + pName;
           printSpec = { trimMm: built.trimMm, pageMm: built.pageMm, rasterPx: built.rasterPx,
+                        finishes: Object.assign({}, selectedFinishes || {}),
                         fold: selectedFold || 'flat',
                         printedSides: selectedSides || 'single',
                         faces: sidesNeeded().map(function(f){ return f.label; }) };
@@ -3486,6 +3487,11 @@ async function addToCartUpload(){
     size: selectedSize,
     paperName: paper.name,
     finish: selectedFinish || 'None',
+    // finish holds one option for the sake of older code that reads it. A card
+    // can carry several — gold foil AND rounded corners AND a tent fold — and
+    // totalFinishSell() already charges for all of them, so the order has to
+    // record all of them or the printer is told about one.
+    finishes: Object.assign({}, selectedFinishes || {}),
     qty: uploadQty,
     // Fold and side count decide the price and the job, and neither was
     // recorded. The press file encodes both — a folded sheet is wider, a

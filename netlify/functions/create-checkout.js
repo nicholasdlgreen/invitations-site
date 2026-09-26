@@ -119,10 +119,24 @@ function floorPriceFor(item, ctx) {
       (s.fold  || 'flat')   === wantFold &&
       (s.sides || 'single') === wantSides);
     if (hit) {
-      const finish = Array.isArray(product.finish_sells)
-        ? (product.finish_sells.find(f => f.name === (b.finish || 'None')) || {}).sell
-        : 0;
-      base = parseFloat(hit.sell) + (parseFloat(finish) || 0);
+      // The site charges for every finishing type chosen, so the floor has to
+      // count every one too — otherwise a card with foil AND rounded corners
+      // floors at the price of one of them. b.finishes is a map of type to
+      // option; older orders carry only b.finish, a single option name.
+      let finish = 0;
+      if (Array.isArray(product.finish_sells)) {
+        const chosen = b.finishes && typeof b.finishes === 'object'
+          ? Object.keys(b.finishes).filter(k => {
+              const v = b.finishes[k];
+              return v && String(v).toLowerCase() !== 'none';
+            })
+          : [b.finish].filter(f => f && String(f).toLowerCase() !== 'none');
+        chosen.forEach(name => {
+          const row = product.finish_sells.find(f => f.name === name);
+          if (row) finish += parseFloat(row.sell) || 0;
+        });
+      }
+      base = parseFloat(hit.sell) + finish;
     }
   }
   if (base == null && ctx.legacyPrices.length) {
