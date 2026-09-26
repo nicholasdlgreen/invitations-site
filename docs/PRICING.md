@@ -1,8 +1,8 @@
 # How Foreverprint pricing works
 
-*Last verified 26 September 2026 against the live database and against
-PrintedEasy's own calculator. This is the canonical reference — if you change
-how pricing works, change this file in the same commit.*
+*Last verified 26 September 2026 (afternoon) against the live database and
+against PrintedEasy's own calculator. This is the canonical reference — if you
+change how pricing works, change this file in the same commit.*
 
 *A shareable summary for PrintedEasy or a production partner, drawn from this
 file, lives at https://claude.ai/code/artifact/3df5ea13-436a-4d15-920b-e423f2c1eef0
@@ -22,7 +22,8 @@ on the route a product is printed on.
 | | |
 |---|---|
 | Cost rows in `sheet_rates` | **7,389** (378 switched off) |
-| Published sell prices | **56,804** |
+| Finishing rows in `finish_rates` | **0** — table built, scrape in progress |
+| Published sell prices | **56,636** |
 | Active products | **23** |
 | Margins | **0 on every product** — the site sells at cost |
 | Payload schema | version 3, published 26 Sept 2026 |
@@ -93,43 +94,70 @@ cheap rate does not sit quietly in a corner — it becomes the headline.
 
 ---
 
-## 3. What we sell, and what it is printed as
+## 3. What we sell, and how it is made
 
-A product's **family** decides which PrintedEasy product it is bought on. It is
-set per product in admin and nothing can be priced without it.
+A product names one or more **routes**, each `{family, fold}` and optionally
+`papers`. The family decides which PrintedEasy product supplies it. Set in
+admin; nothing can be priced without at least one.
 
-| Our family | Products | Bought on |
+| Our family | Bought on | Can it finish? |
 |---|---|---|
-| **flat-card** (15) | wedding, party, birthday, engagement party, baby shower, christening invitations; invitations; save the dates; RSVP; menu cards; table numbers; place cards; new arrival; moving cards; **Christmas cards** | **Postcards** for Silk, Uncoated, Cartonboard · **Luxury Flat** for the Fedrigoni stocks |
-| **folded-card** (4) | greeting, thank you, engagement, graduation cards | **Greeting Cards** |
-| **folded-leaflet** (1) | order of service | **Luxury Folded** |
-| **display-board** (3) | table plans, welcome signs, signage | **Display Boards** |
+| **flat-card** | **Postcards** for Silk, Uncoated, Cartonboard · **Luxury Flat** for the Fedrigoni stocks | Postcards: lamination, foiling, spot UV, corners. Luxury Flat: **corners only**, and free |
+| **folded-card** | **Greeting Cards** | lamination, foiling, spot UV. **No corners** |
+| **folded-leaflet** | **Luxury Folded** | **nothing at all** |
+| **large-format** | **Posters** | lamination |
+| **display-board** | **Display Boards** | its own lamination field, plus drilled holes |
 
-A product may also name a **`folded_family`**, giving it a second route for the
-folded version. Wedding invitations and Christmas cards both do: flat on
-`flat-card`, folded on `folded-card`.
+**Finishing is a property of the route, not the paper.** The document used to say
+the opposite, and it held only by coincidence: the Fedrigoni stocks exist solely
+on the Luxury products, and those cannot be finished, so the two correlated.
+Luxury Folded proves the real cause — it carries no finishing field whatever
+stock you pick.
 
-### One family can span two of their products
+### Routes replaced a two-slot model
 
-`flat-card` resolves Silk, Uncoated and Cartonboard to *Postcards* and the
-Fedrigoni stocks to *Luxury Flat*, decided per paper in `pe_product()`. Luxury
-Flat and Postcards price Silk and Uncoated identically, but only Postcards
-supports foiling — so those papers are bought there at no extra cost and gain
-foiling, while the Fedrigoni stocks, which exist only on Luxury Flat, are
-bought there.
+A product used to have `supplier_family` plus a `folded_family` whose slot meant
+"folded" rather than "another way of making this". That could not express *a
+table plan is flat on 5mm board or on paper*, so 880 `large-format` rates —
+Gloss, Silk and Uncoated posters at A1–A4 — sat unreachable.
 
-### 880 cost rows are currently unreachable
+Two routes **may** share a fold. That is safe because every lookup keys on paper
+too: `noBackwardSteps` curves on `paper|gsm|size|fold|sides`, and
+`lookupSheetSell` matches the paper. Two routes sharing a fold **and** a paper is
+not safe — those lookups take the first hit and would resolve arbitrarily, so a
+route may name the `papers` it serves, and **Publish refuses** with an error
+naming the clashing stocks if any remain.
 
-`sheet_rates` holds a **`large-format`** family — Gloss, Silk and Uncoated at
-A1–A4, 20 quantities each, 880 rows — and **no product uses it**. Table plans,
-signage and welcome signs are all `display-board`, which is Foamex 5mm only at
-A0–A2. We scraped paper posters and then sold only board.
+Each published rate row carries `rt`, its route index. That matters beyond
+price: `printingFamily()` drives **press geometry** — a folded leaflet is imposed
+on a double-width sheet — so once two routes share a fold the fold alone cannot
+say which family prints the job. The site resolves it from the customer's chosen
+paper.
 
-They are unreachable because a product has exactly one `supplier_family` plus
-one `folded_family`, and the second slot means "folded", not "another route".
-**This is the limit that has to go** — see §7.
+`supplier_family` and `folded_family` remain as a fallback for any payload
+published before routes existed.
 
----
+### Order of service has two routes
+
+An example of why this was needed. It was sold only on Luxury Folded, so it was
+Fedrigoni stock or nothing — and Luxury Folded finishes nothing, which is why the
+product offered Lamination, Foiling and Spot UV it could never supply.
+
+| Route | Stocks | Weights | Finishing |
+|---|---|---|---|
+| Luxury Folded (`papers` pinned to the five Fedrigoni) | Tintoretto, Nettuno, Acquerello, Sirio Pearl, Recycled | 280–350 | none |
+| Greeting Cards | Silk, Uncoated | 250 / 300 / 350 | yes |
+
+Pinning the luxury route's stocks is what makes the pair legal: both routes carry
+Silk and Uncoated, and unrestricted they each claimed them.
+
+### 880 cost rows were unreachable
+
+`large-format` — Gloss, Silk and Uncoated at A1–A4, 20 quantities, 880 rows — has
+no product using it. Table plans, signage and welcome signs are all
+`display-board`, which is Foamex 5mm at A0–A2. We scraped paper posters and then
+sold only board. Routes make this fixable: give those products a second
+`large-format` route. **Not yet done.**
 
 ## 4. The papers, and what PrintedEasy really offer
 
@@ -185,18 +213,41 @@ The site derives the thickness picker from **published prices**, never from the
 paper's own weight list. No price, not offered. That is why folded Uncoated and
 folded Silk show different weights from their flat selves.
 
-### The flexibility we want and do not yet have
+### The flexibility we want, and where it now stands
 
 **Anything PrintedEasy sell on the route a product is printed on should be
-offerable on that product, from admin, without a code change.** Today:
+offerable on that product, from admin, without a code change.**
 
 | Change | Admin only? |
 |---|---|
-| New **weight** on a paper we already hold | **Yes** — `paper_stocks`, scrape, Publish |
-| A stock PrintedEasy offer that we do not hold | **No** — needs `PE_STOCK`, sometimes `LUXURY`, and the price-watch list edited in Python |
-| A stock on a **different route** for the same product | **No** — impossible in the model |
+| New **weight** on a paper we already hold | **Yes** |
+| A stock PrintedEasy offer that we do not hold | **Yes**, since the vocabulary moved to the database — below |
+| A stock on a **different route** for the same product | **Yes**, via a second route — §3 |
+| Knowing *which* stocks and weights they sell on a route | **Not yet.** Needs the matrix discovered with the sentinel test |
 
----
+### The supplier's vocabulary lives in the database
+
+Which stock they call `silk`, and which of their products a stock is bought on,
+used to be hardcoded in `tools/printedeasy_refresh.py` **and again** in
+`netlify/functions/printedeasy-price-watch.js`, the second carrying a comment
+asking whoever added a paper to remember the first.
+
+`paper_stocks` now carries:
+
+- **`pe_stock`** — their own value, as their form spells it (`silk`,
+  `tintoretto`, `foamex5mm`). Null means we cannot price it from them.
+- **`pe_product_overrides`** — `{"flat-card":"luxury-flat"}`, naming one of
+  *their* products when it differs from the family default.
+
+The override replaced a hardcoded `LUXURY` set, which conflated two separate
+facts that happened to coincide: *this is premium* and *this is bought off a
+different product*. Only the second affects pricing, so a new premium stock on a
+normal route would have been mis-routed.
+
+Both are on the Paper Stocks form in admin. In the price watch, loading the
+vocabulary is a **hard precondition**: without it every probe looks up an
+undefined stock and the run reports that nothing has changed — silence that reads
+as good news, the worst failure a watcher can have.
 
 ## 5. Finishing — where we do **not** replicate them
 
@@ -226,20 +277,64 @@ and **size** — four dimensions. We hold one number.
 
 **The structural problem.** `finish_options` holds one `cost_modifier` per
 finishing **type**, while `finish_types` holds 2–4 **options** each. Lamination
-has four options and one price. Foiling has four colours and one price. There
-is nowhere to put a price that differs by option, quantity, sides or size.
+has four options and one price. There is nowhere to put a price that differs by
+option, quantity, sides or size.
 
 Our configurator's own copy says lamination is applied to **both sides**, while
 £5 is barely their front-only price. Every laminated order gives away roughly
 £4–£7 of cost before any margin.
 
-Because foiling is a **setup charge, not a per-unit cost**, it adds about £1.72
-a card at 50 but 34p at 250. Unsellable on short runs, very sellable on long
-ones — worth a minimum quantity rather than offering it everywhere.
+Because foiling is a **setup charge, not a per-unit cost**, it adds about £1.72 a
+card at 50 but 34p at 250. Unsellable on short runs, very sellable on long ones —
+worth a minimum quantity rather than offering it everywhere.
 
-**Finishing is a property of the paper, not the product.** Choose a Fedrigoni
-stock and the options disappear, because the printer cannot foil, laminate or
-spot-UV that range at all.
+### `finish_rates` — the replacement
+
+Keyed **(family, finish, option, applies_to, size, quantity)**, holding the
+uplift after the 20% discount. Scraped by `tools/printedeasy_finishes.py`.
+
+**Paper and weight are deliberately not in the key**, which is what keeps this a
+~900-probe job per family rather than 40,000. Both-sides lamination measured
+£11/£11/£12/£11 across 250–400gsm at quantity 100 and £17/£16/£17/£16 at 500 —
+flat within the ±£1 you get from differencing two whole-pound prices. The job's
+own `printed_sides` drops out for the same reason.
+
+**±£1 is the resolution of their price list**, not our error. They quote whole
+pounds, so an uplift is the difference of two rounded staircases. Do not chase it.
+
+Three things the first runs taught, all of them traps:
+
+- **The sentinel probe does not transfer from weights to options.** Asked for an
+  invented lamination value their endpoint falls back to a **real** lamination
+  rather than to none, so the sentinel collided with Matt and rejected 11 good
+  rows. Matt and Gloss also price identically — a true finding — so equality
+  proves nothing. For finishes their own option list **is** authoritative;
+  validation is arithmetic instead, and a finish may cost nothing but can never
+  make a job cheaper.
+- **An allowlist is no defence against your own judgement.** `folded-leaflet` was
+  allowlisted for lamination without checking, and Luxury Folded has no such
+  field, so a full run recorded zero-cost lamination rows for finishes that do not
+  exist. There is now a general guard: if the sentinel **and** every real option
+  price identically to the plain job, the form has no such field and nothing is
+  written.
+- **A report that cannot be read twice is not a report.** The first full run
+  computed 2,793 rates over an hour and discarded them. It now always writes a
+  CSV.
+
+**Matt and Gloss lamination cost the same**; soft touch is £1–2 more. Worth
+knowing when pricing the options to customers.
+
+### Still to wire: gate finishes on the route
+
+Finishes are gated on the **paper's** capability list and the product's allowlist.
+Neither knows about the route, which is now wrong in a way that is live: an order
+of service on Tintoretto is offered **Corners**, and Luxury Folded cannot make
+them. It is free, so no money is taken, but it is a promise we cannot keep.
+
+The fix is self-maintaining and needs no new config: require `finish_rates` rows
+for the **printing family**. The scrape becomes the capability list, and because
+the guard above writes nothing for a family whose form lacks the field, a route
+that cannot finish automatically offers nothing.
 
 ### Envelopes bypass the margin engine
 
@@ -259,7 +354,10 @@ strictly true, and envelopes sit outside the system that will set margin.
 | Our sell price, 56,804 prices | `pricing_config` (one row) | admin → Pricing → **Publish** |
 | Papers, weights, finishes | `paper_stocks` | admin → Pricing → Paper Stocks |
 | Papers/sizes/family/quantities per product | `product_types` | admin → Pricing → Product Types |
-| What a finish **costs** | `finish_options` | admin |
+| What a finish **costs** today | `finish_options` (one price per type) | admin |
+| What a finish **will cost** | `finish_rates` (per option, sides, size, quantity) | `tools/printedeasy_finishes.py` |
+| How a product can be made | `product_types.routes` | admin → product form |
+| The supplier's name for a stock | `paper_stocks.pe_stock`, `pe_product_overrides` | admin → Paper Stocks |
 | What a finish is **called** and its options | `finish_types` | admin |
 | Envelope retail prices | `envelopes` | admin |
 | Which pack the grid quotes | `product_types.display_quantity` | admin → product form |
@@ -281,23 +379,23 @@ raising the number.
 
 ---
 
-## 7. Agreed changes, not yet built
+## 7. The three agreed changes, and where they stand
 
-Agreed 26 September, in this order:
+Agreed 26 September.
 
-1. **Rebuild finishing as a rate table**, keyed like sheet rates —
-   (family, finish, option, size, quantity, sides). This is the one change that
-   makes us structurally match them; everything after it is data.
-2. **Generalise `folded_family` into a list of routes**, so a product can be
-   priced on more than one PrintedEasy product. This frees the 880 orphaned
-   `large-format` rows and lets table plans be sold on paper as well as board.
-3. **Move the supplier's vocabulary out of Python into the database** —
-   `PE_STOCK` and `LUXURY` become columns on `paper_stocks`, and the full stock
-   × weight matrix PrintedEasy offer per route is discovered and stored as data,
-   validated with the sentinel test in §4. Then offering any stock they sell, at
-   any weight they sell it, is an admin tick rather than a code edit.
+1. **Finishing as a rate table** — `finish_rates` exists and the scraper works.
+   **Outstanding:** populate it, then gate finishes on the route and retire
+   `finish_options.cost_modifier`.
+2. **More than one route per product** — **done.** Routes, per-route stock lists,
+   the overlap guard, `rt` on every published row, and press geometry resolving
+   from the chosen paper. Order of service is the first product using it.
+3. **The supplier's vocabulary out of code** — **done** for `pe_stock` and
+   `pe_product_overrides`. **Outstanding:** discover their full stock × weight
+   matrix per route with the sentinel test, so admin can tick any weight they
+   genuinely sell.
 
----
+Only after all three would the back end be a genuine replica, and margin comes
+after that.
 
 ## 8. Watching for supplier changes
 
@@ -382,11 +480,18 @@ not just the input data.**
 1. **Margins.** All 0. The cost base is trade, the market is consumer: Uncoated
    300gsm A5 ×100 costs £24, while Papier charge £210 for the same box. Margin
    should be set by where we want to sit against Papier, not by marking up cost.
-2. **The three agreed changes in §7**, before margin.
-3. **The VAT question** in §1 — the single most valuable thing to resolve.
-4. **Confirm the 20%** against a real invoice.
-5. **Lamination under-recovers** by £4–£7 an order, and the copy promises both
-   sides — fixed by §7.1.
-6. **Envelopes** sit outside the margin engine.
-7. **The checkout VAT line** still shows a split while the business is not
-   registered.
+2. **Populate `finish_rates`**, then gate finishes on the route and retire
+   `finish_options.cost_modifier`. Until then lamination under-recovers £4–£7 an
+   order and the copy promises both sides.
+3. **Corners is promised on an order of service in Fedrigoni stock** and cannot
+   be made. Free, so no money is taken — closed by the route gate.
+4. **Discover their stock × weight matrix per route** with the sentinel test, the
+   last piece of item 3.
+5. **The 880 `large-format` rates** are still unreachable. Routes make it a
+   one-line change; nobody has decided whether table plans should be sold on
+   paper.
+6. **The VAT question** in §1 — the single most valuable thing to resolve.
+7. **Confirm the 20%** against a real invoice.
+8. **Envelopes** sit outside the margin engine: they cost 6p and we charge 35p.
+9. **The checkout VAT line** still shows a split while the business is not
+   registered. The grid and landing pages are already clean.

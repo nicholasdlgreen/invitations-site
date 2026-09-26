@@ -31,18 +31,20 @@
 .lp-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;}
 .lp-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.6vw,3rem);font-weight:400;line-height:1.06;color:var(--text);margin:0 0 12px;}
 .lp-hero-sub{font-size:var(--text-body);color:var(--soft);line-height:1.7;margin:0 0 22px;max-width:500px;}
-/* The figure leads, with "From" and the pack stacked beside it behind a
-   hairline. Stacking all three made a tall narrow box; this is about half the
-   height and twice the width. Grid placement does the rearranging, so the
-   markup keeps its reading order — "From", the price, then the pack. */
-.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:11px 20px;display:inline-grid;grid-template-columns:auto auto;grid-template-areas:"value label" "value qty";column-gap:13px;align-items:center;margin-bottom:18px;}
-.lp-price-label{grid-area:label;align-self:end;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;line-height:1.35;}
-.lp-price-value{grid-area:value;align-self:center;font-family:'Cormorant Garamond',serif;font-size:1.95rem;font-weight:400;color:var(--text);line-height:1;border-right:1px solid var(--hairline);padding-right:13px;}
-.lp-price-qty{grid-area:qty;align-self:start;font-size:var(--text-xs);letter-spacing:.04em;color:var(--soft);line-height:1.35;}
-/* Nothing to say beside the figure until the pack loads, so the divider would
-   otherwise hang there against an empty column. Set by renderPricing rather
-   than :has(), which did not fire when tested against the live page. */
-.lp-price-block.is-solo .lp-price-value{border-right:0;padding-right:0;}
+/* One line, read as a sentence: "From £18 for 50". The previous version led
+   with the figure and stacked the words beside it, which put "From" to the
+   RIGHT of the number and read as "£18 From for 50". The markup order was
+   always correct — a screen reader heard it properly — but that is no defence
+   when the visible line is nonsense. Baseline alignment keeps the small words
+   sitting on the figure's feet rather than floating against its middle. */
+.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:13px 20px;display:inline-flex;align-items:baseline;gap:8px;margin-bottom:18px;}
+.lp-price-label{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;}
+.lp-price-value{font-family:'Cormorant Garamond',serif;font-size:1.95rem;font-weight:400;color:var(--text);line-height:1;}
+.lp-price-qty{font-size:var(--text-xs);letter-spacing:.04em;color:var(--soft);}
+/* Nothing to say after the figure until the pack loads. The flex gap applies
+   between items whatever they contain, so an empty span would leave 8px of
+   trailing air inside the box. */
+.lp-price-block.is-solo .lp-price-qty{display:none;}
 .lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
 .lp-cta:hover{background:transparent;color:var(--gold);}
 .lp-cta::after{content:'→';transition:transform .2s;}
