@@ -105,8 +105,19 @@ function floorPriceFor(item, ctx) {
   let base = null;
 
   if (product && Array.isArray(product.sheet_sells)) {
+    // Fold and printed sides are part of the key, not decoration. Without
+    // them .find() takes whichever row happens to come first for a paper,
+    // size and quantity — and once double-sided rates are published there are
+    // two. Landing on the dearer row would put the floor ABOVE what a
+    // legitimate single-sided order claims and reject it at checkout.
+    // Rows published before either existed carry neither, and those are flat
+    // and single.
+    const wantFold  = b.fold || 'flat';
+    const wantSides = b.printedSides || 'single';
     const hit = product.sheet_sells.find(s =>
-      s.paper === b.paperName && s.size === b.size && parseInt(s.qty, 10) === qty);
+      s.paper === b.paperName && s.size === b.size && parseInt(s.qty, 10) === qty &&
+      (s.fold  || 'flat')   === wantFold &&
+      (s.sides || 'single') === wantSides);
     if (hit) {
       const finish = Array.isArray(product.finish_sells)
         ? (product.finish_sells.find(f => f.name === (b.finish || 'None')) || {}).sell

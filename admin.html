@@ -1615,6 +1615,27 @@ function openJobTicket(orderId) {
           <div class="jt-field"><div class="jt-field-label">Quantity</div><div class="jt-field-val large">${it.qty || o.quantity || '—'}</div></div>
           <div class="jt-field"><div class="jt-field-label">Paper Stock</div><div class="jt-field-val">${it.paper || o.paper || missing('Not recorded — check order')}</div></div>
           <div class="jt-field"><div class="jt-field-label">Size</div><div class="jt-field-val">${it.size || o.size || missing('Not recorded — check order')}</div></div>
+          <div class="jt-field"><div class="jt-field-label">Printed Sides</div><div class="jt-field-val">${
+            (function(){
+              // PrintedEasy's order form asks for this outright, so the ticket
+              // has to answer it. Older orders predate the field; the press
+              // file's page count still tells you, so say that rather than
+              // guess single and risk a back going unprinted.
+              const sides = (spec && spec.printedSides) || (it.basis && it.basis.printedSides);
+              if (sides === 'double') return 'DOUBLE — ' +
+                ((spec && spec.faces && spec.faces.length ? spec.faces.join(', ') : 'both sides'));
+              if (sides === 'single') return 'Single';
+              return missing('Not recorded — check the page count of the print file');
+            })()
+          }</div></div>
+          <div class="jt-field"><div class="jt-field-label">Format</div><div class="jt-field-val">${
+            (function(){
+              const fold = (spec && spec.fold) || (it.basis && it.basis.fold);
+              return fold === 'folded' ? 'Folded — creased after printing'
+                   : fold === 'flat'   ? 'Flat card'
+                   : 'Flat card';
+            })()
+          }</div></div>
           <div class="jt-field"><div class="jt-field-label">Sheet Size</div><div class="jt-field-val">${
             spec && spec.pageMm && spec.trimMm
               ? `${spec.pageMm.w} × ${spec.pageMm.h}mm incl. bleed and marks — trims to ${spec.trimMm.w} × ${spec.trimMm.h}mm`
