@@ -301,6 +301,7 @@ def main():
 
     pe = PrintedEasy()
     rows, skipped, errors, substitutes, notoffered = [], [], [], set(), set()
+    everMoved = set()
 
     for family in families:
         slug = ROUTES.get(family)
@@ -337,22 +338,23 @@ def main():
                                 all(g is not None and abs(g - base) < 0.005 for g in probes.values())):
                             notoffered.add(f'{family}/{fkey}/{applies_to} on {our_size} (no such field)')
                             continue
-                        # Within one finish, if an option leaves the price
-                        # untouched while a sibling moves it, that option is not
-                        # being applied — the form ignored a value it does not
-                        # have. Red envelopes on the Luxury products are exactly
-                        # this, and without the check they would be recorded as
-                        # free rather than unavailable.
-                        moved = [g for g in probes.values()
-                                 if g is not None and abs(g - base) > 0.005]
+                        # Whether an option is OFFERED cannot be judged from one
+                        # rung. Their prices are whole pounds, so a real charge
+                        # rounds to £0 at small quantities — white envelopes on a
+                        # greeting card are 4p each, which is £0 on a run of 25.
+                        # Judging per cell dropped them as "not offered" while
+                        # red, at 8p, survived.
+                        #
+                        # So record whether this option EVER moved the price for
+                        # this family and finish, and decide at the end.
                         for our_opt, their_opt in spec['options'].items():
                             got = probes.get(our_opt)
                             if not got:
                                 skipped.append(f'{family} {fkey} {our_opt} {applies_to} {our_size} x{qty}: 0')
                                 continue
-                            if moved and abs(got - base) < 0.005:
-                                notoffered.add(f'{family}/{fkey}/{our_opt} on {our_size}')
-                                continue
+                            key = (family, fkey, our_opt)
+                            if abs(got - base) > 0.005:
+                                everMoved.add(key)
                             if got < base - 0.005:
                                 skipped.append(f'{family} {fkey} {our_opt} {applies_to} {our_size} x{qty}: '
                                                f'{got} is cheaper than the plain job at {base}')
@@ -360,9 +362,20 @@ def main():
                             uplift = round((got - base) * 0.80, 2)
                             rows.append({'supplier_family': family, 'finish_name': spec['our_name'],
                                          'option_name': our_opt, 'applies_to': applies_to,
-                                         'size': our_size, 'quantity': qty, 'cost': uplift})
+                                         'size': our_size, 'quantity': qty, 'cost': uplift,
+                                         '_key': (family, fkey, our_opt)})
                 print(f'{family} {our_size} x{qty}: {len(rows)} rates, '
                       f'{len(skipped)} skipped, {len(errors)} errors', flush=True)
+
+    # An option that never moved the price anywhere, for any size or quantity,
+    # is one the form does not have. One that moved it somewhere is real, and a
+    # £0 rung is simply a £0 rung.
+    dropped = sorted({r['_key'] for r in rows if r['_key'] not in everMoved})
+    for k in dropped:
+        notoffered.add(f'{k[0]}/{k[1]}/{k[2]} (never changed the price)')
+    rows = [r for r in rows if r['_key'] in everMoved]
+    for r in rows:
+        r.pop('_key', None)
 
     print(f'\nFINISHED {len(rows)} rates, {len(skipped)} not offered, {len(errors)} errors')
     if notoffered:
