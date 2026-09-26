@@ -4326,17 +4326,20 @@ function validateForPublish() {
     const byFold = {};
     routes.forEach(rt => {
       const fold = rt.fold || 'flat';
-      (byFold[fold] = byFold[fold] || []).push(rt.family);
+      (byFold[fold] = byFold[fold] || []).push(rt);
     });
     Object.keys(byFold).forEach(fold => {
-      const fams = byFold[fold];
-      if (fams.length < 2) return;
+      const rts = byFold[fold];
+      if (rts.length < 2) return;
+      const fams = rts.map(rt => rt.family);
       const seen = {}, clash = new Set();
-      fams.forEach(fam => {
-        (sheetRates || []).filter(r => r.supplier_family === fam).forEach(r => {
+      rts.forEach(rt => {
+        const only = Array.isArray(rt.papers) && rt.papers.length ? rt.papers : null;
+        (sheetRates || []).filter(r => r.supplier_family === rt.family &&
+                                       (!only || only.includes(r.paper_name))).forEach(r => {
           const k = r.paper_name + '|' + r.weight_gsm + '|' + r.size;
-          if (seen[k] && seen[k] !== fam) clash.add(r.paper_name);
-          seen[k] = fam;
+          if (seen[k] && seen[k] !== rt.family) clash.add(r.paper_name);
+          seen[k] = rt.family;
         });
       });
       if (clash.size) issues.push({ level: 'error', product: p.name,
@@ -4476,12 +4479,25 @@ async function publishHierarchical() {
         // geometry from the paper the customer chose rather than guessing from
         // the fold. Two routes may share a fold; only the paper tells them
         // apart.
-        const routeOf = new Map();
-        routes.forEach((rt, i) => { if (!routeOf.has(rt.family)) routeOf.set(rt.family, i); });
+        // A route may name the stocks it serves. Without that, two routes that
+        // both carry Silk would each claim it and the overlap guard would
+        // rightly refuse the publish — which is what happens when an order of
+        // service is sold on Luxury Folded for the Fedrigoni stocks AND on
+        // Greeting Cards for the standard ones. Naming the stocks per route is
+        // what makes the pair unambiguous.
+        const routeFor = (fam, paper) => {
+          for (let i = 0; i < routes.length; i++) {
+            if (routes[i].family !== fam) continue;
+            const only = routes[i].papers;
+            if (Array.isArray(only) && only.length && !only.includes(paper)) continue;
+            return i;
+          }
+          return -1;
+        };
         const sidesOffered = !!p.sides_offered;
         const sheetSells = [];
         sheetRates.forEach(r => {
-          const rtIdx = routeOf.has(r.supplier_family) ? routeOf.get(r.supplier_family) : -1;
+          const rtIdx = routeFor(r.supplier_family, r.paper_name);
           const fold = rtIdx < 0 ? null : (routes[rtIdx].fold || 'flat');
           // A double-sided rate only belongs in the payload if the product
           // offers the choice — a welcome sign has no back. Without this the
