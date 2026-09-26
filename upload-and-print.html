@@ -689,6 +689,8 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div id="format-toggle" style="display:none;margin-bottom:16px;"></div>
         <div id="size-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;"></div>
         <p id="format-note" style="display:none;font-size:var(--text-xs);color:var(--pale);margin:10px 0 0;line-height:1.7;"></p>
+        <div id="sides-toggle" style="display:none;margin:14px 0 0;"></div>
+        <p id="sides-note" style="display:none;font-size:var(--text-xs);color:var(--pale);margin:10px 0 0;line-height:1.7;"></p>
         <p id="sizeNote" style="font-size:var(--text-sm);color:var(--pale);margin-top:14px;text-align:center;">↑ Select a size above to unlock the upload</p>
       </div>
 
@@ -1438,7 +1440,18 @@ let publishedPapers = [];
 function sheetSells() {
   const all = (currentProduct && currentProduct.sheet_sells) || [];
   if (!Array.isArray(all)) return [];
-  return all.filter(s => (s.fold || 'flat') === selectedFold);
+  return all.filter(s => (s.fold || 'flat') === selectedFold
+                      && (s.sides || 'single') === selectedSides);
+}
+
+// Does this product offer a printed back? Rows published before sides existed
+// carry none, and those are single-sided.
+function sidesOffered() {
+  const all = (currentProduct && currentProduct.sheet_sells) || [];
+  if (!Array.isArray(all) || !all.length) return ['single'];
+  const forFold = all.filter(s => (s.fold || 'flat') === selectedFold);
+  const seen = new Set(forFold.map(s => s.sides || 'single'));
+  return ['single', 'double'].filter(x => seen.has(x));
 }
 
 // Does this product offer the choice at all, and in which formats?
@@ -1712,6 +1725,53 @@ function updateProofFoldNote(){
   }
 }
 
+function renderSidesToggle() {
+  const box  = document.getElementById('sides-toggle');
+  const note = document.getElementById('sides-note');
+  if (!box) return;
+  const sides = sidesOffered();
+  // Offered on some products and not others, and only where the printer will
+  // actually do it, so hide the row rather than show a choice of one.
+  if (sides.length < 2) {
+    box.style.display = 'none';
+    if (note) note.style.display = 'none';
+    if (selectedSides !== 'single') selectedSides = 'single';
+    return;
+  }
+  const LABEL = { single: 'Printed one side', double: 'Printed both sides' };
+  box.style.display = '';
+  box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
+    + 'background:var(--white);padding:4px;">'
+    + sides.map(x => {
+        const on = x === selectedSides;
+        return '<button type="button" onclick="selectSides(\'' + x + '\')" '
+          + 'style="font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:8px 20px;'
+          + 'border-radius:999px;transition:all .2s;'
+          + (on ? 'background:var(--gold);color:#fff;' : 'background:none;color:var(--soft);')
+          + '">' + LABEL[x] + '</button>';
+      }).join('')
+    + '</div>';
+  if (note) {
+    note.style.display = '';
+    note.textContent = selectedSides === 'double'
+      ? 'Printed on both sides. Worth it on round tables, where guests approach from every direction — upload artwork for the back as a second page.'
+      : 'Printed on the front only. The back is left blank.';
+  }
+}
+
+function selectSides(x) {
+  if (x === selectedSides) return;
+  selectedSides = x;
+  // A paper, weight or size only priced on the other side count must not
+  // survive the switch, exactly as with the fold.
+  const still = getAvailableSizes();
+  if (selectedSize && still.size && !still.has(selectedSize)) selectedSize = null;
+  selectedWeight = null;
+  renderSizeCards();
+  if (typeof renderWeightPicker === 'function') renderWeightPicker();
+  if (typeof updatePrice === 'function') updatePrice();
+}
+
 function selectFold(f) {
   if (f === selectedFold) return;
   selectedFold = f;
@@ -1721,6 +1781,10 @@ function selectFold(f) {
   selectedWeight = null;
   renderSizeCards();
   updateProofFoldNote();
+  // The printer may not offer a back on both formats, so the side choice is
+  // re-derived for the format just picked.
+  if (!sidesOffered().includes(selectedSides)) selectedSides = 'single';
+  renderSidesToggle();
   if (typeof renderWeightPicker === 'function') renderWeightPicker();
   if (typeof updatePrice === 'function') updatePrice();
 }
@@ -1729,6 +1793,7 @@ function renderSizeCards() {
   const grid = document.getElementById('size-grid');
   if (!grid) return;
   renderFormatToggle();
+  renderSidesToggle();
   const available = getAvailableSizes();
   let keys = Object.keys(SIZE_SPECS);
   if (available.size) keys = keys.filter(k => available.has(k));
@@ -1801,6 +1866,8 @@ function paperImage(name, size) {
 }
 
 let selectedFold='flat';   // 'flat' or 'folded' — chosen at the size step
+
+let selectedSides = 'single';
 let selectedPaper='smooth', selectedWeight=null, selectedFinish='None', selectedFinishes={}, uploadQty=25, checksPassed=true;
 let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
 // Goods before delivery. Delivery is a percentage of this with a floor, so

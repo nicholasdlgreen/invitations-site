@@ -4258,7 +4258,9 @@ function renderPublishStatus() {
 function noBackwardSteps(sells) {
   const curves = new Map();
   sells.forEach(r => {
-    const k = r.paper + '|' + r.gsm + '|' + r.size;
+    // Callers already filter by fold and sides, but the key carries them too
+    // so this stays correct however it is called.
+    const k = r.paper + '|' + r.gsm + '|' + r.size + '|' + (r.fold || '') + '|' + (r.sides || 'single');
     if (!curves.has(k)) curves.set(k, []);
     curves.get(k).push(r);
   });
@@ -4316,17 +4318,24 @@ async function publishHierarchical() {
         };
 
         const foldedFamily = p.folded_family || null;
+        const sidesOffered = !!p.sides_offered;
         const sheetSells = [];
         sheetRates.forEach(r => {
           const fold = r.supplier_family === family ? 'flat'
                      : (foldedFamily && r.supplier_family === foldedFamily) ? 'folded'
                      : null;
-          if (fold &&
+          // A double-sided rate only belongs in the payload if the product
+          // offers the choice — a welcome sign has no back. Without this the
+          // rows ship where nothing can reach them and quietly go stale, the
+          // same trap the weight check above exists for.
+          const sidesOk = (r.printed_sides || 'single') === 'single' || sidesOffered;
+          if (fold && sidesOk &&
               papersOk.includes(r.paper_name) &&
               sizes.includes(r.size) &&
               offersWeight(r.paper_name, parseInt(r.weight_gsm, 10))) {
             sheetSells.push({
               fold:  fold,
+              sides: r.printed_sides || 'single',
               paper: r.paper_name,
               gsm:   parseInt(r.weight_gsm, 10) || null,
               size:  r.size,
@@ -4336,9 +4345,13 @@ async function publishHierarchical() {
           }
         });
         // Flat and folded are separate curves and must be flattened apart, or
-        // a cheap folded price could drag a flat one down with it.
-        ['flat', 'folded'].forEach(f => {
-          flattenedSteps += noBackwardSteps(sheetSells.filter(r => r.fold === f));
+        // a cheap folded price could drag a flat one down with it. Printed
+        // sides splits them again for the same reason: single-sided is always
+        // cheaper, so one curve holding both would flatten every double-sided
+        // price down onto the single-sided one.
+        [['flat','single'],['flat','double'],['folded','single'],['folded','double']].forEach(([f, sd]) => {
+          flattenedSteps += noBackwardSteps(
+            sheetSells.filter(r => r.fold === f && (r.sides || 'single') === sd));
         });
         // Finish sells: for each finish ticked on this product
         const finishSells = finishes.map(name => {
