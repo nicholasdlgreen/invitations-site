@@ -272,6 +272,12 @@ nav a:hover,nav a.active{color:var(--gold);}
 .btn:hover{background:var(--brown);box-shadow:0 6px 24px rgba(107,79,58,.3);}
 .btn-out{display:inline-flex;align-items:center;gap:8px;padding:14px 37px;background:transparent;color:var(--gold);border:1px solid var(--gold);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:all .25s;text-decoration:none;border-radius:60px;}
 .btn-out:hover{background:var(--gold);color:#fff;}
+/* Why the button will not go yet. The state used to be carried by turning the
+   button red, which said "stopped" without saying what to do, and borrowed an
+   alert colour that is not a button colour anywhere else on the site. */
+.proceed-reason{font-size:var(--text-xs);color:var(--soft);margin:10px 0 0;letter-spacing:.02em;}
+.btn.is-waiting{opacity:.45;box-shadow:none;}
+.btn.is-waiting:hover{background:var(--gold);box-shadow:none;}
 .container{max-width:1180px;margin:0 auto;padding:0 32px;}
 .section{padding:90px 0;}
 .tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;display:block;}
@@ -398,6 +404,12 @@ nav a:hover,nav a.active{color:var(--gold);}
 .btn:hover{background:var(--brown);box-shadow:0 6px 24px rgba(107,79,58,.3);}
 .btn-out{display:inline-flex;align-items:center;gap:8px;padding:14px 37px;background:transparent;color:var(--gold);border:1px solid var(--gold);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:all .25s;text-decoration:none;border-radius:60px;}
 .btn-out:hover{background:var(--gold);color:#fff;}
+/* Why the button will not go yet. The state used to be carried by turning the
+   button red, which said "stopped" without saying what to do, and borrowed an
+   alert colour that is not a button colour anywhere else on the site. */
+.proceed-reason{font-size:var(--text-xs);color:var(--soft);margin:10px 0 0;letter-spacing:.02em;}
+.btn.is-waiting{opacity:.45;box-shadow:none;}
+.btn.is-waiting:hover{background:var(--gold);box-shadow:none;}
 .container{max-width:1180px;margin:0 auto;padding:0 32px;}
 .section{padding:90px 0;}
 .tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;display:block;}
@@ -804,9 +816,12 @@ was fetched and injected via innerHTML — that was the bug behind the
           <div id="checkResults"></div>
         </div>
       </div>
-      <div id="checkActions" class="hidden" style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
-        <button class="btn" id="proceedBtn" onclick="proceedFromChecks()">Continue to Paper &amp; Quantity</button>
-        <button class="btn-out" onclick="goStep(1)">Upload a Different File</button>
+      <div id="checkActions" class="hidden" style="margin-top:8px;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn" id="proceedBtn" onclick="proceedFromChecks()">Continue to Paper &amp; Quantity</button>
+          <button class="btn-out" onclick="goStep(1)">Upload a Different File</button>
+        </div>
+        <p id="proceedReason" class="proceed-reason" hidden></p>
       </div>
     </div>
 
@@ -2082,7 +2097,13 @@ async function acceptSideFile(key, file){
 
   sideFiles[key] = { file: file, page: 1 };
   renderSideSlots();
-  if (key === 'front') handleFile(file);
+  // Do not leave step 1 until every face has a file. handleFile() calls
+  // goStep(2), and step 1 is where the slots live — so uploading a front used
+  // to hide the very boxes the button then told you to use. A double-sided job
+  // was a dead end: a blocked button pointing "above" at nothing.
+  const ready = sides.every(function(sd){ return !!sideFiles[sd.key]; });
+  if (sides.length > 1 && !ready) { updateProceedButton(); return; }
+  if (sideFiles.front) handleFile(sideFiles.front.file);
 }
 
 // The full check panel still runs on the front, because that is what the proof
@@ -2179,27 +2200,45 @@ function updateProceedButton(){
   // who has chosen double sided must not reach the basket with only a front:
   // they would get exactly what single sided would have given them, for more
   // money, with nothing having said so.
+  // The button keeps its name and its colour throughout. A colour cannot say
+  // "add the back", and red and orange were doing two jobs at once — signalling
+  // a state AND carrying the instruction — in colours that are not button
+  // colours anywhere else here. The reason goes in words underneath instead.
+  const reason = document.getElementById('proceedReason');
+  const say = function(text){
+    if (!reason) return;
+    reason.textContent = text || '';
+    reason.hidden = !text;
+  };
+  btn.style.background = '';
   if (sides.length > 1 && !allFacesReady()){
-    btn.textContent = missing.length
-      ? 'Add the ' + missing.map(function(sd){ return sd.label.toLowerCase(); }).join(' and ') + ' to continue'
-      : 'Fix the sides marked above to continue';
-    btn.style.background = 'var(--err)';
+    btn.textContent = 'Continue to Paper & Quantity';
+    btn.classList.add('is-waiting');
+    say(missing.length
+      ? 'Add the ' + missing.map(function(sd){ return sd.label.toLowerCase(); }).join(' and ')
+        + ' and we\u2019ll carry on.'
+      : 'One of the sides needs fixing before we can carry on.');
     btn.dataset.blocked = '1';
   } else if (!checksPassed){
     btn.textContent = 'Continue Anyway';
-    btn.style.background = 'var(--warn)';
+    btn.classList.remove('is-waiting');
+    say('Some checks flagged something. You can carry on if you are happy.');
     btn.dataset.blocked = '';
   } else {
     btn.textContent = 'Continue to Paper & Quantity';
-    btn.style.background = '';
+    btn.classList.remove('is-waiting');
+    say('');
     btn.dataset.blocked = '';
   }
 }
 
 function proceedFromChecks(){
   if (document.getElementById('proceedBtn').dataset.blocked === '1'){
+    // The slots live in step 1, so scrolling to them from step 2 scrolled to a
+    // hidden element and appeared to do nothing at all.
+    goStep(1);
     const el = document.getElementById('sideSlots');
-    if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    if (el) setTimeout(function(){ el.scrollIntoView({ behavior:'smooth', block:'center' }); }, 60);
     return;
   }
   goStep(3);
