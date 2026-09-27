@@ -374,13 +374,73 @@ The one thing both of them do that we do not is **sell the set** (item 33).
 
 ---
 
-## 10. The full to-do list
+## 10. Orientation — done 27 September
+
+Every size we sold was portrait. Vistaprint sell both, and treat it exactly as
+its own axis: `Size · Fold · Product Orientation · Corner · Foil · Backside ·
+Stock`. It was the largest structural gap in the range.
+
+**It needed no new rates**, which was not obvious and was worth measuring.
+PrintedEasy were asked directly, through the pricing endpoint, with the
+sentinel check in place so a substituted default could not pass as a quote:
+
+| | portrait | landscape |
+|---|---|---|
+| A6 flat, Silk 300, x100 | £25 | £25 |
+| A5 flat | £29 | £29 |
+| DL flat | £26 | £26 |
+| A6 folded | £50 | £50 |
+
+The same sheet of paper, turned. So orientation is a property of the artwork,
+not a different product, and it touches no price anywhere.
+
+**One accessor, every reader.** `sizeSpec()` in the uploader and `sizeInfo()`
+in the studio return the size with its millimetres swapped when the card is
+landscape. The size cards, the artwork check, the proof, the press file, the
+basket line and the job ticket all read it, so they cannot disagree about which
+way round the card is. Verified in the browser: a landscape A6 press page comes
+out 164x121mm with a 148x105mm trim box — the portrait page's numbers swapped,
+not a size invented from scratch.
+
+**Where it is not offered.** A square has nothing to turn. Nor does a size whose
+landscape twin is already sold separately — the boards are `A3` and `A3-L` and
+the customer picks between them, so a toggle as well would have meant two ways
+to order one thing and two names for it on the job sheet.
+
+**A landscape folded card creases across the top.** The unfolded sheet turns
+with the card: 210x148 becomes 148x210, the front panel moves from the right
+half to the bottom half, and the fold ticks move from the top and bottom edges
+to the left and right. Checked on a real order of service: 312x226mm portrait,
+226x312mm landscape.
+
+### Two bugs this turned up
+
+- **The studio never sent the size to the image generator.** The function
+  defaulted to `3:4`, so *every* design ever generated came back portrait — a
+  square invitation was generated tall and then cropped square, and a landscape
+  table plan was generated portrait and cropped hard on both sides. The design
+  the customer approved was not the shape of the thing they were buying. The
+  card's real millimetres now travel with the brief and the nearest Flux preset
+  is chosen from them (A5 -> 2:3, landscape A5 -> 3:2, DL -> 9:21, square ->
+  1:1), and the prompt states the shape in words as well.
+- **The checkout's print-prep block still named a variable `sizeSpec`**, which
+  had become a function. Left alone it would have sent `undefined` trim sizes to
+  the press-prep step on every order.
+
+**Tested** by `tools/test-orientation.py` — 29 assertions pulled out of the live
+file and run under `jsc`, covering the swapped press page, the folded sheet on
+both axes, and which sizes may be offered the choice at all.
+
+---
+
+## 11. The full to-do list
 
 Everything outstanding, in one place and in the order I would do it. The
 sections above give the reasoning; this is the list.
 
 **Cleared 26–27 September:** the envelope rates loaded, deployed, published and
-verified — 4,704 prices, sheet prices held at 56,636.
+verified — 4,704 prices, sheet prices held at 56,636. **Orientation** built
+across the uploader, the studio, the press file and the job ticket (§10).
 
 ### Next up
 
