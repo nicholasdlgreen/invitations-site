@@ -5,7 +5,7 @@ generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
 
-**33 commits on 27 September, all pushed** (810 in the repo). 27 September ran long and covered five threads:
+**40 commits on 27 September, all pushed** (817 in the repo). 27 September ran long and covered five threads:
 orientation across the whole site, the flat-or-folded choice, a publish that
 stopped working entirely, a sweep of marketing copy that was promising things we
 do not sell, and a price comparison against five competitors. Two incidents are
@@ -723,6 +723,20 @@ A long day. In the order it happened:
   invitation products, which needed 315 new scraped rates first (§13).
 - **Price comparison** against five competitors, and a search-demand read (§14).
 - Supabase upgraded to **Pro** — daily backups, which closes a launch blocker.
+- **Footer FAQs and Contact Us were both broken** — FAQs pointed at an anchor
+  that does not exist on how-it-works, Contact Us was a mailto. Both now reach
+  the help centre, which 55 pages had never linked to.
+- **The order tracker's form sat 482px down** a 900px screen on a page whose
+  only job is that form. Now 394px, with everything above the fold at three
+  screen sizes.
+- **Greeting cards had a 49-character box** on /products where every other
+  product has 274 to 363. Rewritten to 287.
+- **Two products had no search snippet at all** — Christmas cards and place
+  cards served `content=""`. Both written.
+- **meta_title was empty on all 22 products.** Eight wedding products were
+  named in a way that never says "wedding" — "Signage | Foreverprint" competes
+  for a word nobody types when they want a sign for their wedding. All 22
+  rewritten, 45 to 59 characters, and built into the served HTML.
 
 **Still true after all of it:** margins are 0, the payload is 11MB and growing,
 and delivery is free and unfunded.
@@ -891,6 +905,17 @@ Two things still open from that work:
     and fills it after. The race is fixed, but the failure mode remains: any
     future fault shows as a heading over a gap, which reads as "they have no
     papers". Cheap insurance on 23 pages.
+29c. **`description` is empty on six products** — menu cards, place cards, RSVP,
+    table plans, thank you and Christmas. It is only the fallback for
+    meta_description and every product now has one of those, so nothing is
+    broken; the column is just half-filled.
+29d. **Anything hand-written between `<!--CHROME:header-->` and its closing
+    marker is deleted by `build_pages.py`.** That region is regenerated from
+    header.html on every run. It caused a scare on 27 September — 27 lines of
+    CSS vanished from upload-and-print.html — which turned out to be a
+    duplicate that also existed safely at line 287, so the build was right and
+    the panic was not. Worth knowing before the next person reverts in a hurry.
+
 29b. **`getAvailablePapers()` now filters by published price.** It always was
     safe, because `step3Papers()` filtered afterwards — tested by adding two
     unpriced papers and sweeping all four formats, and neither ever appeared.
