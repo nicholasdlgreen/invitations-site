@@ -2178,6 +2178,9 @@ function costToSpecRow(cost) {
 }
 
 async function loadCostsFromSupabase() {
+  // Reads into a form that no longer exists. Kept so the call sites do not have
+  // to be unpicked, but it must not throw on the way past.
+  if (!document.getElementById('f_editId')) return;
   try {
     const rows = await sbFetch('product_specs?select=*&active=eq.true&order=updated_at.desc');
     costs = (rows || []).map(specRowToCost);
@@ -2222,7 +2225,10 @@ async function loadCostsFromSupabase() {
   form.scrollIntoView({behavior:'smooth'});
 }
 
-function closeCostForm() { document.getElementById('costFormCard').style.display='none'; }
+function closeCostForm() {
+  const c = document.getElementById('costFormCard');
+  if (c) c.style.display = 'none';     // the Costs form was removed; this is a no-op now
+}
 
 async function saveCostEntry() {
   const productType = document.getElementById('f_productType').value;
@@ -2296,6 +2302,12 @@ async function deleteCost(id) {
   }
 }
 function renderCostTable() {
+  // The Costs feature's markup was removed long ago and its code was not.
+  // Every id below is gone, so this threw on a bare dot — and because it runs
+  // inside pricingLoad(), it took everything after it down with it: the
+  // supplier list, reconciliation, the sales log, the month tabs, the margin
+  // display and the pricing stats all stopped rendering at sign-in.
+  if (!document.getElementById('costCount') || !document.getElementById('costTableBody')) return;
   const fp=document.getElementById('filterProduct')?.value||'',fs=document.getElementById('filterSupplier')?.value||'',ff=document.getElementById('filterFinish')?.value||'';
   const filtered=costs.filter(c=>(!fp||c.productType===fp)&&(!fs||c.supplierId===fs)&&(!ff||c.finish===ff));
   document.getElementById('costCount').textContent=filtered.length;
@@ -5359,6 +5371,7 @@ async function loadPricingSettings() {
 }
 
 async function savePricingSettings() {
+  if (!document.getElementById('globalMargin')) return;   // removed with the Costs feature
   const overrides = [];
   const finishEls = document.querySelectorAll('.ov-finish');
   const marginEls = document.querySelectorAll('.ov-margin');
@@ -5387,7 +5400,11 @@ async function savePricingSettings() {
   }
 }
   
-function updateMarginDisplay() { document.getElementById('globalMarginDisplay').textContent=document.getElementById('globalMargin').value+'%'; }
+function updateMarginDisplay() {
+  const out = document.getElementById('globalMarginDisplay'), inp = document.getElementById('globalMargin');
+  if (!out || !inp) return;            // same removed feature as renderCostTable
+  out.textContent = inp.value + '%';
+}
 
 function getMargin(finish) {
   const ofs=document.querySelectorAll('.ov-finish'), oms=document.querySelectorAll('.ov-margin');
@@ -5449,6 +5466,7 @@ function renderPriceList() {
 }
 
 function updatePricingStats() {
+  if (!document.getElementById('statSkus')) return;   // same removed feature
   document.getElementById('statSkus').textContent=costs.length;
   if(!generatedPrices.length) return;
   const margins=generatedPrices.map(p=>p.margin); const prices=generatedPrices.map(p=>p.sellPrice);
@@ -5481,13 +5499,21 @@ function loadMonth(key) {
 }
 
 function calcPL() {
+  // The monthly P&L markup IS here; what went with the Costs feature are the
+  // Stripe settings fields it reaches for, so those are the ones to default.
+  const num = (id, fallback) => {
+    const el = document.getElementById(id);
+    const v = el ? parseFloat(el.value) : NaN;
+    return isNaN(v) ? fallback : v;
+  };
   const revenue=parseFloat(document.getElementById('m_revenue').value)||0;
   const orders=parseFloat(document.getElementById('m_orders').value)||0;
   let sf=parseFloat(document.getElementById('m_stripeFees').value);
-  if(isNaN(sf)||document.getElementById('m_stripeFees').value==='') sf=revenue*(parseFloat(document.getElementById('stripePct').value)||1.5)/100+orders*((parseFloat(document.getElementById('stripeFixed').value)||20)/100);
+  if(isNaN(sf)||document.getElementById('m_stripeFees').value==='')
+    sf = revenue * num('stripePct', 1.5) / 100 + orders * (num('stripeFixed', 20) / 100);
   const refunds=parseFloat(document.getElementById('m_refunds').value)||0;
   const netRev=revenue-sf-refunds;
-  const cogs=['m_printCost','m_packaging','m_postage','m_otherCOGS'].reduce((a,id)=>a+(parseFloat(document.getElementById(id).value)||0),0);
+  const cogs=['m_printCost','m_packaging','m_postage','m_otherCOGS'].reduce((a,id)=>a+num(id,0),0);
   const gp=netRev-cogs; const gm=netRev>0?gp/netRev*100:0;
   let oh=0; document.querySelectorAll('.oh-amount').forEach(el=>oh+=parseFloat(el.value)||0);
   const np=gp-oh; const nm=netRev>0?np/netRev*100:0;
