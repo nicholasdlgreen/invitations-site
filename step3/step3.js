@@ -149,10 +149,40 @@
             : ' — the only weight this paper comes in.</div>');
   }
 
+  // Push state back to the page after this module changes it by itself, rather
+  // than in response to a click. updatePrice() does not call back into here, so
+  // this cannot loop.
+  function tellPage() {
+    try { if (A && typeof A.onSelect === 'function') A.onSelect(S); }
+    catch (e) { /* the page is not ready to be told; the next click will tell it */ }
+  }
+
   // ---- 3 · finishing ---------------------------------------------------------
   function drawFinishing() {
     if (!S.paper) { open('s2', false); return; }
     var types = A.finishTypesFor(S.paper) || [];
+    // Forget a pick this route can no longer do.
+    //
+    // Rounded corners exist on a flat card and not on a creased one, so going
+    // back to change the fold can take an option away underneath a choice
+    // already made. Left alone it stayed in the summary and went to the basket
+    // with no price behind it. Same reasoning as the abandoned face tabs: the
+    // state has to follow what is actually on the page.
+    var offered = {};
+    types.forEach(function (t) {
+      offered[t.name] = {};
+      (t.options || []).forEach(function (o) { offered[t.name][o.name] = true; });
+    });
+    var dropped = [];
+    Object.keys(S.finishes).forEach(function (k) {
+      var v = S.finishes[k];
+      if (!v || String(v).toLowerCase() === 'none') return;
+      if (!offered[k] || !offered[k][v]) { delete S.finishes[k]; dropped.push(k + ': ' + v); }
+    });
+    if (dropped.length) {
+      if (S.openFin && !offered[S.openFin]) S.openFin = null;
+      tellPage();
+    }
     if (!types.length) {
       // Nothing can be applied to this paper, so the section is simply not
       // here. We show what IS available and say nothing about what is not.
@@ -241,6 +271,12 @@
   function drawEnvelopes() {
     var list = (A.envelopes && A.envelopes()) || [];
     var wrap = el('envsWrap');
+    // And forget a colour this route cannot supply. Luxury Folded sells white
+    // and no red, so changing to that stock must not leave red selected.
+    if (S.env && S.env !== 'none' && !list.some(function (e) { return e.id === S.env; })) {
+      S.env = list.length ? null : 'none';
+      tellPage();
+    }
     // Envelopes live inside Finishing now, so this shows and hides its own
     // block rather than a whole numbered stage.
     if (!S.paper || !S.weight || !list.length) {

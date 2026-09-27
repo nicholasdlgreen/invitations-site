@@ -1585,7 +1585,11 @@ function totalFinishSell() {
   Object.keys(selectedFinishes || {}).forEach(typeName => {
     const opt = selectedFinishes[typeName];
     if (!opt || String(opt).toLowerCase() === 'none') return;
-    sum += lookupFinishSell(typeName, opt);
+    // null means "this route cannot be charged for that", which the finishing
+    // section should already have prevented. Skip it rather than letting it
+    // turn the whole basket total into NaN.
+    const v = lookupFinishSell(typeName, opt);
+    if (typeof v === 'number' && isFinite(v)) sum += v;
   });
   return sum;
 }
@@ -1601,6 +1605,19 @@ function totalFinishSell() {
 // A6 and up to 12p on A5 — so envelopes use the same published ladder as every
 // other finishing charge, and fall back to the flat figure only if no rate has
 // been published for this combination.
+// Is this envelope colour published on this route, at this size? Same shape as
+// finishPricedOn, and it fails open for a payload with no ladder.
+function envelopePricedOn(name, fam){
+  const rows = currentProduct && Array.isArray(currentProduct.finish_prices)
+    ? currentProduct.finish_prices : null;
+  if (!rows || !rows.length) return true;
+  const anyEnvelopes = rows.some(r => /^envelopes$/i.test(r.finish || ''));
+  if (!anyEnvelopes) return true;
+  return rows.some(r => /^envelopes$/i.test(r.finish || '') && _eqf(r.option, name)
+                     && (!fam || r.family === fam)
+                     && (!selectedSize || r.size === selectedSize));
+}
+
 function envelopeCost(env){
   if (!env) return 0;
   const qty = (typeof uploadQty !== 'undefined' && uploadQty) ? uploadQty : 0;
@@ -1655,7 +1672,16 @@ function lookupFinishSell(name, option) {
     }
   }
 
-  // Payload published before finish_prices existed.
+  // If the ladder covers this finish, the ladder is the only answer. Corners
+  // sits at £0 in finish_sells, so letting the flat figure stand in for a rate
+  // that is deliberately absent is how a £22 operation was given away on every
+  // folded order. Finishes the ladder does not cover — foiling, spot UV — still
+  // come from the flat figure below, because that is all we have for them.
+  if (optionHasLadder(name, option)) {
+    console.warn('[finishing] no published rate for', name, option,
+                 'on', printingFamily(), selectedSize, '— not offering it');
+    return null;
+  }
   if (!currentProduct || !Array.isArray(currentProduct.finish_sells)) return 0;
   const match = currentProduct.finish_sells.find(f => f.name === (name || 'None'));
   return match ? parseFloat(match.sell) : 0;
@@ -2263,9 +2289,7 @@ async function faceVerdict(key){
   }
 
   // Is it the same shape as the card? If so, scaling changes nothing but size.
-  const artRatio  = Math.max(d.w,d.h) / Math.min(d.w,d.h);
-  const cardRatio = Math.max(bw,bh)   / Math.min(bw,bh);
-  const sameShape = Math.abs(artRatio - cardRatio) / cardRatio <= 0.02;
+  const sameShape = sameShapeAsCard(d.w, d.h, spec);
 
   // Resolution once scaled to the bleed size. Vector PDFs have none to lose.
   const target = printDpiFor(spec);
@@ -3232,10 +3256,87 @@ function step3Finishes(paperName){
     : []).map(x => (x||'').toLowerCase().trim());
   const allowed = Array.isArray(currentProduct && currentProduct.available_finishes)
     ? currentProduct.available_finishes.map(x => (x||'').toLowerCase().trim()) : [];
+  // And it has to be something this ROUTE can be charged for.
+  //
+  // Rounded corners are priced on flat-card only — the printer does not offer
+  // them on a creased card. Thirteen products sell both flat and folded, so a
+  // folded order was offered corners, found no rate, fell through to the flat
+  // figure in finish_sells, and that figure is ZERO. We were doing a £22 job
+  // for nothing on every folded order that ticked it.
+  const fam = familyForPaper(paperName);
   return (CONFIG.finishTypes || [])
     .filter(t => caps.includes((t.name||'').toLowerCase().trim()))
     .filter(t => !allowed.length || allowed.includes((t.name||'').toLowerCase().trim()))
-    .filter(t => (t.options||[]).some(o => o.name && o.name.toLowerCase() !== 'none'));
+    .filter(t => (t.options||[]).some(o => o.name && o.name.toLowerCase() !== 'none'))
+    .map(t => {
+      // Drop the individual options this route cannot do, not just whole types.
+      const opts = (t.options||[]).filter(o =>
+        !o.name || o.name.toLowerCase() === 'none' || finishPricedOn(t.name, o.name, fam));
+      return Object.assign({}, t, { options: opts });
+    })
+    // And drop the type unless what survives is an actual CHOICE. On a folded
+    // card, Corners loses Rounded and keeps only Square — the free default —
+    // which is a row offering the customer nothing. Shown, it reads as a
+    // decision they have to make and cannot.
+    .filter(t => {
+      const ladderType = finishHasLadder(t.name);
+      return (t.options||[]).some(o => o.name && o.name.toLowerCase() !== 'none'
+                                    && (!ladderType || optionHasLadder(t.name, o.name)));
+    });
+}
+
+// Is there a published price for this finishing option on this route, at the
+// size being bought? Judged across the whole quantity ladder, because a rung
+// that rounds to nothing at 25 does not mean the printer cannot do it at 500.
+//
+// Fails OPEN when the product carries no ladder at all, so an old payload keeps
+// working rather than losing every finishing option at once.
+function finishPricedOn(name, option, fam){
+  if (!optionHasLadder(name, option)) return true;
+  const rows = currentProduct.finish_prices;
+  const sides = finishSidesFor(name);
+  return rows.some(r => _eqf(r.finish, name) && _eqf(r.option, option) && _eqf(r.sides, sides)
+                     && (!fam || r.family === fam)
+                     && (!selectedSize || r.size === selectedSize));
+}
+
+function _eqf(a, b){
+  return String(a||'').toLowerCase().trim() === String(b||'').toLowerCase().trim();
+}
+
+// Is this particular OPTION priced by the rate ladder anywhere at all — any
+// route, any size?
+//
+// This is the line that matters, and it has to be drawn per option rather than
+// per finishing type, because one type holds both kinds:
+//
+//   Corners / Rounded    on the ladder, flat-card only  -> hide it when folded
+//   Corners / Square     on no ladder, because it is the free default
+//                                                       -> always keep it
+//   Foiling / Gold       on no ladder anywhere, sold from the flat figure
+//                                                       -> always keep it
+//
+// Drawn at the type level instead, gating Corners took "Square" away with
+// "Rounded" and left the customer no way to un-choose rounded corners.
+function optionHasLadder(name, option){
+  const rows = currentProduct && Array.isArray(currentProduct.finish_prices)
+    ? currentProduct.finish_prices : null;
+  if (!rows || !rows.length) return false;
+  return rows.some(r => _eqf(r.finish, name) && _eqf(r.option, option));
+}
+
+// And the same question about the TYPE, which is a different question.
+//
+// Corners is a ladder-governed type, so an option of it with no rate is the
+// free default (Square). Foiling is governed by no ladder at all, so an option
+// of it with no rate is an ordinary paid choice sold from the flat figure. Both
+// tests are needed: the type decides how to read a missing rate, the option
+// decides whether this route can have it.
+function finishHasLadder(name){
+  const rows = currentProduct && Array.isArray(currentProduct.finish_prices)
+    ? currentProduct.finish_prices : null;
+  if (!rows || !rows.length) return false;
+  return rows.some(r => _eqf(r.finish, name));
 }
 
 // Only quantities the printer has actually quoted for this paper and weight.
@@ -3305,9 +3406,15 @@ function step3Adapter(){
     finishTypesFor: step3Finishes,
     // Empty when this product is not sold with envelopes, and the step
     // disappears rather than offering something the printer cannot supply.
-    envelopes:  () => (currentProduct && currentProduct.envelopes_offered === false) ? []
-                    : (ENVELOPES || []).map(e => ({ id: e.id, name: e.name,
-                        hex: e.hex, priceEach: e.priceEach })),
+    // Only the colours this route can actually be charged for. Luxury Folded
+    // sells white and no red, so a folded-leaflet order must not be shown red.
+    envelopes:  () => {
+                   if (currentProduct && currentProduct.envelopes_offered === false) return [];
+                   const fam = printingFamily();
+                   return (ENVELOPES || [])
+                     .filter(e => envelopePricedOn(e.name, fam))
+                     .map(e => ({ id: e.id, name: e.name, hex: e.hex, priceEach: e.priceEach }));
+                 },
     quantities:  step3Quantities,
     // What the printer will quote on the paper currently chosen, so the typed
     // box can say so instead of refusing a number without a reason.
@@ -4004,6 +4111,20 @@ let proofEditable = false;    // false for vector PDFs, which we pass through un
 let showGuides = true;
 
 // Geometry of the press sheet in whatever unit pxPerMm is given in.
+// Is a file the same shape as the card, within the 2% the verdict allows?
+//
+// Takes a width and a height in any unit, because the answer is a ratio: the
+// verdict asks in millimetres and the proof asks in pixels, and they must never
+// give different answers about one file. The comparison is against the BLEED
+// size, which is the shape we actually have to fill.
+function sameShapeAsCard(w, h, spec){
+  if (!w || !h || !spec) return true;
+  const bw = spec.mmW + 2*PRINT_BLEED_MM, bh = spec.mmH + 2*PRINT_BLEED_MM;
+  const artRatio  = Math.max(w, h)   / Math.min(w, h);
+  const cardRatio = Math.max(bw, bh) / Math.min(bw, bh);
+  return Math.abs(artRatio - cardRatio) / cardRatio <= 0.02;
+}
+
 function proofGeometry(pxPerMm, spec, includeMarks){
   const b = PRINT_BLEED_MM * pxPerMm;
   const m = includeMarks ? PRINT_MARKS_MM * pxPerMm : 0;
@@ -4035,7 +4156,7 @@ function _dpr(ctx){ return ctx.__dpr || 1; }
 
 // Draws the artwork into the trim area under the customer's adjustments, then
 // mirrors the edges outward to create the bleed.
-function composeArtwork(ctx, img, g, adj){
+function composeArtwork(ctx, img, g, adj, annotate){
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, g.W, g.H);
 
@@ -4057,6 +4178,78 @@ function composeArtwork(ctx, img, g, adj){
   ctx.restore();
 
   mirrorEdges(ctx, g);
+
+  // AFTER the mirror, so nothing drawn here is reflected into the bleed, and
+  // only when the caller asks — the press file and the basket thumbnail must
+  // come out of this function exactly as they did before.
+  if (annotate && annotate.shapeMismatch) {
+    showWhatTheShapeCosts(ctx, img, g, {
+      mode: adj.mode, rot: rot, cx: cx, cy: cy,
+      fw: (swap ? img.naturalHeight : img.naturalWidth)  * scale,
+      fh: (swap ? img.naturalWidth  : img.naturalHeight) * scale,
+      scale: scale
+    });
+  }
+}
+
+// The verdict tells a customer their file is a different shape to the card and
+// says "both are on the proof — pick whichever looks right". The proof did not
+// keep that promise: fill quietly clipped the overflow away, and fit left white
+// bands that are invisible against white paper. Either way the card looked as
+// though the file fitted it.
+//
+// So show the consequence. Fill ghosts the part that will be cut off; fit tints
+// the paper that will be left blank. No words — the verdict panel has those.
+function showWhatTheShapeCosts(ctx, img, g, d){
+  ctx.save();
+  if (d.mode === 'fit') {
+    // Everything inside the trim that the artwork does not reach.
+    const l = d.cx - d.fw/2, t = d.cy - d.fh/2;
+    ctx.beginPath();
+    ctx.rect(g.tx, g.ty, g.tw, g.th);
+    ctx.rect(l, t, d.fw, d.fh);
+    ctx.clip('evenodd');
+    ctx.fillStyle = 'rgba(122,132,148,.20)';
+    ctx.fillRect(g.tx, g.ty, g.tw, g.th);
+    // A slack hatch, so it reads as "nothing will be printed here" rather than
+    // as a grey panel somebody designed.
+    ctx.strokeStyle = 'rgba(122,132,148,.32)';
+    ctx.lineWidth = 1;
+    const step = Math.max(7, g.pxPerMm * 2.5);
+    ctx.beginPath();
+    for (let x = g.tx - g.th; x < g.tx + g.tw + g.th; x += step) {
+      ctx.moveTo(x, g.ty); ctx.lineTo(x + g.th, g.ty + g.th);
+    }
+    ctx.stroke();
+    ctx.restore();
+    // The edge of the artwork itself, so the border's width is legible.
+    ctx.save();
+    ctx.strokeStyle = 'rgba(40,46,58,.55)';
+    ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+    ctx.strokeRect(d.cx - d.fw/2, d.cy - d.fh/2, d.fw, d.fh);
+    ctx.restore();
+    return;
+  }
+
+  // Fill: the artwork is bigger than the card, and the difference is being cut
+  // off. Draw it again outside the trim at low opacity so the customer can see
+  // where their design continues to.
+  ctx.beginPath();
+  ctx.rect(0, 0, g.W, g.H);
+  ctx.rect(g.tx, g.ty, g.tw, g.th);
+  ctx.clip('evenodd');
+  ctx.globalAlpha = 0.22;
+  ctx.translate(d.cx, d.cy);
+  ctx.rotate(d.rot * Math.PI / 180);
+  ctx.drawImage(img, -img.naturalWidth*d.scale/2, -img.naturalHeight*d.scale/2,
+                img.naturalWidth*d.scale, img.naturalHeight*d.scale);
+  ctx.restore();
+  // Where the file's own edge falls, which is usually off the card entirely.
+  ctx.save();
+  ctx.strokeStyle = 'rgba(40,46,58,.45)';
+  ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+  ctx.strokeRect(d.cx - d.fw/2, d.cy - d.fh/2, d.fw, d.fh);
+  ctx.restore();
 }
 
 // Bleed / trim / safe guides and crop marks, drawn on the proof only.
@@ -4128,7 +4321,9 @@ function renderProof(){
   const ctx = cv.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.__dpr = dpr;
-  composeArtwork(ctx, proofImage, g, artworkAdjust);
+  composeArtwork(ctx, proofImage, g, artworkAdjust, {
+    shapeMismatch: !sameShapeAsCard(proofImage.naturalWidth, proofImage.naturalHeight, spec)
+  });
   if (showGuides) drawProofGuides(ctx, g);
   updateProofMeta(spec);
 }
@@ -4458,6 +4653,15 @@ async function rasterisePdfPage(file, sizeKey, dpi){
 // the two want different artwork — so the press file has to follow the choice
 // rather than the product.
 function printingFamily(){
+  const paper = (CONFIG.papers || []).find(x => x.id === selectedPaper);
+  return familyForPaper(paper ? paper.name : '');
+}
+
+// The same question asked about a paper by NAME, because the finishing section
+// asks it about a paper the customer is only considering, before it is selected.
+// One implementation, so the finishes on offer and the price charged can never
+// disagree about which route the customer is on.
+function familyForPaper(paperName){
   if (!currentProduct) return '';
   // Which route the customer's actual choice sits on. Two routes may share a
   // fold — a table plan is flat whether it is 5mm board or paper — so the fold
@@ -4466,10 +4670,9 @@ function printingFamily(){
   // a double-width sheet, a flat card is not.
   const routes = Array.isArray(currentProduct.routes) ? currentProduct.routes : null;
   if (routes && routes.length) {
-    const paper = (CONFIG.papers || []).find(x => x.id === selectedPaper);
-    if (paper) {
+    if (paperName) {
       const hit = sheetSells().find(r =>
-        r.paper === paper.name && (!selectedSize || r.size === selectedSize) && r.rt != null);
+        r.paper === paperName && (!selectedSize || r.size === selectedSize) && r.rt != null);
       if (hit && routes[hit.rt] && routes[hit.rt].family) return routes[hit.rt].family;
     }
     // Nothing chosen yet, so answer for the fold on its own.
