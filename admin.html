@@ -1327,6 +1327,7 @@ async function doLogin() {
 
   const btn = document.querySelector('.login-box .btn, #loginBtn');
   if (btn) btn.disabled = true;
+  let authenticated = false;
   try {
     // 1. Who are you? (Supabase Auth)
     const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
@@ -1354,12 +1355,37 @@ async function doLogin() {
     sessionStorage.setItem('inv_admin_token', ADMIN_TOKEN);
     if (ADMIN_REFRESH) sessionStorage.setItem('inv_admin_refresh', ADMIN_REFRESH);
     sessionStorage.setItem('inv_admin_email', ADMIN_EMAIL);
-    enterAdmin();
+    authenticated = true;
   } catch (e) {
     loginFailed('Could not sign in — check your connection and try again.');
   } finally {
     if (btn) btn.disabled = false;
   }
+  if (!authenticated) return;
+
+  // Building the dashboard is NOT part of signing in, and must not be judged
+  // as if it were. enterAdmin() used to sit inside the try above, so any error
+  // while drawing the screen came back as "check your connection and try
+  // again" — with the password correct, the token already issued and the
+  // account already verified. It sent Nicholas looking at his network for a
+  // null in a function belonging to a feature deleted months ago.
+  try {
+    enterAdmin();
+  } catch (e) {
+    console.error('[admin] signed in, but the dashboard failed to build:', e);
+    alert('You are signed in, but part of the admin screen could not be drawn:\n\n'
+        + (e && e.message ? e.message : e)
+        + '\n\nThis is not your password or your connection. Reload to try again.');
+  }
+}
+
+// Restoring a session must not be undone by a fault in drawing the screen.
+// enterAdmin() sits inside restoreAdminSession's try, whose catch clears the
+// token — so a returning admin would be quietly signed out by a null in some
+// unrelated render.
+function safeEnterAdmin() {
+  try { enterAdmin(); }
+  catch (e) { console.error('[admin] dashboard failed to build:', e); }
 }
 
 let sessionTimer = null;
@@ -1448,7 +1474,7 @@ async function restoreAdminSession() {
       });
       const rs = await ck.json().catch(() => []);
       if (!Array.isArray(rs) || !rs.length) throw new Error('not an admin');
-      enterAdmin();
+      safeEnterAdmin();
       return;
     }
     const user = await res.json();
@@ -1457,7 +1483,7 @@ async function restoreAdminSession() {
     });
     const rows = await check.json().catch(() => []);
     if (!Array.isArray(rows) || !rows.length) throw new Error('not an admin');
-    enterAdmin();
+    safeEnterAdmin();
   } catch (e) {
     ADMIN_TOKEN = null;
     ADMIN_REFRESH = null;
