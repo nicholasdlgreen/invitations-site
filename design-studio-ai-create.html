@@ -1809,6 +1809,34 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // generation. You cannot handwrite over an illustration, a second call
   // doubles both the wait and what a design costs us, and the inside of a card
   // is typography rather than artwork.
+  // A printed panel with nothing on it. A folded card has four panels and the
+  // press file carries one page each — the printer imposes them onto the flat
+  // sheet — so the two we leave empty still have to be there, and at the same
+  // size, or the job arrives short.
+  function blankFaceToPrintFile(){
+    var spec = SIZES[size] || { dim: '148 × 210mm' };
+    var m = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
+    var tw = m ? parseInt(m[1],10) : 148, th = m ? parseInt(m[2],10) : 210;
+    var px = function(mm){ return Math.round(mm * 300 / 25.4); };
+    var cv = document.createElement('canvas');
+    cv.width = px(tw) + px(3)*2; cv.height = px(th) + px(3)*2;
+    var ctx = cv.getContext('2d');
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, cv.width, cv.height);
+    return cv.toDataURL('image/jpeg', 0.95);
+  }
+
+  // The pages the press file needs, in the order the printer expects them.
+  //
+  // Flat: the front, and a back only if there is one. Folded: four panels —
+  // front, inside left, inside right, back — with the message on the inside
+  // right where a card puts it, and the other two blank.
+  function pressFacesFor(frontImage, insideImage){
+    if (!CONFIG_FOLDED) return insideImage ? [frontImage, insideImage] : frontImage;
+    if (!insideImage)   return frontImage;          // folded, printed one side
+    var blank = blankFaceToPrintFile();
+    return [frontImage, blank, insideImage, blank];
+  }
+
   function flattenInsideToPrintFile(){
     var lines = insideLines();
     if (!lines.length) return null;
@@ -2089,7 +2117,7 @@ function artworkFileName(prefix, ext){
         var artworkUrl = r.ok ? (SB_URL + '/storage/v1/object/artwork/' + fileName) : null;
         // 2. build the press-ready PDF: exact ordered size, 3mm bleed already in
         //    the artwork, vector crop marks, TrimBox/BleedBox set.
-        return buildAiPrintPdf(insideImage ? [printImage, insideImage] : printImage, size).then(function(built){
+        return buildAiPrintPdf(pressFacesFor(printImage, insideImage), size).then(function(built){
           if (!built) return { artworkUrl: artworkUrl, printUrl: null };
           var pdfName = artworkFileName('print-ai', 'pdf');
           return fetch(SB_URL + '/storage/v1/object/artwork/' + pdfName, {
