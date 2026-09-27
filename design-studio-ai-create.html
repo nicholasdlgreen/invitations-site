@@ -42,6 +42,14 @@
 .ds-frame-name{position:absolute;bottom:-2px;left:0;right:0;text-align:center;font-size:var(--text-xs);color:var(--soft);}
 
 .ds-sizes{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+.ds-turn{display:none;margin-top:14px;}
+.ds-turn-pills{display:inline-flex;border:1.5px solid var(--border);border-radius:999px;background:var(--white);padding:4px;}
+.ds-turn-pills button{font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:8px 18px;border-radius:999px;
+transition:all .2s;display:inline-flex;align-items:center;gap:8px;background:none;color:var(--soft);}
+.ds-turn-pills button.on{background:var(--gold);color:#fff;}
+.ds-turn-pills i{display:block;border:1.5px solid var(--pale);border-radius:2px;}
+.ds-turn-pills button.on i{border-color:rgba(255,255,255,.85);}
+.ds-turn-note{font-size:var(--text-xs);color:var(--pale);margin:8px 0 0;line-height:1.7;}
 .ds-size{border:1px solid var(--border);border-radius:12px;background:var(--white);cursor:pointer;padding:18px 10px 14px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;}
 .ds-size:hover{border-color:var(--gold-lt);box-shadow:0 6px 18px rgba(61,46,36,.06);}
 .ds-size.sel{border:2px solid var(--gold);background:#F4EDE6;}
@@ -697,6 +705,10 @@ was fetched and injected via innerHTML — that was the bug behind the
               <div class="ds-size-note">Distinctive · modern</div>
             </div>
           </div>
+          <div class="ds-turn" id="ds-turn">
+            <div class="ds-turn-pills" id="ds-turn-pills"></div>
+            <p class="ds-turn-note" id="ds-turn-note"></p>
+          </div>
         </div>
       </div>
 
@@ -1141,14 +1153,112 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     'A1-L':  { ratio: 841/594, desc: 'an A1 landscape sign',            label: 'A1 Landscape', dim: '841 × 594mm', note: 'Landscape sign' }
   };
 
+  // Portrait or landscape. The card is the same piece of paper either way —
+  // PrintedEasy quote £25 for a hundred A6 whichever way round it is — so this
+  // turns the shape, the brief and the print file, and touches no price.
+  var orientation = 'portrait';
+
+  // Every read of a size goes through here, so the canvas, the brief the AI is
+  // given and the press file cannot disagree about which way round the card is.
+  function sizeInfo(key, o){
+    var base = SIZES[key || size];
+    if (!base) return base;
+    var turn = (o || orientation) === 'landscape';
+    var m = (base.dim || '').match(/(\d+)\s*×\s*(\d+)/);
+    var square = m ? m[1] === m[2] : base.ratio === 1;
+    if (!turn || square) return base;
+    return {
+      ratio: 1 / base.ratio,
+      desc:  (base.desc || '').replace(/portrait/g, 'landscape'),
+      label: base.label,
+      dim:   m ? (m[2] + ' × ' + m[1] + 'mm') : base.dim,
+      note:  base.note
+    };
+  }
+
+  // A square has nothing to turn. Nor does a size whose landscape twin is
+  // already on offer — the boards are sold as 'A3' and 'A3-L' and the customer
+  // picks between them, so a toggle as well would mean two ways to order one
+  // thing.
+  function canTurn(key){
+    var k = key || size, base = SIZES[k];
+    if (!base) return false;
+    var m = (base.dim || '').match(/(\d+)\s*×\s*(\d+)/);
+    if (m && m[1] === m[2]) return false;
+    if (base.ratio === 1) return false;
+    if (/-L$/.test(k)) return false;
+    if (SIZES[k + '-L'] && OFFERED_SIZES.indexOf(k + '-L') !== -1) return false;
+    return true;
+  }
+  var OFFERED_SIZES = [];
+
+  function renderTurnToggle(){
+    var box = document.getElementById('ds-turn');
+    var pills = document.getElementById('ds-turn-pills');
+    var note = document.getElementById('ds-turn-note');
+    if (!box || !pills) return;
+    if (!canTurn(size)) {
+      box.style.display = 'none';
+      pills.innerHTML = '';
+      orientation = 'portrait';
+      return;
+    }
+    box.style.display = 'block';
+    var LABEL = { portrait: 'Portrait', landscape: 'Landscape' };
+    pills.innerHTML = ['portrait','landscape'].map(function(o){
+      var on = o === orientation, tall = o === 'portrait';
+      return '<button type="button" data-turn="' + o + '"' + (on ? ' class="on"' : '') + '>'
+           + '<i style="width:' + (tall ? 9 : 13) + 'px;height:' + (tall ? 13 : 9) + 'px;"></i>'
+           + LABEL[o] + '</button>';
+    }).join('');
+    pills.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click', function(){ setOrientation(b.dataset.turn); });
+    });
+    if (note) {
+      var d = sizeInfo(size);
+      note.textContent = 'Your ' + CONFIG_PRODUCT_NOUN + ' will be ' + (d ? d.dim : '')
+        + '. Landscape costs the same as portrait — it is the same card, turned.';
+    }
+  }
+
+  // Every size card shows its own millimetres and a little proportional
+  // rectangle, so they all have to turn with the choice — not just the one
+  // that happens to be selected.
+  function turnSizeCards(){
+    document.querySelectorAll('.ds-size').forEach(function(card){
+      var spec = sizeInfo(card.dataset.size);
+      if (!spec) return;
+      var dim = card.querySelector('.ds-size-dim');
+      if (dim) dim.textContent = spec.dim;
+      var icon = card.querySelector('.ds-size-card');
+      if (icon) {
+        var long = 48;
+        icon.style.width  = (spec.ratio >= 1 ? long : Math.round(long * spec.ratio)) + 'px';
+        icon.style.height = (spec.ratio >= 1 ? Math.round(long / spec.ratio) : long) + 'px';
+      }
+    });
+  }
+
+  function setOrientation(o){
+    if (o === orientation) return;
+    orientation = o;
+    renderTurnToggle();
+    turnSizeCards();
+    applySize();
+    // The shape is part of what the AI is asked for, so a design already on
+    // screen is the wrong shape now and the brief has to say so.
+    buildBrief();
+  }
+
   function applySize(){
-    var S = SIZES[size];
+    var S = sizeInfo(size);
     var canvas = document.getElementById('ds-canvas');
     // set the preview canvas to the chosen proportions with a smooth transition
     canvas.style.transition = 'aspect-ratio .3s ease, max-width .3s ease';
     canvas.style.aspectRatio = S.ratio;
     // square needs a smaller max-width so it doesn't tower; portraits taller
-    canvas.style.maxWidth = (size==='Square') ? '340px' : '380px';
+    canvas.style.maxWidth = (size==='Square') ? '340px'
+                          : (orientation === 'landscape') ? '460px' : '380px';
     canvas.style.margin = '0 auto';
     canvas.classList.toggle('is-square', size==='Square');
     setTimeout(function(){ if(typeof autofit==='function') autofit(); }, 320);
@@ -1200,7 +1310,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     } else {
       // fallback (hardcoded), but with the product noun not fixed to wedding
       var lead = (mood ? mood + ', ' : '') + style;
-      var parts = ['A ' + lead + ' ' + CONFIG_PRODUCT_NOUN + ' design for ' + (SIZES[size] ? SIZES[size].desc : 'an invitation')];
+      var parts = ['A ' + lead + ' ' + CONFIG_PRODUCT_NOUN + ' design for ' + (sizeInfo(size) ? sizeInfo(size).desc : 'an invitation')];
       if(setting) parts.push(setting);
       if(season) parts.push(season);
       if(touch) parts.push(touch);
@@ -1227,9 +1337,11 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   document.querySelectorAll('.ds-size').forEach(function(f){
     f.addEventListener('click', function(){
       document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');});
-      f.classList.add('sel'); size=f.dataset.size; applySize(); buildBrief();
+      f.classList.add('sel'); size=f.dataset.size;
+      renderTurnToggle(); turnSizeCards(); applySize(); buildBrief();
     });
   });
+  renderTurnToggle();
 
   function wireChips(){
     document.querySelectorAll('.ds-chips').forEach(function(g){
@@ -1307,13 +1419,14 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       PRODUCT_HAS_FOLDED_ROUTE = !!(rows && rows[0] && rows[0].folded_family);
       var avail = (rows && rows[0] && Array.isArray(rows[0].available_sizes) && rows[0].available_sizes.length)
         ? rows[0].available_sizes : null;
+      OFFERED_SIZES = avail || [];
       if(!avail) return;   // keep hardcoded fallback sizes
       var wrap = document.getElementById('ds-sizes');
       if(!wrap) return;
       wrap.innerHTML = '';
       var first = null;
       avail.forEach(function(key){
-        var spec = SIZES[key];
+        var spec = sizeInfo(key);
         if(!spec) return;   // skip any size we don't have a definition for
         if(!first) first = key;
         var d = document.createElement('div');
@@ -1331,12 +1444,14 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       wrap.querySelectorAll('.ds-size').forEach(function(f){
         f.addEventListener('click', function(){
           wrap.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');});
-          f.classList.add('sel'); size=f.dataset.size; applySize(); buildBrief();
+          f.classList.add('sel'); size=f.dataset.size;
+          renderTurnToggle(); turnSizeCards(); applySize(); buildBrief();
         });
       });
       if(first){
         var firstEl = wrap.querySelector('.ds-size[data-size="'+first+'"]');
-        if(firstEl){ firstEl.classList.add('sel'); size=first; applySize(); buildBrief(); }
+        if(firstEl){ firstEl.classList.add('sel'); size=first;
+                     renderTurnToggle(); turnSizeCards(); applySize(); buildBrief(); }
       }
     })
     .catch(function(){ /* silent — hardcoded sizes remain */ });
@@ -1414,6 +1529,9 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       // when someone is designing table numbers or a welcome sign.
       if(cfg.product_noun) CONFIG_PRODUCT_NOUN = cfg.product_noun;
       applyProductWording();
+      // The orientation note names the product, and it is drawn before this
+      // arrives — so a greeting card was being called a wedding invitation.
+      renderTurnToggle();
       buildBrief();
     })
     .catch(function(){ /* silent — hardcoded fallback */ });
@@ -1730,7 +1848,12 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     fetch('/.netlify/functions/studio-nano', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ brief: brief })
+      // The shape has to travel with the brief. Nothing was sent before, so
+      // every design came back 3:4 portrait whatever card it was for.
+      body:JSON.stringify(Object.assign({ brief: brief, size: size }, (function(){
+        var d = sizeInfo(size), m = d && (d.dim || '').match(/(\d+)\s*×\s*(\d+)/);
+        return m ? { widthMm: parseInt(m[1],10), heightMm: parseInt(m[2],10) } : {};
+      })()))
     })
     .then(function(r){ return r.json(); })
     .then(function(data){
@@ -1862,7 +1985,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // sheet — so the two we leave empty still have to be there, and at the same
   // size, or the job arrives short.
   function blankFaceToPrintFile(){
-    var spec = SIZES[size] || { dim: '148 × 210mm' };
+    var spec = sizeInfo(size) || { dim: '148 × 210mm' };
     var m = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
     var tw = m ? parseInt(m[1],10) : 148, th = m ? parseInt(m[2],10) : 210;
     var px = function(mm){ return Math.round(mm * 300 / 25.4); };
@@ -1889,7 +2012,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     var lines = insideLines();
     if (!lines.length) return null;
 
-    var spec = SIZES[size] || { dim: '148 × 210mm' };
+    var spec = sizeInfo(size) || { dim: '148 × 210mm' };
     var mmMatch = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
     var trimMmW = mmMatch ? parseInt(mmMatch[1],10) : 148;
     var trimMmH = mmMatch ? parseInt(mmMatch[2],10) : 210;
@@ -1946,7 +2069,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       // proportions the AI happened to return. The old code used the AI image's
       // own pixel dimensions, so an A5 design came out ~159 x 208mm: the wrong
       // shape, which the press then had to crop or stretch to fit the card.
-      var spec = SIZES[size] || { dim: '148 × 210mm' };
+      var spec = sizeInfo(size) || { dim: '148 × 210mm' };
       var mmMatch = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
       var trimMmW = mmMatch ? parseInt(mmMatch[1],10) : 148;   // fallback A5
       var trimMmH = mmMatch ? parseInt(mmMatch[2],10) : 210;
@@ -2059,7 +2182,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // in a PDF page of exactly that size plus a 5mm margin carrying vector crop
   // marks, and records TrimBox/BleedBox so the press knows where to cut.
   function buildAiPrintPdf(printImageDataUrl, sizeKey){
-    var spec = SIZES[sizeKey] || SIZES['A5'] || { dim: '148 × 210mm' };
+    var spec = sizeInfo(sizeKey) || sizeInfo('A5') || { dim: '148 × 210mm' };
     var mm = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
     if (!mm) return Promise.resolve(null);
     var trimMmW = parseInt(mm[1],10), trimMmH = parseInt(mm[2],10);
@@ -2194,6 +2317,7 @@ function artworkFileName(prefix, ext){
             // agree with what was actually designed. A printed inside is a
             // second printed face, which is what "double" means here.
             fold:  (CONFIG_FOLDED && PRODUCT_HAS_FOLDED_ROUTE) ? 'folded' : 'flat',
+            orientation: orientation,
             sides: insideImage ? 'double' : 'single',
             insidePrinted: !!insideImage,
             artworkUrl: res.artworkUrl,        // flattened artwork (trim + bleed)
@@ -2261,6 +2385,7 @@ function artworkFileName(prefix, ext){
     return {
       image: bg ? bg.src : '',
       size: size,
+      orientation: orientation,
       brief: buildBrief(),
       wording: FIELD_MAP.map(function(p){ var el=document.getElementById(p[0]); return el?el.value:''; }),
       sel: sel,
@@ -2475,7 +2600,9 @@ function artworkFileName(prefix, ext){
     }
     if(restore.size){
       var szBtn = document.querySelector('.ds-size[data-size="'+restore.size+'"]');
-      if(szBtn){ document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');}); szBtn.classList.add('sel'); size=restore.size; applySize(); }
+      if(szBtn){ document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');}); szBtn.classList.add('sel'); size=restore.size;
+                 if (restore.orientation) orientation = restore.orientation;
+                 renderTurnToggle(); applySize(); }
     }
     setTimeout(function(){
       enterGeneratedMode(restore.image);   // this calls enableDrag (sets 50/50)

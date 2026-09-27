@@ -128,23 +128,52 @@ exports.handler = async (event) => {
 
   let brief = '';
   let sizeName = 'a7';
+  let shapeW = 0, shapeH = 0;
   try {
     const body = JSON.parse(event.body || '{}');
     brief = (body.brief || '').toString().trim();
     sizeName = (body.size || 'a7').toString();
+    // The finished card's millimetres, sent by the studio. Without them the
+    // only thing we know about the shape is its name, and we guessed.
+    shapeW = parseFloat(body.widthMm) || 0;
+    shapeH = parseFloat(body.heightMm) || 0;
   } catch (e) {
     return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Invalid request body' }) };
   }
   if (!brief) return { statusCode: 400, headers: cors(), body: JSON.stringify({ error: 'Missing brief' }) };
 
-  const fullPrompt = brief +
+  // Said in words as well as in aspect_ratio. The preset fixes the canvas the
+  // model paints on; saying it out loud is what stops a landscape card coming
+  // back with a portrait composition standing in the middle of a wide frame.
+  const shapeWord = !(shapeW > 0 && shapeH > 0) ? ''
+    : shapeW > shapeH * 1.04 ? ' A LANDSCAPE design, wider than it is tall — compose it across the width.'
+    : shapeH > shapeW * 1.04 ? ' A portrait design, taller than it is wide.'
+    : ' A square design.';
+
+  const fullPrompt = brief + shapeWord +
     ' A decorative design only — leave a large clean empty area in the centre for text. ' +
     'No letters, no words, no text anywhere. Flat, straight-on, fills the frame, soft cream background, luxury print quality.';
 
-  // Flux Pro Ultra generates up to 2K/4MP. It uses aspect_ratio presets.
-  // Square -> 1:1; all portrait invitation sizes -> 3:4 (closest to invitation ratio).
-  const isSquare = (sizeName === 'square');
-  const aspectRatio = isSquare ? '1:1' : '3:4';
+  // Flux Pro Ultra generates up to 2K/4MP from a fixed list of aspect-ratio
+  // presets, so we ask for the one closest to the card's real shape.
+  //
+  // This used to be `isSquare ? '1:1' : '3:4'` — and the studio never sent a
+  // size at all, so EVERY design came back 3:4 portrait. A square invitation
+  // was generated tall and then cropped square, and a landscape table plan was
+  // generated portrait and cropped hard on both sides. The design the customer
+  // approved was not the shape of the thing they were buying.
+  const PRESETS = [
+    ['21:9', 21/9], ['16:9', 16/9], ['3:2', 3/2], ['4:3', 4/3], ['1:1', 1],
+    ['3:4', 3/4], ['2:3', 2/3], ['9:16', 9/16], ['9:21', 9/21]
+  ];
+  let wanted = 3/4;
+  if (shapeW > 0 && shapeH > 0) wanted = shapeW / shapeH;
+  else if (sizeName.toLowerCase() === 'square') wanted = 1;
+  const aspectRatio = PRESETS.reduce(function (best, p) {
+    return Math.abs(Math.log(p[1] / wanted)) < Math.abs(Math.log(best[1] / wanted)) ? p : best;
+  }, PRESETS[0])[0];
+  console.log('[studio-nano] size ' + sizeName + ' is ' + shapeW + 'x' + shapeH
+              + 'mm (' + wanted.toFixed(3) + ') — generating at ' + aspectRatio);
 
   try {
     const gen = await postJSON(FAL_ENDPOINT_HOST, FAL_ENDPOINT_PATH, apiKey, {

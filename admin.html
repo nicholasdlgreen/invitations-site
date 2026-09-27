@@ -1834,6 +1834,18 @@ function openJobTicket(orderId) {
                    : 'Flat card';
             })()
           }</div></div>
+          <div class="jt-field"><div class="jt-field-label">Orientation</div><div class="jt-field-val">${
+            (function(){
+              // "A6" alone no longer says which way round the card is. Whoever
+              // places the order has to read this, not infer it from the file.
+              const o = (spec && spec.orientation) || (it.basis && it.basis.orientation) || it.orientation;
+              const fold = (spec && spec.fold) || (it.basis && it.basis.fold);
+              if (o === 'landscape') return 'LANDSCAPE'
+                + (fold === 'folded' ? ' — the crease runs across the top' : '');
+              if (o === 'portrait') return 'Portrait';
+              return 'Portrait (not recorded — predates the choice)';
+            })()
+          }</div></div>
           <div class="jt-field"><div class="jt-field-label">Sheet Size</div><div class="jt-field-val">${
             spec && spec.pageMm && spec.trimMm
               ? `${spec.pageMm.w} × ${spec.pageMm.h}mm incl. bleed and marks — trims to ${spec.trimMm.w} × ${spec.trimMm.h}mm`

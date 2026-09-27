@@ -702,6 +702,8 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div id="format-toggle" style="display:none;margin-bottom:16px;"></div>
         <div id="size-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;"></div>
         <p id="format-note" style="display:none;font-size:var(--text-xs);color:var(--pale);margin:10px 0 0;line-height:1.7;"></p>
+        <div id="orient-toggle" style="display:none;margin:14px 0 0;"></div>
+        <p id="orient-note" style="display:none;font-size:var(--text-xs);color:var(--pale);margin:8px 0 0;line-height:1.7;"></p>
         <div id="sides-toggle" style="display:none;margin:14px 0 0;"></div>
         <p id="sides-note" style="display:none;font-size:var(--text-xs);color:var(--pale);margin:10px 0 0;line-height:1.7;"></p>
         <p id="sizeNote" style="font-size:var(--text-sm);color:var(--pale);margin-top:14px;text-align:center;">↑ Select a size above to unlock the upload</p>
@@ -1884,6 +1886,60 @@ function renderSidesToggle() {
   if (note) note.style.display = 'none';
 }
 
+// Portrait or landscape. The same sheet either way — so this asks about the
+// artwork, not about a different product, and it costs nothing. Hidden for a
+// square, which cannot be turned, and until a size has been chosen.
+function renderOrientationToggle() {
+  const box  = document.getElementById('orient-toggle');
+  const note = document.getElementById('orient-note');
+  if (!box) return;
+  if (!selectedSize || !sizeCanRotate(selectedSize)) {
+    box.style.display = 'none';
+    if (note) note.style.display = 'none';
+    if (selectedOrientation !== 'portrait') selectedOrientation = 'portrait';
+    return;
+  }
+  const LABEL = { portrait: 'Portrait', landscape: 'Landscape' };
+  const spec  = SIZE_SPECS[selectedSize];
+  box.style.display = '';
+  box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
+    + 'background:var(--white);padding:4px;align-items:center;">'
+    + ['portrait','landscape'].map(o => {
+        const on = o === selectedOrientation;
+        // A tiny upright or lying rectangle, so the words are not doing all
+        // the work — the same idea as the size previews above.
+        const tall = o === 'portrait';
+        const rw = tall ? 9 : 13, rh = tall ? 13 : 9;
+        return '<button type="button" onclick="selectOrientation(\'' + o + '\')" '
+          + 'style="font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:8px 18px;'
+          + 'border-radius:999px;transition:all .2s;display:inline-flex;align-items:center;gap:8px;'
+          + (on ? 'background:var(--gold);color:#fff;' : 'background:none;color:var(--soft);')
+          + '"><span style="width:' + rw + 'px;height:' + rh + 'px;border:1.5px solid '
+          + (on ? 'rgba(255,255,255,.85)' : 'var(--pale)') + ';border-radius:2px;"></span>'
+          + LABEL[o] + '</button>';
+      }).join('')
+    + '</div>';
+  if (note) {
+    note.style.display = '';
+    const d = sizeSpec(selectedSize);
+    note.textContent = 'Your card will be ' + Math.round(d.mmW) + '×' + Math.round(d.mmH)
+      + 'mm. Landscape costs the same as portrait — it is the same sheet of paper, turned.';
+  }
+}
+
+function selectOrientation(o) {
+  if (o === selectedOrientation) return;
+  selectedOrientation = o;
+  // The card has changed shape, so every judgement made about a file against
+  // the old shape — does it fit, where was it cropped, was it warned about —
+  // is now about a card that no longer exists. The files stay; only the
+  // verdicts and framing are re-derived.
+  faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {};
+  renderSizeCards();
+  if (typeof refreshFaceChecks === 'function') refreshFaceChecks();
+  if (typeof updatePrice === 'function') updatePrice();
+}
+
 function selectSides(x) {
   if (x === selectedSides) return;
   selectedSides = x;
@@ -1940,6 +1996,7 @@ function renderSizeCards() {
   renderFormatToggle();
   renderSidesToggle();
   renderSideSlots();
+  renderOrientationToggle();
   const available = getAvailableSizes();
   let keys = Object.keys(SIZE_SPECS);
   if (available.size) keys = keys.filter(k => available.has(k));
@@ -1948,7 +2005,7 @@ function renderSizeCards() {
   // Scale the little preview rectangles against the largest size on offer.
   const maxMm = Math.max(...keys.map(k => Math.max(SIZE_SPECS[k].mmW, SIZE_SPECS[k].mmH)));
   grid.innerHTML = keys.map(k => {
-    const z = SIZE_SPECS[k];
+    const z = sizeSpec(k);
     const scale = 42 / maxMm;
     const w = Math.max(12, Math.round(z.mmW * scale));
     const h = Math.max(12, Math.round(z.mmH * scale));
@@ -2012,6 +2069,12 @@ function paperImage(name, size) {
 }
 
 let selectedFold='flat';   // 'flat' or 'folded' — chosen at the size step
+// Portrait or landscape. A landscape A6 is the same sheet of paper as a
+// portrait one, turned ninety degrees: same stock, same press, same price —
+// checked against PrintedEasy, who quote £25 either way. So orientation is a
+// property of the ARTWORK, not a different product, and it needs no rates of
+// its own. Square sizes have no orientation and never offer the choice.
+let selectedOrientation='portrait';
 
 let selectedSides = 'single';
 let selectedPaper='smooth', selectedWeight=null, selectedFinish='None', selectedFinishes={}, uploadQty=25, checksPassed=true;
@@ -2073,6 +2136,9 @@ function selectSize(id){
   // Which weights are buyable can differ by size, so keep the picker honest
   // even though the size is normally chosen a step before the paper.
   if(typeof renderWeightPicker === 'function' && selectedPaper) renderWeightPicker();
+  // A square has no orientation, so moving to one must drop a landscape choice
+  // made on the size before rather than leave it set and invisible.
+  renderOrientationToggle();
 }
 
 // ── FILE UPLOAD ───────────────────────────────────────────
@@ -2279,7 +2345,7 @@ function anSize(label){
 
 async function faceVerdict(key){
   const entry = sideFiles[key];
-  const spec = SIZE_SPECS[selectedSize];
+  const spec = sizeSpec();
   if (!entry || !spec) return { state:'unknown', short:'Ready' };
   let d;
   try { d = await faceDimsMm(entry); } catch(e){ d = null; }
@@ -2747,7 +2813,7 @@ async function buildAndRunChecks(file, info){
     return;
   }
 
-  const spec = SIZE_SPECS[selectedSize] || SIZE_SPECS['A5'];
+  const spec = sizeSpec();
 
   // 3. PDF PATH — use pdf.js for preview + metadata
   if (isPdf) await loadPdfJs().catch(function(e){ console.warn('[check]', e.message); });
@@ -3027,7 +3093,7 @@ async function readImageMeta(file){
 //   - Trim line at the outer edge of the file
 //   - Safe zone inset by 3mm/fileMm percent
 //   - Bleed line hidden (would be off the page)
-function drawBleedOverlay(fileWidthMm, fileHeightMm, sizeSpec){
+function drawBleedOverlay(fileWidthMm, fileHeightMm, cardSpec){
   // Wait for layout to settle (canvas/img dimensions are final)
   requestAnimationFrame(() => {
     const canvas = document.getElementById('previewCanvas');
@@ -3050,8 +3116,8 @@ function drawBleedOverlay(fileWidthMm, fileHeightMm, sizeSpec){
     overlay.style.display = 'block';
 
     // Decide whether the file includes bleed
-    const expectedW_withBleed = sizeSpec.mmW + 6;
-    const expectedH_withBleed = sizeSpec.mmH + 6;
+    const expectedW_withBleed = cardSpec.mmW + 6;
+    const expectedH_withBleed = cardSpec.mmH + 6;
     const tolMm = 2;
     const hasBleed = Math.abs(fileWidthMm - expectedW_withBleed) <= tolMm &&
                      Math.abs(fileHeightMm - expectedH_withBleed) <= tolMm;
@@ -3076,14 +3142,14 @@ function drawBleedOverlay(fileWidthMm, fileHeightMm, sizeSpec){
       // Trim = inset by 3mm
       const tx = 3 / fileWidthMm * 100;
       const ty = 3 / fileHeightMm * 100;
-      const tw = sizeSpec.mmW / fileWidthMm * 100;
-      const th = sizeSpec.mmH / fileHeightMm * 100;
+      const tw = cardSpec.mmW / fileWidthMm * 100;
+      const th = cardSpec.mmH / fileHeightMm * 100;
       setBox(trimEl, tx, ty, tw, th);
       // Safe zone = inset by 6mm (3mm bleed + 3mm safe inside trim)
       const sx = 6 / fileWidthMm * 100;
       const sy = 6 / fileHeightMm * 100;
-      const sw = (sizeSpec.mmW - 6) / fileWidthMm * 100;
-      const sh = (sizeSpec.mmH - 6) / fileHeightMm * 100;
+      const sw = (cardSpec.mmW - 6) / fileWidthMm * 100;
+      const sh = (cardSpec.mmH - 6) / fileHeightMm * 100;
       setBox(safeEl, sx, sy, sw, sh);
     } else {
       // File = trim only (no bleed). Hide the bleed line.
@@ -3388,7 +3454,7 @@ function step3Artwork(){
       // on the paper card is what will be printed — same zoom, pan, rotation
       // and fill mode. Then cut the trim out, because bleed and crop marks
       // belong on a press file, not on a picture of a card.
-      const spec = SIZE_SPECS[selectedSize] || SIZE_SPECS['A5'];
+      const spec = sizeSpec();
       const g = proofGeometry(560 / spec.mmW, spec, false);
       const full = document.createElement('canvas');
       full.width  = Math.round(g.W);
@@ -3990,6 +4056,7 @@ async function addToCartUpload(){
           printSpec = { trimMm: built.trimMm, pageMm: built.pageMm, rasterPx: built.rasterPx,
                         finishes: Object.assign({}, selectedFinishes || {}),
                         fold: selectedFold || 'flat',
+                        orientation: selectedOrientation || 'portrait',
                         printedSides: selectedSides || 'single',
                         faces: sidesNeeded().map(function(f){ return f.label; }) };
           console.log('[print-pdf] built', built.pageMm.w + 'x' + built.pageMm.h + 'mm page for', selectedSize);
@@ -4020,6 +4087,7 @@ async function addToCartUpload(){
     // PrintedEasy should not have to infer it from the artwork. Their form
     // asks for printed-sides outright, so we had better know the answer.
     fold: selectedFold || 'flat',
+    orientation: selectedOrientation || 'portrait',
     printedSides: selectedSides || 'single',
     envelopeId: envelopesEnabled ? selectedEnvColour : null,
     deliveryCost: deliveryCost
@@ -4039,6 +4107,7 @@ async function addToCartUpload(){
     qty: uploadQty,
     size: selectedSize,
     fold: selectedFold,
+    orientation: selectedOrientation || 'portrait',
     paper: paperLabel,
     total: total,
     icon:'✦',
@@ -4140,6 +4209,35 @@ function sameShapeAsCard(w, h, spec){
   const artRatio  = Math.max(w, h)   / Math.min(w, h);
   const cardRatio = Math.max(bw, bh) / Math.min(bw, bh);
   return Math.abs(artRatio - cardRatio) / cardRatio <= 0.02;
+}
+
+// The card's dimensions as the customer will actually receive it. Everything
+// downstream — the artwork check, the proof, the press file, the job ticket —
+// must agree about which way round it is, so they all read this rather than
+// SIZE_SPECS directly.
+function sizeSpec(key, orientation){
+  const base = SIZE_SPECS[key || selectedSize] || SIZE_SPECS['A5'];
+  if (!base) return base;
+  const o = orientation || selectedOrientation;
+  if (o !== 'landscape' || base.mmW === base.mmH) return base;
+  return Object.assign({}, base, { mmW: base.mmH, mmH: base.mmW });
+}
+
+// A square cannot be turned, so it must not be offered the choice.
+//
+// Nor can a size that already has a landscape twin in the list. The boards —
+// signage, table plans, welcome signs — are sold as 'A3' and 'A3-L', two
+// separate sizes the customer picks between. Offering the toggle as well would
+// give two ways to order the same thing and two names for it on the job sheet.
+function sizeCanRotate(key){
+  const k = key || selectedSize;
+  const z = SIZE_SPECS[k];
+  if (!z || z.mmW === z.mmH) return false;
+  if (/-L$/.test(k)) return false;
+  const avail = (typeof getAvailableSizes === 'function') ? getAvailableSizes() : null;
+  const twin = k + '-L';
+  if (SIZE_SPECS[twin] && (!avail || !avail.size || avail.has(twin))) return false;
+  return true;
 }
 
 function proofGeometry(pxPerMm, spec, includeMarks){
@@ -4319,7 +4417,7 @@ function drawProofGuides(ctx, g){
 function renderProof(){
   const cv = document.getElementById('proofCanvas');
   if (!cv || !proofImage) return;
-  const spec = SIZE_SPECS[selectedSize] || SIZE_SPECS['A5'];
+  const spec = sizeSpec();
   const stage = document.getElementById('proofStage');
   const maxW = Math.max(240, (stage ? stage.clientWidth : 520) - 32);
   const maxH = Math.min(window.innerHeight * 0.62, 620);
@@ -4526,7 +4624,7 @@ function syncGuidesBtn(){
 function buildPrintReadyRaster(file, sizeKey, opts){
   opts = opts || {};
   return new Promise(function(resolve){
-    const spec = SIZE_SPECS[sizeKey] || SIZE_SPECS['A5'];
+    const spec = sizeSpec(sizeKey);
     const type = (file.type || '').toLowerCase();
     if (!/^image\/(jpeg|jpg|png|webp)$/.test(type)) { resolve(null); return; }
 
@@ -4705,7 +4803,16 @@ function familyForPaper(paperName){
 function foldedSheetFor(spec){
   const fam = printingFamily();
   if (fam !== 'folded-leaflet' || !spec) return null;
-  return { panelMmW: spec.mmW, mmW: spec.mmW * 2, mmH: spec.mmH };
+  // A portrait card creases down its side, so the unfolded sheet is twice as
+  // wide. Turn the card landscape and the sheet turns with it: the crease runs
+  // across the top and the sheet is twice as TALL. It is the same piece of
+  // paper either way — the same area, off the same press — which is why
+  // landscape costs no more than portrait.
+  if (selectedOrientation === 'landscape')
+    return { axis: 'h', panelMmW: spec.mmW, panelMmH: spec.mmH,
+             mmW: spec.mmW, mmH: spec.mmH * 2 };
+  return   { axis: 'v', panelMmW: spec.mmW, panelMmH: spec.mmH,
+             mmW: spec.mmW * 2, mmH: spec.mmH };
 }
 
 // The one place the press page is laid out, so the vector and raster routes
@@ -4715,27 +4822,35 @@ function foldedSheetFor(spec){
 function layOutPressPage(doc, rgb, spec, drawArt){
   const MM = 72 / 25.4, b = PRINT_BLEED_MM, m = PRINT_MARKS_MM;
   const fold = foldedSheetFor(spec);
+  const sideFold = !fold || fold.axis === 'v';
   const sheetMmW = fold ? fold.mmW : spec.mmW;
-  const sheetMmH = spec.mmH;
+  const sheetMmH = fold ? fold.mmH : spec.mmH;
 
   const pageW = (sheetMmW + 2*b + 2*m) * MM, pageH = (sheetMmH + 2*b + 2*m) * MM;
   const trimX = (m + b) * MM, trimY = (m + b) * MM;
   const trimW = sheetMmW * MM, trimH = sheetMmH * MM;
   const page = doc.addPage([pageW, pageH]);
 
-  // Folded, the artwork fills the front panel only; its left bleed runs over
-  // the fold and is covered again below.
-  const artMmW = fold ? fold.panelMmW : spec.mmW;
-  const artX = (fold ? m + fold.panelMmW : m) * MM;
+  // Folded, the artwork fills the front panel only; the bleed on its folded
+  // edge runs over the crease and is covered again below. A side fold puts the
+  // front on the right half of the sheet; a top fold puts it on the bottom
+  // half, with the blank back above it.
+  const artMmW = fold && sideFold ? fold.panelMmW : spec.mmW;
+  const artMmH = fold && !sideFold ? fold.panelMmH : sheetMmH;
+  const artX = (fold && sideFold ? m + fold.panelMmW : m) * MM;
   drawArt(page, { x: artX, y: m * MM,
-                  width: (artMmW + 2*b) * MM, height: (sheetMmH + 2*b) * MM });
+                  width: (artMmW + 2*b) * MM, height: (artMmH + 2*b) * MM });
 
-  let foldX = null;
-  if (fold) {
+  let foldX = null, foldY = null;
+  if (fold && sideFold) {
     foldX = (m + b + fold.panelMmW) * MM;
     // Without this the front panel's 3mm bleed carries a strip of the design
     // across the fold onto a back that is meant to be blank.
     page.drawRectangle({ x: 0, y: 0, width: foldX, height: pageH, color: rgb(1,1,1) });
+  } else if (fold) {
+    foldY = (m + b + fold.panelMmH) * MM;
+    page.drawRectangle({ x: 0, y: foldY, width: pageW, height: pageH - foldY,
+                         color: rgb(1,1,1) });
   }
 
   const gap = b * MM, len = 4 * MM;
@@ -4759,6 +4874,14 @@ function layOutPressPage(doc, rgb, spec, drawArt){
                     end:{x: foldX, y: trimY + trimH + gap + len},
                     thickness:0.25, color: rgb(0,0,0) });
   }
+  // Same again for a top fold, but the ticks go out of the left and right edges.
+  if (foldY != null) {
+    page.drawLine({ start:{x: trimX - gap, y: foldY}, end:{x: trimX - gap - len, y: foldY},
+                    thickness:0.25, color: rgb(0,0,0) });
+    page.drawLine({ start:{x: trimX + trimW + gap, y: foldY},
+                    end:{x: trimX + trimW + gap + len, y: foldY},
+                    thickness:0.25, color: rgb(0,0,0) });
+  }
 
   page.setTrimBox(trimX, trimY, trimW, trimH);
   page.setBleedBox(m * MM, m * MM, (sheetMmW + 2*b) * MM, (sheetMmH + 2*b) * MM);
@@ -4767,7 +4890,7 @@ function layOutPressPage(doc, rgb, spec, drawArt){
 }
 
 async function buildPrintReadyPdfFromVector(file, sizeKey){
-  const spec = SIZE_SPECS[sizeKey];
+  const spec = sizeSpec(sizeKey);
   if (!spec) return null;
   try {
     const PDFLibRef = await loadPdfLib();
@@ -4853,7 +4976,7 @@ async function buildPressFileForAllFaces(sizeKey){
 }
 
 async function buildPrintReadyPdf(file, sizeKey, opts){
-  const spec = SIZE_SPECS[sizeKey];
+  const spec = sizeSpec(sizeKey);
   if (!spec) { console.warn('[print-pdf] no mm spec for size:', sizeKey); return null; }
 
   if ((file.type || '').toLowerCase() === 'application/pdf') {
@@ -4879,7 +5002,7 @@ async function buildPrintReadyPdf(file, sizeKey, opts){
 
 async function buildPrintReadyPdfFromImage(file, sizeKey, opts){
   opts = opts || {};
-  const spec = SIZE_SPECS[sizeKey];
+  const spec = sizeSpec(sizeKey);
   if (!spec) { console.warn('[print-pdf] no mm spec for size:', sizeKey); return null; }
 
   // Carry this face's own position into the rasteriser. Without it the
@@ -5219,12 +5342,21 @@ async function proceedToStripe(){
   // The ordered size MUST be one we hold exact millimetres for. If it isn't,
   // we send no file rather than invent a size — the old code's guesswork is
   // what produced 496mm and 2015mm pages.
-  var sizeSpec = SIZE_SPECS[orderedSize] || null;
+  // Which way round the card was ordered travels with the basket line — the
+  // picker may since have been left on something else entirely.
+  var orderedOrient = 'portrait';
+  try {
+    var lc3 = JSON.parse(localStorage.getItem('fpCart') || '[]');
+    var withOrient = lc3.find(function(it){ return it && it.orientation; });
+    if (withOrient) orderedOrient = withOrient.orientation;
+  } catch(e){}
+  if (isAiOrder && designState.orientation) orderedOrient = designState.orientation;
+  var orderedSpec = SIZE_SPECS[orderedSize] ? sizeSpec(orderedSize, orderedOrient) : null;
   var ppFileUrl = printArtworkUrl || artworkUrl;
   // Our own press-ready file is a PDF with correct page size, boxes and marks,
    // so print-prep only needs to handle colour for it.
   var ppInputType = (printArtworkUrl || isPdfUpload) ? 'pdf' : 'image';
-  if (!sizeSpec && ppInputType === 'image') {
+  if (!orderedSpec && ppInputType === 'image') {
     console.warn('[print-prep] skipped — no millimetre spec for size:', orderedSize);
   }
   // Our own press-ready PDF is already correct: right size, 3mm bleed, crop
@@ -5233,7 +5365,7 @@ async function proceedToStripe(){
     printReadyUrl = printArtworkUrl;
     console.log('[print] using press-ready PDF as-is (RGB — the press converts):', printReadyUrl);
   }
-  else if(ppFileUrl && sizeSpec && (isPdfUpload || isImageUpload || isAiOrder || printArtworkUrl)){
+  else if(ppFileUrl && orderedSpec && (isPdfUpload || isImageUpload || isAiOrder || printArtworkUrl)){
     document.getElementById('coPayBtnText').textContent='Preparing print-ready file…';
     try{
       const ppRes=await fetch('/.netlify/functions/print-prep',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
@@ -5242,8 +5374,8 @@ async function proceedToStripe(){
         inputType: ppInputType,
         bleedMm: PRINT_BLEED_MM,
         marksMm: PRINT_MARKS_MM,
-        trimMmW: sizeSpec.mmW,
-        trimMmH: sizeSpec.mmH,
+        trimMmW: orderedSpec.mmW,
+        trimMmH: orderedSpec.mmH,
         pressReady: !!printArtworkUrl,
         bleedBakedIn: isAiOrder ? true : false
       })});
@@ -5553,6 +5685,10 @@ function googleCustomerReviewsOptIn(order){
   selectedSize  = designState.size || 'A5';
   if (designState.fold)  selectedFold  = designState.fold;
   if (designState.sides) selectedSides = designState.sides;
+  // The design was drawn, and its press file built, at a particular shape. If
+  // this page defaulted back to portrait the artwork would be laid on a card
+  // the wrong way round.
+  if (designState.orientation) selectedOrientation = designState.orientation;
 
   // The studio used to hand off to wedding-invitations whatever was being
   // designed, so a welcome sign arrived here at A1 — a size wedding
