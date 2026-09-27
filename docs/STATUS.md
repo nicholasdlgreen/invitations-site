@@ -11,16 +11,19 @@ artwork journey — plus two incidents worth reading (§6 and §7).
 
 ## 0. Do this next
 
-**Two things, and the first is five minutes' work.**
+**Envelopes are live. Margins are the only thing left in pricing.**
 
-1. **Let the deploy of `50eb9ca` land**, then **hard-reload admin, sign in, and
-   press Publish.** That is what puts the 378 envelope rates in front of
-   customers; until then envelopes still charge the old flat 10p and 23p. Expect
-   roughly **4,700 envelope prices** to join the 10,374 finishing ones.
-   The deploy must go first: without it, checkout would reject the very orders
-   the publish makes possible (§2).
-2. **Set the margins.** The site sells at cost. Everything else in pricing is
-   finished and this is a decision only Nicholas can make.
+Published 26 September 17:57 and verified the following morning: **4,704
+envelope prices**, none null, across the 16 products that offer them. Wedding
+invitations quote £7.20 for a hundred white A5 and £18.40 for red, which is the
+rate to the penny at zero margin. Nothing leaked where it should not: menu
+cards, place cards, table numbers and order of service have none, and there are
+no Square-210 envelopes. **Sheet prices held at 56,636** — the check that was
+missed last time. The deploy landed first, so the checkout floor moved with the
+price.
+
+1. **Set the margins.** The site sells at cost across all 23 products. This is
+   the last real blocker in pricing and it is a decision, not a build.
 
 ---
 
@@ -31,9 +34,9 @@ artwork journey — plus two incidents worth reading (§6 and §7).
 | Cost rows in `sheet_rates` | 7,389 (378 switched off) |
 | Finishing rows in `finish_rates` | **2,667** (378 of them envelopes) |
 | Published sheet prices | **56,636** |
-| Published finishing prices | **10,374** |
-| Published envelope prices | **0 — awaiting the Publish above** |
-| Product page payload | 536KB, expect ~700KB after the publish |
+| Published finishing prices | **15,078** |
+| Published envelope prices | **4,704**, live and verified |
+| Product page payload | 536KB before envelopes; re-measure |
 | Envelope colours offered | **2** (was 6) |
 | **Margins** | **0 on all 23 products — the site sells at cost** |
 
@@ -260,9 +263,10 @@ sections above give the reasoning; this is the list.
 
 | # | What | Why it is first |
 |---|---|---|
-| 1 | **Deploy, hard-reload admin, Publish** | The 378 envelope rates are loaded but reach nobody until this. Deploy before publish, or checkout rejects the orders it enables. |
-| 2 | **Verify the publish** — envelope prices > 0, sheet prices still 56,636 | The empty-catalogue incident got past me because I checked the thing I changed and not the thing beside it (§7). |
-| 3 | **Set the margins** | The site sells at cost. The last real blocker, and Nicholas's decision. |
+| ~~1~~ | ~~Deploy, hard-reload admin, Publish~~ | **Done 26 Sept 17:57.** |
+| ~~2~~ | ~~Verify the publish~~ | **Done 27 Sept.** 4,704 envelope prices, sheet prices still 56,636. |
+| 1 | **Set the margins** | The site sells at cost. The last real blocker in pricing, and Nicholas's decision. |
+| 2 | **Re-measure the product page payload** | It was 536KB before 4,704 prices a product were added to sixteen of them. Worth knowing before launch. |
 
 ### Blocking launch
 
