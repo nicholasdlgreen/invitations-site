@@ -37,7 +37,7 @@
    always correct — a screen reader heard it properly — but that is no defence
    when the visible line is nonsense. Baseline alignment keeps the small words
    sitting on the figure's feet rather than floating against its middle. */
-.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:13px 20px;display:inline-flex;align-items:baseline;gap:8px;margin-bottom:18px;}
+.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:13px 20px;display:inline-flex;align-items:baseline;gap:8px;margin-bottom:18px;min-width:186px;min-height:52px;box-sizing:border-box;}
 .lp-price-label{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;}
 .lp-price-value{font-family:'Cormorant Garamond',serif;font-size:1.95rem;font-weight:400;color:var(--text);line-height:1;}
 .lp-price-qty{font-size:var(--text-xs);letter-spacing:.04em;color:var(--soft);}
@@ -154,6 +154,26 @@
 </style>
 <script src="/vendor/supabase-js-2.116.0.min.js" defer></script>
 <script src="/supabase-config.js"></script>
+<script>
+// Start fetching the "from" price HERE, in the head.
+//
+// The script that needs it sits at the bottom of the body, so on the live site
+// the request did not even start until 601ms and the figure landed at 1,614ms
+// — most of a second of empty box while the customer looked straight at it.
+// supabase-config.js above is not deferred, so its config is already set and
+// the key is not repeated. Nothing on the page waits for this; if it fails or
+// arrives late, loadData() asks again in the ordinary way.
+(function () {
+  try {
+    var c = window.__SUPABASE_CONFIG;
+    if (!c || !c.url || !c.anonKey || typeof fetch !== 'function') return;
+    window.__fromPricesEarly = fetch(c.url + '/rest/v1/rpc/from_prices', {
+      headers: { apikey: c.anonKey, Authorization: 'Bearer ' + c.anonKey }
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  } catch (e) { /* the page will fetch it again below */ }
+})();
+</script>
 <script src="/auth.js" defer></script>
 <script src="/cart.js"></script>  
 <link rel="stylesheet" href="/papers/section.css">
@@ -1034,8 +1054,8 @@ const SIZE_DIMS = {
 };
 
 let productData = null;
-let pricingPayload = null;
-let productPricing = null;
+let publishedPapers = null;      // the paper catalogue, ~7KB
+let fromPrice = null;            // { price, qty } for this product only
 
 function escapeHtml(s) {
   if (s == null) return '';
@@ -1044,10 +1064,36 @@ function escapeHtml(s) {
 
 async function loadData() {
   const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
-  const [ptRes, pricesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers }),
-    fetch(`${SUPABASE_URL}/rest/v1/rpc/pricing_for?p_slug=${encodeURIComponent(PRODUCT.slug)}`, { headers })
-  ]);
+
+  // This page used to fetch pricing_for, which is 571KB — 3,738 sheet prices
+  // and 1,008 finishing prices for the configurator. Nothing here reads either
+  // array. The page painted at 668ms and the price landed at 1,614ms, so the
+  // block sat empty for most of a second while the customer looked at it.
+  //
+  // from_prices() is what the products grid already calls, so the two pages
+  // now share one definition of the "from" price instead of agreeing by
+  // coincidence. Both calls together are about 9KB.
+  const ptP     = fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers });
+  const papersP = fetch(`${SUPABASE_URL}/rest/v1/rpc/published_papers`, { headers });
+  // Usually already in flight from the head, where it starts about half a
+  // second sooner. Falls back to asking now if that never ran.
+  const priceP  = window.__fromPricesEarly ||
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/from_prices`, { headers })
+      .then(r => r.ok ? r.json() : null).catch(() => null);
+
+  // The price is above the fold and depends on nothing else on this page, so
+  // it is drawn the moment its own answer arrives rather than waiting for the
+  // product row or the paper catalogue.
+  priceP.then(rows => {
+    if (!Array.isArray(rows)) return;
+    const row = rows.find(r => r && r.slug === PRODUCT.slug);
+    if (!row || row.from_price == null) return;
+    fromPrice = { price: parseFloat(row.from_price),
+                  qty: parseInt(row.display_quantity, 10) || 1 };
+    renderPricing();
+  }).catch(() => { /* the placeholder stays; nothing is claimed */ });
+
+  const ptRes = await ptP;
   // Did Supabase actually answer? A failed request and a genuine "no such
   // product" look the same from here, and they must not be treated the same.
   let lookupAnswered = false;
@@ -1055,13 +1101,6 @@ async function loadData() {
     lookupAnswered = true;
     const rows = await ptRes.json();
     if (rows && rows.length) productData = rows[0];
-  }
-  if (pricesRes.ok) {
-    const rows = await pricesRes.json();
-    if (rows && rows.length && rows[0].payload && rows[0].payload.schema_version >= 2 && Array.isArray(rows[0].payload.products)) {
-      pricingPayload = rows[0].payload;
-      productPricing = pricingPayload.products.find(p => p.slug === PRODUCT.slug) || null;
-    }
   }
   if (!productData) {
     // Only claim the product does not exist when Supabase said so. If the
@@ -1092,10 +1131,17 @@ async function loadData() {
   renderSizesStrip();
   // Finishing: what this product offers, narrowed again to the stocks that can
   // physically take it. The laminate cards sit on a real paper photograph.
+  // This is the one section that needs the paper catalogue, so it is the only
+  // thing that waits for it.
+  const papersRes = await papersP.catch(() => null);
+  if (papersRes && papersRes.ok) {
+    const pj = await papersRes.json().catch(() => null);
+    if (Array.isArray(pj)) publishedPapers = pj;
+  }
   const finMount = document.getElementById('lp-finishes-mount');
   if (finMount && window.FinishSection) {
     const caps = {};
-    ((pricingPayload && pricingPayload.papers) || []).forEach(p => { caps[p.name] = p.finishes || []; });
+    (publishedPapers || []).forEach(p => { caps[p.name] = p.finishes || []; });
     const mine = Array.isArray(productData.available_papers) ? productData.available_papers : [];
     const takers = mine.filter(n => (caps[n] || []).some(f => f && f.toLowerCase() !== 'none'));
     if (takers.length) {
@@ -1196,44 +1242,22 @@ function renderPricing() {
   const priceValue = document.getElementById('lp-price-value');
   if (!priceValue) return;
   const priceQty = document.getElementById('lp-price-qty');
-  if (!productPricing || !Array.isArray(productPricing.sheet_sells) || !productPricing.sheet_sells.length) {
+  // One figure, worked out in the database by from_prices() — the same
+  // function the products grid reads, so the grid and this page cannot quote
+  // different numbers for one product. It already applies the rule this
+  // function used to apply in JavaScript: cheapest flat, single-sided, at the
+  // nearest rung to display_quantity, with VAT only if we are registered.
+  if (!fromPrice || !isFinite(fromPrice.price)) {
     priceValue.textContent = '\u00a3\u2014';
     if (priceQty) priceQty.textContent = '';
     setPriceSolo(true);
     return;
   }
-  const papers = productPricing.available_papers || [];
-  const sizes  = productPricing.available_sizes || [];
-  if (!papers.length || !sizes.length) return;
-  // Every size, not a pinned A5. "From" has to mean the cheapest a customer
-  // can reach, and pinning A5 made this page quote £19 for 50 while /products
-  // quoted £18 for the same product in a smaller size. Two prices for one
-  // thing is worse than either number.
-  //
-  // The rest is the cheapest spec they can actually reach: flat and single
-  // sided. Rows published before fold and sides existed carry neither, and
-  // those are flat single — the same reading the configurator uses.
-  const rows = productPricing.sheet_sells.filter(s =>
-    sizes.includes(s.size) && papers.includes(s.paper) &&
-    (s.fold || 'flat') === 'flat' && (s.sides || 'single') === 'single');
-  if (!rows.length) return;
-  // Quote the pack the grid quotes, not a quantity of one. Our price is almost
-  // entirely setup — one card and ten cost the same — so the lowest quantity
-  // in the table made a setup fee look like the price of a single card. This
-  // page and /products must never disagree, so both read display_quantity.
-  const target = parseInt(productData && productData.display_quantity, 10) || 1;
-  const qtys = [...new Set(rows.map(s => parseInt(s.qty, 10)))].sort((a, b) => a - b);
-  // Nearest rung at or above the target, else the largest we hold, so a
-  // missing rung can never blank the price.
-  const qty = qtys.find(q => q >= target);
-  const useQty = (qty === undefined) ? qtys[qtys.length - 1] : qty;
-  const cheapest = Math.min.apply(null, rows
-    .filter(s => parseInt(s.qty, 10) === useQty)
-    .map(s => parseFloat(s.sell)));
-  priceValue.textContent = '\u00a3' + Math.round(cheapest);
-  if (priceQty) priceQty.textContent = useQty > 1 ? ('for ' + useQty) : 'each';
+  priceValue.textContent = '\u00a3' + Math.round(fromPrice.price);
+  if (priceQty) priceQty.textContent = fromPrice.qty > 1 ? ('for ' + fromPrice.qty) : 'each';
   setPriceSolo(false);
 }
+
 
 // The divider between the figure and the words only earns its place once there
 // are words to divide.
@@ -1252,7 +1276,10 @@ function renderSizesStrip() {
   const section = document.getElementById('lp-sizes-strip-section');
   const strip = document.getElementById('lp-sizes-strip');
   if (!section || !strip) return;
-  const sizes = (productPricing && productPricing.available_sizes) || [];
+  // available_sizes is on the product_types row this page already has. It was
+  // being read out of the 571KB payload instead, which is why the strip waited
+  // on it.
+  const sizes = (productData && productData.available_sizes) || [];
   if (!sizes.length) return;
   strip.innerHTML = sizes.map(size => {
     const dim = SIZE_DIMS[size] || '';
