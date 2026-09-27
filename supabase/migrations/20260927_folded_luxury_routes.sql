@@ -16,7 +16,13 @@
 -- folded-card route carries — the same shape order of service uses, and what
 -- keeps Publish's overlap guard satisfied.
 --
--- Left alone on purpose: wedding invitations, save the dates, menu cards and
--- the other nine sold flat OR folded. Their folded side still shows Signature
--- only. Fixing them is the same one-line change, but it alters what twelve more
--- products offer and that is a decision, not a tidy-up.
+-- Extended the same day to the twelve others sold flat OR folded — wedding
+-- invitations, save the dates, menu cards and the rest. They needed the route
+-- only: available_papers already listed the Luxury and recycled stocks, since
+-- their FLAT route is flat-card, which carries them.
+--
+-- Place cards are deliberately excluded. They sell at business-card size only
+-- and folded-leaflet has no rate for it, so the route would reach nothing.
+--
+-- Square-210 keeps no folded option at all, which is not new: folded-card has
+-- never had a Square-210 rate, so a folded Square-210 was never sold.
