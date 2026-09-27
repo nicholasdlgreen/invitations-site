@@ -751,8 +751,9 @@ and delivery is free and unfunded.
    matters: **head to head or head to foot** for a double-sided back. We send
    both faces the same way up — if their press expects otherwise, every
    double-sided job comes back upside down.
-7. **Supabase Pro** (~$25/mo). The free plan has no automatic backups, and
-   orders, customers and consent records live there.
+7. ~~**Supabase Pro**~~ — **done 27 September.** Daily backups now covered.
+   Note it did **not** change `statement_timeout = 8s`, which is what §11 is
+   about.
 8. **`ALERT_EMAIL` in Netlify** for the Monday supplier price watch.
 9. **Remove the homepage holding overlay** when the decision is made to open.
 
@@ -853,10 +854,29 @@ Two things still open from that work:
 24. **The 42 `folded-leaflet` envelope rates are unreachable** — order of
     service is the only product on that family and has envelopes switched off.
     Decide whether it should offer them.
+24a. **Delivery is free and unfunded.** Standard is `price 0.00, surcharge 0%`;
+    PrintedEasy's quoted price excludes delivery, confirmed by dumping every
+    field their endpoint returns. Establish what they charge us, then decide
+    whether delivery is absorbed into the card price or charged.
+24b. **299 published prices sit below cost**, by 80p to £2.40, at eight
+    quantities. The curve-flattening doing its job against a supplier staircase
+    that goes backwards. Harmless once a margin exists; a real loss at zero.
+24c. **Cartonboard's single-sided ladder is thinner than the others** — 16
+    sampled points at A5 where every other paper has 21, left over from dropping
+    280gsm. Prices interpolate correctly, but that curve is sampled more
+    coarsely. Re-scrape when convenient.
+24d. **Flat thank you, engagement and graduation cards.** Sold folded-only, and
+    priced as folded — a thank you card costs the same as a folded invitation.
+    A flat thank-you card is what most people send and both Papier and
+    Vistaprint sell one. Needs a scrape, then a route.
+24e. **Vellum.** Scores 96 against foil's 100 in UK search and we do not stock
+    it. printed.com do. Removed from our copy as a false claim; worth pricing as
+    a real product.
 
 ### Housekeeping
 
-25. **54 test orders** to clear, and ~112 junk bot signups.
+25. ~~**54 test orders**~~ — cleared; the orders table is empty. ~112 junk bot
+    signups remain.
 26. **`from_price_text` is empty on all 23 products and nothing reads it.**
     Either delete the column and its admin field or wire it up as an override;
     a writable field that renders nowhere is a trap.
@@ -866,6 +886,16 @@ Two things still open from that work:
     far, never chased, and proven not to come from any of this week's changes.
 29. **Boards are single-sided only** (signage, table plans, welcome signs),
     deliberately deferred when double-sided went in.
+29a. **Hide a section heading until it has content.** "Our paper stocks" printed
+    with nothing under it for months because the code renders the heading first
+    and fills it after. The race is fixed, but the failure mode remains: any
+    future fault shows as a heading over a gap, which reads as "they have no
+    papers". Cheap insurance on 23 pages.
+29b. **`getAvailablePapers()` now filters by published price.** It always was
+    safe, because `step3Papers()` filtered afterwards — tested by adding two
+    unpriced papers and sweeping all four formats, and neither ever appeared.
+    The guard was moved so it no longer depends on a caller remembering. Noted
+    because the commit message says it closed a latent weakness, not a live bug.
 
 ### The design studio — opened 27 September
 
