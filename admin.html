@@ -551,6 +551,20 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
                   </div>
                 </div>
               </div>
+              <div class="field" style="margin-bottom:0">
+                <label>How the studio draws it</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px;color:var(--cream);opacity:1;margin:0;cursor:pointer;">
+                    <input type="checkbox" id="sf_folded" onchange="sfSetFolded(this.checked)"/>
+                    A folded card — front, and an inside they can have printed
+                  </label>
+                </div>
+                <div style="font-size:11px;color:rgba(250,247,242,.45);margin-top:6px;line-height:1.6;">
+                  Off means one flat face, which is what every product did before. Turn it on and the studio
+                  asks "the inside of your card — leave it blank, or print my message inside", and the boxes
+                  marked <em>Inside</em> below appear when they choose to print.
+                </div>
+              </div>
               <div id="sf_warn" style="display:none;margin-top:4px;padding:10px 12px;border-radius:6px;background:rgba(176,0,32,.12);border:1px solid rgba(176,0,32,.35);font-size:12px;color:#ffb3bd;"></div>
             </div>
 
@@ -4441,6 +4455,7 @@ async function saveSheetRates() {
 // ═══════════════════════════════════════════════════════
 
 let studioFields = [];
+let studioConfigs = [];
 let sfDirty = false;
 
 // The ten ways a line can be set on the card, described by what they look like
@@ -4466,7 +4481,46 @@ async function loadStudioFieldsFromSupabase() {
     console.warn('Could not load studio fields:', err.message);
     studioFields = [];
   }
+  // Loaded separately and caught separately, so one failing table cannot empty
+  // the other — the lesson from the empty catalogue.
+  try {
+    studioConfigs = await sbFetchAll('studio_config?select=id,product_slug,folded&order=product_slug');
+  } catch (err) {
+    console.warn('Could not load studio config:', err.message);
+    studioConfigs = [];
+  }
   sfPopulateProducts();
+}
+
+function sfConfigFor(slug) {
+  return studioConfigs.find(c => c.product_slug === slug) || null;
+}
+
+// Written straight through rather than batched with the boxes: it is one
+// checkbox, and leaving it pending behind a Save button it does not belong to
+// is how a setting gets lost.
+async function sfSetFolded(on) {
+  const slug = document.getElementById('sf_product').value;
+  const cfg = sfConfigFor(slug);
+  if (!cfg) {
+    alert('This product has no design studio config row, so there is nothing to set it on yet.');
+    document.getElementById('sf_folded').checked = false;
+    return;
+  }
+  const was = cfg.folded;
+  cfg.folded = !!on;
+  try {
+    await sbFetch('studio_config?id=eq.' + encodeURIComponent(cfg.id), {
+      method: 'PATCH',
+      body: JSON.stringify({ folded: !!on, updated_at: new Date().toISOString() })
+    });
+    toast(on ? 'The studio will draw this as a folded card' : 'The studio will draw this flat');
+    sfRenderGrid();
+  } catch (err) {
+    cfg.folded = was;
+    document.getElementById('sf_folded').checked = was;
+    alert('Could not save that: ' + err.message);
+  }
 }
 
 function sfPopulateProducts() {
@@ -4498,11 +4552,21 @@ function sfRenderGrid() {
   if (!host) return;
   const rows = sfRows(slug);
 
+  const cfg = sfConfigFor(slug);
+  const foldBox = document.getElementById('sf_folded');
+  if (foldBox) { foldBox.checked = !!(cfg && cfg.folded); foldBox.disabled = !cfg; }
+
   if (warn) {
     if (!rows.filter(r => r.active !== false).length) {
       warn.style.display = 'block';
       warn.innerHTML = '<strong>This product has no boxes of its own.</strong> The studio falls back to the '
         + 'wedding invitation boxes, so a customer here is asked for a host line, a venue, a dress code and an RSVP.';
+    } else if (rows.some(r => r.face === 'inside' && r.active !== false) && !(cfg && cfg.folded)) {
+      // An inside box on a product the studio draws flat is a box nobody will
+      // ever see, which is easier to create than to notice.
+      warn.style.display = 'block';
+      warn.innerHTML = '<strong>This product has Inside boxes but is not drawn as a folded card.</strong> '
+        + 'They will not appear in the studio until "A folded card" above is ticked.';
     } else {
       warn.style.display = 'none';
     }
@@ -4523,6 +4587,7 @@ function sfRenderGrid() {
       <th style="padding:8px 6px;width:52px;">Order</th>
       <th style="padding:8px 6px;">What the box says</th>
       <th style="padding:8px 6px;width:120px;">Key</th>
+      <th style="padding:8px 6px;width:100px;">Face</th>
       <th style="padding:8px 6px;width:120px;">Shows</th>
       <th style="padding:8px 6px;width:230px;">Set as</th>
       <th style="padding:8px 6px;width:90px;">Must fill in</th>
@@ -4536,6 +4601,9 @@ function sfRenderGrid() {
         </td>
         <td style="padding:6px;"><input value="${sfEsc(r.label)}" oninput="sfSet('${r.id}','label',this.value)" style="width:100%;"/></td>
         <td style="padding:6px;"><input value="${sfEsc(r.key)}" oninput="sfSet('${r.id}','key',this.value)" style="width:100%;"/></td>
+        <td style="padding:6px;"><select onchange="sfSet('${r.id}','face',this.value)" style="width:100%;">
+          <option value="front"${(r.face||'front') !== 'inside' ? ' selected' : ''}>Front</option>
+          <option value="inside"${(r.face||'front') === 'inside' ? ' selected' : ''}>Inside</option></select></td>
         <td style="padding:6px;"><select onchange="sfSet('${r.id}','in_more',this.value==='1')" style="width:100%;">
           <option value="0"${!r.in_more ? ' selected' : ''}>Up front</option>
           <option value="1"${r.in_more ? ' selected' : ''}>Behind +more</option></select></td>
@@ -4577,6 +4645,9 @@ function sfRenderPreview() {
         // nudged towards, rather than the label itself.
         const parts = String(r.label || '').split('—');
         const eg = (parts[1] || parts[0] || '').replace(/\(optional\)/i, '').trim() || '…';
+        if (r.face === 'inside') {
+          return `<div style="${SF_PREVIEW_CSS.request}opacity:.5;border-left:2px solid #B8976A;padding-left:8px;text-align:left;">${sfEsc(eg)} <span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#B8976A;">inside</span></div>`;
+        }
         return `<div style="${SF_PREVIEW_CSS[r.preview_style] || SF_PREVIEW_CSS.request}${r.in_more ? 'opacity:.45;' : ''}">${sfEsc(eg)}</div>`;
       }).join('')
     + '</div><div style="margin-top:14px;font-size:10px;color:#8A7A68;">Faded lines sit behind “+ add more details”.</div>';
@@ -4647,7 +4718,8 @@ function sfCopyFrom() {
     studioFields.push({
       id: 'new-' + Date.now() + '-' + n, __new: true, __changed: true,
       product_slug: slug, key: r.key, label: r.label, display_order: n + 1,
-      optional: r.optional, in_more: r.in_more, preview_style: r.preview_style, active: true
+      optional: r.optional, in_more: r.in_more, preview_style: r.preview_style,
+      active: true, face: r.face || 'front'
     });
   });
   sfMarkDirty();
@@ -4679,7 +4751,8 @@ async function sfSave() {
     const ins = touched.filter(f => f.__new && !f.__deleted).map(f => ({
       product_slug: f.product_slug, key: String(f.key).trim(), label: f.label,
       display_order: f.display_order, optional: f.optional !== false,
-      in_more: !!f.in_more, preview_style: f.preview_style || 'request', active: f.active !== false
+      in_more: !!f.in_more, preview_style: f.preview_style || 'request',
+      active: f.active !== false, face: f.face === 'inside' ? 'inside' : 'front'
     }));
     if (ins.length) await sbFetch('studio_fields', { method: 'POST', body: JSON.stringify(ins) });
 
@@ -4690,7 +4763,8 @@ async function sfSave() {
         body: JSON.stringify({
           key: String(f.key).trim(), label: f.label, display_order: f.display_order,
           optional: f.optional !== false, in_more: !!f.in_more,
-          preview_style: f.preview_style || 'request', active: f.active !== false
+          preview_style: f.preview_style || 'request', active: f.active !== false,
+          face: f.face === 'inside' ? 'inside' : 'front'
         })
       });
     }

@@ -72,6 +72,29 @@
 .ds-generate:hover{background:var(--brown);}
 .ds-fld-needed{border-color:var(--gold)!important;box-shadow:0 0 0 2px rgba(184,151,106,.22);}
 .ds-need-hint{margin-top:8px;font-size:var(--text-xs);color:var(--brown);font-style:italic;}
+.ds-inside{margin-top:18px;padding-top:16px;border-top:1px solid var(--border);}
+.ds-inside-h{font-family:'Cormorant Garamond',serif;font-size:var(--text-h3);color:var(--text);margin-bottom:3px;}
+.ds-inside-s{font-size:var(--text-xs);color:var(--soft);margin-bottom:12px;}
+.ds-ask{display:flex;gap:10px;}
+.ds-ask button{flex:1;background:var(--white);border:1px solid var(--border);border-radius:9px;
+padding:13px 12px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);
+text-align:center;cursor:pointer;line-height:1.45;transition:all .2s;}
+.ds-ask button:hover{border-color:var(--gold-lt);}
+.ds-ask button.on{border:1.5px solid var(--gold);background:#F6EFE6;}
+.ds-ask button small{display:block;font-size:calc(var(--text-xs) * .95);color:var(--soft);margin-top:3px;}
+.ds-pop{display:inline-block;font-size:calc(var(--text-xs) * .8);letter-spacing:.12em;text-transform:uppercase;
+color:var(--gold);border:1px solid var(--gold-lt);border-radius:20px;padding:1px 7px;margin-top:6px;}
+.ds-inside-note{font-size:var(--text-xs);color:var(--soft);font-style:italic;margin-top:2px;}
+/* the card shown open: inside on the left, front on the right */
+.ds-open{display:flex;justify-content:center;align-items:stretch;margin-bottom:12px;}
+.ds-open .leaf{width:46%;max-width:190px;background:#FCFAF6;border:1px solid #E3D8CC;
+padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+text-align:center;font-family:'Cormorant Garamond',serif;color:#4A3B30;}
+.ds-open .leaf.l{border-right:none;box-shadow:inset -9px 0 13px -12px rgba(61,46,36,.4);}
+.ds-open .msg{font-size:var(--text-sm);line-height:1.55;}
+.ds-open .frm{font-style:italic;font-size:calc(var(--text-sm) * .92);color:#6B5A4B;margin-top:12px;}
+.ds-open .blankhint{font-size:calc(var(--text-xs) * .95);color:#BCAFA3;font-style:italic;}
+.ds-open .sprig{width:22px;height:1px;background:var(--gold-lt);margin:9px auto;}
 .ds-brief{background:var(--text);border-radius:10px;padding:14px 16px;margin-top:14px;}
 .ds-brief-label{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-lt);margin-bottom:8px;}
 .ds-brief-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);color:var(--cream);line-height:1.7;}
@@ -687,6 +710,20 @@ was fetched and injected via innerHTML — that was the bug behind the
             <input class="ds-fld" id="w-custom" placeholder="Add your own line — a quote, a note… (optional)"/>
           </div>
           <button class="ds-addmore" id="w-addbtn">+ add reception, dress code, RSVP, your own line…</button>
+
+          <!-- Only for a folded card, and only when studio_config.folded says
+               so. A flat card has no inside to ask about. -->
+          <div class="ds-inside" id="ds-inside" style="display:none">
+            <div class="ds-inside-h">The inside of your card</div>
+            <div class="ds-inside-s">A folded card, so there is a page inside.</div>
+            <div class="ds-ask">
+              <button type="button" id="ds-inside-blank" class="on">Leave it blank<small>I’ll write my own message</small><span class="ds-pop">Most popular</span></button>
+              <button type="button" id="ds-inside-print">Print my message inside<small>We’ll set it in type</small></button>
+            </div>
+            <div id="ds-inside-flds" style="display:none">
+              <div class="ds-inside-note">Set in the same type and colour as your front. The left-hand page stays blank.</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -776,6 +813,11 @@ was fetched and injected via innerHTML — that was the bug behind the
     <div class="ds-preview-col">
       <div class="ds-preview">
         <div class="ds-preview-label">Your invitation</div>
+        <div class="ds-open" id="ds-open" style="display:none">
+          <div class="leaf l" id="ds-open-inside"></div>
+          <div class="leaf" id="ds-open-front" style="background:#F1EAE0;border-color:#E3D8CC;
+               font-size:var(--text-xs);color:#A8998C;letter-spacing:.1em;text-transform:uppercase;">Front</div>
+        </div>
         <div class="ds-canvas" id="ds-canvas">
           <div class="ds-art" id="art-a"></div>
           <div class="ds-art" id="art-b"></div>
@@ -1235,12 +1277,13 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   function loadStudioSizes(){
     Promise.all([
       loadSizeDefinitions(),
-      fetch(CFG_SB_URL + '/rest/v1/product_types?slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&select=available_sizes', {
+      fetch(CFG_SB_URL + '/rest/v1/product_types?slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&select=available_sizes,folded_family', {
         headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY }
       }).then(function(r){ return r.ok ? r.json() : null; })
     ])
     .then(function(res){
       var rows = res[1];
+      PRODUCT_HAS_FOLDED_ROUTE = !!(rows && rows[0] && rows[0].folded_family);
       var avail = (rows && rows[0] && Array.isArray(rows[0].available_sizes) && rows[0].available_sizes.length)
         ? rows[0].available_sizes : null;
       if(!avail) return;   // keep hardcoded fallback sizes
@@ -1341,6 +1384,8 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       if(!rows || !rows[0]) return;
       var cfg = rows[0];
       if(cfg.base_prompt) CONFIG_BASE_PROMPT = cfg.base_prompt;
+      CONFIG_FOLDED = cfg.folded === true;
+      applyFoldedness();
       // update the page title + subtitle
       var titleEl=document.getElementById('ds-title-el')||document.querySelector('.ds-title'); if(cfg.intro_title && titleEl) titleEl.textContent=cfg.intro_title;
       if(cfg.intro_sub){ var su=document.querySelector('.ds-sub'); if(su) su.textContent = cfg.intro_sub; }
@@ -1374,6 +1419,44 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // deliberate: if the config cannot be fetched the customer is not blocked by
   // a rule we failed to read.
   var REQUIRED_FIELDS = [];
+  // Is this product drawn as a folded card? Decided per product in admin, not
+  // derived: "folded" lives in the printing family for products sold only that
+  // way and in the fold tag for products sold both ways, and for a Christmas
+  // card — sold flat AND folded — no derivation can answer it.
+  var CONFIG_FOLDED = false;
+  // Whether this product is sold as a SEPARATE folded line, which is what the
+  // fold tag on a price row means. A greeting card is a folded card, but its
+  // only route is tagged flat — so asking for "folded" would match no rate.
+  var PRODUCT_HAS_FOLDED_ROUTE = false;
+  var INSIDE_PRINTED = false;   // did they ask for the inside to be printed?
+
+  function applyFoldedness(){
+    var wrap = document.getElementById('ds-inside');
+    if (wrap) wrap.style.display = CONFIG_FOLDED ? '' : 'none';
+    if (!CONFIG_FOLDED) INSIDE_PRINTED = false;
+    refreshInsidePreview();
+  }
+
+  function setInsidePrinted(on){
+    INSIDE_PRINTED = !!on;
+    var blank = document.getElementById('ds-inside-blank');
+    var print = document.getElementById('ds-inside-print');
+    var flds  = document.getElementById('ds-inside-flds');
+    if (blank) blank.classList.toggle('on', !INSIDE_PRINTED);
+    if (print) print.classList.toggle('on',  INSIDE_PRINTED);
+    if (flds)  flds.style.display = INSIDE_PRINTED ? '' : 'none';
+    refreshInsidePreview();
+  }
+
+  // What goes on the inside right, in the order the boxes are shown.
+  function insideLines(){
+    if (!CONFIG_FOLDED || !INSIDE_PRINTED) return [];
+    return INSIDE_FIELDS.map(function(f){
+      var el = document.getElementById(f.id);
+      return { text: (el && el.value || '').trim(), style: f.style };
+    }).filter(function(l){ return l.text; });
+  }
+  var INSIDE_FIELDS = [];
 
   function loadStudioFields(){
     fetch(CFG_SB_URL + '/rest/v1/studio_fields?product_slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&active=eq.true&order=display_order&select=*', {
@@ -1396,8 +1479,25 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       moreWrap.className = 'ds-more'; moreWrap.id = 'w-more';
       var hasMore = false;
       var newMap = [];
+      var insideWrap = document.getElementById('ds-inside-flds');
+      INSIDE_FIELDS = [];
 
       fields.forEach(function(f){
+        // Inside boxes are not part of the front's preview stack at all. They
+        // are typeset on the other page, so they get their own inputs and
+        // never join FIELD_MAP.
+        if (f.face === 'inside') {
+          if (!insideWrap) return;
+          var ii = document.createElement('input');
+          ii.className = 'ds-fld'; ii.id = 'w-' + f.key; ii.placeholder = f.label;
+          // Before the explanatory note, which is the last thing in the block,
+          // so the boxes stay in the order the admin screen put them in.
+          var note = insideWrap.querySelector('.ds-inside-note');
+          if (note) insideWrap.insertBefore(ii, note); else insideWrap.appendChild(ii);
+          INSIDE_FIELDS.push({ id: 'w-' + f.key, style: f.preview_style || 'request' });
+          ii.addEventListener('input', refreshInsidePreview);
+          return;
+        }
         // input
         var inp = document.createElement('input');
         inp.className = 'ds-fld';
@@ -1538,6 +1638,13 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     genTimer = null;
   }
 
+  (function wireInsideAsk(){
+    var b = document.getElementById('ds-inside-blank');
+    var p = document.getElementById('ds-inside-print');
+    if (b) b.addEventListener('click', function(){ setInsidePrinted(false); });
+    if (p) p.addEventListener('click', function(){ setInsidePrinted(true); });
+  })();
+
   document.getElementById('ds-generate').addEventListener('click', function(){
     var self=this;
     // Every generation costs us a real fal.ai call, and a card with no wording
@@ -1663,6 +1770,89 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   document.getElementById('ds-smaller').addEventListener('click', function(){ rescale(-0.1); });
 
   // --- flatten the design (Flux image + positioned text) to a print-res file ---
+  // The card shown open: the inside on the left, the front on the right. Drawn
+  // from the boxes as they are typed, so the customer can see the blank page
+  // they are choosing as well as the printed one.
+  function refreshInsidePreview(){
+    var open = document.getElementById('ds-open');
+    var ins  = document.getElementById('ds-open-inside');
+    if (!open || !ins) return;
+    if (!CONFIG_FOLDED) { open.style.display = 'none'; return; }
+    open.style.display = 'flex';
+
+    if (!INSIDE_PRINTED) {
+      ins.innerHTML = '<div class="blankhint">blank, for your<br>own message</div>';
+      return;
+    }
+    var lines = insideLines();
+    if (!lines.length) {
+      ins.innerHTML = '<div class="blankhint">your message<br>will appear here</div>';
+      return;
+    }
+    var html = '';
+    lines.forEach(function(l, i){
+      if (i === lines.length - 1 && lines.length > 1) {
+        html += '<div class="sprig"></div><div class="frm">' + escapeForPreview(l.text) + '</div>';
+      } else {
+        html += '<div class="msg">' + escapeForPreview(l.text).replace(/\n/g, '<br>') + '</div>';
+      }
+    });
+    ins.innerHTML = html;
+  }
+
+  function escapeForPreview(t){
+    return String(t == null ? '' : t)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Everything on the inside is TYPE on the card's own paper — never a second
+  // generation. You cannot handwrite over an illustration, a second call
+  // doubles both the wait and what a design costs us, and the inside of a card
+  // is typography rather than artwork.
+  function flattenInsideToPrintFile(){
+    var lines = insideLines();
+    if (!lines.length) return null;
+
+    var spec = SIZES[size] || { dim: '148 × 210mm' };
+    var mmMatch = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
+    var trimMmW = mmMatch ? parseInt(mmMatch[1],10) : 148;
+    var trimMmH = mmMatch ? parseInt(mmMatch[2],10) : 210;
+    var DPI = 300, mmPx = function(mm){ return Math.round(mm * DPI / 25.4); };
+    var TW = mmPx(trimMmW), TH = mmPx(trimMmH), bleed = mmPx(3);
+    var PW = TW + bleed*2, PH = TH + bleed*2;
+
+    var cv = document.createElement('canvas');
+    cv.width = PW; cv.height = PH;
+    var ctx = cv.getContext('2d');
+    ctx.fillStyle = '#FFFFFF';           // the paper, not a design
+    ctx.fillRect(0, 0, PW, PH);
+
+    var base = Math.round(TH * 0.042);   // a readable message size at any card size
+    var measured = lines.map(function(l, i){
+      var last = (i === lines.length - 1 && lines.length > 1);
+      return { text: l.text, px: last ? Math.round(base * 0.88) : base,
+               italic: last, colour: last ? '#6B5A4B' : '#4A3B30', rule: last };
+    });
+    var total = 0;
+    measured.forEach(function(m){ total += m.px * 1.5 + (m.rule ? m.px : 0); });
+
+    var y = (PH - total) / 2;
+    ctx.textAlign = 'center';
+    measured.forEach(function(m){
+      if (m.rule) {
+        y += m.px * 0.5;
+        ctx.strokeStyle = '#D4B896'; ctx.lineWidth = Math.max(1, Math.round(TW/600));
+        ctx.beginPath(); ctx.moveTo(PW/2 - TW*0.06, y); ctx.lineTo(PW/2 + TW*0.06, y); ctx.stroke();
+        y += m.px * 0.5;
+      }
+      ctx.font = (m.italic ? 'italic ' : '') + m.px + "px 'Cormorant Garamond', Georgia, serif";
+      ctx.fillStyle = m.colour;
+      ctx.fillText(m.text, PW/2, y + m.px);
+      y += m.px * 1.5;
+    });
+    return cv.toDataURL('image/jpeg', 0.95);
+  }
+
   function flattenToPrintFile(callback){
     var bg = document.getElementById('ds-nano-bg');
     if(!bg || !bg.src){ callback(null); return; }
@@ -1801,14 +1991,20 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
     return loadPdfLib().then(function(PDFLibRef){
       var PDFDocument = PDFLibRef.PDFDocument, rgb = PDFLibRef.rgb;
-      return dataUrlToBlob(printImageDataUrl).arrayBuffer().then(function(buf){
+      // One page per printed face, in the order the press expects: front first,
+      // then the inside. A single-page file is still a single-page file.
+      var faces = Array.isArray(printImageDataUrl) ? printImageDataUrl.filter(Boolean)
+                                                   : [printImageDataUrl];
+      return Promise.all(faces.map(function(f){ return dataUrlToBlob(f).arrayBuffer(); }))
+        .then(function(bufs){
         return PDFDocument.create().then(function(doc){
           var pageW = (trimMmW + 2*b + 2*m) * MM, pageH = (trimMmH + 2*b + 2*m) * MM;
           var artW  = (trimMmW + 2*b) * MM,       artH  = (trimMmH + 2*b) * MM;
           var trimX = (m + b) * MM,               trimY = (m + b) * MM;
           var trimW = trimMmW * MM,               trimH = trimMmH * MM;
-          var page = doc.addPage([pageW, pageH]);
-          return doc.embedJpg(buf).then(function(img){
+          return Promise.all(bufs.map(function(bb){ return doc.embedJpg(bb); })).then(function(imgs){
+          imgs.forEach(function(img){
+            var page = doc.addPage([pageW, pageH]);
             page.drawImage(img, { x: m*MM, y: m*MM, width: artW, height: artH });
             var gap = b*MM, len = 4*MM;
             [[trimX,trimY],[trimX+trimW,trimY],[trimX,trimY+trimH],[trimX+trimW,trimY+trimH]]
@@ -1823,11 +2019,14 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
               });
             page.setTrimBox(trimX, trimY, trimW, trimH);
             page.setBleedBox(m*MM, m*MM, artW, artH);
-            return doc.save().then(function(bytes){
-              return { blob: new Blob([bytes], {type:'application/pdf'}),
-                       trimMm: { w: trimMmW, h: trimMmH },
-                       pageMm: { w: trimMmW+2*b+2*m, h: trimMmH+2*b+2*m } };
-            });
+          });
+          // Every face is on the page now; save once.
+          return doc.save().then(function(bytes){
+            return { blob: new Blob([bytes], {type:'application/pdf'}),
+                     pages: imgs.length,
+                     trimMm: { w: trimMmW, h: trimMmH },
+                     pageMm: { w: trimMmW+2*b+2*m, h: trimMmH+2*b+2*m } };
+          });
           });
         });
       });
@@ -1864,6 +2063,10 @@ function artworkFileName(prefix, ext){
     flattenToPrintFile(function(printImage){
       if(!printImage){ btn.textContent = '↻ Try again'; btn.disabled=false; return; }
 
+      // The inside, if they asked for one. Type on the card's own paper, built
+      // here rather than generated — see flattenInsideToPrintFile.
+      var insideImage = flattenInsideToPrintFile();
+
       // The line that names the order. Only wedding-shaped products have a
       // box called "names": a birthday has a celebrant, a christening has a
       // child, a place card has a guest. Fall back to whichever box this
@@ -1886,7 +2089,7 @@ function artworkFileName(prefix, ext){
         var artworkUrl = r.ok ? (SB_URL + '/storage/v1/object/artwork/' + fileName) : null;
         // 2. build the press-ready PDF: exact ordered size, 3mm bleed already in
         //    the artwork, vector crop marks, TrimBox/BleedBox set.
-        return buildAiPrintPdf(printImage, size).then(function(built){
+        return buildAiPrintPdf(insideImage ? [printImage, insideImage] : printImage, size).then(function(built){
           if (!built) return { artworkUrl: artworkUrl, printUrl: null };
           var pdfName = artworkFileName('print-ai', 'pdf');
           return fetch(SB_URL + '/storage/v1/object/artwork/' + pdfName, {
@@ -1911,6 +2114,12 @@ function artworkFileName(prefix, ext){
             templateId: 'ai-' + Date.now(),
             size: size || 'A5',
             productSlug: PRODUCT_SLUG,
+            // How this card is made, so the order step and the press file
+            // agree with what was actually designed. A printed inside is a
+            // second printed face, which is what "double" means here.
+            fold:  (CONFIG_FOLDED && PRODUCT_HAS_FOLDED_ROUTE) ? 'folded' : 'flat',
+            sides: insideImage ? 'double' : 'single',
+            insidePrinted: !!insideImage,
             artworkUrl: res.artworkUrl,        // flattened artwork (trim + bleed)
             printArtworkUrl: res.printUrl,     // press-ready PDF at the exact size
             thumbnail: thumb,                  // small image for display only

@@ -1833,7 +1833,7 @@ function renderFormatToggle() {
 
   if (note) {
     note.style.display = '';
-    note.textContent = selectedFold === 'folded'
+    note.textContent = isFoldedPiece()
       ? 'Your artwork is the front of the card. We print it and fold it for you — the inside is left blank for your own message. The size shown is the finished card.'
       : 'A single flat card. The size shown is the card itself.';
   }
@@ -1844,7 +1844,7 @@ function renderFormatToggle() {
 function updateProofFoldNote(){
   const title = document.getElementById('proofTitle');
   const note  = document.getElementById('proofFoldNote');
-  const folded = selectedFold === 'folded';
+  const folded = isFoldedPiece();
   if (title) title.textContent = folded ? 'The front of your card' : 'Your artwork';
   if (!note) return;
   note.style.display = folded ? '' : 'none';
@@ -1888,6 +1888,10 @@ function selectSides(x) {
   if (x === selectedSides) return;
   selectedSides = x;
   sideFiles = {};
+  // A product sold only as a folded card has no fold control, so this note —
+  // which used to be refreshed only when the fold changed — was never shown to
+  // the very customers who most need telling their card folds.
+  updateProofFoldNote();
   // Everything remembered per face belonged to the choice being abandoned: its
   // positions, its verdicts, which face was on screen and which had been
   // flagged. Left behind, they described faces that no longer exist.
@@ -2103,8 +2107,21 @@ const SIDE_SETS = {
 };
 let sideFiles = {};
 
+// Is the finished piece folded? Not the same question as selectedFold.
+//
+// For a product sold flat OR folded, the fold tag on its rates answers it. But
+// a greeting card, a thank you card and an order of service are sold ONLY
+// folded, so their single route is tagged "flat" — that tag means "the only
+// format", not "a flat sheet". Asking selectedFold alone therefore called the
+// inside of a greeting card its "Back", and a greeting card has no back you
+// would print on. The printing family is what actually knows.
+function isFoldedPiece(){
+  if ((selectedFold || 'flat') === 'folded') return true;
+  return /folded/i.test(printingFamily() || '');
+}
+
 function sidesNeeded(){
-  return SIDE_SETS[(selectedFold || 'flat') + ':' + (selectedSides || 'single')]
+  return SIDE_SETS[(isFoldedPiece() ? 'folded' : 'flat') + ':' + (selectedSides || 'single')]
       || SIDE_SETS['flat:single'];
 }
 
@@ -5529,8 +5546,13 @@ function googleCustomerReviewsOptIn(order){
   document.getElementById('step1')?.classList.add('hidden');
   document.getElementById('step2')?.classList.add('hidden');
 
-  // 4. Pre-set the size from the design state
-  selectedSize = designState.size || 'A5';
+  // 4. Pre-set the size, the format and the number of printed faces from what
+  //    was actually designed. Steps 1 and 2 are hidden here, so if these are
+  //    not carried across the customer is priced for something they did not
+  //    make — a card with a printed inside sold as a single-sided one.
+  selectedSize  = designState.size || 'A5';
+  if (designState.fold)  selectedFold  = designState.fold;
+  if (designState.sides) selectedSides = designState.sides;
 
   // The studio used to hand off to wedding-invitations whatever was being
   // designed, so a welcome sign arrived here at A1 — a size wedding
