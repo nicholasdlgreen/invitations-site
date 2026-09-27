@@ -1,44 +1,69 @@
-# Where we are — 26 September 2026
+# Where we are — 27 September 2026
 
-*Written at the end of the day. Every figure below was checked against the live
-site, the live database or a generated file, not against intention.*
+*Every figure below was checked against the live site, the live database or a
+generated file, not against intention. Where something was measured and came
+back different from what was expected, the measurement won and the expectation
+is written down beside it.*
 
-**43 commits, all pushed.** Three threads: making our pricing mirror
-PrintedEasy's, checking the product mix against competitors, and rebuilding the
-artwork journey — plus two incidents worth reading (§6 and §7).
+**75 commits, all pushed.** 27 September ran long and covered five threads:
+orientation across the whole site, the flat-or-folded choice, a publish that
+stopped working entirely, a sweep of marketing copy that was promising things we
+do not sell, and a price comparison against five competitors. Two incidents are
+worth reading on their own — §11, where Publish broke, and §12, where the studio
+was quietly charging double.
 
 ---
 
 ## 0. Do this next
 
-**Envelopes are live. Margins are the only thing left in pricing.**
+**Margins are still the only thing between us and trading — and there is now an
+evidence base for setting them (§14).**
 
-Published 26 September 17:57 and verified the following morning: **4,704
-envelope prices**, none null, across the 16 products that offer them. Wedding
-invitations quote £7.20 for a hundred white A5 and £18.40 for red, which is the
-rate to the penny at zero margin. Nothing leaked where it should not: menu
-cards, place cards, table numbers and order of service have none, and there are
-no Square-210 envelopes. **Sheet prices held at 56,636** — the check that was
-missed last time. The deploy landed first, so the checkout floor moved with the
-price.
+Published 27 September 19:04 and verified: **78,431 sheet prices** (up from
+69,887), **14,700 finishing prices**, 22 products, 10 live papers. The publish
+itself ran in **1.9 seconds**, a quarter of its budget, with zero dead rows —
+the autovacuum fix from §11 holding.
 
-1. **Set the margins.** The site sells at cost across all 23 products. This is
-   the last real blocker in pricing and it is a decision, not a build.
+1. **Set the margins.** Confirmed 27 September: our price is
+   `PrintedEasy list × 0.80`, which is our cost, sold on at **zero margin** —
+   we pass the whole trade discount to the customer, deliberately. Verified:
+   22 products at zero margin, and of 64,151 published prices **63,852 are
+   exactly cost**. §14 shows what everyone else charges. Matching PrintedEasy
+   is a 25% markup; reaching printed.com on Fedrigoni stock is 53%. Both are
+   still below the market.
+
+2. **Delivery is free and nobody pays for it.** Standard delivery is
+   `price 0.00, surcharge 0%`, and PrintedEasy's quoted price **excludes**
+   delivery — confirmed by dumping every field their endpoint returns. So at
+   zero margin each standard order sells print at cost and absorbs their
+   delivery charge on top. What that charge actually is has not been
+   established. **This has to be answered before margins are set**, because it
+   is a fixed subtraction from whatever margin is chosen.
+
+3. **299 published prices sit below cost.** Never above — 80p to £2.40 under, at
+   quantities 20, 25, 30, 50, 60, 125, 250 and 450. That is the curve-flattening
+   working as designed: PrintedEasy's staircase goes backwards in places and
+   Publish walks ours down so we never quote more for fewer. At zero margin
+   those specific orders lose money. Harmless once a margin exists.
 
 ---
 
 ## 1. The state of things
 
+Measured against the live database, 27 September 19:04.
+
 | | |
 |---|---|
-| Cost rows in `sheet_rates` | 7,389 (378 switched off) |
-| Finishing rows in `finish_rates` | **2,667** (378 of them envelopes) |
-| Published sheet prices | **56,636** |
-| Published finishing prices | **15,078** |
-| Published envelope prices | **4,704**, live and verified |
-| Product page payload | 536KB before envelopes; re-measure |
-| Envelope colours offered | **2** (was 6) |
-| **Margins** | **0 on all 23 products — the site sells at cost** |
+| Cost rows in `sheet_rates` | **8,796** (8,418 active) |
+| Finishing rows in `finish_rates` | 2,667 (378 of them envelopes) |
+| Published sheet prices | **78,431** |
+| Published finishing prices | **14,700** |
+| Live products | **22** |
+| Live papers | **10** (Gloss switched off — nothing sold it) |
+| Published payload | **11 MB** — was 10MB this morning, and growing |
+| Publish duration | **1.9s** of an 8s hard limit |
+| Orders in the database | **0** (the 54 test orders were cleared) |
+| **Margins** | **0 on all 22 products — the site sells at cost** |
 
 ---
 
@@ -621,24 +646,95 @@ bug, and the commit says so.
 
 ---
 
-## 14. The full to-do list
+## 14. What competitors charge — 27 September
+
+Read from each site's own live calculator. Full workbook: `docs/PRICE-COMPARISON.md`.
+
+The cleanest row: printed.com's default wedding invitation uses **300gsm
+Tintoretto Gesso, the same Fedrigoni paper we stock.** A5, one side, with
+envelopes:
+
+| Quantity | Us (cost) | printed.com inc VAT | Their premium |
+|---|---|---|---|
+| 50 | £36.00 | £38.95 | +8% |
+| 100 | £48.00 | £62.39 | **+30%** |
+| 150 | £64.00 | £90.29 | **+41%** |
+
+The field at 100 × A5: **us £23.20** on Silk · PrintedEasy list £29.00 ·
+instantprint £29.29 (envelopes forced in) · **us £40.80** on Gesso ·
+printed.com £62.39 on Gesso · Vistaprint ~£70 · Papier ~£210. A **ninefold
+spread** on a physically similar card.
+
+**Three things it says.** Low quantities are where margin has to come from —
+our A5 Silk moves only 80p between 25 and 50 cards, because trade print is
+mostly a setup charge, so a percentage margin earns almost nothing on the small
+orders a wedding shop actually sells. Luxury stock carries margin more honestly
+than plain — printed.com are 53% above us on Gesso but 26% on silk. And
+envelopes are table stakes: free at printed.com, **forced in** at instantprint,
+included at Papier, an extra £7.20 per 100 for us.
+
+**A correction worth keeping.** The first version of this said our own supplier
+undercut us. It was backwards, and Nicholas caught it. Both numbers were in
+front of me. We are 20% *below* PrintedEasy because the trade discount is passed
+on, not kept.
+
+### What search says, same day
+
+Google Trends, UK, twelve months. **Foil is the only finish with real demand** —
+the sole finish in the top 25 searches, and rising, especially "gold foil".
+**Vellum scores 96 against foil's 100, and we do not sell it** — worth noting
+given vellum was removed from the copy the same afternoon for being a claim we
+could not honour. Letterpress, embossed and laser cut do not register.
+"Folded wedding invitations" is rising, which validates §12. **No quantity term
+appears anywhere** in either list, which suggests pack size is decided on the
+page rather than in the search box.
+
+Semrush still has **no API units**. Google Ads Keyword Planner is now connected
+through Supermetrics but the Google account used **has no accessible Ads
+account** — the re-link is in the conversation, and account 972-711-7378 is the
+one it needs to see.
+
+---
+
+## 15. The full to-do list
 
 Everything outstanding, in one place and in the order I would do it. The
 sections above give the reasoning; this is the list.
 
-**Cleared 26–27 September:** the envelope rates loaded, deployed, published and
-verified — 4,704 prices, sheet prices held at 56,636. **Orientation** built
-across the uploader, the studio, the press file and the job ticket (§10).
-**Publish was broken and is fixed** (§11) — the payload is still 10MB and that
-remains the underlying problem.
+### Cleared 27 September
+
+A long day. In the order it happened:
+
+- **Orientation** — portrait or landscape across the uploader, the studio, the
+  press file, the basket and the job ticket. Measured as free at the printer, so
+  no rates and no scrape (§10).
+- **Publish stopped working entirely** and was fixed — TOAST bloat, not the
+  trigger I first blamed (§11).
+- **The studio was selling every invitation folded**, at roughly double, with no
+  control to choose flat. Found by Nicholas asking where the option was (§12).
+- **Card icons** — a folded card now looks folded, from one shared drawing.
+- **Eight pages promised finishes and papers we do not sell** — wax seals,
+  deckle edges, vellum, cotton rag — including a direct answer in the help
+  centre and a minimum-order claim in Amy's knowledge base. All removed, and
+  `product_types.features` rebuilt from the catalogue for all 22 products.
+- **The paper and finishing sections vanished at random** on all 23 landing
+  pages — a race with two deferred scripts. Fixed, with a regression test.
+- **Gloss switched off**; **Cartonboard and Ice White added** to the thirteen
+  invitation products, which needed 315 new scraped rates first (§13).
+- **Price comparison** against five competitors, and a search-demand read (§14).
+- Supabase upgraded to **Pro** — daily backups, which closes a launch blocker.
+
+**Still true after all of it:** margins are 0, the payload is 11MB and growing,
+and delivery is free and unfunded.
 
 ### Next up
 
 | # | What | Why it is first |
 |---|---|---|
-| 1 | **Set the margins** | The site sells at cost across all 23 products. The last real blocker in pricing, and a decision rather than a build. |
-| 2 | **Publish** | Seven product names and the `/invitations` switch-off are database changes; the grid reads `product_types` live, but a publish keeps the payload honest. |
-| 3 | **Decide on place cards and table numbers** | We tell customers each card in a set will differ. Nothing makes that true. §10, item 31. |
+| 1 | **Find out what PrintedEasy charge us for delivery** | Standard delivery is free to the customer and their quoted price excludes it, so every order absorbs it. It is a fixed subtraction from any margin, so it has to be known *before* margins are set, not after. |
+| 2 | **Set the margins** | 22 products at cost. The last real blocker, and a decision rather than a build. §14 is the evidence. |
+| 3 | **Decide on place cards and table numbers** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live. Item 31. |
+| 4 | **The 11MB payload** | Publish is healthy today only because autovacuum was tuned. The payload grew 10→11MB in one afternoon. This is the thing that will break next. |
 
 ### Blocking launch
 
