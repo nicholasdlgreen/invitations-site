@@ -42,6 +42,16 @@
 .ds-frame-name{position:absolute;bottom:-2px;left:0;right:0;text-align:center;font-size:var(--text-xs);color:var(--soft);}
 
 .ds-sizes{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+.ds-fold{margin-top:16px;}
+.ds-fold-q{font-size:var(--text-sm);color:var(--text);margin-bottom:8px;}
+.ds-fold-pills{display:inline-flex;border:1.5px solid var(--border);border-radius:999px;background:var(--white);padding:4px;}
+.ds-fold-pills button{font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:8px 18px;border-radius:999px;
+transition:all .2s;display:inline-flex;align-items:center;gap:8px;background:none;color:var(--soft);}
+.ds-fold-pills button.on{background:var(--gold);color:#fff;}
+.ds-fold-pills i{display:block;width:13px;height:16px;border:1.5px solid var(--pale);border-radius:2px;}
+.ds-fold-pills i.fold{border-left-width:4px;}
+.ds-fold-pills button.on i{border-color:rgba(255,255,255,.85);}
+.ds-fold-note,.ds-fold-told{font-size:var(--text-xs);color:var(--pale);margin:8px 0 0;line-height:1.7;}
 .ds-turn{display:none;margin-top:14px;}
 .ds-turn-pills{display:inline-flex;border:1.5px solid var(--border);border-radius:999px;background:var(--white);padding:4px;}
 .ds-turn-pills button{font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:8px 18px;border-radius:999px;
@@ -705,6 +715,12 @@ was fetched and injected via innerHTML — that was the bug behind the
               <div class="ds-size-note">Distinctive · modern</div>
             </div>
           </div>
+          <div class="ds-fold" id="ds-fold" style="display:none">
+            <div class="ds-fold-q">Flat card or folded card?</div>
+            <div class="ds-fold-pills" id="ds-fold-pills"></div>
+            <p class="ds-fold-note" id="ds-fold-note"></p>
+          </div>
+          <p class="ds-fold-told" id="ds-fold-told" style="display:none"></p>
           <div class="ds-turn" id="ds-turn">
             <div class="ds-turn-pills" id="ds-turn-pills"></div>
             <p class="ds-turn-note" id="ds-turn-note"></p>
@@ -1417,6 +1433,10 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     .then(function(res){
       var rows = res[1];
       PRODUCT_HAS_FOLDED_ROUTE = !!(rows && rows[0] && rows[0].folded_family);
+      // Both halves of the answer are needed before the choice can be drawn,
+      // and these two loads race — so each one redraws.
+      renderFoldChoice();
+      applyFoldedness();
       var avail = (rows && rows[0] && Array.isArray(rows[0].available_sizes) && rows[0].available_sizes.length)
         ? rows[0].available_sizes : null;
       OFFERED_SIZES = avail || [];
@@ -1521,6 +1541,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       var cfg = rows[0];
       if(cfg.base_prompt) CONFIG_BASE_PROMPT = cfg.base_prompt;
       CONFIG_FOLDED = cfg.folded === true;
+      renderFoldChoice();
       applyFoldedness();
       // update the page title + subtitle
       var titleEl=document.getElementById('ds-title-el')||document.querySelector('.ds-title'); if(cfg.intro_title && titleEl) titleEl.textContent=cfg.intro_title;
@@ -1569,14 +1590,80 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   var PRODUCT_HAS_FOLDED_ROUTE = false;
   var INSIDE_PRINTED = false;   // did they ask for the inside to be printed?
 
+  // Which the customer picked, where there is anything to pick. Flat by
+  // default: it is the cheaper card and the commoner one, and a studio that
+  // quietly defaults to folded is charging roughly double without asking.
+  var FOLD_CHOICE = 'flat';
+
+  // Sold BOTH ways, so the customer gets to choose.
+  function foldIsAChoice(){ return CONFIG_FOLDED && PRODUCT_HAS_FOLDED_ROUTE; }
+  // Only sold folded — a greeting card, a thank you card. Nothing to choose,
+  // but the customer still has to be TOLD, or they will lay out artwork for a
+  // flat card and find out at the proof.
+  function foldedOnly(){ return CONFIG_FOLDED && !PRODUCT_HAS_FOLDED_ROUTE; }
+  // Is the thing being designed, right now, a folded card?
+  function isFoldedNow(){
+    return foldedOnly() || (foldIsAChoice() && FOLD_CHOICE === 'folded');
+  }
+
+  function renderFoldChoice(){
+    var box   = document.getElementById('ds-fold');
+    var pills = document.getElementById('ds-fold-pills');
+    var note  = document.getElementById('ds-fold-note');
+    var told  = document.getElementById('ds-fold-told');
+    if (!box || !pills || !told) return;
+
+    // Sold only as a folded card: say so plainly rather than offering a
+    // choice of one, and rather than saying nothing at all.
+    if (foldedOnly()) {
+      box.style.display = 'none';
+      told.style.display = 'block';
+      told.textContent = 'This is a folded card — we print it and crease it, '
+        + 'so there is a page inside for your message.';
+      return;
+    }
+    told.style.display = 'none';
+    if (!foldIsAChoice()) { box.style.display = 'none'; FOLD_CHOICE = 'flat'; return; }
+
+    box.style.display = 'block';
+    var LABEL = { flat: 'Flat card', folded: 'Folded card' };
+    pills.innerHTML = ['flat','folded'].map(function(f){
+      var on = f === FOLD_CHOICE;
+      return '<button type="button" data-fold="' + f + '"' + (on ? ' class="on"' : '') + '>'
+           + '<i' + (f === 'folded' ? ' class="fold"' : '') + '></i>' + LABEL[f] + '</button>';
+    }).join('');
+    pills.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click', function(){ setFold(b.dataset.fold); });
+    });
+    if (note) {
+      note.textContent = FOLD_CHOICE === 'folded'
+        ? 'A single sheet creased down the middle, so there is a page inside. '
+          + 'It uses twice the paper, so it costs more than a flat card.'
+        : 'A single flat card, printed on the front. The commonest choice, and '
+          + 'the cheaper one.';
+    }
+  }
+
+  function setFold(f){
+    if (f === FOLD_CHOICE) return;
+    FOLD_CHOICE = f;
+    // Choosing flat takes the inside away with it. Leaving the answer behind
+    // would sell a flat card carrying a message nobody can read.
+    if (!isFoldedNow()) { INSIDE_PRINTED = false; setInsidePrinted(false); }
+    renderFoldChoice();
+    applyFoldedness();
+    buildBrief();
+  }
+
   function applyFoldedness(){
+    var folded = isFoldedNow();
     var wrap = document.getElementById('ds-inside');
-    if (wrap) wrap.style.display = CONFIG_FOLDED ? '' : 'none';
+    if (wrap) wrap.style.display = folded ? '' : 'none';
     // "The front" only earns its place when there is an inside to tell it
     // apart from. On a flat card it is the only face, so naming it is noise.
     var fh = document.getElementById('ds-front-h');
-    if (fh) fh.style.display = CONFIG_FOLDED ? '' : 'none';
-    if (!CONFIG_FOLDED) INSIDE_PRINTED = false;
+    if (fh) fh.style.display = folded ? '' : 'none';
+    if (!folded) INSIDE_PRINTED = false;
     refreshInsidePreview();
   }
 
@@ -1607,7 +1694,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
   // What goes on the inside right, in the order the boxes are shown.
   function insideLines(){
-    if (!CONFIG_FOLDED || !INSIDE_PRINTED) return [];
+    if (!isFoldedNow() || !INSIDE_PRINTED) return [];
     return INSIDE_FIELDS.map(function(f){
       var el = document.getElementById(f.id);
       return { text: (el && el.value || '').trim(), style: f.style };
@@ -1947,7 +2034,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     var view = document.getElementById('ds-inside-view');
     if (!tabs || !view) return;
 
-    var lines = (CONFIG_FOLDED && INSIDE_PRINTED) ? insideLines() : [];
+    var lines = (isFoldedNow() && INSIDE_PRINTED) ? insideLines() : [];
     // Nothing appears until there is genuinely something to look at. The pair
     // of panels that used to sit here showed up before a word was typed,
     // described a choice nobody had been asked to make, and could not be
@@ -2002,7 +2089,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // front, inside left, inside right, back — with the message on the inside
   // right where a card puts it, and the other two blank.
   function pressFacesFor(frontImage, insideImage){
-    if (!CONFIG_FOLDED) return insideImage ? [frontImage, insideImage] : frontImage;
+    if (!isFoldedNow()) return insideImage ? [frontImage, insideImage] : frontImage;
     if (!insideImage)   return frontImage;          // folded, printed one side
     var blank = blankFaceToPrintFile();
     return [frontImage, blank, insideImage, blank];
@@ -2316,7 +2403,13 @@ function artworkFileName(prefix, ext){
             // How this card is made, so the order step and the press file
             // agree with what was actually designed. A printed inside is a
             // second printed face, which is what "double" means here.
-            fold:  (CONFIG_FOLDED && PRODUCT_HAS_FOLDED_ROUTE) ? 'folded' : 'flat',
+            // What the customer actually chose. This used to read
+            // (CONFIG_FOLDED && PRODUCT_HAS_FOLDED_ROUTE), which asks "could
+            // this product be folded?" — so every wedding invitation designed
+            // here was sold as a folded card at roughly twice the price, with
+            // no way to ask for a flat one. A product sold ONLY folded keeps
+            // 'flat', because that is how its own rates are tagged.
+            fold:  (PRODUCT_HAS_FOLDED_ROUTE && isFoldedNow()) ? 'folded' : 'flat',
             orientation: orientation,
             sides: insideImage ? 'double' : 'single',
             insidePrinted: !!insideImage,
@@ -2386,6 +2479,7 @@ function artworkFileName(prefix, ext){
       image: bg ? bg.src : '',
       size: size,
       orientation: orientation,
+      fold: FOLD_CHOICE,
       brief: buildBrief(),
       wording: FIELD_MAP.map(function(p){ var el=document.getElementById(p[0]); return el?el.value:''; }),
       sel: sel,
@@ -2602,7 +2696,9 @@ function artworkFileName(prefix, ext){
       var szBtn = document.querySelector('.ds-size[data-size="'+restore.size+'"]');
       if(szBtn){ document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');}); szBtn.classList.add('sel'); size=restore.size;
                  if (restore.orientation) orientation = restore.orientation;
-                 renderTurnToggle(); applySize(); }
+                 if (restore.fold) FOLD_CHOICE = restore.fold;
+                 renderFoldChoice(); applyFoldedness();
+                 renderTurnToggle(); turnSizeCards(); applySize(); }
     }
     setTimeout(function(){
       enterGeneratedMode(restore.image);   // this calls enableDrag (sets 50/50)

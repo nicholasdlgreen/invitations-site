@@ -1817,7 +1817,28 @@ function renderFormatToggle() {
   const note = document.getElementById('format-note');
   if (!box) return;
   const folds = foldsOffered();
-  if (folds.length < 2) { box.style.display = 'none'; if (note) note.style.display = 'none'; return; }
+  if (folds.length < 2) {
+    // Nothing to choose — but a thank you card, a greeting card, an engagement
+    // or graduation card is sold ONLY folded, and until now the page never
+    // said so. The word "fold" did not appear anywhere on it. Someone would
+    // lay out artwork for a flat card and discover the crease at the proof.
+    // No choice is not the same as nothing to say.
+    box.style.display = 'none';
+    if (note) {
+      const folded = /folded/i.test(printingFamily() || '');
+      note.style.display = folded ? '' : 'none';
+      if (folded) {
+        // Name the thing rather than calling everything a card — an order of
+        // service is a folded booklet, and "this is a folded card" is simply
+        // untrue of it.
+        const what = String(PRODUCT.name || 'card').toLowerCase().replace(/s$/, '');
+        note.textContent = 'Your ' + what + ' is folded. We print it flat and '
+          + 'crease it for you, so there is a page inside. Your artwork is the '
+          + 'front, and the size shown is the finished, folded size.';
+      }
+    }
+    return;
+  }
 
   const LABEL = { flat: 'Flat card', folded: 'Folded card' };
   box.style.display = '';

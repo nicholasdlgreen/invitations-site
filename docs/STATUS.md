@@ -510,7 +510,62 @@ make it small. The options, none chosen yet:
 
 ---
 
-## 12. The full to-do list
+## 12. The studio was selling every invitation folded — 27 September
+
+Found by Nicholas asking a plain question: *"if I am in a thank you card or an
+invitation, how am I choosing folded — where is that option?"* The answer was
+that there wasn't one.
+
+**In the design studio there was no flat/folded control at all**, for any
+product. The hand-off to the order step read:
+
+    fold: (CONFIG_FOLDED && PRODUCT_HAS_FOLDED_ROUTE) ? 'folded' : 'flat'
+
+which asks *"could this product be folded?"* and answers *"then it is folded"*.
+So all fourteen products sold both ways — every invitation, save the date, RSVP,
+menu, place card, table number — were handed to checkout as folded cards, at
+roughly **twice the price**, with no way to ask for a flat one:
+
+| Wedding invitation, 100, A5 Silk | flat | folded |
+|---|---|---|
+| | £24.00 | **£47.20** |
+
+Answering "No, leave it blank" to the inside question did not make it flat
+either. It came in the same day, in `d8556a3` "Give a folded card its inside" —
+fixing the absence of a folded option created the absence of a flat one.
+
+**And on Upload & Print, the five folded-only products said nothing at all.**
+Thank you, greeting, engagement and graduation cards and the order of service
+are sold *only* folded, and the word "fold" appeared nowhere on the page —
+verified on the live site. Correct that there is no choice to make; wrong that
+nobody is told. Someone would lay out artwork for a flat card and meet the
+crease at the proof.
+
+### What it does now
+
+- **The studio asks** "Flat card or folded card?" at the size step, for the
+  fourteen products sold both ways, **defaulting to flat** — the cheaper and
+  commoner card. A studio that quietly defaults to folded is charging double
+  without asking.
+- **Choosing flat takes the inside question away with it**, so a flat card can
+  never be sold carrying a message nobody can read.
+- **Folded-only products say so**, in both places, instead of offering a choice
+  of one. The line names the product rather than calling everything a card,
+  because an order of service is a booklet.
+- **Boards say nothing**, as before.
+
+The decision is now `isFoldedNow()` — *is the thing being designed, right now, a
+folded card* — rather than `CONFIG_FOLDED`, which only ever meant *could it be*.
+A folded-only product still hands off `fold: 'flat'`, because that is how its
+own rates are tagged; that trap is documented where the function is defined.
+
+**Tested.** `tools/test-studio-fold.js` — 17 assertions over all four product
+shapes. End to end in a browser: the same invitation prices at **£23.20 flat and
+£44.80 folded**, and the choice reaches the lookup.
+
+---
+
+## 13. The full to-do list
 
 Everything outstanding, in one place and in the order I would do it. The
 sections above give the reasoning; this is the list.
