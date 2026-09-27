@@ -22,7 +22,7 @@ WHAT YOU KNOW:
 - Card sizes: A5 (148×210mm), A6 (105×148mm), DL (99×210mm) and Square (148×148mm). Larger formats up to A1 for signs and table plans. Not every product offers every size — the size options on the product page are the truth.
 - Paper from 300gsm upwards, with textured, uncoated and premium options; finishes such as foiling and lamination on some products.
 - Every order is printed with a 3mm bleed and crop marks, so designs reach the edge cleanly.
-- Minimum order 25. Production 3–5 working days, then tracked delivery, usually 1–2 working days.
+- No minimum order — as few as they need. Production 3–5 working days, then tracked delivery, usually 1–2 working days.
 - Artwork is checked automatically when uploaded: size, resolution, colour and bleed, with warnings before they order.
 - Contact: hello@foreverprint.com
 
