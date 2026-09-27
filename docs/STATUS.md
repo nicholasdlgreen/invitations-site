@@ -433,7 +433,84 @@ both axes, and which sizes may be offered the choice at all.
 
 ---
 
-## 11. The full to-do list
+## 11. Publish stopped working — 27 September
+
+Three publishes failed at 16:43, 16:44 and 16:45 with HTTP 500 and
+`57014 — canceling statement due to statement timeout`. The one before, at
+15:55, had worked. **Nothing about the data had changed**: the same 8,481 sheet
+rates and 2,667 finishing rates were read before the publish that worked and
+before all three that failed.
+
+### What was actually wrong
+
+The catalogue publishes as **one jsonb value** — 10MB of JSON, 69,887 sheet
+prices and 14,700 finishing prices across 22 products. It does not fit in a
+page, so Postgres stores it out of line in a TOAST table as about **717
+chunks**. Every publish writes 717 new chunks and leaves the previous 717 as
+dead rows. Publish a few times in an afternoon and the TOAST table is mostly
+dead weight — it reached **2,151 dead against 717 live** — and every read and
+write of the payload walks past all of it.
+
+The `authenticated` role has `statement_timeout = 8s`. Measured on the live
+instance:
+
+| the publish write | time | against the 8s limit |
+|---|---|---|
+| bloated, as found | **9,971 ms** | over — could never succeed |
+| after a plain VACUUM | **1,165 ms** | 15% |
+
+So once the write crossed eight seconds, Publish could not succeed again, and
+would not have recovered on its own until autovacuum happened to catch up. It
+was not a bug that appeared; it was a coin toss that had been landing the right
+way. Even the publish that *worked*, at 15:55, took 5.2 seconds — 64% of the
+budget — and nobody had ever checked that number.
+
+### What was done
+
+1. **A plain `VACUUM`** cleared 2,151 dead chunks to 0 and unblocked publishing
+   the same evening. (`VACUUM FULL` would also shrink the file from 7.4MB to
+   ~1.4MB but takes an exclusive lock — left for a quiet moment.)
+2. **`supabase/migrations/20260927_pricing_config_autovacuum.sql`** — autovacuum
+   tuned for this one table. Its defaults are written for tables that are
+   appended to, not for a single row whose entire ten megabytes are replaced
+   each time: it waits for 20% dead and then throttles itself. Now it cleans
+   after essentially every publish and does not throttle. **The `toast.*` half
+   matters most** — without it autovacuum tidies a 40kB heap and ignores the
+   7MB TOAST table where all the bloat actually is.
+3. **`Prefer: return=minimal`** on the publish POST. It had been
+   `return=representation`, which made the database re-serialise all 10MB
+   inside the same statement and send it to a caller that discards it — a tenth
+   of the budget and a 10MB download, for nothing.
+
+Verified after: three publishes back to back ran **1,240ms, 1,156ms, 1,020ms**
+and did not degrade. The same three-in-a-row test before the fix gave 16s, 32s,
+34s.
+
+### Two things to remember
+
+- **A false trail cost time.** The first theory was that the from-price cache
+  trigger added that morning was to blame. Measured, it is **303ms** — 5% of the
+  budget, not the cause. But it was 5% added to an operation already running at
+  64% of its limit, and nobody had measured the headroom before putting it
+  there. *Before adding work to publish, measure what publish has left.*
+- **Supabase Pro does not change this.** The plan was upgraded the same evening;
+  `statement_timeout` is still 8s for `authenticated`. Pro brings daily backups
+  (which clears a launch blocker), not a bigger budget for this statement.
+
+### The part that is not fixed
+
+**The payload is 10MB and grows every time rates are added** — 2.5x what it was
+when this design was chosen. Autovacuum tuning keeps it publishable; it does not
+make it small. The options, none chosen yet:
+
+- Publish sheet prices to their own table, a row per price, instead of one JSON
+  blob. Biggest change, and the only one that actually solves it.
+- Publish only what the site reads at page load and fetch the rest on demand.
+- Drop quantities from the published ladder and interpolate more in the browser.
+
+---
+
+## 12. The full to-do list
 
 Everything outstanding, in one place and in the order I would do it. The
 sections above give the reasoning; this is the list.
@@ -441,6 +518,8 @@ sections above give the reasoning; this is the list.
 **Cleared 26–27 September:** the envelope rates loaded, deployed, published and
 verified — 4,704 prices, sheet prices held at 56,636. **Orientation** built
 across the uploader, the studio, the press file and the job ticket (§10).
+**Publish was broken and is fixed** (§11) — the payload is still 10MB and that
+remains the underlying problem.
 
 ### Next up
 

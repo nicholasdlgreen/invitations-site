@@ -5222,10 +5222,15 @@ async function publishHierarchical() {
     // Insert/update the singleton pricing_config row.
     // PostgREST UPSERT: include id='singleton' and Prefer: resolution=merge-duplicates
     // so an existing row is overwritten rather than triggering a duplicate-key error.
+    //
+    // return=MINIMAL, not representation. The payload is 10MB of JSON. Asking
+    // for it back made the database re-serialise all 10MB inside the same
+    // statement and send it to a caller that throws it away — a tenth of a
+    // publish's eight-second budget, and 10MB of download, for nothing.
     await sbFetch('pricing_config', {
       method: 'POST',
       headers: {
-        'Prefer': 'return=representation,resolution=merge-duplicates'
+        'Prefer': 'return=minimal,resolution=merge-duplicates'
       },
       body: JSON.stringify({ id: 'singleton', payload, published_at: new Date().toISOString() })
     });
