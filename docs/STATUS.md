@@ -259,44 +259,72 @@ not the thing beside it is how this happens.
 Everything outstanding, in one place and in the order I would do it. The
 sections above give the reasoning; this is the list.
 
-### Tomorrow morning
+**Cleared 26–27 September:** the envelope rates loaded, deployed, published and
+verified — 4,704 prices, sheet prices held at 56,636.
+
+### Next up
 
 | # | What | Why it is first |
 |---|---|---|
-| ~~1~~ | ~~Deploy, hard-reload admin, Publish~~ | **Done 26 Sept 17:57.** |
-| ~~2~~ | ~~Verify the publish~~ | **Done 27 Sept.** 4,704 envelope prices, sheet prices still 56,636. |
-| 1 | **Set the margins** | The site sells at cost. The last real blocker in pricing, and Nicholas's decision. |
-| 2 | **Re-measure the product page payload** | It was 536KB before 4,704 prices a product were added to sixteen of them. Worth knowing before launch. |
+| 1 | **Set the margins** | The site sells at cost across all 23 products. The last real blocker in pricing, and a decision rather than a build. |
+| 2 | **Re-measure the product page payload** | It was 536KB before 4,704 envelope prices were added to sixteen products. Worth knowing before launch. |
 
 ### Blocking launch
 
-4. **VAT at checkout.** The grid is clean and driven by
+3. **VAT at checkout.** The grid is clean and driven by
    `site_config.pricing.vatRegistered`, but checkout still shows "VAT (20%)"
    and stores a VAT figure while we are not registered. Move checkout onto the
    same flag so the two cannot disagree.
-5. **Stripe live keys, and a live-mode webhook with its own
+4. **Stripe live keys, and a live-mode webhook with its own
    `STRIPE_WEBHOOK_SECRET`.** Without the webhook, payments succeed and orders
    stay pending.
-6. **Print one real sample** through PrintedEasy. The file maths is verified;
+5. **Print one real sample** through PrintedEasy. The file maths is verified;
    the handover to their press is not.
-7. **Send `ARTWORK-SPEC.md`** and get the six questions answered. The one that
+6. **Send `ARTWORK-SPEC.md`** and get the six questions answered. The one that
    matters: **head to head or head to foot** for a double-sided back. We send
    both faces the same way up — if their press expects otherwise, every
    double-sided job comes back upside down.
-8. **Supabase Pro** (~$25/mo). The free plan has no automatic backups, and
+7. **Supabase Pro** (~$25/mo). The free plan has no automatic backups, and
    orders, customers and consent records live there.
-9. **`ALERT_EMAIL` in Netlify** for the Monday supplier price watch.
-10. **Remove the homepage holding overlay** when the decision is made to open.
+8. **`ALERT_EMAIL` in Netlify** for the Monday supplier price watch.
+9. **Remove the homepage holding overlay** when the decision is made to open.
 
 ### Live mis-sells — small fixes, real money
 
-11. **Gate finishes and envelopes on the route.** An order of service in
+10. **Gate finishes and envelopes on the route.** An order of service in
     Fedrigoni stock is offered Corners that Luxury Folded cannot make, and red
     envelopes on a route that only stocks white.
-12. **"Finished by hand" on twelve pages.** Nothing is finished by hand.
-13. **"Colour mode: CMYK preferred"** on the upload screen, while we send RGB.
-14. **The proof still renders a mismatched file as though it fits.**
-15. **Eight product names stored lowercase** and rendering that way on the grid.
+11. **"Finished by hand" on twelve pages.** Nothing is finished by hand.
+12. **"Colour mode: CMYK preferred"** on the upload screen, while we send RGB.
+13. **The proof still renders a mismatched file as though it fits.**
+14. **Eight product names stored lowercase** and rendering that way on the grid.
+
+### Site testing — scoped 27 September, not started
+
+15. **Build the test suite.** Five stages, agreed in outline and paused. In the
+    order worth doing them:
+    - **Broken images** — inventory from four DB columns, 81 `<img>` tags across
+      56 pages, CSS backgrounds and the runtime-built URLs; then fetch every one
+      and check status, type and size. Not a bug: storage URLs missing
+      `/public/`.
+    - **Price correctness** — compute every price twice, once with the site's
+      own functions and once from the rules in `PRICING.md`, and compare. Also
+      proves the checkout floor never exceeds the price shown, that more cards
+      never cost less, and that the grid, landing page and configurator agree.
+      No browser, tens of thousands of combinations.
+    - **Eight ordering journeys**, chosen so each exercises a different code
+      path rather than a different product name — flat, folded, double-sided,
+      folded-card-only, folded leaflet, large format, business-card size, and
+      envelopes with finishing. Stops at Add to Basket; never touches payment.
+    - **The artwork uploader** — diagnostic test images per rule and per DPI
+      band, then press-file forensics: page count, page size, crop marks, bleed
+      proved to be mirrored rather than cropped, and each face keeping its own
+      position.
+    - **Make it repeatable** — scripts in `tools/`, and a report that separates
+      failed from passed from could-not-be-tested.
+
+    **What it cannot prove:** whether an image is the *right* image, whether the
+    press file suits *their* press, the payment flow, or colour on paper.
 
 ### Pricing accuracy, once trading
 
