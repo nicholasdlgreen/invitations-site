@@ -565,7 +565,63 @@ shapes. End to end in a browser: the same invitation prices at **£23.20 flat an
 
 ---
 
-## 13. The full to-do list
+## 13. Paper coverage — 27 September
+
+Asked what we have no paper stocks for. Nothing is broken: all 22 live products
+offer papers, and every combination the configurator can actually reach has a
+price. But three things came out of looking.
+
+### Gloss — switched off
+
+Active, offered by **no** product, **0** published prices, and **240 live cost
+rows**. It is a `large-format` paper (A1–A4) while the three board products are
+`display-board` (Foamex, A2/A1/A0) — a different family, and no A0 cost — so it
+could not simply be added to signage. `paper_stocks.active = false`; the cost
+rows are kept as evidence.
+
+### The bigger finding underneath it
+
+**`large-format` holds 880 live cost rows** across Gloss, Silk and Uncoated at
+A1–A4, and **no live product uses that family at all**. We hold a costed
+paper-poster range we do not sell. That is a product decision, not a bug, and
+nobody has made it.
+
+### Cartonboard and Ice White on the thirteen invitation products
+
+They are on greeting cards, thank you, engagement, graduation and place cards,
+but not on the thirteen invitation-type products. Checking product × paper ×
+size makes this look like a config change. **It is not** — that check ignores
+fold and printed sides, and the gaps are exactly there:
+
+| Paper | Family | Sides | Sizes missing |
+|---|---|---|---|
+| Cartonboard | flat-card | double | A5, A6, DL, Square, Square-210 |
+| Ice White | flat-card | single | A5, A6, DL, Square, Square-210 |
+| Ice White | flat-card | double | A5, A6, DL, Square, Square-210 |
+
+Ice White has **no flat-card single rates at all** at card sizes — it exists
+only as a folded card plus a double-sided business card. It cannot be sold flat
+today. Scraping those 15 combinations across the 21-point ladder is 315 prices.
+
+### Weights that exist but cannot be bought
+
+Uncoated 120gsm and Tintoretto Gesso 140gsm have no rates. Correctly hidden —
+`availableWeightsFor()` filters by published price — so no customer sees them.
+They were meant for insert and detail cards, which we still do not sell.
+
+### A correction worth keeping
+
+I first called adding those two papers a free win, then called it dangerous
+because `getAvailablePapers()` does not filter by price. Both were wrong.
+`step3Papers()` filters afterwards via `availableWeightsFor()`, and a test that
+added both papers and swept all four formats showed neither ever appears. The
+guard has since been moved into `getAvailablePapers()` itself so it does not
+depend on a caller remembering — but it closed a latent weakness, not a live
+bug, and the commit says so.
+
+---
+
+## 14. The full to-do list
 
 Everything outstanding, in one place and in the order I would do it. The
 sections above give the reasoning; this is the list.
