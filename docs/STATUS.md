@@ -5,7 +5,7 @@ generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
 
-**75 commits, all pushed.** 27 September ran long and covered five threads:
+**33 commits on 27 September, all pushed** (810 in the repo). 27 September ran long and covered five threads:
 orientation across the whole site, the flat-or-folded choice, a publish that
 stopped working entirely, a sweep of marketing copy that was promising things we
 do not sell, and a price comparison against five competitors. Two incidents are
