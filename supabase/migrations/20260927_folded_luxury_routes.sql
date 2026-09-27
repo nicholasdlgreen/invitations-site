@@ -1,0 +1,22 @@
+-- Luxury and Eco on a folded card.
+--
+-- Everything sold folded could only ever be offered on Signature paper: the
+-- Luxury and recycled stocks have NO rates on the folded-card family, and
+-- PrintedEasy's greeting-card product will not sell them at any price — probed
+-- directly, every one of them returns 0 while uncoated and silk quote fine.
+--
+-- They do exist folded, on PrintedEasy's Luxury Folded (our folded-leaflet),
+-- which is how an order of service already offers all three ranges. We had only
+-- ever scraped it at A6 and A5, so DL and Square had nowhere to get a price.
+-- tools/printedeasy_folded_sizes.py fills that in: 1,092 rates, both sides,
+-- the full 21-point ladder.
+--
+-- The five products we sell folded then get a SECOND route onto folded-leaflet,
+-- naming the stocks it serves so it cannot claim the Silk and Uncoated the
+-- folded-card route carries — the same shape order of service uses, and what
+-- keeps Publish's overlap guard satisfied.
+--
+-- Left alone on purpose: wedding invitations, save the dates, menu cards and
+-- the other nine sold flat OR folded. Their folded side still shows Signature
+-- only. Fixing them is the same one-line change, but it alters what twelve more
+-- products offer and that is a decision, not a tidy-up.
