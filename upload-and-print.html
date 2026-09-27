@@ -419,33 +419,6 @@ nav a:hover,nav a.active{color:var(--gold);}
 .btn:hover{background:var(--brown);box-shadow:0 6px 24px rgba(107,79,58,.3);}
 .btn-out{display:inline-flex;align-items:center;gap:8px;padding:14px 37px;background:transparent;color:var(--gold);border:1px solid var(--gold);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;cursor:pointer;transition:all .25s;text-decoration:none;border-radius:60px;}
 .btn-out:hover{background:var(--gold);color:#fff;}
-/* Why the button will not go yet. The state used to be carried by turning the
-   button red, which said "stopped" without saying what to do, and borrowed an
-   alert colour that is not a button colour anywhere else on the site. */
-.proceed-reason{font-size:var(--text-xs);color:var(--soft);margin:10px 0 0;letter-spacing:.02em;}
-.proof-chip .chip-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pale);margin-right:7px;vertical-align:1px;}
-.proof-chip.on .chip-dot{background:var(--ok);}
-.face-tabs{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap;}
-.face-notice,.slot-note{border:1px solid var(--border);border-left:3px solid var(--pale);border-radius:0;background:var(--cream);padding:11px 14px;margin:0 0 12px;}
-.face-notice.warn,.slot-note.warn{border-left-color:var(--warn);}
-.face-notice.err,.slot-note.err{border-left-color:var(--err);}
-.face-notice.ok,.slot-note.ok{border-left-color:var(--ok);}
-.face-notice b,.slot-note b{display:block;font-weight:500;font-size:var(--text-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin-bottom:5px;}
-.face-notice span,.slot-note span{display:block;font-size:var(--text-xs);color:var(--soft);line-height:1.7;}
-.slot-notices{margin:12px 0 0;}
-.face-notice.fixed,.slot-note.fixed{border-left-color:var(--ok);}
-.slot-note.fixed b,.face-notice.fixed b{color:var(--ok);}
-.proceed-reason.good{color:var(--text);}
-.slot-note{margin:0 0 8px;}
-.face-tab{appearance:none;background:transparent;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
-.face-tab:hover{border-color:var(--gold);color:var(--text);}
-.face-tab.on{background:var(--gold);border-color:var(--gold);color:#fff;}
-.face-tab .dot{width:6px;height:6px;border-radius:50%;background:var(--pale);}
-.face-tab.ready .dot{background:var(--ok);}
-.face-tab.bad .dot{background:var(--err);}
-.face-tab.on .dot{background:#fff;}
-.btn.is-waiting{opacity:.45;box-shadow:none;}
-.btn.is-waiting:hover{background:var(--gold);box-shadow:none;}
 .container{max-width:1180px;margin:0 auto;padding:0 32px;}
 .section{padding:90px 0;}
 .tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;display:block;}
