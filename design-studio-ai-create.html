@@ -63,9 +63,9 @@ transition:all .2s;display:inline-flex;align-items:center;gap:8px;background:non
 .ds-size{border:1px solid var(--border);border-radius:12px;background:var(--white);cursor:pointer;padding:18px 10px 14px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;}
 .ds-size:hover{border-color:var(--gold-lt);box-shadow:0 6px 18px rgba(61,46,36,.06);}
 .ds-size.sel{border:2px solid var(--gold);background:#F4EDE6;}
-.ds-size-icon{height:52px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
-.ds-size-card{background:#FBF8F2;border:1px solid #D8CBB8;border-radius:3px;box-shadow:0 3px 8px rgba(61,46,36,.08);}
-.ds-size.sel .ds-size-card{border-color:var(--gold);}
+/* The card itself is drawn by card-icon.js; this box just holds it. The cards
+   sit on their base, so an A6 and an A5 stand on the same table. */
+.ds-size-icon{height:62px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:10px;}
 .ds-size-name{font-family:'Cormorant Garamond',serif;font-size:var(--text-lg);color:var(--text);line-height:1;}
 .ds-size-dim{font-size:var(--text-xs);color:var(--soft);margin-top:4px;}
 .ds-size-note{font-size:calc(var(--text-xs) * .92);color:var(--pale);margin-top:8px;line-height:1.35;}
@@ -209,6 +209,7 @@ padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
 <script src="/supabase-config.js"></script>
 <script src="/auth.js"></script>
 <script src="/cart.js"></script>
+<script src="/card-icon.js"></script>
 <script>
 window.updateCartBadge = window.updateCartBadge || function(){};
 window.openCart = window.openCart || function(){};
@@ -691,25 +692,25 @@ was fetched and injected via innerHTML — that was the bug behind the
           <div class="ds-sec-hint">The size and shape of your design. Everything else builds on this.</div>
           <div class="ds-sizes" id="ds-sizes">
             <div class="ds-size sel" data-size="5x7">
-              <div class="ds-size-icon"><div class="ds-size-card" style="width:32px;height:44px;"></div></div>
+              <div class="ds-size-icon"></div>
               <div class="ds-size-name">5&times;7&Prime;</div>
               <div class="ds-size-dim">127 &times; 178mm</div>
               <div class="ds-size-note">The classic · most popular</div>
             </div>
             <div class="ds-size" data-size="A5">
-              <div class="ds-size-icon"><div class="ds-size-card" style="width:35px;height:49px;"></div></div>
+              <div class="ds-size-icon"></div>
               <div class="ds-size-name">A5</div>
               <div class="ds-size-dim">148 &times; 210mm</div>
               <div class="ds-size-note">Larger · a real statement</div>
             </div>
             <div class="ds-size" data-size="A6">
-              <div class="ds-size-icon"><div class="ds-size-card" style="width:28px;height:39px;"></div></div>
+              <div class="ds-size-icon"></div>
               <div class="ds-size-name">A6</div>
               <div class="ds-size-dim">105 &times; 148mm</div>
               <div class="ds-size-note">Smaller · intimate</div>
             </div>
             <div class="ds-size" data-size="Square">
-              <div class="ds-size-icon"><div class="ds-size-card" style="width:42px;height:42px;"></div></div>
+              <div class="ds-size-icon"></div>
               <div class="ds-size-name">Square</div>
               <div class="ds-size-dim">148 &times; 148mm</div>
               <div class="ds-size-note">Distinctive · modern</div>
@@ -1240,17 +1241,23 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // Every size card shows its own millimetres and a little proportional
   // rectangle, so they all have to turn with the choice — not just the one
   // that happens to be selected.
-  function turnSizeCards(){
+  // Draw the little card on every tile: its millimetres, its shape, whether it
+  // is creased and whether it is the one chosen. The drawing lives in
+  // card-icon.js and is shared with the uploader, so the two cannot drift.
+  function paintSizeCards(){
     document.querySelectorAll('.ds-size').forEach(function(card){
       var spec = sizeInfo(card.dataset.size);
       if (!spec) return;
       var dim = card.querySelector('.ds-size-dim');
       if (dim) dim.textContent = spec.dim;
-      var icon = card.querySelector('.ds-size-card');
-      if (icon) {
-        var long = 48;
-        icon.style.width  = (spec.ratio >= 1 ? long : Math.round(long * spec.ratio)) + 'px';
-        icon.style.height = (spec.ratio >= 1 ? Math.round(long / spec.ratio) : long) + 'px';
+      var box = card.querySelector('.ds-size-icon');
+      if (box && typeof cardIcon === 'function') {
+        box.innerHTML = cardIcon({
+          ratio:  spec.ratio,
+          H:      48,
+          folded: isFoldedNow(),
+          sel:    card.classList.contains('sel')
+        });
       }
     });
   }
@@ -1259,7 +1266,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     if (o === orientation) return;
     orientation = o;
     renderTurnToggle();
-    turnSizeCards();
+    paintSizeCards();
     applySize();
     // The shape is part of what the AI is asked for, so a design already on
     // screen is the wrong shape now and the brief has to say so.
@@ -1354,7 +1361,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     f.addEventListener('click', function(){
       document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');});
       f.classList.add('sel'); size=f.dataset.size;
-      renderTurnToggle(); turnSizeCards(); applySize(); buildBrief();
+      renderTurnToggle(); paintSizeCards(); applySize(); buildBrief();
     });
   });
   renderTurnToggle();
@@ -1437,6 +1444,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       // and these two loads race — so each one redraws.
       renderFoldChoice();
       applyFoldedness();
+      paintSizeCards();
       var avail = (rows && rows[0] && Array.isArray(rows[0].available_sizes) && rows[0].available_sizes.length)
         ? rows[0].available_sizes : null;
       OFFERED_SIZES = avail || [];
@@ -1454,7 +1462,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         d.dataset.size = key;
         // shape icon proportional to the size
         var h = 56, w = Math.round(56 * spec.ratio);
-        d.innerHTML = '<div class="ds-size-icon"><div class="ds-size-card" style="width:'+w+'px;height:'+h+'px;"></div></div>' +
+        d.innerHTML = '<div class="ds-size-icon"></div>' +
                       '<div class="ds-size-name">'+spec.label+'</div>' +
                       '<div class="ds-size-dim">'+spec.dim+'</div>' +
                       '<div class="ds-size-note">'+(spec.note||'')+'</div>';
@@ -1465,13 +1473,13 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         f.addEventListener('click', function(){
           wrap.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');});
           f.classList.add('sel'); size=f.dataset.size;
-          renderTurnToggle(); turnSizeCards(); applySize(); buildBrief();
+          renderTurnToggle(); paintSizeCards(); applySize(); buildBrief();
         });
       });
       if(first){
         var firstEl = wrap.querySelector('.ds-size[data-size="'+first+'"]');
         if(firstEl){ firstEl.classList.add('sel'); size=first;
-                     renderTurnToggle(); turnSizeCards(); applySize(); buildBrief(); }
+                     renderTurnToggle(); paintSizeCards(); applySize(); buildBrief(); }
       }
     })
     .catch(function(){ /* silent — hardcoded sizes remain */ });
@@ -1543,6 +1551,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       CONFIG_FOLDED = cfg.folded === true;
       renderFoldChoice();
       applyFoldedness();
+      paintSizeCards();
       // update the page title + subtitle
       var titleEl=document.getElementById('ds-title-el')||document.querySelector('.ds-title'); if(cfg.intro_title && titleEl) titleEl.textContent=cfg.intro_title;
       if(cfg.intro_sub){ var su=document.querySelector('.ds-sub'); if(su) su.textContent = cfg.intro_sub; }
@@ -1629,8 +1638,10 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     var LABEL = { flat: 'Flat card', folded: 'Folded card' };
     pills.innerHTML = ['flat','folded'].map(function(f){
       var on = f === FOLD_CHOICE;
+      var art = (typeof cardIcon === 'function')
+        ? cardIcon({ ratio: 0.71, H: 17, folded: f === 'folded', sel: on }) : '';
       return '<button type="button" data-fold="' + f + '"' + (on ? ' class="on"' : '') + '>'
-           + '<i' + (f === 'folded' ? ' class="fold"' : '') + '></i>' + LABEL[f] + '</button>';
+           + art + LABEL[f] + '</button>';
     }).join('');
     pills.querySelectorAll('button').forEach(function(b){
       b.addEventListener('click', function(){ setFold(b.dataset.fold); });
@@ -1652,6 +1663,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     if (!isFoldedNow()) { INSIDE_PRINTED = false; setInsidePrinted(false); }
     renderFoldChoice();
     applyFoldedness();
+    paintSizeCards();
     buildBrief();
   }
 
@@ -2698,7 +2710,7 @@ function artworkFileName(prefix, ext){
                  if (restore.orientation) orientation = restore.orientation;
                  if (restore.fold) FOLD_CHOICE = restore.fold;
                  renderFoldChoice(); applyFoldedness();
-                 renderTurnToggle(); turnSizeCards(); applySize(); }
+                 renderTurnToggle(); paintSizeCards(); applySize(); }
     }
     setTimeout(function(){
       enterGeneratedMode(restore.image);   // this calls enableDrag (sets 50/50)

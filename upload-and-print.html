@@ -196,6 +196,7 @@ body.wide-step .step-bar{display:none;}
 <script src="/supabase-config.js"></script>
 <script src="/auth.js" defer></script>
 <script src="/cart.js"></script>
+<script src="/card-icon.js"></script>
 <!-- pdf.js for browser-side preview + metadata (file check page) -->
 <!-- pdf.js is 313KB and was loaded here render-blocking, so it held up the
      first paint on every visit. It is only needed if someone uploads a PDF,
@@ -1846,11 +1847,13 @@ function renderFormatToggle() {
     + 'background:var(--white);padding:4px;">'
     + folds.map(f => {
         const on = f === selectedFold;
+        const art = (typeof cardIcon === 'function')
+          ? cardIcon({ ratio: 0.71, H: 17, folded: f === 'folded', sel: on }) : '';
         return '<button type="button" onclick="selectFold(\'' + f + '\')" '
-          + 'style="font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:8px 20px;'
-          + 'border-radius:999px;transition:all .2s;'
+          + 'style="font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:7px 18px;'
+          + 'border-radius:999px;transition:all .2s;display:inline-flex;align-items:center;gap:9px;'
           + (on ? 'background:var(--gold);color:#fff;' : 'background:none;color:var(--soft);')
-          + '">' + LABEL[f] + '</button>';
+          + '">' + art + LABEL[f] + '</button>';
       }).join('')
     + '</div>';
 
@@ -2023,30 +2026,43 @@ function renderSizeCards() {
   if (available.size) keys = keys.filter(k => available.has(k));
   if (!keys.length) keys = Object.keys(SIZE_SPECS);      // never show an empty step
 
-  // Scale the little preview rectangles against the largest size on offer.
-  const maxMm = Math.max(...keys.map(k => Math.max(SIZE_SPECS[k].mmW, SIZE_SPECS[k].mmH)));
+  // Every tile is drawn to the same long side, so A5 really does look taller
+  // than A6. The drawing itself lives in card-icon.js and is shared with the
+  // design studio, so the two cannot drift apart.
   grid.innerHTML = keys.map(k => {
     const z = sizeSpec(k);
-    const scale = 42 / maxMm;
-    const w = Math.max(12, Math.round(z.mmW * scale));
-    const h = Math.max(12, Math.round(z.mmH * scale));
     const esc = String(k).replace(/"/g, '&quot;');
     return `<div id="size-opt-${esc}" onclick="selectSize('${esc}')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;">
-      <div style="display:flex;justify-content:center;align-items:flex-end;height:48px;margin-bottom:12px;">
-        <div id="size-rect-${esc}" style="width:${w}px;height:${h}px;border:1.5px solid var(--border);border-radius:3px;background:var(--cream);transition:all .2s;position:relative;">${
-        selectedFold === 'folded'
-          ? '<span style="position:absolute;left:50%;top:0;bottom:0;border-left:1.5px dashed var(--pale);"></span>'
-          : ''}</div>
-      </div>
+      <div id="size-art-${esc}" style="display:flex;justify-content:center;align-items:flex-end;height:58px;margin-bottom:12px;"></div>
       <div id="size-name-${esc}" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">${z.shortLabel || k}</div>
       <div style="font-size:var(--text-xs);color:var(--pale);">${Math.round(z.mmW)}×${Math.round(z.mmH)}mm</div>
       ${z.badge ? `<div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">${z.badge}</div>` : ''}
     </div>`;
   }).join('');
 
+  paintSizeArt(keys);
   // Keep any existing choice highlighted; drop it if it is no longer offered.
   if (selectedSize && !keys.includes(selectedSize)) selectedSize = null;
   if (selectedSize) selectSize(selectedSize);
+}
+
+// Draw (or redraw) the little card on every tile. Selection, fold and
+// orientation all change the picture, so each of them calls this rather than
+// trying to restyle an element that is now an SVG.
+function paintSizeArt(keys){
+  const list = keys || Object.keys(SIZE_SPECS);
+  list.forEach(k => {
+    const box = document.getElementById('size-art-' + k);
+    if (!box || typeof cardIcon !== 'function') return;
+    const z = sizeSpec(k);
+    if (!z) return;
+    box.innerHTML = cardIcon({
+      ratio:  z.mmW / z.mmH,
+      H:      48,
+      folded: isFoldedPiece(),
+      sel:    k === selectedSize
+    });
+  });
 }
 
 // Kept for older call sites — the renderer does the filtering now.
@@ -2146,11 +2162,10 @@ function selectSize(id){
     const sel=s===id;
     el.style.borderColor=sel?'var(--gold)':'var(--border)';
     el.style.background=sel?'rgba(184,151,106,.06)':'var(--white)';
-    const rect=document.getElementById('size-rect-'+s);
-    if(rect){rect.style.borderColor=sel?'var(--gold)':'var(--border)';rect.style.background=sel?'rgba(184,151,106,.18)':'var(--cream)';}
     const nm=document.getElementById('size-name-'+s);
     if(nm)nm.style.color=sel?'var(--gold)':'var(--text)';
   });
+  paintSizeArt();
   document.getElementById('sizeNote').style.display='none';
   const dz=document.getElementById('dropZone');
   dz.style.opacity='1'; dz.style.pointerEvents='auto';
