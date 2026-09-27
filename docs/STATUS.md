@@ -339,7 +339,42 @@ time; the change is how much else travels with it.
 
 ---
 
-## 9. The full to-do list
+## 9. The design studio wording
+
+**Fixed 27 September.** Nicholas spotted that the Christmas card wording "looked
+odd". It was worse than odd.
+
+`studio_fields` had no rows at all for **christmas-cards, greeting-cards and
+place-cards**, and `loadStudioFields()` keeps a hardcoded fallback when the
+table returns nothing — the wedding invitation. So all three asked for a host
+line, a venue reading Cotswold Manor, a dress code of black tie and an RSVP.
+Confirmed on the live site before touching anything.
+
+Two more were asking nothing about their own content: an **order of service**
+with no service in it, and an **RSVP card** with nothing to reply on. And every
+box on every product was optional, so any product could be generated from an
+empty form — `optional` had been a column since the table was created and
+nothing ever read it.
+
+### What the competitors do
+
+Neither Papier nor Vistaprint uses labelled wording boxes at all. Both give you
+a finished template and let you click the text on the card to change it —
+Papier's editor has tabs per face, a layout picker and *add text / add image /
+add QR code*; Vistaprint has 522 wedding invitation templates filtered by
+corners, foil, theme, photos, size, season, colour, fold and orientation.
+
+**So there is almost no overlap, because we are not doing the same thing.** They
+sell a template you edit. We sell a brief you describe, and the wording feeds an
+AI that draws something new. That is worth keeping — nobody else lets you say
+"art deco, sage green, gold foil" and get a design back — but it only works if
+the questions match the product.
+
+The one thing both of them do that we do not is **sell the set** (item 33).
+
+---
+
+## 10. The full to-do list
 
 Everything outstanding, in one place and in the order I would do it. The
 sections above give the reasoning; this is the list.
@@ -353,6 +388,7 @@ verified — 4,704 prices, sheet prices held at 56,636.
 |---|---|---|
 | 1 | **Set the margins** | The site sells at cost across all 23 products. The last real blocker in pricing, and a decision rather than a build. |
 | 2 | **Publish** | Seven product names and the `/invitations` switch-off are database changes; the grid reads `product_types` live, but a publish keeps the payload honest. |
+| 3 | **Decide on place cards and table numbers** | We tell customers each card in a set will differ. Nothing makes that true. §10, item 31. |
 
 ### Blocking launch
 
@@ -484,6 +520,31 @@ Two things still open from that work:
     far, never chased, and proven not to come from any of this week's changes.
 29. **Boards are single-sided only** (signage, table plans, welcome signs),
     deliberately deferred when double-sided went in.
+
+### The design studio — opened 27 September
+
+Done that day: the wording boxes fixed on five products, and an admin screen so
+they can be changed without SQL (§9).
+
+31. **Place cards and table numbers cannot do what we tell customers they do.**
+    There is no variable-data support anywhere: the uploader builds ONE artwork
+    and prints N copies. So fifty place cards are fifty copies of one guest's
+    name, and the table-number box says *"each card in your set will differ"*,
+    which nothing in the system makes true. Either build it — paste a guest
+    list, get N artworks — or change what we sell and what we say. **The false
+    line in that label is live now.**
+32. **Table plans have no tables.** Heading, names and date, and nowhere to type
+    who sits where, which is the whole content of the product. Parked with 31
+    because it is the same kind of gap.
+33. **Sell the set.** Papier offer "Complete the set — info card, RSVP card,
+    RSVP envelope" inside the editor; Vistaprint sell invitation suites as a
+    category. Both competitors do it and we do not. Closest thing we have is
+    the design-suite idea.
+34. **Saving a design loses almost everyone.** 44 sessions generated, 24 pressed
+    "Love it", 5 tried to save, **2 designs exist**. Saving is gated behind
+    creating an account and that is where people stop.
+35. **`studio-nano.js` is misnamed** — it calls Flux Pro 1.1 Ultra, not Nano.
+    The filename says the opposite of the decision on record.
 
 ### Needs a decision, not a developer
 
