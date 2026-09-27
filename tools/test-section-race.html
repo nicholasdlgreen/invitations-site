@@ -1,0 +1,65 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Section race — regression test</title>
+<!--
+  On 27 September the RSVP cards page showed the heading "Our paper stocks" with
+  nothing underneath it. Not every time — reload and it looked fine, which is
+  why it had survived.
+
+  /papers/section.js and /finishing/section.js are DEFERRED, so they execute
+  only after the document has finished parsing. loadData() is started by an
+  inline script DURING parsing. On a warm connection the product data comes back
+  before parsing ends, and the page then asks `if (paperMount &&
+  window.PaperSection)` while that module does not exist yet — so it skipped the
+  whole section silently.
+
+  Measured on the live site: product fetch 54-80ms; papers/section.js ready at
+  159ms; finishing/section.js at 723ms.
+
+  The fix is one line, `await domReady()`, because deferred scripts are
+  guaranteed to run before DOMContentLoaded and not before it.
+
+  To run: serve this directory and open the page. Both lines must say "rendered".
+  The OLD line reproduces the bug and is expected to fail — that is the point of
+  it. If OLD ever passes, the test has stopped testing anything: the filler
+  below is no longer enough to keep the parser busy, so make it bigger.
+-->
+<script defer src="./test-section-race.js"></script>
+</head><body style="font-family:system-ui;padding:30px;line-height:1.8">
+<h2>Deferred module vs. an inline script that does not wait</h2>
+<div id="out">running…</div>
+<script>
+function fastProductFetch(){ return new Promise(r => setTimeout(r, 0)); }
+
+function domReady(){
+  return document.readyState === 'loading'
+    ? new Promise(function (go) { document.addEventListener('DOMContentLoaded', go, { once:true }); })
+    : Promise.resolve();
+}
+
+window.RESULT = {};
+(async function OLD(){                       // what the pages used to do
+  await fastProductFetch();
+  RESULT.oldReadyState = document.readyState;
+  RESULT.old = window.PaperSection ? 'rendered' : 'SKIPPED';
+})();
+(async function NEW(){                       // what they do now
+  await fastProductFetch();
+  await domReady();
+  RESULT.newReadyState = document.readyState;
+  RESULT.new = window.PaperSection ? 'rendered' : 'SKIPPED';
+})();
+window.addEventListener('load', function(){
+  var pass = RESULT.old === 'SKIPPED' && RESULT.new === 'rendered';
+  document.getElementById('out').innerHTML =
+      '<p>old code — readyState <b>' + RESULT.oldReadyState + '</b> → <b>' + RESULT.old + '</b></p>'
+    + '<p>new code — readyState <b>' + RESULT.newReadyState + '</b> → <b>' + RESULT.new + '</b></p>'
+    + '<p style="font-size:20px;color:' + (pass ? 'green' : 'crimson') + '">'
+    + (pass ? 'PASS — the race is real, and awaiting domReady() fixes it'
+            : 'INCONCLUSIVE — the parser finished too quickly; add more filler') + '</p>';
+});
+</script>
+<script>
+// Filler, written by script so the file stays small in git. It has to be big
+// enough that parsing is still going when the 0ms timer fires.
+for (var i = 0; i < 60000; i++) document.write('<p>x</p>');
+</script>
+</body></html>

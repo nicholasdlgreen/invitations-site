@@ -1062,6 +1062,14 @@ function escapeHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+function domReady(){
+  return document.readyState === 'loading'
+    ? new Promise(function (go) {
+        document.addEventListener('DOMContentLoaded', go, { once: true });
+      })
+    : Promise.resolve();
+}
+
 async function loadData() {
   const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
 
@@ -1118,6 +1126,19 @@ async function loadData() {
   // Only the stocks this product is sold on. available_papers is the admin's
   // own list on product_types, so the section cannot offer a paper we do not
   // print this product on.
+  // /papers/section.js and /finishing/section.js are deferred, which means they
+  // are guaranteed to have run by DOMContentLoaded and NOT before it. loadData()
+  // is started by an inline script during parsing, so on a warm connection the
+  // product data can arrive long before either module exists — measured on the
+  // live site: the product fetch takes 54-80ms, papers/section.js is not ready
+  // until ~170ms and finishing/section.js until ~723ms.
+  //
+  // The guards below are written to skip quietly when the module is missing, so
+  // losing that race printed the heading "Our paper stocks" with nothing at all
+  // underneath it, and no error anywhere. It is intermittent, which is why it
+  // survived: reload and it looks fine.
+  await domReady();
+
   const paperMount = document.getElementById('lp-papers-mount');
   if (paperMount && window.PaperSection) {
     const names = Array.isArray(productData.available_papers) ? productData.available_papers : [];
