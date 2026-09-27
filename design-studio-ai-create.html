@@ -72,29 +72,37 @@
 .ds-generate:hover{background:var(--brown);}
 .ds-fld-needed{border-color:var(--gold)!important;box-shadow:0 0 0 2px rgba(184,151,106,.22);}
 .ds-need-hint{margin-top:8px;font-size:var(--text-xs);color:var(--brown);font-style:italic;}
-.ds-inside{margin-top:18px;padding-top:16px;border-top:1px solid var(--border);}
-.ds-inside-h{font-family:'Cormorant Garamond',serif;font-size:var(--text-h3);color:var(--text);margin-bottom:3px;}
-.ds-inside-s{font-size:var(--text-xs);color:var(--soft);margin-bottom:12px;}
-.ds-ask{display:flex;gap:10px;}
-.ds-ask button{flex:1;background:var(--white);border:1px solid var(--border);border-radius:9px;
-padding:13px 12px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);
-text-align:center;cursor:pointer;line-height:1.45;transition:all .2s;}
-.ds-ask button:hover{border-color:var(--gold-lt);}
-.ds-ask button.on{border:1.5px solid var(--gold);background:#F6EFE6;}
-.ds-ask button small{display:block;font-size:calc(var(--text-xs) * .95);color:var(--soft);margin-top:3px;}
-.ds-pop{display:inline-block;font-size:calc(var(--text-xs) * .8);letter-spacing:.12em;text-transform:uppercase;
-color:var(--gold);border:1px solid var(--gold-lt);border-radius:20px;padding:1px 7px;margin-top:6px;}
+/* the two decisions, read as a sentence rather than a structure */
+.ds-face-h{font-family:'Cormorant Garamond',serif;font-size:calc(var(--text-h3) * .92);
+color:var(--text);margin-bottom:9px;}
+.ds-rule{height:1px;background:var(--border);margin:17px 0 14px;}
+.ds-inside{margin-top:2px;}
+.ds-radios{display:flex;flex-direction:column;gap:7px;}
+.ds-radio{display:flex;align-items:flex-start;gap:10px;background:var(--white);
+border:1px solid var(--border);border-radius:9px;padding:12px 14px;cursor:pointer;transition:all .2s;}
+.ds-radio:hover{border-color:var(--gold-lt);}
+.ds-radio.on{border:1.5px solid var(--gold);background:#F6EFE6;}
+.ds-dotr{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--gold-lt);
+flex-shrink:0;margin-top:2px;position:relative;}
+.ds-radio.on .ds-dotr{border-color:var(--gold);}
+.ds-radio.on .ds-dotr:after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--gold);}
+.ds-radio .t{font-size:var(--text-sm);line-height:1.4;}
+.ds-radio .t small{display:block;font-size:calc(var(--text-xs) * .95);color:var(--soft);margin-top:2px;}
 .ds-inside-note{font-size:var(--text-xs);color:var(--soft);font-style:italic;margin-top:2px;}
-/* the card shown open: inside on the left, front on the right */
-.ds-open{display:flex;justify-content:center;align-items:stretch;margin-bottom:12px;}
-.ds-open .leaf{width:46%;max-width:190px;background:#FCFAF6;border:1px solid #E3D8CC;
-padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-text-align:center;font-family:'Cormorant Garamond',serif;color:#4A3B30;}
-.ds-open .leaf.l{border-right:none;box-shadow:inset -9px 0 13px -12px rgba(61,46,36,.4);}
-.ds-open .msg{font-size:var(--text-sm);line-height:1.55;}
-.ds-open .frm{font-style:italic;font-size:calc(var(--text-sm) * .92);color:#6B5A4B;margin-top:12px;}
-.ds-open .blankhint{font-size:calc(var(--text-xs) * .95);color:#BCAFA3;font-style:italic;}
-.ds-open .sprig{width:22px;height:1px;background:var(--gold-lt);margin:9px auto;}
+/* front / inside switch over the preview — only once there is an inside */
+.ds-face-tabs{display:flex;justify-content:center;gap:6px;margin-bottom:10px;}
+.ds-face-tabs button{font-family:'Jost',sans-serif;font-size:var(--text-xs);padding:5px 14px;
+border-radius:20px;border:1px solid var(--border);background:var(--white);color:var(--soft);cursor:pointer;transition:all .2s;}
+.ds-face-tabs button:hover{border-color:var(--gold-lt);}
+.ds-face-tabs button.on{background:var(--gold);border-color:var(--gold);color:#fff;}
+/* the inside, shown where the front normally is */
+.ds-inside-view{position:absolute;inset:0;background:#FCFAF6;display:none;
+flex-direction:column;align-items:center;justify-content:center;text-align:center;
+padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
+.ds-inside-view.show{display:flex;}
+.ds-inside-view .msg{font-size:var(--text-body);line-height:1.6;}
+.ds-inside-view .frm{font-style:italic;font-size:var(--text-sm);color:#6B5A4B;margin-top:14px;}
+.ds-inside-view .sprig{width:26px;height:1px;background:var(--gold-lt);margin:11px auto;}
 .ds-brief{background:var(--text);border-radius:10px;padding:14px 16px;margin-top:14px;}
 .ds-brief-label{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-lt);margin-bottom:8px;}
 .ds-brief-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);color:var(--cream);line-height:1.7;}
@@ -697,6 +705,8 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div class="ds-sec-body">
           <div class="ds-sec-hint">Fill in whatever you'd like — everything appears in your design as you type, and all but the first line is optional.</div>
           <div class="ds-need-hint" id="ds-need-hint" style="display:none"></div>
+          <div class="ds-face-h" id="ds-front-h" style="display:none">The front</div>
+          <div id="w-front">
           <input class="ds-fld" id="w-names" placeholder="Your names — e.g. Eleanor &amp; Thomas"/>
           <input class="ds-fld" id="w-host" placeholder="Host line — Together with their families (optional)"/>
           <input class="ds-fld" id="w-line" placeholder="Invitation line — invite you to celebrate their marriage"/>
@@ -710,15 +720,23 @@ was fetched and injected via innerHTML — that was the bug behind the
             <input class="ds-fld" id="w-custom" placeholder="Add your own line — a quote, a note… (optional)"/>
           </div>
           <button class="ds-addmore" id="w-addbtn">+ add reception, dress code, RSVP, your own line…</button>
+          </div><!-- /#w-front -->
 
-          <!-- Only for a folded card, and only when studio_config.folded says
-               so. A flat card has no inside to ask about. -->
+          <!-- The second decision. Only for a folded card, and only when
+               studio_config.folded says so: a flat card has no inside to ask
+               about, and then this whole block is simply not here. -->
           <div class="ds-inside" id="ds-inside" style="display:none">
-            <div class="ds-inside-h">The inside of your card</div>
-            <div class="ds-inside-s">A folded card, so there is a page inside.</div>
-            <div class="ds-ask">
-              <button type="button" id="ds-inside-blank" class="on">Leave it blank<small>I’ll write my own message</small><span class="ds-pop">Most popular</span></button>
-              <button type="button" id="ds-inside-print">Print my message inside<small>We’ll set it in type</small></button>
+            <div class="ds-rule"></div>
+            <div class="ds-face-h">Would you like a message printed inside?</div>
+            <div class="ds-radios">
+              <label class="ds-radio on" id="ds-inside-blank">
+                <span class="ds-dotr"></span>
+                <span class="t">No, leave it blank<small>I’ll write it myself — most people do</small></span>
+              </label>
+              <label class="ds-radio" id="ds-inside-print">
+                <span class="ds-dotr"></span>
+                <span class="t">Yes, print my message<small>We’ll set it in type</small></span>
+              </label>
             </div>
             <div id="ds-inside-flds" style="display:none">
               <div class="ds-inside-note">Set in the same type and colour as your front. The left-hand page stays blank.</div>
@@ -813,10 +831,12 @@ was fetched and injected via innerHTML — that was the bug behind the
     <div class="ds-preview-col">
       <div class="ds-preview">
         <div class="ds-preview-label">Your invitation</div>
-        <div class="ds-open" id="ds-open" style="display:none">
-          <div class="leaf l" id="ds-open-inside"></div>
-          <div class="leaf" id="ds-open-front" style="background:#F1EAE0;border-color:#E3D8CC;
-               font-size:var(--text-xs);color:#A8998C;letter-spacing:.1em;text-transform:uppercase;">Front</div>
+        <!-- Appears only once there IS an inside to look at. Two panels used to
+             sit here before a word had been typed, describing a choice nobody
+             had been asked to make, and they could not be clicked. -->
+        <div class="ds-face-tabs" id="ds-face-tabs" style="display:none">
+          <button type="button" id="ds-tab-front" class="on">Front</button>
+          <button type="button" id="ds-tab-inside">Inside</button>
         </div>
         <div class="ds-canvas" id="ds-canvas">
           <div class="ds-art" id="art-a"></div>
@@ -836,6 +856,7 @@ was fetched and injected via innerHTML — that was the bug behind the
               <div class="ln custom" id="pv-custom"></div>
             </div>
           </div>
+          <div class="ds-inside-view" id="ds-inside-view"></div>
           <div class="ds-gen" id="ds-gen" role="status" aria-live="polite">
             <div class="ds-gen-mark" aria-hidden="true">&#10022;</div>
             <div class="ds-gen-msg" id="ds-gen-msg">Reading your brief&hellip;</div>
@@ -1433,6 +1454,10 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   function applyFoldedness(){
     var wrap = document.getElementById('ds-inside');
     if (wrap) wrap.style.display = CONFIG_FOLDED ? '' : 'none';
+    // "The front" only earns its place when there is an inside to tell it
+    // apart from. On a flat card it is the only face, so naming it is noise.
+    var fh = document.getElementById('ds-front-h');
+    if (fh) fh.style.display = CONFIG_FOLDED ? '' : 'none';
     if (!CONFIG_FOLDED) INSIDE_PRINTED = false;
     refreshInsidePreview();
   }
@@ -1445,7 +1470,21 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     if (blank) blank.classList.toggle('on', !INSIDE_PRINTED);
     if (print) print.classList.toggle('on',  INSIDE_PRINTED);
     if (flds)  flds.style.display = INSIDE_PRINTED ? '' : 'none';
+    if (!INSIDE_PRINTED) showFace('front');
     refreshInsidePreview();
+  }
+
+  // Which face the preview is showing. Only ever reachable once there IS an
+  // inside, so the switch cannot appear before the choice has been made.
+  var SHOWING_FACE = 'front';
+  function showFace(which){
+    SHOWING_FACE = (which === 'inside') ? 'inside' : 'front';
+    var t1 = document.getElementById('ds-tab-front');
+    var t2 = document.getElementById('ds-tab-inside');
+    var vw = document.getElementById('ds-inside-view');
+    if (t1) t1.classList.toggle('on', SHOWING_FACE === 'front');
+    if (t2) t2.classList.toggle('on', SHOWING_FACE === 'inside');
+    if (vw) vw.classList.toggle('show', SHOWING_FACE === 'inside');
   }
 
   // What goes on the inside right, in the order the boxes are shown.
@@ -1467,7 +1506,10 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       if(!fields || !fields.length) return;   // keep hardcoded fallback
       REQUIRED_FIELDS = [];
 
-      var body = document.querySelector('.ds-sec[data-sec="1"] .ds-sec-body');
+      // The front's own container. Appending to the section body put the
+      // rebuilt boxes AFTER the inside question, so the step read backwards:
+      // the second decision above the first one it depends on.
+      var body = document.getElementById('w-front');
       var stack = document.getElementById('ds-stack');
       if(!body || !stack) return;
 
@@ -1643,6 +1685,10 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     var p = document.getElementById('ds-inside-print');
     if (b) b.addEventListener('click', function(){ setInsidePrinted(false); });
     if (p) p.addEventListener('click', function(){ setInsidePrinted(true); });
+    var t1 = document.getElementById('ds-tab-front');
+    var t2 = document.getElementById('ds-tab-inside');
+    if (t1) t1.addEventListener('click', function(){ showFace('front'); });
+    if (t2) t2.addEventListener('click', function(){ showFace('inside'); });
   })();
 
   document.getElementById('ds-generate').addEventListener('click', function(){
@@ -1774,30 +1820,32 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // from the boxes as they are typed, so the customer can see the blank page
   // they are choosing as well as the printed one.
   function refreshInsidePreview(){
-    var open = document.getElementById('ds-open');
-    var ins  = document.getElementById('ds-open-inside');
-    if (!open || !ins) return;
-    if (!CONFIG_FOLDED) { open.style.display = 'none'; return; }
-    open.style.display = 'flex';
+    var tabs = document.getElementById('ds-face-tabs');
+    var view = document.getElementById('ds-inside-view');
+    if (!tabs || !view) return;
 
-    if (!INSIDE_PRINTED) {
-      ins.innerHTML = '<div class="blankhint">blank, for your<br>own message</div>';
-      return;
-    }
-    var lines = insideLines();
+    var lines = (CONFIG_FOLDED && INSIDE_PRINTED) ? insideLines() : [];
+    // Nothing appears until there is genuinely something to look at. The pair
+    // of panels that used to sit here showed up before a word was typed,
+    // described a choice nobody had been asked to make, and could not be
+    // clicked — three reasons to be confusing at once.
     if (!lines.length) {
-      ins.innerHTML = '<div class="blankhint">your message<br>will appear here</div>';
+      tabs.style.display = 'none';
+      view.innerHTML = '';
+      showFace('front');
       return;
     }
+
+    tabs.style.display = 'flex';
     var html = '';
     lines.forEach(function(l, i){
       if (i === lines.length - 1 && lines.length > 1) {
         html += '<div class="sprig"></div><div class="frm">' + escapeForPreview(l.text) + '</div>';
       } else {
-        html += '<div class="msg">' + escapeForPreview(l.text).replace(/\n/g, '<br>') + '</div>';
+        html += '<div class="msg">' + escapeForPreview(l.text) + '</div>';
       }
     });
-    ins.innerHTML = html;
+    view.innerHTML = html;
   }
 
   function escapeForPreview(t){
