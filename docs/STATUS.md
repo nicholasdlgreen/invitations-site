@@ -254,7 +254,61 @@ not the thing beside it is how this happens.
 
 ---
 
-## 8. The full to-do list
+## 8. Why the from-price appears late
+
+**Measured on the live site**, not guessed.
+
+| | |
+|---|---|
+| Page first readable (first contentful paint) | **668ms** |
+| `pricing_for` call finishes | **1,614ms** |
+| **The price block sits empty for** | **~950ms** |
+| What that call downloads | **571KB of JSON** |
+
+The page paints with a `£—` placeholder, then waits for a payload of 3,738
+sheet prices and 1,008 finishing prices, parses it, and takes the minimum. Every
+landing page does this. On a phone on 4G it is several seconds, not one.
+
+**The whole 571KB is fetched to render one number.** Nothing else on the landing
+page reads `sheet_sells` or `finish_prices` — the paper section, the sizes strip
+and the finishes section use `available_papers`, `available_sizes` and
+`pricing.papers`, and the first two are already on the `product_types` row the
+page fetches alongside. The heavy arrays exist for the configurator, not for
+this page.
+
+### What I would do, in order
+
+1. **Compute the from-price in the database.** An RPC returning
+   `{amount, quantity}` for a slug — about 40 bytes instead of 571KB. The
+   cheapest flat, single-sided row at `display_quantity`, which is the rule
+   `renderPricing()` already applies in JavaScript. **This is the whole fix for
+   the visible symptom** and takes the price from 1,614ms to roughly 700ms.
+2. **Give the landing page a light payload.** A second RPC with everything it
+   actually uses and neither heavy array, so the page stops downloading the
+   configurator's data. Together with (1) that is one small call instead of one
+   enormous one.
+3. **Stop the hero waiting on anything below the fold.** The two calls are in a
+   `Promise.all` and the price waits for both, including the 571KB one. Render
+   the hero the moment its own data lands.
+4. **Reserve the space.** `£—` is narrower than `£18 for 50`, so the block
+   changes width when the real figure arrives and the button below it moves.
+   Even at 200ms that reads as a jolt.
+5. **Cache it at the edge.** The from-price changes only on Publish. A thin
+   Netlify function in front of the RPC with a short `Cache-Control` makes
+   repeat visits and crawlers instant.
+
+**Fastest possible**, if it is ever worth the machinery: render the number into
+the HTML at request time with a Netlify Edge Function, so it is there in the
+first paint with no round trip at all. Still read from the database per request,
+so still dynamic.
+
+**None of this hardcodes a price or bakes one in at build time** — the standing
+rule from 17 September. Every option above reads the published figure at request
+time; the change is how much else travels with it.
+
+---
+
+## 9. The full to-do list
 
 Everything outstanding, in one place and in the order I would do it. The
 sections above give the reasoning; this is the list.
@@ -267,7 +321,9 @@ verified — 4,704 prices, sheet prices held at 56,636.
 | # | What | Why it is first |
 |---|---|---|
 | 1 | **Set the margins** | The site sells at cost across all 23 products. The last real blocker in pricing, and a decision rather than a build. |
-| 2 | **Re-measure the product page payload** | It was 536KB before 4,704 envelope prices were added to sixteen products. Worth knowing before launch. |
+| 2 | **Decide what `/invitations` is** | Active, on the grid, and 404s when clicked. Give it a page or switch it off. |
+| 3 | **The from-price load** | ~950ms of empty space on every landing page. Measured; cause and options in §8. |
+| 4 | **The broken `.html` twins** | All 23 landing pages serve 200 and render "Product not found" at their `.html` URL. |
 
 ### Blocking launch
 
@@ -289,15 +345,49 @@ verified — 4,704 prices, sheet prices held at 56,636.
 8. **`ALERT_EMAIL` in Netlify** for the Monday supplier price watch.
 9. **Remove the homepage holding overlay** when the decision is made to open.
 
-### Live mis-sells — small fixes, real money
+### Live mis-sells — cleared 27 September
 
-10. **Gate finishes and envelopes on the route.** An order of service in
-    Fedrigoni stock is offered Corners that Luxury Folded cannot make, and red
-    envelopes on a route that only stocks white.
-11. **"Finished by hand" on twelve pages.** Nothing is finished by hand.
-12. **"Colour mode: CMYK preferred"** on the upload screen, while we send RGB.
-13. **The proof still renders a mismatched file as though it fits.**
-14. **Eight product names stored lowercase** and rendering that way on the grid.
+All three done, and two closed as not-bugs.
+
+- ~~**Gate finishes and envelopes on the route.**~~ The example in this list was
+  wrong: order of service does not offer Corners at all. The real exposure was
+  **thirteen products selling both flat and folded**, where rounded corners are
+  priced on flat-card only. A folded order was offered them, found no rate, fell
+  through to the flat figure — **which is zero** — so we did a £22 job for
+  nothing. Envelope colours had no live exposure yet; they are gated now too.
+- ~~**The proof renders a mismatched file as though it fits.**~~ Fill now ghosts
+  what will be cut off, fit hatches the paper left blank. The press file is
+  unchanged.
+- ~~**Product names stored lowercase.**~~ Seven fixed, not eight, in the database
+  and in every place the HTML used the name as a name. "signage" was the page
+  title Google shows.
+- ~~"Finished by hand" on twelve pages.~~ **Not a bug — we do finish by hand.**
+  Nicholas confirmed 27 September.
+- ~~"Colour mode: CMYK preferred" on the upload screen.~~ **Left as is**, by
+  decision, 27 September.
+
+Two things still open from that work:
+
+10. **"Save the Date" and "Table Plan" are singular** while their slugs and the
+    rest of the range are plural. A naming decision, not a casing one, so left
+    alone.
+11. **The checkout floor still adds nothing for a finish it cannot price.** The
+    interface can no longer offer one, so this needs deliberate tampering to
+    reach — but it is the last place the zero survives.
+
+### Found while working, not yet fixed
+
+12. **`/invitations` returns 404** while the product is active and appears as a
+    tile on `/products`. A customer clicking it hits a dead end. It has no
+    landing page, no category, and a name that was lowercase until today. It
+    looks like a leftover: either give it a page or deactivate it. **Needs a
+    decision.**
+13. **Every landing page has a broken `.html` twin.** `/wedding-invitations`
+    works; `/wedding-invitations.html` returns 200 and renders "Product not
+    found", because the slug parser rejects any path containing a dot. All 23
+    pages, live, and indexable.
+14. **The from-price takes about a second to appear** after the page is
+    readable. Measured; cause and options in §8.
 
 ### Site testing — scoped 27 September, not started
 
