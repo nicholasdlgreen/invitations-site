@@ -1,0 +1,16 @@
+-- Design studio wording, 27 September.
+--
+-- Three products had no rows in studio_fields at all — christmas-cards,
+-- greeting-cards and place-cards — and the studio silently keeps a hardcoded
+-- fallback when the table returns nothing. That fallback is the wedding
+-- invitation, so "Let's design your Christmas card" was followed by a host
+-- line, a wedding venue, a dress code and an RSVP.
+--
+-- Also: an order of service had no service in it, an RSVP card had nothing to
+-- reply on, and every box on every product was optional, so any product could
+-- be generated from a completely empty form. (optional has been a column since
+-- the table was created and nothing read it; design-studio-ai-create.html now
+-- does.)
+--
+-- The exact statements are in the commit; re-run them from there if this ever
+-- has to be rebuilt. Applied directly to the live database.

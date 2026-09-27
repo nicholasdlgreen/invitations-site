@@ -70,6 +70,8 @@
 .ds-sw.on::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;text-shadow:0 1px 2px rgba(0,0,0,.35);}
 .ds-generate{display:block;width:100%;margin-top:18px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;font-weight:500;padding:15px;border-radius:60px;cursor:pointer;transition:background .2s;}
 .ds-generate:hover{background:var(--brown);}
+.ds-fld-needed{border-color:var(--gold)!important;box-shadow:0 0 0 2px rgba(184,151,106,.22);}
+.ds-need-hint{margin-top:8px;font-size:var(--text-xs);color:var(--brown);font-style:italic;}
 .ds-brief{background:var(--text);border-radius:10px;padding:14px 16px;margin-top:14px;}
 .ds-brief-label{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-lt);margin-bottom:8px;}
 .ds-brief-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);color:var(--cream);line-height:1.7;}
@@ -670,7 +672,8 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div class="ds-sec" data-sec="1">
         <button class="ds-sec-head" data-head="1"><span><span class="ds-sec-num">2</span>Your wording</span><span class="ds-chev">▾</span></button>
         <div class="ds-sec-body">
-          <div class="ds-sec-hint">Fill in whatever you'd like — every line is optional, and appears in your design as you type.</div>
+          <div class="ds-sec-hint">Fill in whatever you'd like — everything appears in your design as you type, and all but the first line is optional.</div>
+          <div class="ds-need-hint" id="ds-need-hint" style="display:none"></div>
           <input class="ds-fld" id="w-names" placeholder="Your names — e.g. Eleanor &amp; Thomas"/>
           <input class="ds-fld" id="w-host" placeholder="Host line — Together with their families (optional)"/>
           <input class="ds-fld" id="w-line" placeholder="Invitation line — invite you to celebrate their marriage"/>
@@ -1367,6 +1370,11 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // ---- Stage 2 part 2: load wording FIELDS from Supabase config ----
   // Rebuilds the input fields, the matching preview lines, and FIELD_MAP.
   // Falls back silently to the hardcoded fields if the fetch fails.
+  // Filled by loadStudioFields(). Empty means nothing is enforced, which is
+  // deliberate: if the config cannot be fetched the customer is not blocked by
+  // a rule we failed to read.
+  var REQUIRED_FIELDS = [];
+
   function loadStudioFields(){
     fetch(CFG_SB_URL + '/rest/v1/studio_fields?product_slug=eq.' + encodeURIComponent(PRODUCT_SLUG) + '&active=eq.true&order=display_order&select=*', {
       headers: { apikey: CFG_SB_KEY, Authorization: 'Bearer ' + CFG_SB_KEY }
@@ -1374,6 +1382,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(fields){
       if(!fields || !fields.length) return;   // keep hardcoded fallback
+      REQUIRED_FIELDS = [];
 
       var body = document.querySelector('.ds-sec[data-sec="1"] .ds-sec-body');
       var stack = document.getElementById('ds-stack');
@@ -1403,6 +1412,13 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         stack.appendChild(ln);
         // map
         newMap.push(['w-' + f.key, 'pv-' + f.key]);
+        // The one box that makes the card theirs. optional has been on this
+        // table since it was created and nothing ever read it, so every
+        // product could be generated from a completely empty form.
+        if (f.optional === false) {
+          inp.dataset.required = '1';
+          REQUIRED_FIELDS.push({ id: 'w-' + f.key, label: f.label });
+        }
       });
 
       if(hasMore){
@@ -1524,6 +1540,34 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
   document.getElementById('ds-generate').addEventListener('click', function(){
     var self=this;
+    // Every generation costs us a real fal.ai call, and a card with no wording
+    // on it is almost never what someone meant to ask for.
+    var missing = REQUIRED_FIELDS.filter(function(f){
+      var el = document.getElementById(f.id);
+      return el && !String(el.value || '').trim();
+    });
+    if (missing.length) {
+      var el = document.getElementById(missing[0].id);
+      if (el) {
+        el.classList.add('ds-fld-needed');
+        el.focus();
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        el.addEventListener('input', function once(){
+          el.classList.remove('ds-fld-needed');
+          el.removeEventListener('input', once);
+        });
+      }
+      var hint = document.getElementById('ds-need-hint');
+      if (hint) {
+        // Quote the label rather than bending it into a sentence: "Add from
+        // first" is what lowercasing "From — e.g. Eleanor" gets you.
+        hint.textContent = 'Fill in \u201c' + String(missing[0].label || 'that line').split('\u2014')[0].trim()
+                         + '\u201d first, so your design has something to say.';
+        hint.style.display = 'block';
+        setTimeout(function(){ hint.style.display = 'none'; }, 6000);
+      }
+      return;
+    }
     var brief = buildBrief();
     genCount++;
     logEvent(genCount === 1 ? 'generate' : 'regenerate', { count: genCount, size: size, selections: sel, brief: brief });
