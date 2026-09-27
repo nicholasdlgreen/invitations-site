@@ -1761,7 +1761,38 @@ function getAvailableSizes() {
 // or wildcard in old schema → show all).
 function getAvailablePapers() {
   if (currentProduct && Array.isArray(currentProduct.available_papers) && currentProduct.available_papers.length) {
-    return { set: new Set(currentProduct.available_papers.map(p => p.toLowerCase().trim())), hasWildcard: false };
+    // available_papers is the admin's list of what this product MAY be printed
+    // on. It is not a promise that we hold a price for every one of them in
+    // every format: Ice White, for instance, is sold as a folded card and not
+    // as a flat one, so offering it on a flat order would find no rate and fall
+    // through to calcBasePrice() — a formula that ignores paper, size and
+    // finish and invents a figure.
+    //
+    // step3Papers() already drops these, because availableWeightsFor() returns
+    // nothing for a paper with no prices in the chosen format. Doing it here as
+    // well means the guarantee belongs to this function rather than depending
+    // on every caller remembering to filter afterwards.
+    const rows = sheetSells();
+    const listed = currentProduct.available_papers.map(p => p.toLowerCase().trim());
+    if (rows.length) {
+      const priced = new Set(rows
+        .filter(r => !selectedSize || r.size === selectedSize)
+        .map(r => String(r.paper || '').toLowerCase().trim()));
+      const sellable = listed.filter(n => priced.has(n));
+      // Nothing matched at all — the size has probably not been chosen yet, or
+      // this format is published differently. Narrowing to nothing would empty
+      // the step, so fall back to the full list and let the weight filter run.
+      if (sellable.length) {
+        if (sellable.length !== listed.length) {
+          console.info('[papers] ' + (listed.length - sellable.length) + ' of '
+            + listed.length + ' listed papers have no price for '
+            + selectedFold + '/' + selectedSides
+            + (selectedSize ? '/' + selectedSize : '') + ' and are not offered');
+        }
+        return { set: new Set(sellable), hasWildcard: false };
+      }
+    }
+    return { set: new Set(listed), hasWildcard: false };
   }
   // Fallback: old logic
   const set = new Set();
