@@ -1864,7 +1864,14 @@ function artworkFileName(prefix, ext){
     flattenToPrintFile(function(printImage){
       if(!printImage){ btn.textContent = '↻ Try again'; btn.disabled=false; return; }
 
+      // The line that names the order. Only wedding-shaped products have a
+      // box called "names": a birthday has a celebrant, a christening has a
+      // child, a place card has a guest. Fall back to whichever box this
+      // product marks as the one that must be filled in.
       var names = (document.getElementById('w-names') || {}).value || '';
+      if (!names && REQUIRED_FIELDS.length) {
+        names = (document.getElementById(REQUIRED_FIELDS[0].id) || {}).value || '';
+      }
       var parts = names.split(/\s*&\s*|\s+and\s+/i);
       var fileName = artworkFileName('ai-design', 'jpg');
 
@@ -1903,29 +1910,34 @@ function artworkFileName(prefix, ext){
             templateName: 'Your bespoke design',
             templateId: 'ai-' + Date.now(),
             size: size || 'A5',
+            productSlug: PRODUCT_SLUG,
             artworkUrl: res.artworkUrl,        // flattened artwork (trim + bleed)
             printArtworkUrl: res.printUrl,     // press-ready PDF at the exact size
             thumbnail: thumb,                  // small image for display only
-            text: {
-              name1: (parts[0]||'').trim(),
-              name2: (parts[1]||'').trim(),
-              host: (document.getElementById('w-host')||{}).value||'',
-              line: (document.getElementById('w-line')||{}).value||'',
-              date: (document.getElementById('w-date')||{}).value||'',
-              time: (document.getElementById('w-time')||{}).value||'',
-              venue: (document.getElementById('w-venue')||{}).value||''
-            }
+            // Every box this product actually has, keyed by its own key. The
+            // five read here before were the wedding invitation's, so a
+            // Christmas card reached the order with nothing written on it.
+            text: (function(){
+              var t = { name1: (parts[0]||'').trim(), name2: (parts[1]||'').trim() };
+              FIELD_MAP.forEach(function(pair){
+                var el = document.getElementById(pair[0]);
+                if (el && String(el.value||'').trim()) t[pair[0].replace(/^w-/, '')] = el.value.trim();
+              });
+              return t;
+            })()
           };
           try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
-          window.location.href = '/upload-and-print.html?product=wedding-invitations&source=design-studio';
+          window.location.href = '/upload-and-print.html?product=' + encodeURIComponent(PRODUCT_SLUG)
+                               + '&source=design-studio';
         });
       })
       .catch(function(){
         // if upload fails, still proceed with just the thumbnail (order can't print without artwork, but flow continues)
         makeThumb(printImage, function(thumb){
-          var design = { source:'ai-studio', templateName:'Your bespoke design', templateId:'ai-'+Date.now(), size: size||'A5', artworkUrl:null, thumbnail:thumb, text:{ name1:(parts[0]||'').trim(), name2:(parts[1]||'').trim() } };
+          var design = { source:'ai-studio', templateName:'Your bespoke design', templateId:'ai-'+Date.now(), size: size||'A5', productSlug: PRODUCT_SLUG, artworkUrl:null, thumbnail:thumb, text:{ name1:(parts[0]||'').trim(), name2:(parts[1]||'').trim() } };
           try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
-          window.location.href = '/upload-and-print.html?product=wedding-invitations&source=design-studio';
+          window.location.href = '/upload-and-print.html?product=' + encodeURIComponent(PRODUCT_SLUG)
+                               + '&source=design-studio';
         });
       });
     });

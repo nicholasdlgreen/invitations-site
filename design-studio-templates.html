@@ -574,7 +574,7 @@ was fetched and injected via innerHTML — that was the bug behind the
 <section class="gallery">
   <div class="tpl-grid" id="tplGrid">
 
-    <a class="tpl-card" data-style="botanical" href="/design-studio-customise.html?template=botanic">
+    <a class="tpl-card" data-style="botanical" href="/design-studio-customise.html?template=botanic" data-keep-product>
       <div class="tpl-preview">
         <svg viewBox="0 0 148 210" xmlns="http://www.w3.org/2000/svg" style="background:#F0F2EC">
           <rect width="148" height="210" fill="#F0F2EC"/>
@@ -891,5 +891,18 @@ function closeComingSoon(e){
 
   <script src="/analytics.js" defer></script>
   <script src="/help-widget.js" defer></script>
+<script>
+// Templates and the customiser are one journey, so the product has to survive
+// the hop. Without it the customiser hands off with no product and the
+// configurator falls back to wedding invitations.
+(function () {
+  var p = new URLSearchParams(window.location.search).get('product');
+  if (!p || !/^[a-z0-9-]+$/.test(p)) return;
+  document.querySelectorAll('a[href*="design-studio-customise.html"]').forEach(function (a) {
+    var u = a.getAttribute('href');
+    if (u.indexOf('product=') === -1) a.setAttribute('href', u + '&product=' + encodeURIComponent(p));
+  });
+})();
+</script>
 </body>
 </html>

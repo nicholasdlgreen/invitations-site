@@ -1040,6 +1040,15 @@ function getTemplateFromUrl(){
   return (t && TEMPLATES[t]) ? t : 'botanic';
 }
 
+// Which product is being designed. This route had no notion of one, so it
+// handed off with no product at all and the configurator fell back to wedding
+// invitations — whatever the customer thought they were making. It is carried
+// through when the link provides it, and only falls back when it does not.
+function getProductFromUrl(){
+  const p = new URLSearchParams(window.location.search).get('product');
+  return (p && /^[a-z0-9-]+$/.test(p)) ? p : 'wedding-invitations';
+}
+
 // ─── EXTERNAL ILLUSTRATION LOADER ───────────────────────────
 // Fetches a separate SVG file (e.g. /img/templates/romantic-wedding/2.svg)
 // and injects its paths into the motif group, scaled to fit the area defined
@@ -1428,10 +1437,12 @@ function continueToOrder(){
     trimMm: { w: sizeInfo.mmW, h: sizeInfo.mmH },
     bleedBoxMm: { w: sizeInfo.mmW + 6, h: sizeInfo.mmH + 6 }
   };
+  designState.productSlug = getProductFromUrl();
   sessionStorage.setItem('foreverprint_design', JSON.stringify(designState));
   // Route into the existing order flow in design-studio mode so the user
   // skips the upload step and goes straight to paper/quantity/etc.
-  window.location.href = '/upload-and-print.html?source=design-studio';
+  window.location.href = '/upload-and-print.html?product=' + encodeURIComponent(getProductFromUrl())
+                       + '&source=design-studio';
 }
 
 // Builds a print-ready SVG with 3mm bleed margin added on all sides.

@@ -5532,6 +5532,16 @@ function googleCustomerReviewsOptIn(order){
   // 4. Pre-set the size from the design state
   selectedSize = designState.size || 'A5';
 
+  // The studio used to hand off to wedding-invitations whatever was being
+  // designed, so a welcome sign arrived here at A1 — a size wedding
+  // invitations do not sell — and the price fell through to a formula. The
+  // studio carries its product now, so this should never fire. It is left in
+  // because a silently invented price is the worst way to find out it has.
+  if (designState.productSlug && designState.productSlug !== PRODUCT.slug) {
+    console.error('[design-studio] design was made for "' + designState.productSlug
+      + '" but landed on "' + PRODUCT.slug + '" — the price will be for the wrong product');
+  }
+
   // 5. Attach the artwork.
   //    - AI studio: the print-ready file is ALREADY uploaded to Supabase; just
   //      record its URL so checkout uses it. Show the thumbnail for the proof.
