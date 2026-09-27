@@ -485,6 +485,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <button class="pz-tab active" data-pz="producttypes" onclick="showPricingPanel(this)">🎴 Product Types</button>
           <button class="pz-tab" data-pz="sheetrates" onclick="showPricingPanel(this)">📊 Sheet Rates</button>
           <button class="pz-tab" data-pz="finishes" onclick="showPricingPanel(this)">✨ Finish Options</button>
+          <button class="pz-tab" data-pz="studiofields" onclick="showPricingPanel(this)">✍️ Studio Wording</button>
           <button class="pz-tab" data-pz="publish" onclick="showPricingPanel(this)">🚀 Publish</button>
           <button class="pz-tab" data-pz="reconcile" onclick="showPricingPanel(this)">🔁 Reconciliation</button>
           <button class="pz-tab" data-pz="contacts" onclick="showPricingPanel(this)">👥 Customers</button>
@@ -521,6 +522,53 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
               <button class="btn btn-gold" onclick="openEnvelopeModal()">＋ Add Envelope</button>
             </div>
             <div id="envelopeList"><div class="empty"><span class="empty-icon">✉️</span><div class="empty-text">No envelopes yet</div></div></div>
+          </div>
+
+          <!-- PANEL: DESIGN STUDIO WORDING -->
+          <div class="pz-panel" id="pz-studiofields">
+            <div class="section-header">
+              <div>
+                <div class="section-title">Design Studio Wording</div>
+                <div class="section-sub">The boxes a customer fills in before the studio draws their design, and how each line is set on the card. A product with no rows here falls back to the wedding invitation boxes, which is how Christmas cards came to ask for a dress code.</div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-sm" onclick="sfAddField()">＋ Add a box</button>
+                <button class="btn btn-gold" onclick="sfSave()" id="sf_saveBtn" disabled>Save wording</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="grid-2">
+                <div class="field">
+                  <label>Product</label>
+                  <select id="sf_product" onchange="sfRenderGrid()"></select>
+                </div>
+                <div class="field">
+                  <label>Copy the boxes from</label>
+                  <div class="dyn-wrap">
+                    <select id="sf_copyFrom"></select>
+                    <button class="dyn-btn" title="Copy those boxes onto this product" onclick="sfCopyFrom()" style="width:auto;padding:0 10px;font-size:12px;">Copy</button>
+                  </div>
+                </div>
+              </div>
+              <div id="sf_warn" style="display:none;margin-top:4px;padding:10px 12px;border-radius:6px;background:rgba(176,0,32,.12);border:1px solid rgba(176,0,32,.35);font-size:12px;color:#ffb3bd;"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">The boxes, in the order the customer sees them</div>
+              <div id="sf_grid"><div class="empty"><span class="empty-icon">✍️</span><div class="empty-text">Pick a product above</div></div></div>
+              <div style="margin-top:10px;font-size:11px;color:rgba(250,247,242,.45);line-height:1.7;">
+                <strong>Shows</strong> — "Up front" is visible immediately; "Behind +more" hides it until the customer asks for more detail.<br>
+                <strong>Set as</strong> — how the line is drawn on the preview card. The names are historical, so the description is what matters.<br>
+                <strong>Must fill in</strong> — the customer cannot generate until this box has something in it. Use it sparingly; one per product is usually enough.<br>
+                <strong>Key</strong> — the internal name. <code>names</code>, <code>date</code> and <code>venue</code> are also written onto the order, so keep those three where they make sense.
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">How it will stack on the card</div>
+              <div id="sf_preview" style="background:#FBF9F6;border-radius:8px;padding:28px 24px;min-height:120px;text-align:center;"></div>
+            </div>
           </div>
 
           <!-- PANEL: PAPER STOCKS -->
@@ -1836,7 +1884,7 @@ let settings = { company:'Natch Ltd', vat:'', fyStart:'June' };
 let activeMonth = null;
 const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const PZ_TITLES = {
-  discounts: 'Discount Codes', suppliers:'Supplier Directory', reconcile:'Supplier Reconciliation', mgmt:'Management Accounts', settings:'Settings & Export', envelopes:'Envelopes', papers:'Paper Stocks', producttypes:'Product Types', sheetrates:'Sheet Rates', finishes:'Finish Options', publish:'Publish to Site' };
+  discounts: 'Discount Codes', suppliers:'Supplier Directory', reconcile:'Supplier Reconciliation', mgmt:'Management Accounts', settings:'Settings & Export', envelopes:'Envelopes', papers:'Paper Stocks', producttypes:'Product Types', sheetrates:'Sheet Rates', finishes:'Finish Options', studiofields:'Design Studio Wording', publish:'Publish to Site' };
 
 // ═══════════════════════════════════════════════════════
 // PRICING — BOOT
@@ -1859,6 +1907,7 @@ function pricingLoad() {
   loadFinishOptionsFromSupabase();
   loadFinishTypesFromSupabase();
   loadSheetRatesFromSupabase();
+  loadStudioFieldsFromSupabase();
   loadDocsFromSupabase();
   settings       = pj('natch_settings_v2', JSON.stringify(settings));
 loadPricingSettings();
@@ -1901,6 +1950,7 @@ function showPricingPanel(el) {
   if (id === 'reconcile')  { renderRecon(); renderSalesLog(); }
   if (id === 'mgmt')       { renderMgmtHistory(); }
   if (id === 'publish')    { renderPublishStatus(); }
+  if (id === 'studiofields') { sfPopulateProducts(); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4377,6 +4427,281 @@ async function saveSheetRates() {
     toast(`Saved ${newRates.length} rate${newRates.length!==1?'s':''} for ${paperName} ${weightGsm}gsm ✓`);
   } catch (err) {
     toast('Save failed: ' + err.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// DESIGN STUDIO WORDING — rows in `studio_fields`
+//
+// These are the boxes a customer fills in before the studio draws anything.
+// They were editable only by SQL, and three products had no rows at all —
+// Christmas cards, greeting cards and place cards — which meant the studio
+// quietly kept its hardcoded fallback and asked for a wedding venue and a
+// dress code on a Christmas card.
+// ═══════════════════════════════════════════════════════
+
+let studioFields = [];
+let sfDirty = false;
+
+// The ten ways a line can be set on the card, described by what they look like
+// rather than by their names, which were taken from a wedding invitation and
+// make no sense on a menu.
+const SF_STYLES = [
+  ['names',     'Large heading — the biggest line on the card'],
+  ['host',      'Small italic, muted — sits above the heading'],
+  ['request',   'Italic, small — a sentence like "invite you to"'],
+  ['date',      'Normal, letter-spaced — a date or a line of detail'],
+  ['time',      'Small, muted — sits under the date'],
+  ['venue',     'Normal, letter-spaced — a place or a line of detail'],
+  ['reception', 'Italic, small, muted — an afterthought line'],
+  ['dress',     'Tiny uppercase, spaced — a short label'],
+  ['rsvp',      'Tiny, muted — the smallest print'],
+  ['custom',    'Italic, gold — the customer\'s own line']
+];
+
+async function loadStudioFieldsFromSupabase() {
+  try {
+    studioFields = await sbFetchAll('studio_fields?select=*&order=product_slug,display_order');
+  } catch (err) {
+    console.warn('Could not load studio fields:', err.message);
+    studioFields = [];
+  }
+  sfPopulateProducts();
+}
+
+function sfPopulateProducts() {
+  const sel  = document.getElementById('sf_product');
+  const copy = document.getElementById('sf_copyFrom');
+  if (!sel) return;
+  const slugs = (productTypes || []).filter(p => p.active !== false)
+    .sort((a, b) => (a.name || a.slug).localeCompare(b.name || b.slug));
+  const opts = slugs.map(p => {
+    const n = studioFields.filter(f => f.product_slug === p.slug && f.active !== false).length;
+    return `<option value="${p.slug}">${p.name || p.slug}${n ? ' — ' + n + ' boxes' : '  ⚠ no boxes'}</option>`;
+  }).join('');
+  const keep = sel.value;
+  sel.innerHTML = opts;
+  if (keep) sel.value = keep;
+  if (copy) copy.innerHTML = '<option value="">— pick a product —</option>' + opts;
+  sfRenderGrid();
+}
+
+function sfRows(slug) {
+  return studioFields.filter(f => f.product_slug === slug)
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+}
+
+function sfRenderGrid() {
+  const slug = document.getElementById('sf_product').value;
+  const host = document.getElementById('sf_grid');
+  const warn = document.getElementById('sf_warn');
+  if (!host) return;
+  const rows = sfRows(slug);
+
+  if (warn) {
+    if (!rows.filter(r => r.active !== false).length) {
+      warn.style.display = 'block';
+      warn.innerHTML = '<strong>This product has no boxes of its own.</strong> The studio falls back to the '
+        + 'wedding invitation boxes, so a customer here is asked for a host line, a venue, a dress code and an RSVP.';
+    } else {
+      warn.style.display = 'none';
+    }
+  }
+
+  if (!rows.length) {
+    host.innerHTML = '<div class="empty"><span class="empty-icon">✍️</span><div class="empty-text">'
+      + 'No boxes yet. Add one, or copy them from a similar product above.</div></div>';
+    sfRenderPreview();
+    return;
+  }
+
+  const styleOpts = o => SF_STYLES.map(([v, d]) =>
+    `<option value="${v}"${o === v ? ' selected' : ''}>${d}</option>`).join('');
+
+  host.innerHTML = `<div class="table-wrap" style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead><tr style="text-align:left;color:var(--gold-lt);">
+      <th style="padding:8px 6px;width:52px;">Order</th>
+      <th style="padding:8px 6px;">What the box says</th>
+      <th style="padding:8px 6px;width:120px;">Key</th>
+      <th style="padding:8px 6px;width:120px;">Shows</th>
+      <th style="padding:8px 6px;width:230px;">Set as</th>
+      <th style="padding:8px 6px;width:90px;">Must fill in</th>
+      <th style="padding:8px 6px;width:70px;">Live</th>
+      <th style="padding:8px 6px;width:40px;"></th>
+    </tr></thead><tbody>`
+    + rows.map((r, i) => `<tr data-id="${r.id}" style="border-top:1px solid var(--border-lt);">
+        <td style="padding:6px;">
+          <button class="dyn-btn" style="width:24px;height:22px;font-size:12px;" onclick="sfMove('${r.id}',-1)" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button class="dyn-btn" style="width:24px;height:22px;font-size:12px;" onclick="sfMove('${r.id}',1)" ${i === rows.length - 1 ? 'disabled' : ''}>↓</button>
+        </td>
+        <td style="padding:6px;"><input value="${sfEsc(r.label)}" oninput="sfSet('${r.id}','label',this.value)" style="width:100%;"/></td>
+        <td style="padding:6px;"><input value="${sfEsc(r.key)}" oninput="sfSet('${r.id}','key',this.value)" style="width:100%;"/></td>
+        <td style="padding:6px;"><select onchange="sfSet('${r.id}','in_more',this.value==='1')" style="width:100%;">
+          <option value="0"${!r.in_more ? ' selected' : ''}>Up front</option>
+          <option value="1"${r.in_more ? ' selected' : ''}>Behind +more</option></select></td>
+        <td style="padding:6px;"><select onchange="sfSet('${r.id}','preview_style',this.value)" style="width:100%;">${styleOpts(r.preview_style || 'request')}</select></td>
+        <td style="padding:6px;text-align:center;"><input type="checkbox" ${r.optional === false ? 'checked' : ''} onchange="sfSet('${r.id}','optional',!this.checked)"/></td>
+        <td style="padding:6px;text-align:center;"><input type="checkbox" ${r.active !== false ? 'checked' : ''} onchange="sfSet('${r.id}','active',this.checked)"/></td>
+        <td style="padding:6px;"><button class="btn btn-danger btn-xs" onclick="sfDelete('${r.id}')">✕</button></td>
+      </tr>`).join('')
+    + '</tbody></table></div>';
+  sfRenderPreview();
+}
+
+function sfEsc(v) { return String(v == null ? '' : v).replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+// The same ten styles the studio uses, so what is chosen here is what the
+// customer sees. Kept as inline CSS rather than shared, because admin is dark
+// and the card is cream.
+const SF_PREVIEW_CSS = {
+  names:     'font-size:22px;font-weight:500;line-height:1.1;margin-bottom:4px;color:#3D3833;',
+  host:      'font-style:italic;font-size:12px;color:#8A7A68;margin-bottom:8px;',
+  request:   'font-style:italic;font-size:12px;color:#5C5148;margin-bottom:11px;',
+  date:      'font-size:13px;letter-spacing:.5px;margin-top:10px;color:#3D3833;',
+  time:      'font-size:12px;color:#5C5148;margin-bottom:5px;',
+  venue:     'font-size:13px;letter-spacing:.5px;margin-top:8px;color:#3D3833;',
+  reception: 'font-style:italic;font-size:12px;color:#5C5148;margin-top:10px;',
+  dress:     'font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8A7A68;margin-top:8px;',
+  rsvp:      'font-size:10px;color:#8A7A68;margin-top:8px;',
+  custom:    'font-style:italic;font-size:12px;color:#B8976A;margin-top:10px;'
+};
+
+function sfRenderPreview() {
+  const host = document.getElementById('sf_preview');
+  if (!host) return;
+  const rows = sfRows(document.getElementById('sf_product').value).filter(r => r.active !== false);
+  if (!rows.length) { host.innerHTML = '<div style="color:#8A7A68;font-size:12px;">Nothing to show yet.</div>'; return; }
+  host.innerHTML = '<div style="font-family:Georgia,serif;max-width:300px;margin:0 auto;">'
+    + rows.map(r => {
+        // Show the example from the label, which is what the customer is
+        // nudged towards, rather than the label itself.
+        const parts = String(r.label || '').split('—');
+        const eg = (parts[1] || parts[0] || '').replace(/\(optional\)/i, '').trim() || '…';
+        return `<div style="${SF_PREVIEW_CSS[r.preview_style] || SF_PREVIEW_CSS.request}${r.in_more ? 'opacity:.45;' : ''}">${sfEsc(eg)}</div>`;
+      }).join('')
+    + '</div><div style="margin-top:14px;font-size:10px;color:#8A7A68;">Faded lines sit behind “+ add more details”.</div>';
+}
+
+function sfSet(id, key, value) {
+  const row = studioFields.find(f => String(f.id) === String(id));
+  if (!row) return;
+  row[key] = value;
+  row.__changed = true;
+  sfMarkDirty();
+  if (key === 'preview_style' || key === 'in_more' || key === 'active' || key === 'label') sfRenderPreview();
+}
+
+function sfMarkDirty() {
+  sfDirty = true;
+  const b = document.getElementById('sf_saveBtn');
+  if (b) { b.disabled = false; b.textContent = 'Save wording'; }
+}
+
+function sfMove(id, dir) {
+  const slug = document.getElementById('sf_product').value;
+  const rows = sfRows(slug);
+  const i = rows.findIndex(r => String(r.id) === String(id));
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= rows.length) return;
+  // Renumber the whole product from scratch, because display_order has gaps
+  // and duplicates in the data as it stands.
+  const tmp = rows[i]; rows[i] = rows[j]; rows[j] = tmp;
+  rows.forEach((r, n) => { if (r.display_order !== n + 1) { r.display_order = n + 1; r.__changed = true; } });
+  sfMarkDirty();
+  sfRenderGrid();
+}
+
+function sfAddField() {
+  const slug = document.getElementById('sf_product').value;
+  if (!slug) { toast('Pick a product first'); return; }
+  const rows = sfRows(slug);
+  studioFields.push({
+    id: 'new-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    __new: true, __changed: true,
+    product_slug: slug, key: '', label: '', display_order: rows.length + 1,
+    optional: true, in_more: false, preview_style: 'request', active: true
+  });
+  sfMarkDirty();
+  sfRenderGrid();
+}
+
+function sfDelete(id) {
+  const row = studioFields.find(f => String(f.id) === String(id));
+  if (!row) return;
+  if (!confirm('Remove “' + (row.label || row.key || 'this box') + '” from this product?')) return;
+  row.__deleted = true; row.__changed = true;
+  sfMarkDirty();
+  sfRenderGrid();
+}
+
+function sfCopyFrom() {
+  const from = document.getElementById('sf_copyFrom').value;
+  const slug = document.getElementById('sf_product').value;
+  if (!from || !slug) { toast('Pick a product to copy from'); return; }
+  if (from === slug) { toast('That is the same product'); return; }
+  const src = sfRows(from).filter(r => r.active !== false && !r.__deleted);
+  if (!src.length) { toast('That product has no boxes to copy'); return; }
+  if (!confirm('Replace the boxes on this product with the ' + src.length + ' from that one?')) return;
+  sfRows(slug).forEach(r => { r.__deleted = true; r.__changed = true; });
+  src.forEach((r, n) => {
+    studioFields.push({
+      id: 'new-' + Date.now() + '-' + n, __new: true, __changed: true,
+      product_slug: slug, key: r.key, label: r.label, display_order: n + 1,
+      optional: r.optional, in_more: r.in_more, preview_style: r.preview_style, active: true
+    });
+  });
+  sfMarkDirty();
+  sfRenderGrid();
+}
+
+async function sfSave() {
+  const btn = document.getElementById('sf_saveBtn');
+  const touched = studioFields.filter(f => f.__changed);
+  if (!touched.length) { toast('Nothing to save'); return; }
+
+  // A box with no key cannot be wired to an input, and a duplicate key would
+  // make two boxes fight over the same line. Catch both before writing.
+  const live = studioFields.filter(f => !f.__deleted && f.active !== false);
+  const bad  = live.filter(f => !String(f.key || '').trim() || !String(f.label || '').trim());
+  if (bad.length) { alert('Every box needs a key and something written on it. ' + bad.length + ' still to fill in.'); return; }
+  const seen = {};
+  for (const f of live) {
+    const k = f.product_slug + '::' + String(f.key).trim().toLowerCase();
+    if (seen[k]) { alert('Two boxes on the same product share the key “' + f.key + '”. Keys have to be unique per product.'); return; }
+    seen[k] = true;
+  }
+
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const del = touched.filter(f => f.__deleted && !f.__new);
+    for (const f of del) await sbFetch('studio_fields?id=eq.' + encodeURIComponent(f.id), { method: 'DELETE' });
+
+    const ins = touched.filter(f => f.__new && !f.__deleted).map(f => ({
+      product_slug: f.product_slug, key: String(f.key).trim(), label: f.label,
+      display_order: f.display_order, optional: f.optional !== false,
+      in_more: !!f.in_more, preview_style: f.preview_style || 'request', active: f.active !== false
+    }));
+    if (ins.length) await sbFetch('studio_fields', { method: 'POST', body: JSON.stringify(ins) });
+
+    const upd = touched.filter(f => !f.__new && !f.__deleted);
+    for (const f of upd) {
+      await sbFetch('studio_fields?id=eq.' + encodeURIComponent(f.id), {
+        method: 'PATCH',
+        body: JSON.stringify({
+          key: String(f.key).trim(), label: f.label, display_order: f.display_order,
+          optional: f.optional !== false, in_more: !!f.in_more,
+          preview_style: f.preview_style || 'request', active: f.active !== false
+        })
+      });
+    }
+    await loadStudioFieldsFromSupabase();
+    sfDirty = false;
+    btn.textContent = 'Saved ✓';
+    toast('Wording saved — it is live on the studio straight away');
+    setTimeout(() => { btn.textContent = 'Save wording'; btn.disabled = true; }, 2200);
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Save wording';
+    alert('Could not save: ' + err.message);
   }
 }
 
