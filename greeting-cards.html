@@ -994,7 +994,13 @@ const PRODUCT = (function() {
   const params = new URLSearchParams(window.location.search);
   let slug = params.get('product');
   if (!slug) {
-    const path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
+    // Netlify serves this file at BOTH /wedding-invitations and
+    // /wedding-invitations.html. The dot test was meant to skip asset paths,
+    // and it skipped our own page too: the .html address returned 200 and
+    // rendered "Product not found" on all 23 landing pages, indexable and
+    // linkable. Drop a trailing .html before deciding.
+    const path = window.location.pathname
+      .replace(/^\//, '').replace(/\/$/, '').replace(/\.html$/i, '');
     if (path && !path.includes('.') && !path.includes('/')) slug = path;
   }
   slug = (slug || '').toLowerCase().trim();
