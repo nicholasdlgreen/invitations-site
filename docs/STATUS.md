@@ -254,9 +254,13 @@ not the thing beside it is how this happens.
 
 ---
 
-## 8. Why the from-price appears late
+## 8. The from-price, and why it was late
 
-**Measured on the live site**, not guessed.
+**Fixed 27 September.** What follows is what it was, what caused it, and what
+was done — the measurements are the point, because the first guess about the
+cause was only half right.
+
+### What it was, measured on the live site
 
 | | |
 |---|---|
@@ -275,6 +279,33 @@ and the finishes section use `available_papers`, `available_sizes` and
 `pricing.papers`, and the first two are already on the `product_types` row the
 page fetches alongside. The heavy arrays exist for the configurator, not for
 this page.
+
+### Fixed, 27 September
+
+`from_prices()` — which the products grid already called — now serves the
+landing page too, and the request starts in the `<head>` where
+`supabase-config.js` has already set the key, instead of from the bottom of the
+body at 601ms. `published_papers()` is a new 7KB endpoint for the one section
+that needs the paper catalogue. **9KB in place of 571KB.**
+
+Five runs each, same machine, same page, identical price out:
+
+| | median | spread |
+|---|---:|---|
+| before | 345ms | 234–918ms |
+| after | **213ms** | **196–280ms** |
+
+The spread matters more than the median: the 571KB was the variance, and on a
+phone it is the whole story. The price block now reserves its width too, because
+the placeholder was narrower than the real figure and the button below it moved.
+
+Sharing one function with the grid is worth as much as the speed. Both pages
+computed the same figure by different routes, with a comment in each saying they
+must not disagree; checked across all 22 active products before switching, same
+price and quantity either way. When we register for VAT the landing page will
+follow the grid rather than quietly diverging.
+
+### What was considered and not done
 
 ### What I would do, in order
 
@@ -321,9 +352,7 @@ verified — 4,704 prices, sheet prices held at 56,636.
 | # | What | Why it is first |
 |---|---|---|
 | 1 | **Set the margins** | The site sells at cost across all 23 products. The last real blocker in pricing, and a decision rather than a build. |
-| 2 | **Decide what `/invitations` is** | Active, on the grid, and 404s when clicked. Give it a page or switch it off. |
-| 3 | **The from-price load** | ~950ms of empty space on every landing page. Measured; cause and options in §8. |
-| 4 | **The broken `.html` twins** | All 23 landing pages serve 200 and render "Product not found" at their `.html` URL. |
+| 2 | **Publish** | Seven product names and the `/invitations` switch-off are database changes; the grid reads `product_types` live, but a publish keeps the payload honest. |
 
 ### Blocking launch
 
@@ -375,19 +404,24 @@ Two things still open from that work:
     interface can no longer offer one, so this needs deliberate tampering to
     reach — but it is the last place the zero survives.
 
-### Found while working, not yet fixed
+### Found and fixed the same day
 
-12. **`/invitations` returns 404** while the product is active and appears as a
-    tile on `/products`. A customer clicking it hits a dead end. It has no
-    landing page, no category, and a name that was lowercase until today. It
-    looks like a leftover: either give it a page or deactivate it. **Needs a
-    decision.**
-13. **Every landing page has a broken `.html` twin.** `/wedding-invitations`
-    works; `/wedding-invitations.html` returns 200 and renders "Product not
-    found", because the slug parser rejects any path containing a dot. All 23
-    pages, live, and indexable.
-14. **The from-price takes about a second to appear** after the page is
-    readable. Measured; cause and options in §8.
+- ~~**`/invitations` returned 404**~~ while active and on the grid. A half-built
+  duplicate of wedding invitations: no page, no category, no hero image, no
+  FAQs, copy lifted word for word, nothing linking to it, no order using it.
+  **Switched off, not deleted** — the row is there if it should become a real
+  category page.
+- ~~**Every landing page had a broken `.html` twin.**~~ All 23 served 200 and
+  rendered "Product not found". Fixed by dropping a trailing `.html` before the
+  dot test. No redirect rule: the canonical tags already name one address, and a
+  blanket `/*.html` rule would sit in front of `header.html`, `footer.html` and
+  the `/:slug/order` rewrite.
+- ~~**The from-price took about a second to appear.**~~ See §8 — now about 210ms
+  and, more to the point, steady.
+
+12. **`renderSizesStrip()` has never had an element to write into** on any of
+    the 23 pages. Dead code, and it was before this work. Either add the markup
+    or delete the function.
 
 ### Site testing — scoped 27 September, not started
 
