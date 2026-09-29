@@ -46,6 +46,26 @@ the autovacuum fix from §11 holding.
    Publish walks ours down so we never quote more for fewer. At zero margin
    those specific orders lose money. Harmless once a margin exists.
 
+4. **Monitoring is half built, and the missing half is the money.**
+   `tools/check-live.py` and `tools/check-live-browser.js` went in 29
+   September and cover the catalogue and the order step
+   (`docs/DAILY-CHECK.md`). Neither touches **Stripe checkout** or the **five
+   Resend emails**, so nothing would tell us if a card stopped being taken or
+   an order confirmation stopped sending. In order: add checkout and email to
+   the check; run the jsc suite in the Netlify build so a broken build cannot
+   deploy (needs a node shim, Netlify is Linux); then put the daily check on a
+   cron that does not depend on a laptop being open.
+
+5. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+   and `test-section-race`. They read fixtures from a scratchpad that no longer
+   exists. Small job, but a real failure can hide behind noise that is always
+   there.
+
+6. **The migration backups are still in the database.**
+   `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
+   the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
+   can put it back. Drop both once the six-box step 3 has bedded in.
+
 ---
 
 ## 1. The state of things
