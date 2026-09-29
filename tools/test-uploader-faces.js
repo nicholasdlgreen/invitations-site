@@ -135,5 +135,27 @@ is(mapPagesToSlots([pg(154,216),pg(154,216)], K3, SPEC, 'portrait'),
 is(mapPagesToSlots([pg(302,216)], K3, SPEC, 'portrait'), null,
    'a flat card has no spread to split');
 
+print('\nWHAT THE REPORT SAYS ABOUT THE FACES');
+eval(grab('sidesCheck'));
+job(false, 'double');
+sideFiles = {};
+is(sidesCheck().status, 'err', 'no front at all is an error');
+sideFiles = { front:{file:'F',page:1} };
+var sc = sidesCheck();
+is(sc.status, 'warn', 'a missing back is worth a look, not a failure');
+is(sc.val, '1 of 2 supplied', 'and it is counted');
+is(sc.note, 'The back will print blank. Click it above if you meant to add artwork.',
+   'and it names the face and says where to go');
+sideFiles.back = { file:'B', page:1 };
+is(sidesCheck().status, 'ok', 'both supplied and it passes');
+is(sidesCheck().val, '2 faces', 'counted as faces, not sides');
+job(true, 'double');
+sideFiles = { front:{file:'F',page:1} };
+is(sidesCheck().note,
+   'The back and the inside will print blank. Click it above if you meant to add artwork.',
+   'two blank faces are both named');
+job(false, 'single');
+is(sidesCheck(), null, 'a one-face job has no sides row at all');
+
 print('\n' + pass + ' passed, ' + fail + ' failed\n');
 if (fail) throw new Error(fail + ' assertion(s) failed');

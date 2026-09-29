@@ -318,6 +318,10 @@ nav a:hover,nav a.active{color:var(--gold);}
 /* Why the button will not go yet. The state used to be carried by turning the
    button red, which said "stopped" without saying what to do, and borrowed an
    alert colour that is not a button colour anywhere else on the site. */
+.blank-face{text-align:center;padding:10px 0 4px;}
+.blank-card{max-width:250px;margin:0 auto 16px;border:1.5px dashed var(--border);border-radius:10px;background:var(--cream);display:flex;align-items:center;justify-content:center;}
+.blank-card span{font-size:var(--text-sm);color:var(--pale);letter-spacing:.04em;}
+.blank-note{font-size:var(--text-sm);color:var(--soft);line-height:1.7;margin:0 auto 16px;max-width:42ch;}
 .proceed-reason{font-size:var(--text-xs);color:var(--soft);margin:10px 0 0;letter-spacing:.02em;}
 .proof-chip .chip-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pale);margin-right:7px;vertical-align:1px;}
 .proof-chip.on .chip-dot{background:var(--ok);}
@@ -800,6 +804,9 @@ was fetched and injected via innerHTML — that was the bug behind the
                all, and it was imposed with the front's position. -->
           <div id="faceTabs" class="face-tabs" style="display:none;"></div>
           <div id="faceNotice" class="face-notice" hidden></div>
+          <!-- Shown instead of the proof when the customer clicks a face they
+               have not supplied. -->
+          <div id="blankFace" class="blank-face" hidden></div>
           <div id="proofStage" class="proof-stage">
             <canvas id="proofCanvas" class="proof-canvas" style="display:none"></canvas>
             <div id="previewPlaceholder" class="preview-placeholder">
@@ -2874,20 +2881,52 @@ function refreshSizeRow(){
   row.querySelector('.check-note').textContent = v.detail;
 }
 
-function refreshSidesRow(){
-  const row = document.querySelector('.check-row[data-check="Sides"]');
-  if (!row) return;
+// What the report says about the job's faces. One builder, so the row created
+// with the checks and the row patched in afterwards can never disagree — and
+// so it exists for an image upload, not only for a PDF, which is how someone
+// could choose double sided, upload one picture and be told nothing about the
+// back at all.
+function sidesCheck(){
   const faces = sidesNeeded();
-  const got = faces.filter(function(f){ return sideFiles[f.key]; }).length;
-  const ok = got === faces.length;
-  const icon = row.querySelector('.check-icon');
-  const val  = row.querySelector('.check-val');
-  const note = row.querySelector('.check-note');
-  if (icon){ icon.className = 'check-icon ' + (ok ? 'ok' : 'err'); icon.textContent = ok ? '\u2713' : '\u2715'; }
-  if (val)  val.textContent = ok ? faces.length + ' sides' : got + ' of ' + faces.length + ' supplied';
-  if (note) note.textContent = ok
-    ? faces.map(function(f){ return f.label.toLowerCase(); }).join(', ') + ' \u2014 each checked in its own box above.'
-    : 'Every side needs artwork before this can go to print.';
+  if (faces.length < 2) return null;
+  const filled = faces.filter(function(f){ return sideFiles[f.key]; });
+  const blank  = faces.filter(function(f){ return !sideFiles[f.key]; });
+  if (!sideFiles.front)
+    return { status:'err', label:'Sides', val:'No front supplied',
+             note:'The front needs artwork before this can go to print.' };
+  // A blank face is a choice, not a fault — but never a silent one, and worth
+  // a second look when the customer has just chosen to print that side.
+  if (blank.length)
+    return { status:'warn', label:'Sides',
+             val: filled.length + ' of ' + faces.length + ' supplied',
+             note:'The ' + blank.map(function(f){ return f.label.toLowerCase(); }).join(' and the ')
+                  + ' will print blank. Click it above if you meant to add artwork.' };
+  return { status:'ok', label:'Sides', val: faces.length + ' faces',
+           note: filled.map(function(f){ return f.label.toLowerCase(); }).join(', ')
+                 + ' — each checked in its own box above.' };
+}
+
+function refreshSidesRow(){
+  const list = document.getElementById('checkResults');
+  if (!list) return;
+  const c = sidesCheck();
+  let row = list.querySelector('.check-row[data-check="Sides"]');
+  if (!c){ if (row) row.remove(); return; }
+  // Patched in rather than built with the list, exactly like the artwork-size
+  // row, because adding a face has to change this without a full re-render.
+  if (!row){
+    row = document.createElement('div');
+    row.className = 'check-row';
+    row.setAttribute('data-check', 'Sides');
+    row.innerHTML = '<div class="check-icon"></div><div><div class="check-label">Sides</div>'
+                  + '<div class="check-val"></div><div class="check-note"></div></div>';
+    list.insertBefore(row, list.firstChild);
+  }
+  row.querySelector('.check-icon').className = 'check-icon ' + c.status;
+  row.querySelector('.check-icon').textContent =
+    c.status === 'ok' ? '\u2713' : c.status === 'err' ? '\u2715' : '!';
+  row.querySelector('.check-val').textContent = c.val;
+  row.querySelector('.check-note').textContent = c.note;
 }
 
 // Every face we are going to print must be present and printable.
@@ -2974,7 +3013,20 @@ function renderFaceTabs(){
 async function switchFace(key){
   if (key === activeFace) return;
   const entry = sideFiles[key];
-  if (!entry) return;
+  // An empty face used to be unreachable, because nobody could leave step 1
+  // without filling every one. Now that a blank back is a legitimate answer,
+  // the tab is clickable and did nothing at all \u2014 so show the face, say it
+  // is blank, and put the way to change that on the same screen.
+  if (!entry){
+    faceAdjust[activeFace] = Object.assign({}, artworkAdjust);
+    activeFace = key;
+    renderFaceTabs();
+    renderFaceNotice();
+    showBlankFace(key);
+    updateProceedButton();
+    return;
+  }
+  hideBlankFace();
   faceAdjust[activeFace] = Object.assign({}, artworkAdjust);
   activeFace = key;
   renderFaceTabs();
@@ -2985,6 +3037,56 @@ async function switchFace(key){
   pendingFaceAdjust = faceAdjust[key] || null;
   const file = await faceAsFile(entry);
   await checkFile(file);
+}
+
+// The proof area, standing in for a face nobody has supplied. It is drawn at
+// the real proportions of the card so it reads as a blank page rather than a
+// broken one, and it carries the only button that can change that.
+function showBlankFace(key){
+  const wrap = document.getElementById('blankFace');
+  if (!wrap) return;
+  const sd = sidesNeeded().filter(function(x){ return x.key === key; })[0];
+  const label = sd ? sd.label.toLowerCase() : 'page';
+  const spec = sizeSpec();
+  const across = selectedOrientation === 'landscape';
+  const isSpread = !!(sd && sd.spread);
+  const w = spec ? (isSpread && !across ? spec.mmW * 2 : spec.mmW) : 3;
+  const h = spec ? (isSpread &&  across ? spec.mmH * 2 : spec.mmH) : 4;
+  wrap.innerHTML =
+      '<div class="blank-card" style="aspect-ratio:' + w + '/' + h + ';">'
+    +   '<span>This ' + esc(label) + ' is blank</span>'
+    + '</div>'
+    + '<p class="blank-note">Nothing has been added, so it will print blank. '
+    + 'That is a perfectly good answer \u2014 plenty of cards are written by hand.</p>'
+    + '<button type="button" class="btn-out" onclick="addFaceArtwork(\'' + key + '\')">'
+    + 'Add artwork for the ' + esc(label) + '</button>';
+  wrap.hidden = false;
+  // There is nothing to proof, so everything that proofs something goes away.
+  const stage = document.getElementById('proofStage');   if (stage) stage.style.display = 'none';
+  const tools = document.getElementById('proofTools');   if (tools) tools.classList.add('hidden');
+  const legend = document.getElementById('bleedLegend'); if (legend) legend.style.display = 'none';
+  const meta = document.getElementById('previewMeta');   if (meta) meta.textContent = '';
+}
+
+function hideBlankFace(){
+  const wrap = document.getElementById('blankFace');
+  if (!wrap) return;
+  wrap.hidden = true;
+  wrap.innerHTML = '';
+  const stage = document.getElementById('proofStage'); if (stage) stage.style.display = '';
+}
+
+// Open the file picker for one face, from the proof rather than from step 1.
+// The slot inputs live in the placement screen, so reuse the one that belongs
+// to this face and let its own change handler do the work.
+function addFaceArtwork(key){
+  const slot = document.querySelector('.side-slot[data-side="' + key + '"] input[type=file]');
+  if (slot){ slot.click(); return; }
+  // The placement screen is not built yet \u2014 make one and try again.
+  placementOpen = true;
+  renderSideSlots();
+  const again = document.querySelector('.side-slot[data-side="' + key + '"] input[type=file]');
+  if (again) again.click();
 }
 
 // Keep the tab dots honest as each face is checked.
@@ -3204,6 +3306,7 @@ function renderChecksLoading(){
 
 // Reset the preview panel back to "preparing" state
 function resetPreviewUI(){
+  if (typeof hideBlankFace === 'function') hideBlankFace();
   const placeholder = document.getElementById('previewPlaceholder');
   const img = document.getElementById('previewImg');
   const canvas = document.getElementById('previewCanvas');
@@ -3283,13 +3386,10 @@ async function buildAndRunChecks(file, info){
       // had just chosen double sided.
       const faces = sidesNeeded();
       if (faces.length > 1){
-        const got = faces.filter(function(f){ return sideFiles[f.key]; }).length;
-        checks.push(got === faces.length
-          ? { status:'ok', label:'Sides', val: faces.length + ' sides',
-              note: faces.map(function(f){ return f.label.toLowerCase(); }).join(', ')
-                    + ' — each checked in its own box above.' }
-          : { status:'err', label:'Sides', val: got + ' of ' + faces.length + ' supplied',
-              note:'Every side needs artwork before this can go to print.' });
+        // The Sides row is built once for every file type, further down, and
+        // patched in by refreshSidesRow(). Built here it existed only on the
+        // PDF path, so choosing double sided and uploading one IMAGE said
+        // nothing whatever about the back.
       } else if (pdfInfo.numPages === 1){
         checks.push({status:'ok', label:'Pages', val:'1 page', note:'Single-side invitation as expected.'});
       } else {
@@ -3636,6 +3736,7 @@ function renderChecks(checks){
   // re-added every time this list is rebuilt — switching face rebuilds it, and
   // the row was being wiped a moment after it was added.
   if (typeof refreshSizeRow === 'function') refreshSizeRow();
+  if (typeof refreshSidesRow === 'function') refreshSidesRow();
   // The lamp and the tick box read the finished list, so they go last.
   if (typeof updateProceedButton === 'function') updateProceedButton();
 }
