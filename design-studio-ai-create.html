@@ -1546,16 +1546,44 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   });
   renderTurnToggle();
 
-  // A ready-made pair is a shortcut into the palette, not a seventh thing the
-  // brief mentions: clicking one selects its two colours and nothing else.
-  function applyPair(g, c){
-    var names = (c.dataset.v || '').split('|').map(function(x){ return x.trim(); }).filter(Boolean);
-    sel.colour = names.slice();
+  // A ready-made bundle is a shortcut into the palette, not a seventh thing the
+  // brief mentions. Several can be on at once, so a bundle is lit when all of
+  // its colours happen to be chosen — however they were chosen. That keeps the
+  // pills honest when a swatch is picked or dropped by hand afterwards.
+  function pairNames(el){
+    return (el.dataset.v || '').split('|').map(function(x){ return x.trim(); }).filter(Boolean);
+  }
+  function pairIsOn(el){
+    var n = pairNames(el);
+    return n.length > 0 && n.every(function(x){ return (sel.colour || []).indexOf(x) > -1; });
+  }
+  function paintSwatches(){
     var sw = document.querySelector('.ds-chips[data-group="colour"]');
     if (sw) sw.querySelectorAll('.ds-sw').forEach(function(o){
-      o.classList.toggle('on', names.indexOf(o.dataset.v) > -1);
+      o.classList.toggle('on', (sel.colour || []).indexOf(o.dataset.v) > -1);
     });
-    g.querySelectorAll('.ds-pair').forEach(function(o){ o.classList.toggle('on', o === c); });
+  }
+  function paintPairs(){
+    var pg = document.querySelector('.ds-chips[data-group="pair"]');
+    if (pg) pg.querySelectorAll('.ds-pair').forEach(function(o){ o.classList.toggle('on', pairIsOn(o)); });
+  }
+  function applyPair(g, c){
+    var names = pairNames(c);
+    if (!sel.colour) sel.colour = [];
+    if (pairIsOn(c)){
+      // Turning one off must not strip a colour another lit bundle still needs
+      // — dropping "gold & cream" should not take the cream out of "sage &
+      // cream" sitting lit next to it.
+      var keep = {};
+      g.querySelectorAll('.ds-pair').forEach(function(o){
+        if (o !== c && pairIsOn(o)) pairNames(o).forEach(function(n){ keep[n] = 1; });
+      });
+      sel.colour = sel.colour.filter(function(n){ return names.indexOf(n) < 0 || keep[n]; });
+    } else {
+      names.forEach(function(n){ if (sel.colour.indexOf(n) < 0) sel.colour.push(n); });
+    }
+    paintSwatches();
+    paintPairs();
   }
 
   function wireChips(){
@@ -1585,11 +1613,9 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
             var i=sel[cat].indexOf(v);
             if(i>-1) sel[cat].splice(i,1); else sel[cat].push(v);
           }
-          // Choosing a colour by hand is no longer whichever pair was showing
-          if (cat === 'colour'){
-            var pg = document.querySelector('.ds-chips[data-group="pair"]');
-            if (pg) pg.querySelectorAll('.ds-pair').forEach(function(o){ o.classList.remove('on'); });
-          }
+          // A bundle is lit when its colours are chosen, so picking or dropping
+          // a swatch by hand has to repaint the bundles above it.
+          if (cat === 'colour') paintPairs();
           logEvent(c.classList.contains('on') ? 'chip_select' : 'chip_deselect', { category: cat, label: c.textContent || v, phrase: v });
           buildBrief();
         });
