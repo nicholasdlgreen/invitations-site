@@ -51,7 +51,6 @@ transition:all .2s;display:inline-flex;align-items:center;gap:8px;background:non
 .ds-fold-pills i{display:block;width:13px;height:16px;border:1.5px solid var(--pale);border-radius:2px;}
 .ds-fold-pills i.fold{border-left-width:4px;}
 .ds-fold-pills button.on i{border-color:rgba(255,255,255,.85);}
-.ds-fold-note,.ds-fold-told{font-size:var(--text-xs);color:var(--pale);margin:8px 0 0;line-height:1.7;}
 .ds-turn{display:none;margin-top:14px;}
 .ds-turn-pills{display:inline-flex;border:1.5px solid var(--border);border-radius:999px;background:var(--white);padding:4px;}
 .ds-turn-pills button{font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:8px 18px;border-radius:999px;
@@ -59,7 +58,6 @@ transition:all .2s;display:inline-flex;align-items:center;gap:8px;background:non
 .ds-turn-pills button.on{background:var(--gold);color:#fff;}
 .ds-turn-pills i{display:block;border:1.5px solid var(--pale);border-radius:2px;}
 .ds-turn-pills button.on i{border-color:rgba(255,255,255,.85);}
-.ds-turn-note{font-size:var(--text-xs);color:var(--pale);margin:8px 0 0;line-height:1.7;}
 .ds-size{border:1px solid var(--border);border-radius:12px;background:var(--white);cursor:pointer;padding:18px 10px 14px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;}
 .ds-size:hover{border-color:var(--gold-lt);box-shadow:0 6px 18px rgba(61,46,36,.06);}
 .ds-size.sel{border:2px solid var(--gold);background:#F4EDE6;}
@@ -689,7 +687,7 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div class="ds-sec open" data-sec="0">
         <button class="ds-sec-head" data-head="0"><span><span class="ds-sec-num">1</span>Choose your size</span><span class="ds-chev">▾</span></button>
         <div class="ds-sec-body">
-          <div class="ds-sec-hint">The size and shape of your design. Everything else builds on this.</div>
+          <div class="ds-sec-hint">The size and shape of your design.</div>
           <div class="ds-sizes" id="ds-sizes">
             <div class="ds-size sel" data-size="5x7">
               <div class="ds-size-icon"></div>
@@ -719,12 +717,9 @@ was fetched and injected via innerHTML — that was the bug behind the
           <div class="ds-fold" id="ds-fold" style="display:none">
             <div class="ds-fold-q">Flat card or folded card?</div>
             <div class="ds-fold-pills" id="ds-fold-pills"></div>
-            <p class="ds-fold-note" id="ds-fold-note"></p>
           </div>
-          <p class="ds-fold-told" id="ds-fold-told" style="display:none"></p>
           <div class="ds-turn" id="ds-turn">
             <div class="ds-turn-pills" id="ds-turn-pills"></div>
-            <p class="ds-turn-note" id="ds-turn-note"></p>
           </div>
         </div>
       </div>
@@ -777,7 +772,7 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div class="ds-sec" data-sec="2">
         <button class="ds-sec-head" data-head="2"><span><span class="ds-sec-num">3</span>Describe the look</span><span class="ds-chev">▾</span></button>
         <div class="ds-sec-body">
-          <div class="ds-sec-hint">Tap the ideas you love — the more you choose, the richer the brief we send our design AI.</div>
+          <div class="ds-sec-hint">Tap the ideas you love, the more you choose, the better it will be</div>
 
           <div class="ds-label" data-label-for="style">Style</div>
           <div class="ds-chips" data-group="style">
@@ -1212,7 +1207,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   function renderTurnToggle(){
     var box = document.getElementById('ds-turn');
     var pills = document.getElementById('ds-turn-pills');
-    var note = document.getElementById('ds-turn-note');
     if (!box || !pills) return;
     if (!canTurn(size)) {
       box.style.display = 'none';
@@ -1231,11 +1225,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     pills.querySelectorAll('button').forEach(function(b){
       b.addEventListener('click', function(){ setOrientation(b.dataset.turn); });
     });
-    if (note) {
-      var d = sizeInfo(size);
-      note.textContent = 'Your ' + CONFIG_PRODUCT_NOUN + ' will be ' + (d ? d.dim : '')
-        + '. Landscape costs the same as portrait — it is the same card, turned.';
-    }
   }
 
   // Every size card shows its own millimetres and a little proportional
@@ -1618,20 +1607,11 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   function renderFoldChoice(){
     var box   = document.getElementById('ds-fold');
     var pills = document.getElementById('ds-fold-pills');
-    var note  = document.getElementById('ds-fold-note');
-    var told  = document.getElementById('ds-fold-told');
-    if (!box || !pills || !told) return;
+    if (!box || !pills) return;
 
-    // Sold only as a folded card: say so plainly rather than offering a
-    // choice of one, and rather than saying nothing at all.
-    if (foldedOnly()) {
-      box.style.display = 'none';
-      told.style.display = 'block';
-      told.textContent = 'This is a folded card — we print it and crease it, '
-        + 'so there is a page inside for your message.';
-      return;
-    }
-    told.style.display = 'none';
+    // Sold only as a folded card, so there is no choice to put in front of
+    // anyone. The crease is drawn on every size tile by paintSizeCards().
+    if (foldedOnly()) { box.style.display = 'none'; return; }
     if (!foldIsAChoice()) { box.style.display = 'none'; FOLD_CHOICE = 'flat'; return; }
 
     box.style.display = 'block';
@@ -1646,13 +1626,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     pills.querySelectorAll('button').forEach(function(b){
       b.addEventListener('click', function(){ setFold(b.dataset.fold); });
     });
-    if (note) {
-      note.textContent = FOLD_CHOICE === 'folded'
-        ? 'A single sheet creased down the middle, so there is a page inside. '
-          + 'It uses twice the paper, so it costs more than a flat card.'
-        : 'A single flat card, printed on the front. The commonest choice, and '
-          + 'the cheaper one.';
-    }
   }
 
   function setFold(f){
