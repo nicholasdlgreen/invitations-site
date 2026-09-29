@@ -42,7 +42,12 @@
    to spare. */
 .ds-acc{display:flex;flex-direction:column;gap:12px;
   min-height:calc(var(--ds-pvh, 642px) + 50vh);}
-.ds-sec{background:var(--cream);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;}
+/* scroll-margin-top is how an element says "leave this much room above me when
+   something scrolls me into view". Without it, placing a section puts its
+   header underneath the sticky site header \u2014 which is exactly the 5px-under
+   landing this exists to stop. The header height is measured into --ds-head. */
+.ds-sec{background:var(--cream);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;
+  scroll-margin-top:calc(var(--ds-head, 75px) + 16px);}
 .ds-sec.open{border-color:var(--gold-lt);}
 .ds-sec-head{width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:var(--text-h3);color:var(--text);text-align:left;}
 .ds-sec-num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);align-items:center;justify-content:center;margin-right:10px;}
@@ -1405,10 +1410,31 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // The rail keeps its step marked: collapsing a section is putting the lid on
   // it, not leaving it. Blanking the rail would make the page look as though
   // nothing were selected at all.
+  // Opening a section collapses the one above it, and everything below is
+  // pulled up by however tall that was \u2014 621px for the size step. The scroll
+  // position does not follow, so the header you just clicked ends up ABOVE the
+  // fold, under the sticky site header, and the rows you were sent to are off
+  // the top of the screen. Measured at 550px in the wrong direction.
+  //
+  // Browsers do have scroll anchoring for this, but it is unreliable across a
+  // collapse and knows nothing about a sticky header. So place the section
+  // deliberately rather than hoping.
+  //
+  // Only ever from a click. setStep() is also called on first load and after a
+  // design is generated, and neither of those should move the page.
+  function placeSection(sec){
+    if (!sec || !sec.scrollIntoView) return;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(function(){
+      sec.scrollIntoView({ block: 'start', behavior: reduce ? 'instant' : 'smooth' });
+    });
+  }
+
   function toggleStep(n){
     var sec = document.querySelector('.ds-sec[data-sec="' + n + '"]');
     if (sec && sec.classList.contains('open')){ sec.classList.remove('open'); return; }
     setStep(n);
+    placeSection(sec);
   }
   heads.forEach(function(h){ h.addEventListener('click', function(){ toggleStep(+h.dataset.head); }); });
 
