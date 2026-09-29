@@ -3376,7 +3376,12 @@ async function buildAndRunChecks(file, info){
   if (isProFormat){
     checks.push({status:'ok', label:'File format', val: ext.toUpperCase()+' file', note:'Professional print format — ideal.'});
   } else if (isImage){
-    checks.push({status:'warn', label:'File format', val: ext.toUpperCase()+' file', note:'Image files are accepted. For best results, supply a PDF at 300 DPI or above.'});
+    // Information, not a fault. This says nothing about the file in front of
+    // us \u2014 it is a standing preference for PDFs \u2014 and whether THIS image is
+    // good enough is decided by the Resolution check on its own merits. As a
+    // warning it meant no image could ever reach "Good to print", however
+    // perfect it was, so the green light was unreachable for most customers.
+    checks.push({status:'info', label:'File format', val: ext.toUpperCase()+' file', note:'Image files are accepted. For best results, supply a PDF at 300 DPI or above.'});
   } else {
     checks.push({status:'err', label:'File format', val: ext.toUpperCase()+' — not supported', note:'Please upload a PDF, AI, InDesign, TIFF, PNG or JPG file.'});
     checksPassed = false;
