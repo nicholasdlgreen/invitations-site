@@ -59,7 +59,10 @@
 .ds-frame-inner{width:100%;height:100%;position:relative;}
 .ds-frame-name{position:absolute;bottom:-2px;left:0;right:0;text-align:center;font-size:var(--text-xs);color:var(--soft);}
 
-.ds-sizes{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+/* Three across, not four. In a 481px column that takes a tile from 102px wide
+   to 140 \u2014 and the height comes off the drawing and the gaps rather than the
+   words, so nothing is lost. */
+.ds-sizes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 .ds-fold{margin-top:16px;}
 .ds-fold-q{font-size:var(--text-sm);color:var(--text);margin-bottom:8px;}
 .ds-fold-pills{display:inline-flex;border:1.5px solid var(--border);border-radius:999px;background:var(--white);padding:4px;}
@@ -76,15 +79,15 @@ transition:all .2s;display:inline-flex;align-items:center;gap:8px;background:non
 .ds-turn-pills button.on{background:var(--gold);color:#fff;}
 .ds-turn-pills i{display:block;border:1.5px solid var(--pale);border-radius:2px;}
 .ds-turn-pills button.on i{border-color:rgba(255,255,255,.85);}
-.ds-size{border:1px solid var(--border);border-radius:12px;background:var(--white);cursor:pointer;padding:18px 10px 14px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;}
+.ds-size{border:1px solid var(--border);border-radius:12px;background:var(--white);cursor:pointer;padding:14px 10px 12px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;}
 .ds-size:hover{border-color:var(--gold-lt);box-shadow:0 6px 18px rgba(61,46,36,.06);}
 .ds-size.sel{border:2px solid var(--gold);background:#F4EDE6;}
 /* The card itself is drawn by card-icon.js; this box just holds it. The cards
    sit on their base, so an A6 and an A5 stand on the same table. */
-.ds-size-icon{height:62px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:10px;}
+.ds-size-icon{height:44px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;}
 .ds-size-name{font-family:'Cormorant Garamond',serif;font-size:var(--text-lg);color:var(--text);line-height:1;}
-.ds-size-dim{font-size:var(--text-xs);color:var(--soft);margin-top:4px;}
-.ds-size-note{font-size:calc(var(--text-xs) * .92);color:var(--pale);margin-top:8px;line-height:1.35;}
+.ds-size-dim{font-size:var(--text-xs);color:var(--soft);margin-top:3px;}
+.ds-size-note{font-size:calc(var(--text-xs) * .92);color:var(--pale);margin-top:5px;line-height:1.3;}
 @media(max-width:600px){.ds-sizes{grid-template-columns:1fr 1fr;}}
 .ds-fld{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);outline:none;width:100%;box-sizing:border-box;margin-bottom:8px;transition:border-color .2s;}
 .ds-fld:focus{border-color:var(--gold-lt);}
@@ -1296,7 +1299,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       if (box && typeof cardIcon === 'function') {
         box.innerHTML = cardIcon({
           ratio:  spec.ratio,
-          H:      48,
+          H:      40,
           folded: isFoldedNow(),
           sel:    card.classList.contains('sel')
         });
@@ -1553,7 +1556,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         d.className = 'ds-size';
         d.dataset.size = key;
         // shape icon proportional to the size
-        var h = 56, w = Math.round(56 * spec.ratio);
+        var h = 40, w = Math.round(40 * spec.ratio);
         d.innerHTML = '<div class="ds-size-icon"></div>' +
                       '<div class="ds-size-name">'+spec.label+'</div>' +
                       '<div class="ds-size-dim">'+spec.dim+'</div>' +
