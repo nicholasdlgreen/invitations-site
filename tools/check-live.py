@@ -148,6 +148,13 @@ def check_prices(slug, payload):
     off_size = sorted({r.get('size') for r in sells} - sizes) if sizes else []
     check(not off_size, slug + ': prices only for sizes it sells', str(off_size))
 
+    # Which way the card opens is asked once, at the size step. If it reappears
+    # in the catalogue it will be asked twice again, two steps apart, both
+    # times called fold.
+    check('Fold' not in (prod.get('available_finishes') or []),
+          slug + ': does not ask about the fold twice',
+          'Fold is back in the finishing step')
+
     return (slug, len(offered), len(tiers), len(sells))
 
 
@@ -177,6 +184,9 @@ def _break_all_signature(pl, slug):
                               if (next((q for q in pl['papers'] if q['name'] == n), {}) or {}).get('tier')]
 def _break_no_prices(pl, slug):
     next(x for x in pl['products'] if x['slug'] == slug)['sheet_sells'] = []
+def _break_fold_finish(pl, slug):
+    p = next(x for x in pl['products'] if x['slug'] == slug)
+    p['available_finishes'] = (p.get('available_finishes') or []) + ['Fold']
 def _break_nan_price(pl, slug):
     next(x for x in pl['products'] if x['slug'] == slug)['sheet_sells'][0]['sell'] = None
 def _break_missing_product(pl, slug):
@@ -197,6 +207,7 @@ PRICE_BREAKS = [
     ('the product vanishes from a publish', _break_missing_product),
     ('a product has no prices at all',      _break_no_prices),
     ('a price is not a number',             _break_nan_price),
+    ('the fold is asked twice again',       _break_fold_finish),
 ]
 
 
