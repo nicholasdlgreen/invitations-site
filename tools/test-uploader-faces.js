@@ -187,5 +187,20 @@ faceVerdicts.front = SHAPE;
 is(shownVerdict('front').state, 'choice', 'and Reset puts the question back');
 is(shownVerdict('nothing-here'), undefined, 'a face with no verdict stays undefined');
 
+print('\nWHAT COUNTS AS A WARNING');
+// These two are read straight out of the page source. They are not logic, they
+// are a judgement that has drifted back twice: a thing WE do to the file is
+// information, not something the customer has to accept responsibility for.
+// As warnings they held the traffic light at amber and raised the tick box on
+// files that were perfectly fine.
+is(/state:'info',\s*kind:'nobleed'/.test(SRC), true,
+   'a file at exact card size is info \u2014 we mirror the edges outward ourselves');
+is(/status:'info', label:'Bleed'/.test(SRC), true,
+   'and the same fact on the PDF path agrees with it');
+is(/status:'info', label:'File format', val: ext/.test(SRC), true,
+   'an image is info too \u2014 whether THIS one is good enough is the resolution check');
+is(/status:'err', label:'Resolution'/.test(SRC), true,
+   'while resolution, which really is the customer\u2019s to fix, can still be an error');
+
 print('\n' + pass + ' passed, ' + fail + ' failed\n');
 if (fail) throw new Error(fail + ' assertion(s) failed');

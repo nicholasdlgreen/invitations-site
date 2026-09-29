@@ -2754,10 +2754,14 @@ async function faceVerdict(key){
                             detail: mm(bw) + '\u00d7' + mm(bh) + 'mm with bleed. Ready to print.' };
 
   if (fits(spec.mmW, spec.mmH)){
-    // Not a choice. mirrorEdges() reflects the outer 3mm outward to make the
-    // bleed, so nothing is cropped and no white appears. Offering an
-    // alternative would only let the customer pick something worse.
-    return { state:'warn', kind:'nobleed', short:'No bleed — we\u2019ll make it',
+    // Not a choice, and not a fault either. mirrorEdges() reflects the outer
+    // 3mm OUTWARD to make the bleed, so nothing of the design is lost and no
+    // white appears. There is nothing here for the customer to decide or fix,
+    // which is why it is information rather than a warning: as a warning it
+    // held the traffic light at amber and raised the tick box, asking someone
+    // to accept responsibility for the very thing the next sentence promises
+    // we handle. A PDF at exact card size is what most people export.
+    return { state:'info', kind:'nobleed', short:'No bleed — we\u2019ll make it',
              detail:'This is exactly card size, with no bleed. Printers cut with a little '
                   + 'movement either way, so we mirror the outer 3mm outward to fill the gap. '
                   + 'Nothing is cropped.' };
@@ -2905,8 +2909,10 @@ function refreshSizeRow(){
   const v = shownVerdict(activeFace);
   let row = list.querySelector('.check-row[data-check="Artwork size"]');
   if (!v || !v.detail){ if (row) row.remove(); return; }
-  const state = v.state === 'err' ? 'err' : v.state === 'ok' ? 'ok' : 'warn';
-  const icon = state === 'ok' ? '\u2713' : state === 'err' ? '\u2715' : '!';
+  const state = v.state === 'err' ? 'err' : v.state === 'ok' ? 'ok'
+              : v.state === 'info' ? 'info' : 'warn';
+  const icon = state === 'ok' ? '\u2713' : state === 'err' ? '\u2715'
+             : state === 'info' ? 'i' : '!';
   if (!row){
     row = document.createElement('div');
     row.className = 'check-row';
@@ -2996,7 +3002,8 @@ function noticeHtml(key, v, withLabel){
          + '<b>\u2713 ' + esc(withLabel ? label + ' \u2014 that\u2019s better' : 'That\u2019s better') + '</b>'
          + '<span>' + esc(v.detail || v.short) + '</span></div>';
   }
-  if (v.state === 'ok' || !v.detail) return '';
+  // 'info' is something we are doing, not something to answer for.
+  if (v.state === 'ok' || v.state === 'info' || !v.detail) return '';
 
   const cls = v.state === 'err' ? 'err' : 'warn';
   return '<div class="slot-note ' + cls + '">'
@@ -3458,7 +3465,7 @@ async function buildAndRunChecks(file, info){
       if (hasBleed){
         checks.push({status:'ok', label:'Bleed', val:'3mm bleed detected', note:'Your file includes the 3mm bleed margin — your background will print right to the edge.'});
       } else if (atTrim){
-        checks.push({status:'warn', label:'Bleed', val:'No bleed — we\'ll add it', note:'Your file is at exact trim size with no 3mm bleed. We\'ll extend your background outwards by 3mm automatically so there are no white edges after cutting. For complete control, re-export your PDF with 3mm bleed and crop marks.'});
+        checks.push({status:'info', label:'Bleed', val:'No bleed — we\'ll add it', note:'Your file is at exact trim size with no 3mm bleed. We\'ll extend your background outwards by 3mm automatically so there are no white edges after cutting. For complete control, re-export your PDF with 3mm bleed and crop marks.'});
       }
 
       // Update preview meta + show the rendered canvas
