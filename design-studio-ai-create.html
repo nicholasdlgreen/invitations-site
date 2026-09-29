@@ -139,9 +139,16 @@ padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
    --ds-head is the real measured header height; 75px is only what to paint
    with before setStudioHeadOffset() runs. */
 .ds-preview-col{position:static;}
-.ds-preview-stick{position:sticky;top:calc(var(--ds-head, 75px) + 16px);
-  min-height:calc(100vh - var(--ds-head, 75px) - 32px);
-  display:flex;flex-direction:column;justify-content:center;}
+/* A sticky element can only hold still for as long as its container is taller
+   than it is. Making this box the full height of the window to centre the card
+   inside it ATE that difference: with only the wording section open the left
+   column is 703px, the box was 703px, and the preview could not stick at all.
+   So the box stays exactly the height of the card, and the centring is done by
+   the offset instead \u2014 which costs nothing.
+   top is the lower of "clear of the header" and "centred in the window", so on
+   a tall screen it centres and on a short one it simply clears the header. */
+.ds-preview-stick{position:sticky;
+  top:max(calc(var(--ds-head, 75px) + 16px), calc((100vh - var(--ds-pvh, 642px)) / 2));}
 .ds-preview{background:#F1EFE9;border:1px solid var(--border);border-radius:16px;padding:18px;}
 .ds-preview-label{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-align:center;margin-bottom:12px;}
 /* A ceiling, not a target: with room the card stays exactly the size it was,
@@ -222,7 +229,7 @@ padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
 @media(max-width:820px){
   .ds-grid{grid-template-columns:1fr;}
   .ds-preview-col{position:static;order:-1;margin-bottom:8px;}
-  .ds-preview-stick{position:static;min-height:0;display:block;}
+  .ds-preview-stick{position:static;}
   .ds-canvas{max-height:none;}
   .ds-canvas{max-width:300px;margin:0 auto;}
   .ds-steps-label{display:none;}
@@ -1397,7 +1404,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // same amount, so the difference between them \u2014 the chrome \u2014 does not move.
   // Writing the variable only when it actually changes makes that settle after
   // one pass instead of feeding back on itself.
-  var lastChrome = -1;
+  var lastChrome = -1, lastPvH = -1;
   function setStudioMetrics(){
     var hdr = document.querySelector('header');
     if (hdr){
@@ -1412,6 +1419,12 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       if (chrome >= 0 && chrome !== lastChrome){
         lastChrome = chrome;
         document.documentElement.style.setProperty('--ds-chrome', chrome + 'px');
+      }
+      // And the card's own height, which is what it has to be centred against.
+      var h = Math.round(pv.getBoundingClientRect().height);
+      if (h > 0 && h !== lastPvH){
+        lastPvH = h;
+        document.documentElement.style.setProperty('--ds-pvh', h + 'px');
       }
     }
   }
