@@ -1398,7 +1398,19 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     document.querySelectorAll('.ds-steps-label').forEach(function(l){l.classList.toggle('active',+l.dataset.lbl===n);});
     secs.forEach(function(s){ s.classList.toggle('ds-sec-done', +s.dataset.sec < n); });
   }
-  heads.forEach(function(h){ h.addEventListener('click', function(){ setStep(+h.dataset.head); }); });
+  // Clicking the open section closes it again. It used to call setStep() with
+  // the step it was already on, which re-opened the very thing being clicked,
+  // so the chevron pointed up at something that would not go down.
+  //
+  // The rail keeps its step marked: collapsing a section is putting the lid on
+  // it, not leaving it. Blanking the rail would make the page look as though
+  // nothing were selected at all.
+  function toggleStep(n){
+    var sec = document.querySelector('.ds-sec[data-sec="' + n + '"]');
+    if (sec && sec.classList.contains('open')){ sec.classList.remove('open'); return; }
+    setStep(n);
+  }
+  heads.forEach(function(h){ h.addEventListener('click', function(){ toggleStep(+h.dataset.head); }); });
 
   document.getElementById('w-addbtn').addEventListener('click', function(){ document.getElementById('w-more').classList.add('show'); this.style.display='none'; });
 
