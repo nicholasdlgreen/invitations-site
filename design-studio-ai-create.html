@@ -2154,6 +2154,11 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     if (missing.length) {
       var el = document.getElementById(missing[0].id);
       if (el) {
+        // The field, its red edge and the hint all live in the wording step,
+        // and only one step is open at a time — so from step 3 every bit of
+        // this happened inside a closed section and the button looked dead.
+        var sec = el.closest ? el.closest('.ds-sec') : null;
+        if (sec && !sec.classList.contains('open')) setStep(+sec.dataset.sec);
         el.classList.add('ds-fld-needed');
         el.focus();
         el.scrollIntoView({ block: 'center', behavior: 'smooth' });

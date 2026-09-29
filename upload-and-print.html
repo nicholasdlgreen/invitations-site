@@ -2154,7 +2154,12 @@ function paintSizeArt(keys){
 // Kept for older call sites — the renderer does the filtering now.
 function applySizeFilter() { renderSizeCards(); }
 
-loadSiteData();
+// Step 3 decides which ranges exist from the papers this returns, so it has to
+// be possible to wait for it. Arriving from the design studio mounted the step
+// before this resolved: every paper fell back to Signature, the range choice
+// saw one range and removed itself, and _step3Ready latched — so Luxury and
+// Eco were unreachable for the rest of the visit.
+const _siteDataReady = loadSiteData();
 loadPrintSizes();
 loadDeliveryOptions();
   
@@ -4318,6 +4323,8 @@ window.addEventListener('resize', setRailOffset);
 
 async function initStep3(){
   if (!_step3Ready) {
+    // Never draw the step against a half-loaded catalogue.
+    try { await _siteDataReady; } catch (e) { /* drawn from whatever arrived */ }
     const mount = document.getElementById('step3Mount');
     try {
       const r = await fetch('/step3/step3.html');
@@ -4341,7 +4348,10 @@ async function initStep3(){
       console.error('step 3 failed to start', e);
       return;
     }
-    _step3Ready = true;
+    // Only remember this step as built if it had a catalogue to build from.
+    // Latching on an empty one is what made the fault stick for the whole visit
+    // instead of righting itself on the next look.
+    if (step3Papers().length) _step3Ready = true;
   }
   setRailOffset();
   Step3.setArtwork(step3Artwork());
