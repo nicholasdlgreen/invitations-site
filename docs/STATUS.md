@@ -56,12 +56,23 @@ the autovacuum fix from §11 holding.
    deploy (needs a node shim, Netlify is Linux); then put the daily check on a
    cron that does not depend on a laptop being open.
 
-5. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+5. **The order of service does not yet offer flat or folded**, which Nicholas
+   asked for on 29 September. Every paper and size it sells has full rate
+   coverage in both `flat-card` and `folded-leaflet`, so it is priceable — but
+   `routes` is a hand-maintained column and changing it changes which family
+   prices the product, so it needs a route edit and a Publish, not a UI change.
+
+6. **Publish is needed** to finish the fold rework: `available_finishes` no
+   longer lists `Fold` on the five products that had it, but the published
+   payload still does. The pages filter it out in code so nobody is asked
+   twice, and `tools/check-live.py` will report the mismatch until a publish.
+
+7. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
    and `test-section-race`. They read fixtures from a scratchpad that no longer
    exists. Small job, but a real failure can hide behind noise that is always
    there.
 
-6. **The migration backups are still in the database.**
+8. **The migration backups are still in the database.**
    `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
    the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
    can put it back. Drop both once the six-box step 3 has bedded in.
