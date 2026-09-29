@@ -40,13 +40,13 @@
    to stay beside. The space it adds is empty and has no background, and it
    only appears when the form is short \u2014 which is exactly when there is room
    to spare. */
-.ds-acc{display:flex;flex-direction:column;gap:12px;
+.ds-acc{display:flex;flex-direction:column;gap:12px;min-width:0;
   min-height:calc(var(--ds-pvh, 642px) + 50vh);}
 /* scroll-margin-top is how an element says "leave this much room above me when
    something scrolls me into view". Without it, placing a section puts its
    header underneath the sticky site header \u2014 which is exactly the 5px-under
    landing this exists to stop. The header height is measured into --ds-head. */
-.ds-sec{background:var(--cream);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;
+.ds-sec{background:var(--cream);border:1px solid var(--border);border-radius:14px;overflow:hidden;min-width:0;transition:border-color .2s;
   scroll-margin-top:calc(var(--ds-head, 75px) + 16px);}
 .ds-sec.open{border-color:var(--gold-lt);}
 .ds-sec-head{width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:var(--text-h3);color:var(--text);text-align:left;}
@@ -100,7 +100,20 @@ transition:all .2s;display:inline-flex;align-items:center;gap:8px;background:non
 .ds-addmore{background:none;border:none;color:var(--gold);font-family:'Jost',sans-serif;font-size:var(--text-sm);cursor:pointer;padding:6px 0 0;letter-spacing:.02em;}
 .ds-more{display:none;}
 .ds-more.show{display:block;}
-.ds-label{font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin:16px 0 8px;}
+.ds-label{font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin:16px 0 8px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+.ds-label em{font-style:normal;text-transform:none;letter-spacing:.04em;font-size:11px;color:var(--gold);}
+.ds-pairs{margin-bottom:9px;}
+.ds-pair{border:1px solid var(--border);background:var(--white);border-radius:60px;padding:5px 12px 5px 6px;font-family:'Jost',sans-serif;font-size:11.5px;color:var(--soft);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .2s;}
+.ds-pair:hover{border-color:var(--gold-lt);}
+.ds-pair.on{border-color:var(--gold);background:#F4EDE6;color:var(--brown);}
+/* On a phone six pairs wrap to six lines and cost 100px before the palette
+   is even reached, so they become one row you push sideways instead. */
+@media(max-width:520px){.ds-chips.ds-pairs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+.ds-pairs::-webkit-scrollbar{display:none;}
+.ds-chips.ds-pairs .ds-pair{flex:0 0 auto;}}
+.ds-pair i{display:inline-flex;}
+.ds-pair i span{width:15px;height:15px;border-radius:50%;display:block;border:1.5px solid var(--white);margin-left:-6px;}
+.ds-pair i span:first-child{margin-left:0;}
 .ds-label:first-child{margin-top:0;}
 .ds-chips{display:flex;gap:7px;flex-wrap:wrap;}
 .ds-chip{border:1px solid var(--border);background:var(--white);border-radius:60px;padding:8px 15px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--soft);cursor:pointer;transition:all .2s;}
@@ -830,7 +843,8 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div class="ds-sec-body">
           <div class="ds-sec-hint">Tap the ideas you love, the more you choose, the better it will be</div>
 
-          <div class="ds-label" data-label-for="colour">Colours</div>
+          <div class="ds-label" data-label-for="colour">Palette<em>as many as you like</em></div>
+          <div class="ds-chips ds-pairs" data-group="pair" style="display:none;"></div>
           <div class="ds-chips" data-group="colour" style="gap:9px;">
             <span class="ds-sw" data-v="sage green" style="background:#DDE3D3;"></span>
             <span class="ds-sw" data-v="cream" style="background:#E8DDD8;"></span>
@@ -846,56 +860,65 @@ was fetched and injected via innerHTML — that was the bug behind the
             <span class="ds-sw" data-v="olive" style="background:#8A9A7B;"></span>
           </div>
 
-          <div class="ds-label" data-label-for="style">Style</div>
-          <div class="ds-chips" data-group="style">
-            <button class="ds-chip" data-v="soft watercolour florals">watercolour</button>
-            <button class="ds-chip" data-v="fine botanical linework">botanical linework</button>
-            <button class="ds-chip" data-v="hand-painted florals">hand-painted</button>
-            <button class="ds-chip" data-v="pressed and dried flowers">pressed flowers</button>
-            <button class="ds-chip" data-v="elegant and minimalist">minimalist</button>
-            <button class="ds-chip" data-v="classic engraved">classic engraved</button>
-            <button class="ds-chip" data-v="art deco geometric">art deco</button>
-            <button class="ds-chip" data-v="vintage romantic">vintage</button>
-            <button class="ds-chip" data-v="modern editorial">modern</button>
+          <div class="ds-label" data-label-for="medium">Medium<em>pick one</em></div>
+          <div class="ds-chips" data-group="medium" data-single="1">
+            <button class="ds-chip" data-v="in soft watercolour">watercolour</button>
+            <button class="ds-chip" data-v="in fine ink linework">ink linework</button>
+            <button class="ds-chip" data-v="in hand-painted gouache">hand-painted</button>
+            <button class="ds-chip" data-v="made from pressed and dried flowers">pressed flowers</button>
+            <button class="ds-chip" data-v="in the manner of fine engraving">engraved</button>
+            <button class="ds-chip" data-v="in loose hand-drawn pen">hand-drawn</button>
+            <button class="ds-chip" data-v="on textured cotton paper">textured paper</button>
+            <button class="ds-chip" data-v="in a loose painterly wash">painterly wash</button>
           </div>
 
-          <div class="ds-label" data-label-for="touch">Decorative touches</div>
-          <div class="ds-chips" data-group="touch">
+          <div class="ds-label" data-label-for="era">Era<em>pick one</em></div>
+          <div class="ds-chips" data-group="era" data-single="1">
+            <button class="ds-chip" data-v="classic">classic</button>
+            <button class="ds-chip" data-v="modern">modern</button>
+            <button class="ds-chip" data-v="vintage">vintage</button>
+            <button class="ds-chip" data-v="art deco">art deco</button>
+            <button class="ds-chip" data-v="minimal">minimal</button>
+            <button class="ds-chip" data-v="bohemian">bohemian</button>
+          </div>
+
+          <div class="ds-label" data-label-for="layout">Layout<em>pick one</em></div>
+          <div class="ds-chips" data-group="layout" data-single="1">
+            <button class="ds-chip" data-v="arranged as a border around the edge">a border</button>
+            <button class="ds-chip" data-v="the decoration kept to the corners">corners</button>
+            <button class="ds-chip" data-v="arranged as a wreath">a wreath</button>
+            <button class="ds-chip" data-v="as a loose spray down one side">down one side</button>
+            <button class="ds-chip" data-v="as a delicate all-over pattern">all-over</button>
+            <button class="ds-chip" data-v="kept very sparing">sparing</button>
+          </div>
+
+          <div class="ds-label" data-label-for="motif">Motif<em>as many as you like</em></div>
+          <div class="ds-chips" data-group="motif">
             <button class="ds-chip" data-v="trailing eucalyptus">eucalyptus</button>
-            <button class="ds-chip" data-v="soft blush roses">blush roses</button>
+            <button class="ds-chip" data-v="blush roses">blush roses</button>
             <button class="ds-chip" data-v="delicate wildflowers">wildflowers</button>
-            <button class="ds-chip" data-v="greenery and foliage">greenery</button>
-            <button class="ds-chip" data-v="a botanical wreath">a wreath</button>
+            <button class="ds-chip" data-v="soft greenery">greenery</button>
             <button class="ds-chip" data-v="gold foliage">gold foliage</button>
-            <button class="ds-chip" data-v="a monogram crest">a monogram</button>
-            <button class="ds-chip" data-v="fine gold foil detailing">gold foil</button>
-            <button class="ds-chip" data-v="deckled edges">deckled edges</button>
+            <button class="ds-chip" data-v="a monogram">a monogram</button>
+            <button class="ds-chip" data-v="a hand-drawn heraldic crest">a crest</button>
+            <button class="ds-chip" data-v="silk ribbon bows">bows</button>
+            <button class="ds-chip" data-v="fine lace detailing">lace</button>
           </div>
 
-          <div class="ds-label" data-label-for="mood">Mood</div>
+          <div class="ds-label" data-label-for="mood">Mood<em>as many as you like</em></div>
           <div class="ds-chips" data-group="mood">
             <button class="ds-chip" data-v="warm and romantic">warm &amp; romantic</button>
             <button class="ds-chip" data-v="soft and airy">soft &amp; airy</button>
-            <button class="ds-chip" data-v="candlelit and intimate">candlelit</button>
+            <button class="ds-chip" data-v="candlelit">candlelit</button>
             <button class="ds-chip" data-v="bright and fresh">bright &amp; fresh</button>
-            <button class="ds-chip" data-v="timeless and refined">timeless</button>
-            <button class="ds-chip" data-v="grand and opulent">grand</button>
+            <button class="ds-chip" data-v="timeless">timeless</button>
+            <button class="ds-chip" data-v="grand">grand</button>
+            <button class="ds-chip" data-v="sunlit">sunlit</button>
+            <button class="ds-chip" data-v="softly lit">softly lit</button>
           </div>
 
-          <div class="ds-label" data-label-for="finish">Light &amp; finish</div>
-          <div class="ds-chips" data-group="finish">
-            <button class="ds-chip" data-v="soft natural light">soft natural light</button>
-            <button class="ds-chip" data-v="warm glowing light">warm glow</button>
-            <button class="ds-chip" data-v="bright airy daylight">airy daylight</button>
-            <button class="ds-chip" data-v="on textured cotton paper">textured paper</button>
-            <button class="ds-chip" data-v="a subtle painterly wash">painterly wash</button>
-          </div>
-
-          <div class="ds-label" data-label-for="setting" style="display:none;">Where it's happening</div>
-          <div class="ds-chips" data-group="setting" style="display:none;"></div>
-
-          <div class="ds-label" data-label-for="season" style="display:none;">Time of year</div>
-          <div class="ds-chips" data-group="season" style="display:none;"></div>
+          <div class="ds-label" data-label-for="audience" style="display:none;">Who it&rsquo;s for<em>pick one</em></div>
+          <div class="ds-chips" data-group="audience" data-single="1" style="display:none;"></div>
 
           <div class="ds-brief">
             <div class="ds-brief-label">The brief we'll send</div>
@@ -1202,7 +1225,15 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
 <script>
 (function(){
-  var sel = { style:[], setting:[], season:[], touch:[], mood:[], finish:[], colour:[] };
+  // Built from the chip groups actually in the page, so the six boxes are
+  // named in one place only. A saved design from before the rework carries
+  // keys that no longer exist; they are simply never read.
+  var sel = {};
+  function resetSel(){
+    sel = {};
+    document.querySelectorAll('.ds-chips').forEach(function(g){ sel[g.dataset.group] = []; });
+  }
+  resetSel();
   var size = '5x7';
 
   // ---- size definitions: aspect ratio (width/height) per size ----
@@ -1340,29 +1371,45 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   var CONFIG_BASE_PROMPT = null;   // set from studio_config when it loads
   var CONFIG_PRODUCT_NOUN = 'wedding invitation';  // fallback noun
   function buildBrief(){
-    var mood = sel.mood.length ? sel.mood.join(', ') : '';
-    var style = sel.style.length ? sel.style.join(', ') : 'elegant';
-    var touch = sel.touch.length ? 'with ' + sel.touch.join(', ') : '';
-    var colour = sel.colour.length ? 'in ' + sel.colour.join(', ') : '';
-    var finish = sel.finish.length ? sel.finish.join(', ') : '';
-    // Setting and season carry their own prepositions in the stored phrase
-    // ("with an English country garden feeling"), so they drop straight into
-    // the template and read as a sentence when several are chosen.
-    // Each phrase carries its own preposition ("with a...", "in fresh..."), so
-    // joining two of them repeated it: "with a coastal feeling and with a
-    // vineyard feeling". Only the first one keeps it.
+    function pick(cat){ return sel[cat] || []; }
+    // "a, b and c" rather than "a, b, c" — the brief is read by a person as
+    // well as by the model, and the list is the part they check.
+    function andList(a){
+      return a.length < 2 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+    }
+    // Mood and era both describe the design before it is named, so they share
+    // the one slot: "A warm and cosy, Scandinavian Christmas card design".
+    var lead   = pick('mood').concat(pick('era'));
+    var leadTx = lead.length ? lead.join(', ') : 'elegant';
+    // Every other phrase carries its own joining word, so the sentence holds
+    // together whether one box is answered or all six.
+    var audience = pick('audience').length ? ' ' + pick('audience')[0] : '';
+    var medium   = pick('medium')[0] || '';
+    var layout   = pick('layout')[0] || '';
+    var motif    = pick('motif').length  ? 'with ' + andList(pick('motif'))  : '';
+    var colour   = pick('colour').length ? 'in '   + andList(pick('colour')) : '';
+    // The vocabulary before the rework: still filled in, so a template that has
+    // not been migrated yet keeps working instead of printing its placeholders.
     function joinPhrases(list){
       return list.map(function(ph, i){
         return i === 0 ? ph : ph.replace(/^(with|in|on)\s+/i, '');
       }).join(' and ');
     }
-    var setting = sel.setting.length ? joinPhrases(sel.setting) : '';
-    var season = sel.season.length ? joinPhrases(sel.season) : '';
+    var mood    = pick('mood').join(', ');
+    var style   = pick('style').length ? pick('style').join(', ') : 'elegant';
+    var touch   = pick('touch').length ? 'with ' + pick('touch').join(', ') : '';
+    var finish  = pick('finish').join(', ');
+    var setting = pick('setting').length ? joinPhrases(pick('setting')) : '';
+    var season  = pick('season').length  ? joinPhrases(pick('season'))  : '';
     var s;
     if(CONFIG_BASE_PROMPT){
-      // fill the config template's {placeholders}
       s = CONFIG_BASE_PROMPT
-        .replace('{mood}', mood ? mood : '')
+        .replace('{lead}', leadTx)
+        .replace('{audience}', audience)
+        .replace('{medium}', medium)
+        .replace('{layout}', layout)
+        .replace('{motif}', motif)
+        .replace('{mood}', mood)
         .replace('{style}', style)
         .replace('{setting}', setting)
         .replace('{season}', season)
@@ -1377,19 +1424,19 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         .replace(/\s{2,}/g, ' ')          // runs of spaces from empty slots
         .replace(/\s+([,.])/g, '$1')      // no space before comma or full stop
         .replace(/,\s*(?=,)/g, '')        // no doubled commas
+        .replace(/,\s*\./g, '.')          // nor a comma left hanging before the stop
         .replace(/^A,\s*/i, 'A ')         // "A, elegant" when the mood is empty
         .replace(/^A (?=[aeiou])/, 'An ')  // ...which then read "A elegant"
         .replace(/\s+$/, '');
     } else {
       // fallback (hardcoded), but with the product noun not fixed to wedding
-      var lead = (mood ? mood + ', ' : '') + style;
-      var parts = ['A ' + lead + ' ' + CONFIG_PRODUCT_NOUN + ' design for ' + (sizeInfo(size) ? sizeInfo(size).desc : 'an invitation')];
-      if(setting) parts.push(setting);
-      if(season) parts.push(season);
-      if(touch) parts.push(touch);
+      var parts = ['A ' + leadTx + ' ' + CONFIG_PRODUCT_NOUN + ' design' + audience];
+      if(medium) parts.push(medium);
+      if(layout) parts.push(layout);
+      if(motif)  parts.push(motif);
       if(colour) parts.push(colour);
-      if(finish) parts.push(finish);
-      s = parts.join(', ') + '. A decorative design only, with generous clear empty space in the centre for text — no lettering or words in the image. Flat, straight-on, fills the frame, print quality.';
+      s = parts.join(', ') + '. A decorative design only, with generous clear empty space in the centre for text \u2014 no lettering or words in the image. Flat, straight-on, fills the frame, print quality.';
+      s = s.replace(/^A (?=[aeiou])/, 'An ');
     }
     var briefEl = document.getElementById('ds-brief-text');
     if(briefEl) briefEl.textContent = '"' + s + '"';
@@ -1499,15 +1546,50 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   });
   renderTurnToggle();
 
+  // A ready-made pair is a shortcut into the palette, not a seventh thing the
+  // brief mentions: clicking one selects its two colours and nothing else.
+  function applyPair(g, c){
+    var names = (c.dataset.v || '').split('|').map(function(x){ return x.trim(); }).filter(Boolean);
+    sel.colour = names.slice();
+    var sw = document.querySelector('.ds-chips[data-group="colour"]');
+    if (sw) sw.querySelectorAll('.ds-sw').forEach(function(o){
+      o.classList.toggle('on', names.indexOf(o.dataset.v) > -1);
+    });
+    g.querySelectorAll('.ds-pair').forEach(function(o){ o.classList.toggle('on', o === c); });
+  }
+
   function wireChips(){
     document.querySelectorAll('.ds-chips').forEach(function(g){
-      var cat=g.dataset.group;
-      g.querySelectorAll('.ds-chip, .ds-sw').forEach(function(c){
+      var cat=g.dataset.group, single = g.dataset.single === '1';
+      g.querySelectorAll('.ds-chip, .ds-sw, .ds-pair').forEach(function(c){
         if(c.dataset.wired) return; c.dataset.wired='1';
         c.addEventListener('click', function(){
-          c.classList.toggle('on');
-          var v=c.dataset.v, i=sel[cat].indexOf(v);
-          if(i>-1) sel[cat].splice(i,1); else sel[cat].push(v);
+          if(!sel[cat]) sel[cat] = [];
+          var v=c.dataset.v;
+          if (cat === 'pair'){
+            applyPair(g, c);
+            logEvent('chip_select', { category: cat, label: c.textContent || v, phrase: v });
+            buildBrief();
+            return;
+          }
+          if (single){
+            // Medium, era and layout each answer one question. Picking a second
+            // replaces the first rather than putting two answers that argue
+            // with each other into the same sentence.
+            var was = c.classList.contains('on');
+            g.querySelectorAll('.ds-chip, .ds-sw').forEach(function(o){ o.classList.remove('on'); });
+            if (!was) c.classList.add('on');
+            sel[cat] = was ? [] : [v];
+          } else {
+            c.classList.toggle('on');
+            var i=sel[cat].indexOf(v);
+            if(i>-1) sel[cat].splice(i,1); else sel[cat].push(v);
+          }
+          // Choosing a colour by hand is no longer whichever pair was showing
+          if (cat === 'colour'){
+            var pg = document.querySelector('.ds-chips[data-group="pair"]');
+            if (pg) pg.querySelectorAll('.ds-pair').forEach(function(o){ o.classList.remove('on'); });
+          }
           logEvent(c.classList.contains('on') ? 'chip_select' : 'chip_deselect', { category: cat, label: c.textContent || v, phrase: v });
           buildBrief();
         });
@@ -1628,20 +1710,22 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       // group by category
       var byCat = {};
       rows.forEach(function(o){ (byCat[o.category] = byCat[o.category] || []).push(o); });
+      // The swatch colours are needed to draw the ready-made pairs, so the
+      // palette is read before anything is rendered.
+      var hex = {};
+      (byCat.colour || []).forEach(function(o){ hex[o.phrase] = o.swatch_hex || '#ccc'; });
       // reset selection state, then rebuild each chip group
-      Object.keys(sel).forEach(function(k){ sel[k] = []; });
+      resetSel();
       document.querySelectorAll('.ds-chips').forEach(function(g){
         var cat = g.dataset.group;
         var lbl = document.querySelector('.ds-label[data-label-for="' + cat + '"]');
         if(!byCat[cat]){
-          // Setting and Season ship empty and are filled per product, so a
-          // product without them must hide the row rather than show a bare
-          // heading. Groups that carry hardcoded fallback chips are left alone
-          // so a failed fetch still renders a usable step.
-          if(!g.children.length){
-            g.style.display = 'none';
-            if(lbl) lbl.style.display = 'none';
-          }
+          // We only get here when the fetch succeeded, so a category with no
+          // rows is a category this product does not have — hide it. Leaving
+          // the hardcoded chips in place showed eucalyptus on a birthday card.
+          g.innerHTML = '';
+          g.style.display = 'none';
+          if(lbl) lbl.style.display = 'none';
           return;
         }
         g.style.display = '';
@@ -1653,6 +1737,14 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
             el = document.createElement('span');
             el.className = 'ds-sw' + (o.default_on ? ' on' : '');
             el.style.background = o.swatch_hex || '#ccc';
+          } else if(cat === 'pair'){
+            // phrase is the two colour names, exactly as the swatches store them
+            el = document.createElement('button');
+            el.className = 'ds-pair';
+            var dots = o.phrase.split('|').map(function(n){
+              return '<span style="background:' + (hex[n.trim()] || '#ccc') + '"></span>';
+            }).join('');
+            el.innerHTML = '<i>' + dots + '</i>' + o.label;
           } else {
             el = document.createElement('button');
             el.className = 'ds-chip' + (o.default_on ? ' on' : '');
@@ -1660,7 +1752,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
           }
           el.dataset.v = o.phrase;
           g.appendChild(el);
-          if(o.default_on) sel[cat].push(o.phrase);
+          if(o.default_on && cat !== 'pair') sel[cat].push(o.phrase);
         });
       });
       wireChips();

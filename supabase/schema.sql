@@ -1286,3 +1286,24 @@ ALTER TABLE public.pricing_config SET (
   toast.autovacuum_vacuum_scale_factor = 0,
   toast.autovacuum_vacuum_cost_delay = 0
 );
+
+-- ---------------------------------------------------------------------------
+-- Migration backups, 2026-09-29. Temporary: these hold the seven-category chip
+-- vocabulary and the {mood}/{style} prompt templates as they were before
+-- tools/sql/studio_vocab_20260929.sql ran, and exist only so that
+-- tools/sql/studio_vocab_20260929_rollback.sql can put them back. Drop both
+-- once the six-box step 3 has been live for a while.
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.studio_prompt_options_pre_20260929 (
+  LIKE public.studio_prompt_options
+);
+CREATE TABLE IF NOT EXISTS public.studio_config_pre_20260929 (
+  LIKE public.studio_config
+);
+
+ALTER TABLE public.studio_prompt_options_pre_20260929 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.studio_config_pre_20260929 ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY studio_prompt_options_pre_20260929_admin_only ON public.studio_prompt_options_pre_20260929 AS PERMISSIVE FOR ALL TO public USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY studio_config_pre_20260929_admin_only ON public.studio_config_pre_20260929 AS PERMISSIVE FOR ALL TO public USING (is_admin()) WITH CHECK (is_admin());
