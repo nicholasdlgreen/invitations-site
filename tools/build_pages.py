@@ -586,6 +586,69 @@ def write_guides_index(guides, slugs):
 CHROME_SKIP = {"header.html", "footer.html", "admin.html"}
 
 
+# ── THE TAB ICON ─────────────────────────────────────────────────────────
+# The site had no favicon at all, so every tab showed a blank sheet on all 56
+# pages. inline_chrome() below works on the BODY — it swaps the header and
+# footer placeholders — so the head needs its own pass.
+#
+# The mark is "fp" in Cormorant Garamond, the f in the body brown and the p in
+# the gold, the way the logo splits the name. It is shipped as PNG rather than
+# SVG on purpose: a favicon is not allowed to fetch a webfont, so an SVG with a
+# letter in it renders in whatever serif the viewer happens to have and would
+# look different on every machine. These were rendered once, from the real
+# font, by tools/make-favicon.html.
+FAVICON_TAGS = (
+    '<link rel="icon" href="/favicon.ico" sizes="any"/>\n'
+    '<link rel="icon" type="image/png" sizes="32x32" href="/img/brand/favicon-32.png"/>\n'
+    '<link rel="icon" type="image/png" sizes="16x16" href="/img/brand/favicon-16.png"/>\n'
+    '<link rel="apple-touch-icon" sizes="180x180" href="/img/brand/favicon-180.png"/>\n'
+)
+FAVICON_START = "<!--FAVICON-->"
+FAVICON_END = "<!--/FAVICON-->"
+
+
+def inline_favicon():
+    """Put the tab icon into every page's <head>.
+
+    Wrapped in markers, like the chrome below, so the next build replaces the
+    block rather than adding a second copy. It goes immediately after
+    <meta charset>, which every page in this repo has as its first head tag.
+    """
+    pages = [(n, os.path.join(ROOT, n)) for n in sorted(os.listdir(ROOT))]
+    guides_dir = os.path.join(ROOT, "guides")
+    if os.path.isdir(guides_dir):
+        pages += [(n, os.path.join(guides_dir, n)) for n in sorted(os.listdir(guides_dir))]
+
+    block = FAVICON_START + "\n" + FAVICON_TAGS + FAVICON_END
+    done = skipped = 0
+    for name, path in pages:
+        if not name.endswith(".html"):
+            continue
+        try:
+            html = open(path, encoding="utf-8").read()
+        except OSError:
+            continue
+        before = html
+
+        if FAVICON_START in html:
+            html = re.sub(re.escape(FAVICON_START) + r".*?" + re.escape(FAVICON_END),
+                          lambda _m: block, html, count=1, flags=re.S)
+        else:
+            m = re.search(r"<meta\s+charset=[^>]*>", html, re.I)
+            if not m:
+                # No charset to anchor to. Say so rather than guessing at a
+                # position and quietly putting the tags somewhere useless.
+                log(f"  {name}: no <meta charset> — favicon not added")
+                skipped += 1
+                continue
+            html = html[:m.end()] + "\n" + block + html[m.end():]
+
+        if html != before:
+            open(path, "w", encoding="utf-8").write(html)
+            done += 1
+    log(f"favicon in {done} page(s)" + (f", {skipped} skipped" if skipped else ""))
+
+
 def inline_chrome():
     """Put the header and footer into every page's HTML.
 
@@ -790,6 +853,7 @@ def main():
             log(f"wrote {len(guide_slugs)} guides")
 
     inline_chrome()
+    inline_favicon()
     write_sitemap(written, guide_slugs)
     return 0
 

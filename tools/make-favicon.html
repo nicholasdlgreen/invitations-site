@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<!--
+  THE TAB ICON, AND HOW TO REMAKE IT
+
+  The favicon is "fp" set in Cormorant Garamond — the f in the body brown and
+  the p in the gold, the way the logo splits the name.
+
+  It ships as PNG, not SVG, and that is deliberate: a favicon is not allowed to
+  fetch a webfont, so an SVG carrying a letter falls back to whatever serif the
+  viewer's machine happens to have and looks different on every computer. So
+  the letters are rendered ONCE here, with the real font, and the pixels are
+  what we ship.
+
+  To change it:
+    1. Serve the site locally and open /tools/make-favicon.html.
+    2. Adjust the constants below and reload until it looks right at 16px —
+       that is the size that decides, not the big one.
+    3. In the console: copy(window.ICONS['32'])  (and 16, 48, 180)
+    4. Decode each into img/brand/favicon-<size>.png.
+    5. Rebuild favicon.ico from the 16, 32 and 48 PNGs — the packer is a dozen
+       lines of struct.pack; see the commit that added this file.
+    6. python3 -c "import sys;sys.path.insert(0,'tools');import build_pages;build_pages.inline_favicon()"
+
+  The 48px PNG is not linked from any page. It exists so favicon.ico can be
+  rebuilt without re-rendering.
+-->
+<title>favicon generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet"/>
+<style>body{background:#DEE1E6;font-family:system-ui;padding:20px}canvas{background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0/10px 10px;margin:6px;vertical-align:bottom}</style>
+</head><body>
+<div id="out"></div>
+<script>
+// The mark: a cream tile, "f" in the body brown and "p" in the gold, the way
+// the logo splits the name. Drawn on a canvas with the real Cormorant Garamond
+// loaded, because a favicon cannot fetch a webfont — ship pixels, not an SVG.
+const CREAM = '#FAF7F2', BROWN = '#3D2E24', GOLD = '#B8976A';
+const SS = 8;                       // supersample, then scale down
+
+function drawMark(size){
+  const S = size * SS;
+  const c = document.createElement('canvas');
+  c.width = S; c.height = S;
+  const x = c.getContext('2d');
+
+  // tile
+  const r = S * 0.22;
+  x.beginPath();
+  if (x.roundRect) x.roundRect(0, 0, S, S, r);
+  else { x.moveTo(r,0); x.arcTo(S,0,S,S,r); x.arcTo(S,S,0,S,r); x.arcTo(0,S,0,0,r); x.arcTo(0,0,S,0,r); }
+  x.fillStyle = CREAM; x.fill();
+
+  // the two letters, measured so the PAIR is centred rather than each half
+  const fs = S * 0.54;
+  x.font = '600 ' + fs + 'px "Cormorant Garamond", Georgia, serif';
+  x.textBaseline = 'alphabetic';
+  const wf = x.measureText('f').width, wp = x.measureText('p').width;
+  const kern = fs * 0.015;                       // Cormorant's f has a wide terminal
+  const total = wf + wp + kern;
+  let px = (S - total) / 2;
+  // Optical centring: "p" has a descender and "f" an ascender, so centre on the
+  // x-height rather than the em box or it sits visibly high.
+  const m = x.measureText('fp');
+  const top = m.actualBoundingBoxAscent, bot = m.actualBoundingBoxDescent;
+  const baseline = (S + (top - bot)) / 2;
+
+  x.fillStyle = BROWN; x.fillText('f', px, baseline); px += wf + kern;
+  x.fillStyle = GOLD;  x.fillText('p', px, baseline);
+
+  // down to the real size, in one good-quality step
+  const o = document.createElement('canvas');
+  o.width = size; o.height = size;
+  const ox = o.getContext('2d');
+  ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
+  ox.drawImage(c, 0, 0, size, size);
+  return o;
+}
+
+window.ICONS = {};
+(async function(){
+  await document.fonts.load('600 40px "Cormorant Garamond"');
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 400));
+  const out = document.getElementById('out');
+  [16, 32, 48, 180, 512].forEach(function(s){
+    const cv = drawMark(s);
+    window.ICONS[s] = cv.toDataURL('image/png').split(',')[1];
+    const wrap = document.createElement('span');
+    wrap.appendChild(cv);
+    const lab = document.createElement('div');
+    lab.style.cssText = 'display:inline-block;font-size:11px;color:#444;margin-right:14px';
+    lab.textContent = s + 'px';
+    out.appendChild(wrap); out.appendChild(lab);
+  });
+  window.__ready = true;
+})();
+</script></body></html>
