@@ -60,6 +60,25 @@ body.wide-step .step-bar{display:none;}
 .side-slot.filled .side-slot-state{color:var(--ok);}
 .side-slot input[type=file]{display:none;}
 .side-slots-hint{font-size:var(--text-xs);color:var(--pale);text-align:center;margin:0 0 22px;line-height:1.7;}
+/* The placement screen. Two headings, because that is the thing the customer
+   just bought \u2014 outside and inside \u2014 and it teaches the model without a
+   sentence explaining it. The slots underneath stay single panels, so nobody
+   has to lay out a spread with the back on the left; we assemble that. */
+.slot-group{margin-bottom:18px;}
+.slot-group-h{font-size:var(--text-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--pale);margin:0 0 8px;}
+.slot-row{display:flex;gap:12px;flex-wrap:wrap;}
+.slot-row .side-slot{flex:1 1 120px;max-width:190px;}
+.slot-row .side-slot.spread{flex:2 1 250px;max-width:392px;}
+.side-slot.target{border-color:var(--gold);background:var(--cream);}
+.side-slot-blank{display:block;font-size:var(--text-xs);color:var(--pale);line-height:1.5;}
+/* Files the customer has given us that are not yet placed. */
+.file-pool{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:0 0 20px;}
+.pool-item{border:1px solid var(--border);border-radius:11px;background:var(--white);padding:8px;width:104px;text-align:center;cursor:grab;transition:border-color .2s,box-shadow .2s;}
+.pool-item:hover{border-color:var(--gold-lt);}
+.pool-item.picked{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,151,106,.16);}
+.pool-art{aspect-ratio:3/4;border-radius:6px;background:var(--cream);margin-bottom:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.pool-art img,.pool-art canvas{width:100%;height:100%;object-fit:contain;}
+.pool-name{display:block;font-size:var(--text-xs);color:var(--soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .drop-zone{border:1.5px dashed var(--border);border-radius:24px;padding:72px 40px;text-align:center;cursor:pointer;transition:all .3s;background:var(--white);position:relative;}
 .drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold);background:rgba(184,151,106,.04);}
 #fileInput{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
@@ -708,10 +727,11 @@ was fetched and injected via innerHTML — that was the bug behind the
       </div>
 
       <div id="sideSlotsWrap" style="display:none;">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;margin-bottom:10px;color:var(--text);text-align:center;">Upload your artwork</div>
-        <p id="sideSlotsLead" style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin-bottom:24px;text-align:center;">Drag a file onto each side, or click to browse.</p>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;margin-bottom:10px;color:var(--text);text-align:center;">Tell us what goes where</div>
+        <p id="sideSlotsLead" style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin-bottom:20px;text-align:center;"></p>
+        <div id="filePool" class="file-pool" hidden></div>
         <div id="sideSlots" class="side-slots"></div>
-        <p id="sideSlotsHint" class="side-slots-hint">Already have it as one file? Drop it on any box and we'll fill them in order.</p>
+        <p id="sideSlotsHint" class="side-slots-hint" hidden></p>
     <div id="slotNotices" class="slot-notices" hidden></div>
         <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
           <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">PDF</span>
@@ -725,12 +745,13 @@ was fetched and injected via innerHTML — that was the bug behind the
       </div>
 
       <div class="drop-zone" id="dropZone" style="opacity:.45;pointer-events:none;">
-        <input type="file" id="fileInput" accept=".pdf,.ai,.indd,.jpg,.jpeg,.png,.tif,.tiff,.eps" onchange="handleFile(this.files[0])"/>
+        <input type="file" id="fileInput" multiple accept=".pdf,.ai,.indd,.jpg,.jpeg,.png,.tif,.tiff,.eps" onchange="handleFiles(this.files)"/>
         <div style="width:72px;height:72px;border-radius:50%;background:rgba(184,151,106,.1);border:1.5px solid var(--gold-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B8976A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;margin-bottom:10px;color:var(--text);">Upload your artwork</div>
-        <p style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin-bottom:28px;">Drag and drop your file here, or click to browse.</p>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;margin-bottom:10px;color:var(--text);">Add your artwork</div>
+        <p style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin-bottom:8px;">Drop your file here, or click to browse</p>
+        <p id="dropSeveral" style="font-size:var(--text-xs);color:var(--pale);line-height:1.8;margin-bottom:22px;" hidden>Got several files? Add them all and you&rsquo;ll place each one</p>
         <div style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:1px solid var(--gold);border-radius:60px;color:var(--gold);font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;font-weight:500;margin-bottom:24px;">Click to choose a file</div>
         <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
           <span style="background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:var(--text-xs);color:var(--soft);">PDF</span>
@@ -1932,7 +1953,13 @@ function renderSidesToggle() {
     if (selectedSides !== 'single') selectedSides = 'single';
     return;
   }
-  const LABEL = { single: 'Single sided', double: 'Double sided' };
+  // On a folded card "single sided" is a contradiction the customer has to
+  // already understand: the front and the back are both on one side of the
+  // sheet. printed.com and instantprint both relabel it, in these words.
+  // A flat card keeps Single / Double, where they mean what they say.
+  const LABEL = isFoldedPiece()
+    ? { single: 'Outside only',  double: 'Outside and inside' }
+    : { single: 'Single sided',  double: 'Double sided' };
   box.style.display = '';
   box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
     + 'background:var(--white);padding:4px;">'
@@ -2014,8 +2041,12 @@ function selectSides(x) {
   // positions, its verdicts, which face was on screen and which had been
   // flagged. Left behind, they described faces that no longer exist.
   faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {};
+  // Files waiting to be placed belonged to the old face set as much as the
+  // placed ones did, and the placement screen has to close with them.
+  filePool = []; pickedFile = null; placementOpen = false;
   activeFace = 'front';
   renderSideSlots();
+  if (typeof renderFilePool === 'function') renderFilePool();
   // A paper, weight or size only priced on the other side count must not
   // survive the switch, exactly as with the fold.
   const still = getAvailableSizes();
@@ -2045,8 +2076,12 @@ function selectFold(f) {
   // printed both sides has FOUR faces, so abandoning folded for flat left four
   // tabs describing faces that no longer exist.
   faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {};
+  // Files waiting to be placed belonged to the old face set as much as the
+  // placed ones did, and the placement screen has to close with them.
+  filePool = []; pickedFile = null; placementOpen = false;
   activeFace = 'front';
   renderSideSlots();
+  if (typeof renderFilePool === 'function') renderFilePool();
   if (typeof refreshFaceChecks === 'function') refreshFaceChecks();
   if (typeof renderWeightPicker === 'function') renderWeightPicker();
   if (typeof updatePrice === 'function') updatePrice();
@@ -2219,32 +2254,55 @@ function selectSize(id){
 const dz=document.getElementById('dropZone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');handleFiles(e.dataTransfer.files);});
 
 function esc(v){
   return String(v == null ? '' : v)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── ONE BOX PER PRINTED FACE ─────────────────────────────────────────────
-// Trade printers ask for a single file with the pages in a stated order;
-// PrintedEasy and printed.com both do. That only means something to someone
-// who has laid out a print file before. Vistaprint, whose customers are
-// ordinary people, asks for one upload per face and labels each one — so that
-// is what we do. Nobody needs to know what a spread is, or which page goes
-// where. An empty box prints blank, which is plain from looking at it.
+// ── ONE DROP ZONE, THEN PLACE WHAT WE CANNOT READ ────────────────────────
+// Every product starts with a single box, because the default assumption is
+// one finished piece of artwork properly set up \u2014 which is what the trade
+// printers assume, and what the people who use this page tend to have.
 //
-// A folded card has four faces, not two sides, which is why the folded set is
-// not simply front and back.
+// We read that file and map it onto the job. If it fits, the customer confirms
+// and moves on. If they gave us several files, that IS the statement that they
+// are separate pieces, so we do not guess: they place them. Same if one file
+// cannot cover the job on its own.
+// WHAT THE CUSTOMER FILLS IN. Never four boxes: no competitor asks for four,
+// and splitting the inside makes a design that crosses the crease impossible
+// to supply. Vistaprint show Front, Inside, Back \u2014 their inside canvas is
+// exactly double the height of the other two, so it is one spread.
+//
+// A folded card's front and back are BOTH on the outside of the sheet, so
+// "outside only" still has two panels to fill. printed.com say it outright:
+// one side "includes print on the front and back once the card is folded".
+// This is why folded:single is not just a front.
 const SIDE_SETS = {
   'flat:single':   [{ key:'front', label:'Front' }],
   'flat:double':   [{ key:'front', label:'Front' }, { key:'back', label:'Back' }],
-  'folded:single': [{ key:'front', label:'Front' }],
-  'folded:double': [{ key:'front', label:'Front' },
-                    { key:'inside-left',  label:'Inside left' },
-                    { key:'inside-right', label:'Inside right' },
-                    { key:'back', label:'Back' }]
+  'folded:single': [{ key:'front', label:'Front', group:'Outside' },
+                    { key:'back',  label:'Back',  group:'Outside' }],
+  'folded:double': [{ key:'front',  label:'Front',  group:'Outside' },
+                    { key:'back',   label:'Back',   group:'Outside' },
+                    { key:'inside', label:'Inside', group:'Inside', spread:true }]
 };
+
+// WHAT THE PRESS FILE CARRIES. Deliberately NOT the same list. docs/ARTWORK-SPEC
+// says one page per printed face, front / inside left / inside right / back,
+// and that is still an open question with PrintedEasy \u2014 so the output keeps
+// exactly the shape it has today. The Inside slot is a grouping over two
+// panels, not a change to what the printer receives. If they come back and ask
+// for spreads, panelsNeeded() is the one place that changes.
+const PANEL_SETS = {
+  'flat:single':   ['front'],
+  'flat:double':   ['front', 'back'],
+  'folded:single': ['front', 'back'],
+  'folded:double': ['front', 'inside-left', 'inside-right', 'back']
+};
+const PANEL_LABEL = { front:'Front', back:'Back',
+                      'inside-left':'Inside left', 'inside-right':'Inside right' };
 let sideFiles = {};
 
 // Is the finished piece folded? Not the same question as selectedFold.
@@ -2260,9 +2318,206 @@ function isFoldedPiece(){
   return /folded/i.test(printingFamily() || '');
 }
 
+function jobKey(){
+  return (isFoldedPiece() ? 'folded' : 'flat') + ':' + (selectedSides || 'single');
+}
 function sidesNeeded(){
-  return SIDE_SETS[(isFoldedPiece() ? 'folded' : 'flat') + ':' + (selectedSides || 'single')]
-      || SIDE_SETS['flat:single'];
+  return SIDE_SETS[jobKey()] || SIDE_SETS['flat:single'];
+}
+function panelsNeeded(){
+  return PANEL_SETS[jobKey()] || PANEL_SETS['flat:single'];
+}
+
+// Which slot feeds a panel, and which half of it. The Inside slot holds one
+// spread; its left half is the inside-left panel and its right half the
+// inside-right. A customer who drops a panel-sized file on the Inside slot has
+// supplied the right-hand page \u2014 where a message goes \u2014 and the left stays
+// blank, which is what a blank left page is for.
+function panelSource(panel){
+  if (panel === 'inside-left' || panel === 'inside-right'){
+    const e = sideFiles.inside;
+    if (!e) return null;
+    const right = panel === 'inside-right';
+    // Two pages, one per inside panel \u2014 a four page card file.
+    if (e.pageRight != null)
+      return { entry: { file:e.file, page: right ? e.pageRight : e.page }, slot:'inside' };
+    // One spread, cut down the crease.
+    if (e.spread)
+      return { entry: { file:e.file, page:e.page, half: right ? 'right' : 'left' }, slot:'inside' };
+    // One panel-sized file on the Inside slot is the right-hand page \u2014 where a
+    // message goes. The left stays blank, which is what a blank left page is for.
+    return right ? { entry: { file:e.file, page:e.page }, slot:'inside' } : null;
+  }
+  const e = sideFiles[panel];
+  return e ? { entry: { file:e.file, page:e.page, half:e.half || null }, slot: panel } : null;
+}
+
+// ── READING ONE FILE ──────────────────────────────────────
+// Only the shapes a real card file actually comes in. Everything else returns
+// null and the customer places the pages, which is the honest answer and kills
+// the old rule \u2014 "at least as many pages as boxes, take them in order" \u2014 that
+// used pages 1..n and threw the rest away without saying so.
+function mapPagesToSlots(pages, slotKeys, spec, orientation){
+  if (!spec || !pages || !pages.length) return null;
+  const o = orientation || selectedOrientation || 'portrait';
+  const B = 6;                       // 3mm bleed on both edges
+  const tol = 4;
+  const near = function(a, b){ return Math.abs(a - b) <= tol; };
+  const fits = function(v, want){ return near(v, want) || near(v, want + B); };
+  const panel = function(pg){ return fits(pg.mmW, spec.mmW) && fits(pg.mmH, spec.mmH); };
+  const spread = function(pg){
+    return o === 'landscape'
+      ? fits(pg.mmW, spec.mmW)     && fits(pg.mmH, spec.mmH * 2)
+      : fits(pg.mmW, spec.mmW * 2) && fits(pg.mmH, spec.mmH);
+  };
+  const has = function(k){ return slotKeys.indexOf(k) > -1; };
+  const n = pages.length;
+
+  // Folded, outside and inside \u2014 front, inside, back.
+  if (slotKeys.length === 3 && has('inside')){
+    // The ordinary export: four panels in reading order.
+    if (n === 4 && pages.every(panel))
+      return { front:  { page:1 },
+               inside: { page:2, pageRight:3 },
+               back:   { page:4 } };
+    // The trade shape: two sheet sides. The outside carries the back on the
+    // left of the front, so it is cut the same way the inside is.
+    if (n === 2 && pages.every(spread))
+      return { front:  { page:1, half:'right' },
+               back:   { page:1, half:'left'  },
+               inside: { page:2, spread:true } };
+    return null;
+  }
+  // Folded, outside only \u2014 front and back, both on one sheet side.
+  if (slotKeys.length === 2 && has('back') && isFoldedPiece()){
+    if (n === 1 && spread(pages[0]))
+      return { front: { page:1, half:'right' }, back: { page:1, half:'left' } };
+    if (n === 2 && pages.every(panel))
+      return { front: { page:1 }, back: { page:2 } };
+    return null;
+  }
+  // A flat card printed both sides.
+  if (slotKeys.length === 2 && has('back')){
+    if (n === 2 && pages.every(panel)) return { front: { page:1 }, back: { page:2 } };
+    return null;
+  }
+  return null;
+}
+
+// Measure every page, then ask the rules above what it is.
+async function mapOneFile(file, slots){
+  if (!/\.pdf$/i.test(file.name || '')) return null;   // an image is one face, never a job
+  const spec = sizeSpec();
+  if (!spec) return null;
+  try {
+    await loadPdfJs();
+    const doc = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    const pages = [];
+    for (let i = 1; i <= doc.numPages; i++){
+      const v = (await doc.getPage(i)).getViewport({ scale: 1 });
+      pages.push({ n:i, mmW: v.width * 25.4 / 72, mmH: v.height * 25.4 / 72 });
+    }
+    const map = mapPagesToSlots(pages, slots.map(function(x){ return x.key; }), spec);
+    if (!map) return null;
+    Object.keys(map).forEach(function(k){ map[k].file = file; });
+    return map;
+  } catch(e){
+    console.warn('[read] could not read the PDF:', e.message);
+    return null;
+  }
+}
+
+// Files the customer has given us that are not yet on a face, and the one they
+// have picked up. Only ever populated when we chose not to guess.
+let filePool = [];
+let pickedFile = null;
+let placementOpen = false;
+
+// The front door for everything dropped or chosen, however many.
+async function handleFiles(list){
+  const files = Array.prototype.slice.call(list || []).filter(Boolean);
+  if (!files.length) return;
+  const slots = sidesNeeded();
+
+  // One face to fill: nothing to work out, and nothing changes.
+  if (slots.length < 2){ handleFile(files[0]); return; }
+
+  // Several files IS the statement that they are separate pieces. We do not
+  // guess which is which \u2014 that is the whole reason they sent more than one.
+  if (files.length > 1){ await openPlacement(files); return; }
+
+  // One file, so the assumption is a finished piece of artwork properly set up.
+  const map = await mapOneFile(files[0], slots);
+  if (map){
+    sideFiles = map;
+    filePool = []; pickedFile = null; placementOpen = false;
+    renderSideSlots();
+    activeFace = 'front';
+    handleFile(files[0]);
+    renderFaceTabs();
+    return;
+  }
+  // It cannot cover the job on its own \u2014 one image for a card with three
+  // faces, or a page count we will not guess at.
+  await openPlacement(files);
+}
+
+async function openPlacement(files){
+  placementOpen = true;
+  pickedFile = null;
+  sideFiles = {};
+  if (files.length === 1){
+    // One file that could not cover the job. It is almost always the front, so
+    // put it there and let them move it or fill the rest.
+    filePool = [];
+    await acceptSideFile('front', files[0], true);
+    return;
+  }
+  filePool = files.slice();
+  renderSideSlots();
+  renderFilePool();
+  const wrap = document.getElementById('sideSlotsWrap');
+  if (wrap) wrap.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+// Is the placement screen up? It is, once anything has been supplied for a job
+// with more than one face \u2014 so it doubles as the way to change a face later.
+function placementShowing(){
+  return sidesNeeded().length > 1 && (placementOpen || Object.keys(sideFiles).length > 0);
+}
+
+function renderFilePool(){
+  const pool = document.getElementById('filePool');
+  if (!pool) return;
+  if (!filePool.length){ pool.hidden = true; pool.innerHTML = ''; return; }
+  pool.hidden = false;
+  pool.innerHTML = filePool.map(function(f, i){
+    return '<div class="pool-item' + (pickedFile === i ? ' picked' : '') + '" draggable="true" data-i="' + i + '">'
+         + '<div class="pool-art" id="pool-art-' + i + '"></div>'
+         + '<span class="pool-name">' + esc(f.name) + '</span></div>';
+  }).join('');
+  pool.querySelectorAll('.pool-item').forEach(function(el){
+    const i = +el.dataset.i;
+    el.addEventListener('click', function(){
+      pickedFile = (pickedFile === i) ? null : i;
+      renderFilePool();
+    });
+    el.addEventListener('dragstart', function(e){
+      pickedFile = i;
+      try { e.dataTransfer.setData('text/plain', 'pool:' + i); } catch(err){}
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    drawPoolThumb(i, filePool[i]);
+  });
+}
+
+function placeFromPool(slotKey, i){
+  const f = filePool[i];
+  if (!f) return;
+  filePool.splice(i, 1);
+  pickedFile = null;
+  acceptSideFile(slotKey, f, true);
+  renderFilePool();
 }
 
 // With one face to print there is nothing to choose between, so the familiar
@@ -2278,8 +2533,11 @@ function renderSideSlots(){
   // told people — the file types, the size limit, the colour note. Losing that
   // when the uploader splits left a bare row of boxes and less guidance than
   // the simpler case had.
+  const several = document.getElementById('dropSeveral');
+  if (several) several.hidden = sides.length < 2;
+
   const outer = document.getElementById('sideSlotsWrap');
-  if (sides.length < 2){
+  if (!placementShowing()){
     if (outer) outer.style.display = 'none';
     if (drop) drop.style.display = '';
     // Emptied, not just hidden. Leaving the boxes in the page meant anything
@@ -2289,29 +2547,62 @@ function renderSideSlots(){
   }
 
   if (outer) outer.style.display = '';
-  wrap.style.display = 'grid';
-  wrap.style.gridTemplateColumns = 'repeat(' + Math.min(sides.length, 4) + ',minmax(0,1fr))';
-  const lead = document.getElementById('sideSlotsLead');
-  if (lead) lead.textContent = 'This card is printed on '
-    + (sides.length === 2 ? 'both sides' : 'all ' + sides.length + ' faces')
-    + ', so we need a file for each. Drag one onto each box, or click to browse.';
   if (drop) drop.style.display = 'none';
 
-  wrap.innerHTML = sides.map(function(sd){
-    const has = !!sideFiles[sd.key];
-    return '<label class="side-slot' + (has ? ' filled' : '') + '" data-side="' + sd.key + '">'
-      + '<input type="file" accept=".pdf,.ai,.indd,.jpg,.jpeg,.png,.tif,.tiff,.eps">'
-      + '<span class="side-slot-art" id="slot-art-' + sd.key + '">'
-      + (has ? '' : '<span style="font-size:var(--text-lg);color:var(--gold);">+</span>') + '</span>'
-      + '<span class="side-slot-label">' + esc(sd.label) + '</span>'
-      + '<span class="side-slot-state">' + (has ? 'Ready' : 'Add file') + '</span>'
-      + '</label>';
+  const lead = document.getElementById('sideSlotsLead');
+  if (lead) lead.textContent = filePool.length
+    ? 'You\u2019ve given us ' + filePool.length + ' file' + (filePool.length === 1 ? '' : 's')
+      + '. Drag each one onto its place.'
+    : '';
+
+  // The proportions of the real card, so a spread looks like a spread. A
+  // portrait card creases down its side and the spread is twice as wide; turn
+  // it landscape and the spread is twice as tall instead.
+  const spec = sizeSpec();
+  const cw = spec ? spec.mmW : 3, ch = spec ? spec.mmH : 4;
+  const across = selectedOrientation === 'landscape';
+  const ratio = function(isSpread){
+    if (!isSpread) return cw + '/' + ch;
+    return across ? cw + '/' + (ch * 2) : (cw * 2) + '/' + ch;
+  };
+
+  // Group the slots under what the customer bought \u2014 Outside and Inside \u2014
+  // keeping the order the groups were declared in.
+  const groups = [];
+  sides.forEach(function(sd){
+    const g = sd.group || '';
+    let bucket = groups.filter(function(x){ return x.name === g; })[0];
+    if (!bucket){ bucket = { name: g, items: [] }; groups.push(bucket); }
+    bucket.items.push(sd);
+  });
+
+  wrap.innerHTML = groups.map(function(g){
+    return '<div class="slot-group">'
+      + (g.name ? '<div class="slot-group-h">' + esc(g.name) + '</div>' : '')
+      + '<div class="slot-row">' + g.items.map(function(sd){
+          const has = !!sideFiles[sd.key];
+          return '<label class="side-slot' + (has ? ' filled' : '') + (sd.spread ? ' spread' : '')
+            + '" data-side="' + sd.key + '">'
+            + '<input type="file" accept=".pdf,.ai,.indd,.jpg,.jpeg,.png,.tif,.tiff,.eps">'
+            + '<span class="side-slot-art" id="slot-art-' + sd.key + '" '
+            + 'style="aspect-ratio:' + ratio(!!sd.spread) + ';">'
+            + (has ? '' : '<span style="font-size:var(--text-lg);color:var(--gold);">+</span>') + '</span>'
+            + '<span class="side-slot-label">' + esc(sd.label) + '</span>'
+            + (has ? '<span class="side-slot-state">Ready</span>'
+                   : '<span class="side-slot-blank">Nothing here \u2014 this page will print blank</span>')
+            + '</label>';
+        }).join('') + '</div></div>';
   }).join('');
 
   wrap.querySelectorAll('.side-slot').forEach(function(el){
     const key = el.dataset.side;
     el.querySelector('input').addEventListener('change', function(){
-      if (this.files && this.files[0]) acceptSideFile(key, this.files[0]);
+      if (this.files && this.files[0]) acceptSideFile(key, this.files[0], true);
+    });
+    // Tapping a file in the pool and then a slot does the same job as dragging,
+    // because dragging does not exist on a phone.
+    el.addEventListener('click', function(){
+      if (pickedFile != null){ placeFromPool(key, pickedFile); }
     });
     ['dragenter','dragover'].forEach(function(t){
       el.addEventListener(t, function(e){ e.preventDefault(); el.classList.add('over'); });
@@ -2321,7 +2612,8 @@ function renderSideSlots(){
     });
     el.addEventListener('drop', function(e){
       const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-      if (f) acceptSideFile(key, f);
+      if (f) { acceptSideFile(key, f, true); return; }
+      if (pickedFile != null) placeFromPool(key, pickedFile);
     });
     if (sideFiles[key]) drawSlotThumb(key, sideFiles[key]);
   });
@@ -2331,36 +2623,48 @@ function renderSideSlots(){
 // The front is also kept in currentFile, so every existing single-sided path —
 // the proof, the checks, the basket, the press file — carries on working
 // untouched and only learns about the other faces where it has to.
-async function acceptSideFile(key, file){
-  const sides = sidesNeeded();
+async function acceptSideFile(key, file, manual){
+  const slot = sidesNeeded().filter(function(sd){ return sd.key === key; })[0];
+  const entry = { file: file, page: 1 };
+  // One artwork across the crease, or just the right-hand page? Measured, not
+  // assumed \u2014 and only ever asked of the slot that can hold a spread.
+  if (slot && slot.spread) entry.spread = await looksLikeSpread(file);
+  sideFiles[key] = entry;
+  placementOpen = true;
+  renderSideSlots();
+  renderFilePool();
+  // The front is the only face that has to be there. A blank back or a blank
+  // inside is a real answer, and the slot says so in as many words. But we do
+  // not walk anyone off to the proof while files are still sitting unplaced.
+  if (!sideFiles.front || filePool.length){ updateProceedButton(); return; }
+  activeFace = key === 'front' ? 'front' : activeFace;
+  const frontEntry = sideFiles.front;
+  handleFile(await faceAsFile({ file: frontEntry.file, page: frontEntry.page,
+                                half: frontEntry.half || null }));
+  renderFaceTabs();
+}
 
-  // Someone who has already made a multi-page file should not have to take it
-  // apart. One page per face, in the order the boxes are shown.
-  if (/\.pdf$/i.test(file.name) && sides.length > 1){
-    try {
+// Is this file one artwork spanning the fold, rather than a single panel?
+async function looksLikeSpread(file){
+  const spec = sizeSpec();
+  if (!spec) return false;
+  const across = selectedOrientation === 'landscape';
+  const wantW = across ? spec.mmW : spec.mmW * 2;
+  const wantH = across ? spec.mmH * 2 : spec.mmH;
+  try {
+    if (/\.pdf$/i.test(file.name || '')){
       await loadPdfJs();
       const doc = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-      if (doc.numPages >= sides.length){
-        for (let i = 0; i < sides.length; i++) sideFiles[sides[i].key] = { file: file, page: i + 1 };
-        renderSideSlots();
-        if (sideFiles.front) handleFile(file);
-        return;
-      }
-    } catch(e){ /* not readable as a multi-page PDF; treat it as one face */ }
-  }
-
-  sideFiles[key] = { file: file, page: 1 };
-  renderSideSlots();
-  // Do not leave step 1 until every face has a file. handleFile() calls
-  // goStep(2), and step 1 is where the slots live — so uploading a front used
-  // to hide the very boxes the button then told you to use. A double-sided job
-  // was a dead end: a blocked button pointing "above" at nothing.
-  const ready = sides.every(function(sd){ return !!sideFiles[sd.key]; });
-  if (sides.length > 1 && !ready) { updateProceedButton(); return; }
-  // Every face is in, so the proof opens on the front with a tab per face.
-  activeFace = 'front';
-  if (sideFiles.front) handleFile(sideFiles.front.file);
-  renderFaceTabs();
+      const v = (await doc.getPage(1)).getViewport({ scale: 1 });
+      const w = v.width * 25.4 / 72, h = v.height * 25.4 / 72;
+      const tol = 11;                       // covers trim and trim-plus-bleed
+      return Math.abs(w - wantW) <= tol && Math.abs(h - wantH) <= tol;
+    }
+    // An image carries no physical size, so proportion is all there is to go on.
+    const bmp = await createImageBitmap(file);
+    const want = wantW / wantH;
+    return Math.abs((bmp.width / bmp.height) - want) / want < 0.12;
+  } catch(e){ return false; }
 }
 
 // The full check panel still runs on the front, because that is what the proof
@@ -2717,9 +3021,8 @@ function updateProceedButton(){
     const broken = sides.filter(function(sd){
       return sideFiles[sd.key] && faceOk[sd.key] === false;
     }).map(function(sd){ return sd.label.toLowerCase(); });
-    say(missing.length
-      ? 'Add the ' + missing.map(function(sd){ return sd.label.toLowerCase(); }).join(' and ')
-        + ' and we\u2019ll carry on.'
+    say(!sideFiles.front
+      ? 'Add your front and we\u2019ll carry on.'
       : broken.length
         ? 'The ' + broken.join(' and the ') + ' need' + (broken.length === 1 ? 's' : '')
           + ' a different file \u2014 see above.'
@@ -2787,17 +3090,32 @@ function proceedFromChecks(){
   goStep(3);
 }
 
+// The front is the only face that has to be there. A blank back and a blank
+// inside are both real answers \u2014 an "outside only" card has a bare inside by
+// definition, and plenty of people write the inside of a card themselves. Any
+// face that HAS been supplied still has to be printable.
 function allFacesReady(){
   const sides = sidesNeeded();
   if (sides.length < 2) return true;
+  if (!sideFiles.front) return false;
   return sides.every(function(sd){
+    if (!sideFiles[sd.key]) return true;
     const slot = document.querySelector('.side-slot[data-side="' + sd.key + '"]');
-    return sideFiles[sd.key] && (!slot || slot.dataset.faceState !== 'err');
+    return !slot || slot.dataset.faceState !== 'err';
   });
 }
 
+// The same picture, for a file that has not been placed yet.
+function drawPoolThumb(i, file){
+  const box = document.getElementById('pool-art-' + i);
+  if (!box || !file) return;
+  drawThumbInto(box, { file: file, page: 1 });
+}
 function drawSlotThumb(key, entry){
   const box = document.getElementById('slot-art-' + key);
+  drawThumbInto(box, entry);
+}
+function drawThumbInto(box, entry){
   if (!box || !entry) return;
   const file = entry.file;
   if (/\.(jpe?g|png|tiff?)$/i.test(file.name)){
@@ -4302,7 +4620,7 @@ async function addToCartUpload(){
                         fold: selectedFold || 'flat',
                         orientation: selectedOrientation || 'portrait',
                         printedSides: selectedSides || 'single',
-                        faces: sidesNeeded().map(function(f){ return f.label; }) };
+                        faces: panelsNeeded().map(function(k){ return PANEL_LABEL[k] || k; }) };
           console.log('[print-pdf] built', built.pageMm.w + 'x' + built.pageMm.h + 'mm page for', selectedSize);
         } else {
           console.error('[print-raster] upload failed:', pRes.status);
@@ -5065,6 +5383,18 @@ function foldedSheetFor(spec){
              mmW: spec.mmW * 2, mmH: spec.mmH };
 }
 
+// A page that is deliberately blank \u2014 the inside of an "outside only" card,
+// or an inside-left nobody wrote on. It carries the same trim, bleed, crop
+// marks and fold ticks as any other, so the finisher counts the same number of
+// faces and knows this one is meant to be bare rather than missing.
+function layOutBlankPressPage(doc, rgb, spec){
+  if (!spec) return null;
+  return layOutPressPage(doc, rgb, spec, function(page, box){
+    page.drawRectangle({ x: box.x, y: box.y, width: box.width, height: box.height,
+                         color: rgb(1, 1, 1) });
+  });
+}
+
 // The one place the press page is laid out, so the vector and raster routes
 // cannot drift apart. drawArt places the artwork in the rectangle it is given.
 // Unfolded, that rectangle is the whole sheet and this behaves exactly as it
@@ -5171,15 +5501,46 @@ async function buildPrintReadyPdfFromVector(file, sizeKey){
 // A face that came from page N of a multi-page upload is lifted out as its own
 // single-page file, so the builders below never have to know about faces.
 async function faceAsFile(entry){
-  if (!/\.pdf$/i.test(entry.file.name) || (entry.page || 1) === 1) return entry.file;
+  const half = entry.half || null;
+  if (!/\.pdf$/i.test(entry.file.name)) return half ? imageHalf(entry.file, half) : entry.file;
+  if (!half && (entry.page || 1) === 1) return entry.file;
   const L = await loadPdfLib();
   const src = await L.PDFDocument.load(await entry.file.arrayBuffer());
   const one = await L.PDFDocument.create();
-  const [pg] = await one.copyPages(src, [entry.page - 1]);
+  const [pg] = await one.copyPages(src, [(entry.page || 1) - 1]);
   one.addPage(pg);
+  // Half a spread, kept as vector: move the boxes rather than re-rendering, so
+  // type stays type. The fold runs down the middle for a portrait card and
+  // across the middle for a landscape one \u2014 the same axis the sheet doubles on.
+  if (half){
+    const w = pg.getWidth(), h = pg.getHeight();
+    const acrossTheMiddle = selectedOrientation === 'landscape';
+    let x = 0, y = 0, cw = w, ch = h;
+    if (acrossTheMiddle){ ch = h / 2; y = half === 'left' ? h / 2 : 0; }  // left = the upper page
+    else                { cw = w / 2; x = half === 'left' ? 0 : w / 2; }
+    pg.setMediaBox(x, y, cw, ch);
+    pg.setCropBox(x, y, cw, ch);
+  }
+  const tag = (half ? '-' + half : '') + '-p' + (entry.page || 1);
   return new File([await one.save()],
-                  entry.file.name.replace(/\.pdf$/i, '') + '-p' + entry.page + '.pdf',
+                  entry.file.name.replace(/\.pdf$/i, '') + tag + '.pdf',
                   { type: 'application/pdf' });
+}
+
+// The same cut for an image, which has no boxes to move.
+async function imageHalf(file, half){
+  const bmp = await createImageBitmap(file);
+  const acrossTheMiddle = selectedOrientation === 'landscape';
+  const cw = acrossTheMiddle ? bmp.width  : Math.round(bmp.width / 2);
+  const ch = acrossTheMiddle ? Math.round(bmp.height / 2) : bmp.height;
+  const sx = acrossTheMiddle ? 0 : (half === 'left' ? 0 : cw);
+  const sy = acrossTheMiddle ? (half === 'left' ? 0 : ch) : 0;
+  const c = document.createElement('canvas');
+  c.width = cw; c.height = ch;
+  c.getContext('2d').drawImage(bmp, sx, sy, cw, ch, 0, 0, cw, ch);
+  const blob = await new Promise(function(r){ c.toBlob(r, 'image/png'); });
+  return new File([blob], file.name.replace(/\.[^.]+$/, '') + '-' + half + '.png',
+                  { type: 'image/png' });
 }
 
 // The press file for every face we are printing, in the order the boxes are
@@ -5190,27 +5551,36 @@ async function faceAsFile(entry){
 // pages are then copied into one document.
 async function buildPressFileForAllFaces(sizeKey){
   const sides = sidesNeeded();
+  const panels = panelsNeeded();
   // The face on screen has not been saved yet — faceAdjust only fills in when
   // the customer switches away. Someone who positions the front and presses
   // Continue without ever clicking Back would otherwise have their adjustment
   // dropped from the press file.
   if (sides.length > 1) faceAdjust[activeFace] = Object.assign({}, artworkAdjust);
-  if (sides.length < 2) return buildPrintReadyPdf(currentFile, sizeKey);
+  if (panels.length < 2) return buildPrintReadyPdf(currentFile, sizeKey);
 
   const L = await loadPdfLib();
   const out = await L.PDFDocument.create();
   let first = null;
-  for (const sd of sides){
-    const entry = sideFiles[sd.key];
-    if (!entry){
-      console.warn('[print-pdf] no artwork for face:', sd.key);
-      return null;                      // never send a job with a face missing
+  for (const panel of panels){
+    const src = panelSource(panel);
+    // A blank panel is a real answer, not a missing file: "outside only" leaves
+    // the inside bare on purpose, and an unwritten inside-left is the norm.
+    // Only the front has to be there.
+    if (!src){
+      if (panel === 'front'){
+        console.warn('[print-pdf] no artwork for the front');
+        return null;
+      }
+      const blank = layOutBlankPressPage(out, L.rgb, sizeSpec(sizeKey));
+      if (!blank) return null;
+      continue;
     }
     // Each face is imposed with ITS OWN position, not whichever one happened to
     // be on screen. This defaulted to the global artworkAdjust, so a zoomed
     // front produced a zoomed back that nobody had asked for or seen.
-    const built = await buildPrintReadyPdf(await faceAsFile(entry), sizeKey,
-                                           { adjust: faceAdjust[sd.key] || null });
+    const built = await buildPrintReadyPdf(await faceAsFile(src.entry), sizeKey,
+                                           { adjust: faceAdjust[src.slot] || null });
     if (!built) return null;
     const doc = await L.PDFDocument.load(await built.blob.arrayBuffer());
     const pages = await out.copyPages(doc, doc.getPageIndices());
@@ -5219,7 +5589,7 @@ async function buildPressFileForAllFaces(sizeKey){
   }
   const bytes = await out.save();
   console.log('[print-pdf] ' + out.getPageCount() + ' faces imposed: '
-              + sides.map(function(x){ return x.label; }).join(', '));
+              + panels.map(function(x){ return PANEL_LABEL[x] || x; }).join(', '));
   return { blob: new Blob([bytes], { type: 'application/pdf' }),
            trimMm: first.trimMm, pageMm: first.pageMm, folded: first.folded,
            route: first.route + ' \u00d7' + out.getPageCount() };

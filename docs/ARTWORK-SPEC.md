@@ -27,6 +27,20 @@ see §4 for what happens when it does not.
 > **To confirm with PrintedEasy:** is one PDF with a page per face, in that
 > order, what you want — or would you rather have one file per face?
 
+> **And a second half to that question, which matters more.** For a folded
+> card on the folded-leaflet route, each of those four pages is currently the
+> whole unfolded **sheet** — 210 × 148mm for an A6 card — with the artwork in
+> one panel and the other panel painted white. So you receive four sheets, each
+> a quarter used, rather than two: an outside carrying the back and the front,
+> and an inside carrying both inside pages. **Which do you want?** We can send
+> either; we have simply never been told which is right, and the answer changes
+> the imposition rather than anything the customer sees.
+>
+> Nothing about the uploader rebuild on 29 September changed this. The customer
+> now fills three slots instead of four, but the file you receive has exactly
+> the shape it had before — the Inside slot is a grouping over the inside-left
+> and inside-right panels, not a change to the output.
+
 ### Colour
 
 We send **RGB** and do not convert. A previous CMYK conversion step was removed
