@@ -33,7 +33,15 @@
    with the form closed, after which it gave up and scrolled away. Stretching
    the column gives the sticky wrapper inside it the whole row to work with. */
 .ds-grid{display:grid;grid-template-columns:1fr 1.35fr;gap:22px;align-items:stretch;}
-.ds-acc{display:flex;flex-direction:column;gap:12px;}
+/* The preview can only hold still while the form column is taller than it is,
+   and the form is often shorter: 688px with just the wording section open,
+   against a 642px card, which left 46px of travel and read as "not sticky".
+   This gives the column a floor, so there is always something for the preview
+   to stay beside. The space it adds is empty and has no background, and it
+   only appears when the form is short \u2014 which is exactly when there is room
+   to spare. */
+.ds-acc{display:flex;flex-direction:column;gap:12px;
+  min-height:calc(var(--ds-pvh, 642px) + 50vh);}
 .ds-sec{background:var(--cream);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;}
 .ds-sec.open{border-color:var(--gold-lt);}
 .ds-sec-head{width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:var(--text-h3);color:var(--text);text-align:left;}
@@ -230,6 +238,7 @@ padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
   .ds-grid{grid-template-columns:1fr;}
   .ds-preview-col{position:static;order:-1;margin-bottom:8px;}
   .ds-preview-stick{position:static;}
+  .ds-acc{min-height:0;}
   .ds-canvas{max-height:none;}
   .ds-canvas{max-width:300px;margin:0 auto;}
   .ds-steps-label{display:none;}
