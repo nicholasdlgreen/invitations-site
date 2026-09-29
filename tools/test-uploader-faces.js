@@ -157,5 +157,35 @@ is(sidesCheck().note,
 job(false, 'single');
 is(sidesCheck(), null, 'a one-face job has no sides row at all');
 
+print('\nA CHOICE THE CUSTOMER HAS MADE');
+var faceVerdicts = {}, facePlaced = {}, activeFace = 'front';
+eval(grab('shownVerdict'));
+
+var SHAPE = { state:'choice', kind:'shape', short:'A different shape to the card',
+              detail:'Fill the card crops the long edges; Fit it all in leaves a border.' };
+faceVerdicts.front = SHAPE;
+is(shownVerdict('front').state, 'choice', 'until they position it, the question stands');
+is(shownVerdict('front').short, 'A different shape to the card', 'in its original words');
+
+facePlaced.front = true;
+is(shownVerdict('front').state, 'ok', 'once positioned it is settled, not a warning');
+is(shownVerdict('front').short, 'Positioned \u2014 this is how it will print', 'and says so');
+is(/exactly what goes to press/.test(shownVerdict('front').detail), true,
+   'and confirms the proof is the thing that prints');
+
+// Positioning answers a question about SHAPE. It does not answer anything else,
+// and must never be allowed to look as though it has.
+faceVerdicts.front = { state:'warn', kind:'nobleed', short:'No bleed \u2014 we\u2019ll make it' };
+is(shownVerdict('front').state, 'warn', 'zooming does not conjure up bleed');
+faceVerdicts.front = { state:'err', kind:'toosmall', short:'Too small for A5' };
+is(shownVerdict('front').state, 'err', 'nor does it add pixels to a file that is too small');
+faceVerdicts.front = { state:'warn', short:'We\u2019ll scale it \u2014 about 235 DPI' };
+is(shownVerdict('front').state, 'warn', 'nor improve the resolution');
+
+facePlaced = {};
+faceVerdicts.front = SHAPE;
+is(shownVerdict('front').state, 'choice', 'and Reset puts the question back');
+is(shownVerdict('nothing-here'), undefined, 'a face with no verdict stays undefined');
+
 print('\n' + pass + ' passed, ' + fail + ' failed\n');
 if (fail) throw new Error(fail + ' assertion(s) failed');

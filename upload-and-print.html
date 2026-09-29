@@ -2036,7 +2036,7 @@ function selectOrientation(o) {
   // the old shape — does it fit, where was it cropped, was it warned about —
   // is now about a card that no longer exists. The files stay; only the
   // verdicts and framing are re-derived.
-  faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {};
+  faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {}; facePlaced = {};
   renderSizeCards();
   if (typeof refreshFaceChecks === 'function') refreshFaceChecks();
   if (typeof updatePrice === 'function') updatePrice();
@@ -2053,7 +2053,7 @@ function selectSides(x) {
   // Everything remembered per face belonged to the choice being abandoned: its
   // positions, its verdicts, which face was on screen and which had been
   // flagged. Left behind, they described faces that no longer exist.
-  faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {};
+  faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {}; facePlaced = {};
   // Files waiting to be placed belonged to the old face set as much as the
   // placed ones did, and the placement screen has to close with them.
   filePool = []; pickedFile = null; placementOpen = false;
@@ -2088,7 +2088,7 @@ function selectFold(f) {
   // Same reset as the sides switch, and for a sharper reason: a folded card
   // printed both sides has FOUR faces, so abandoning folded for flat left four
   // tabs describing faces that no longer exist.
-  faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {};
+  faceAdjust = {}; faceVerdicts = {}; faceOk = {}; faceWasBad = {}; facePlaced = {};
   // Files waiting to be placed belonged to the old face set as much as the
   // placed ones did, and the placement screen has to close with them.
   filePool = []; pickedFile = null; placementOpen = false;
@@ -2643,6 +2643,7 @@ async function acceptSideFile(key, file, manual){
   // assumed \u2014 and only ever asked of the slot that can hold a spread.
   if (slot && slot.spread) entry.spread = await looksLikeSpread(file);
   sideFiles[key] = entry;
+  delete facePlaced[key];            // a new file has not been positioned yet
   placementOpen = true;
   renderSideSlots();
   renderFilePool();
@@ -2809,6 +2810,45 @@ async function faceVerdict(key){
                 + 'costs nothing.' };
 }
 
+// Has the customer deliberately set how this face sits on the card? Arriving
+// on the proof does not count \u2014 "Fill the card" is selected for them before
+// they have done anything.
+let facePlaced = {};
+
+// A "different shape to the card" verdict is not a fault; it is a choice, and
+// its own words say so \u2014 "pick whichever looks right". Once the customer HAS
+// picked, leaving the warning up tells them off for doing what was asked.
+// So the measurement stays as measured and this is applied on the way out,
+// which also means no file is re-read every time the zoom slider moves.
+function shownVerdict(key){
+  const v = faceVerdicts[key];
+  if (!v) return v;
+  if (v.kind !== 'shape' || !facePlaced[key]) return v;
+  return { state:'ok', kind:'placed',
+           short:'Positioned \u2014 this is how it will print',
+           detail:'A different shape to the card, but you have set how it sits. '
+                + 'The proof above is exactly what goes to press.' };
+}
+
+// Called by every control that changes the framing. Cheap and synchronous:
+// nothing is measured again, only the verdict already held is re-read.
+function markPlaced(){
+  if (!activeFace) return;
+  const v = faceVerdicts[activeFace];
+  // Either the face verdict or a shape row in the report can be settled this
+  // way; a single-face job only ever has the latter.
+  const hasShapeRow = !!document.querySelector('#checkResults .check-row[data-shape]');
+  if ((!v || v.kind !== 'shape') && !hasShapeRow) return;
+  if (facePlaced[activeFace]) return;
+  facePlaced[activeFace] = true;
+  refreshShapeRows();
+  refreshSizeRow();
+  renderFaceNotice();
+  renderFaceTabs();
+  renderSlotNotices();
+  updateProceedButton();
+}
+
 async function refreshFaceChecks(){
   const sides = sidesNeeded();
   // Draw the tabs and notices BEFORE the early return. This used to bail out
@@ -2862,7 +2902,7 @@ async function refreshFaceChecks(){
 function refreshSizeRow(){
   const list = document.getElementById('checkResults');
   if (!list) return;
-  const v = faceVerdicts[activeFace];
+  const v = shownVerdict(activeFace);
   let row = list.querySelector('.check-row[data-check="Artwork size"]');
   if (!v || !v.detail){ if (row) row.remove(); return; }
   const state = v.state === 'err' ? 'err' : v.state === 'ok' ? 'ok' : 'warn';
@@ -2970,7 +3010,7 @@ function renderSlotNotices(){
   if (!box) return;
   const sides = sidesNeeded();
   const html = sides.map(function(sd){
-    return noticeHtml(sd.key, faceVerdicts[sd.key], sides.length > 1);
+    return noticeHtml(sd.key, shownVerdict(sd.key), sides.length > 1);
   }).join('');
   box.innerHTML = html;
   box.hidden = !html;
@@ -2980,7 +3020,7 @@ function renderSlotNotices(){
 function renderFaceNotice(){
   const box = document.getElementById('faceNotice');
   if (!box) return;
-  const v = faceVerdicts[activeFace];
+  const v = shownVerdict(activeFace);
   const html = noticeHtml(activeFace, v, false);
   box.innerHTML = html;
   box.className = 'face-notice';
@@ -3375,7 +3415,9 @@ async function buildAndRunChecks(file, info){
       if (widthMatch && heightMatch){
         checks.push({status:'ok', label:'Dimensions', val: dimText, note:`Matches your selected size (${spec.label}).`});
       } else {
-        checks.push({status:'warn', label:'Dimensions', val: dimText, note:`Your selected size is ${spec.label} (${spec.mmW} × ${spec.mmH} mm). The file dimensions don't match — your design may be cropped, scaled, or shifted.`});
+        // Same question as the image path asks, so it is settled the same way.
+        checks.push({status:'warn', label:'Dimensions', val: dimText, shapeChoice:true,
+                     note:`Your selected size is ${spec.label} (${spec.mmW} × ${spec.mmH} mm). The file dimensions don't match, so your design will be cropped or scaled — position it on the proof and we'll take that as your answer.`});
       }
 
       // Page count check.
@@ -3456,7 +3498,10 @@ async function buildAndRunChecks(file, info){
       if (ratioDiff < 0.05){
         checks.push({status:'ok', label:'Dimensions', val: dimText, note:`Aspect ratio matches ${spec.label}.`});
       } else {
-        checks.push({status:'warn', label:'Dimensions', val: dimText, note:`Aspect ratio doesn't match ${spec.label} (${spec.mmW} × ${spec.mmH} mm). Your image will be cropped or scaled — please confirm this is what you want.`});
+        // "Please confirm this is what you want" \u2014 and until now nothing let
+        // them. shapeChoice marks it as settled by positioning the artwork.
+        checks.push({status:'warn', label:'Dimensions', val: dimText, shapeChoice:true,
+                     note:`Aspect ratio doesn't match ${spec.label} (${spec.mmW} × ${spec.mmH} mm). Your image will be cropped or scaled — position it on the proof and we'll take that as your answer.`});
       }
 
       // Colour mode — RGB files are converted for press, so say so up front.
@@ -3714,10 +3759,36 @@ function drawBleedOverlay(fileWidthMm, fileHeightMm, cardSpec){
 let _passedChecksOpen = false;
 function _checkRow(c){
   const icon = c.status==='ok'?'✓':c.status==='warn'?'!':c.status==='err'?'✕':'i';
-  return `<div class="check-row" data-check="${c.label}">
+  // A shape row keeps its own original wording, so undoing the positioning can
+  // put the question back exactly as it was asked.
+  const flag = c.shapeChoice
+    ? ` data-shape="1" data-was-val="${esc(c.val)}" data-was-note="${esc(c.note||'')}"` : '';
+  return `<div class="check-row" data-check="${c.label}"${flag}>
       <div class="check-icon ${c.status}">${icon}</div>
       <div><div class="check-label">${c.label}</div><div class="check-val">${c.val}</div>${c.note?`<div class="check-note">${c.note}</div>`:''}</div>
     </div>`;
+}
+
+// Rows that asked the customer to choose how the artwork sits, answered.
+// Nothing is re-measured: the file is still a different shape, and the row says
+// so. What changes is that it is no longer an open question.
+function refreshShapeRows(){
+  const placed = !!facePlaced[activeFace];
+  document.querySelectorAll('#checkResults .check-row[data-shape]').forEach(function(row){
+    const icon = row.querySelector('.check-icon');
+    const val  = row.querySelector('.check-val');
+    const note = row.querySelector('.check-note');
+    if (placed){
+      if (icon){ icon.className = 'check-icon ok'; icon.textContent = '\u2713'; }
+      if (val)  val.textContent = 'Positioned \u2014 this is how it will print';
+      if (note) note.textContent = 'A different shape to the card, but you have set how it '
+                                 + 'sits. The proof above is exactly what goes to press.';
+    } else {
+      if (icon){ icon.className = 'check-icon warn'; icon.textContent = '!'; }
+      if (val)  val.textContent = row.dataset.wasVal || val.textContent;
+      if (note) note.textContent = row.dataset.wasNote || note.textContent;
+    }
+  });
 }
 // Problems and things worth knowing stay visible; everything that simply passed
 // is folded away, so the report never buries the artwork.
@@ -3737,6 +3808,7 @@ function renderChecks(checks){
   // the row was being wiped a moment after it was added.
   if (typeof refreshSizeRow === 'function') refreshSizeRow();
   if (typeof refreshSidesRow === 'function') refreshSidesRow();
+  if (typeof refreshShapeRows === 'function') refreshShapeRows();
   // The lamp and the tick box read the finished list, so they go last.
   if (typeof updateProceedButton === 'function') updateProceedButton();
 }
@@ -5225,6 +5297,7 @@ function setAdjustMode(mode){
   document.getElementById('segFill')?.classList.toggle('on', mode==='fill');
   document.getElementById('segFit')?.classList.toggle('on', mode==='fit');
   renderProof();
+  markPlaced();
 }
 function setZoom(v){
   if (!proofEditable) return;
@@ -5232,12 +5305,14 @@ function setZoom(v){
   const zv = document.getElementById('zoomVal');
   if (zv) zv.textContent = Math.round(artworkAdjust.zoom*100) + '%';
   renderProof();
+  markPlaced();
 }
 function rotateArtwork(){
   if (!proofEditable) return;
   artworkAdjust.rot = (artworkAdjust.rot + 90) % 360;
   artworkAdjust.dx = 0; artworkAdjust.dy = 0;
   renderProof();
+  markPlaced();
 }
 function resetAdjust(){
   if (!proofEditable) return;
@@ -5245,6 +5320,13 @@ function resetAdjust(){
   const zr = document.getElementById('zoomRange'); if (zr) zr.value = 100;
   const zv = document.getElementById('zoomVal'); if (zv) zv.textContent = '100%';
   renderProof();
+  // Reset puts the framing back to the default, so the choice is unmade and
+  // the question is live again. Saying "positioned" after this would be false.
+  if (activeFace && facePlaced[activeFace]){
+    delete facePlaced[activeFace];
+    refreshShapeRows(); refreshSizeRow(); renderFaceNotice(); renderFaceTabs();
+    renderSlotNotices(); updateProceedButton();
+  }
 }
 function toggleGuides(){
   showGuides = !showGuides;
@@ -5287,6 +5369,7 @@ function syncGuidesBtn(){
     renderProof();
   });
   document.addEventListener('pointerup', function(){
+    if (dragging) markPlaced();      // on release, not on every pixel of travel
     dragging = false;
     document.getElementById('proofCanvas')?.classList.remove('dragging');
   });
