@@ -103,7 +103,31 @@ body.wide-step .step-bar{display:none;}
 .zoom-row input[type=range]{flex:1;accent-color:var(--gold);}
 .proof-chip{border:1px solid var(--border);background:var(--white);padding:6px 14px;border-radius:999px;font-size:var(--text-xs);cursor:pointer;color:var(--soft);font-family:inherit;letter-spacing:.06em;text-transform:uppercase;}
 .proof-chip.on{background:var(--gold);border-color:var(--gold);color:#fff;}
-.check-summary{font-size:var(--text-xs);color:var(--soft);letter-spacing:.04em;}
+/* The traffic light. Three lamps, one lit, sitting where a one-line summary
+   used to — the verdict readable from across the room, before a single word
+   of the report has been. The two dark lamps matter as much as the lit one:
+   green alone would not read as "green rather than amber". */
+.check-light{display:flex;align-items:center;gap:16px;background:var(--cream);border:1px solid var(--hairline);border-radius:16px;padding:14px 18px;margin-bottom:20px;}
+.tl-lamps{display:flex;gap:7px;flex-shrink:0;background:#F1EAE3;border-radius:999px;padding:6px 8px;}
+.tl-lamp{width:16px;height:16px;border-radius:50%;background:#DCD1C8;transition:background .25s,box-shadow .25s;}
+.tl-lamp.on.red{background:var(--err);box-shadow:0 0 0 4px rgba(201,74,58,.14);}
+.tl-lamp.on.amber{background:var(--warn);box-shadow:0 0 0 4px rgba(201,123,58,.14);}
+.tl-lamp.on.green{background:var(--ok);box-shadow:0 0 0 4px rgba(90,158,111,.14);}
+.tl-words strong{display:block;font-weight:400;font-size:var(--text-body);line-height:1.35;}
+.tl-words span{display:block;font-size:var(--text-xs);color:var(--soft);letter-spacing:.03em;}
+@media(prefers-reduced-motion:reduce){.tl-lamp{transition:none;}}
+/* Shown only when something is flagged, and boxed so it cannot be skimmed
+   past. Nobody should reach the basket able to say we never told them. */
+.ack-box{display:flex;gap:13px;align-items:flex-start;border:1px solid #F2DEC4;background:#FDF4E7;border-radius:14px;padding:15px 17px;margin:0 0 18px;max-width:640px;transition:border-color .2s,box-shadow .2s;}
+.ack-box.nudge{border-color:var(--warn);box-shadow:0 0 0 3px rgba(201,123,58,.16);}
+.ack-box input{width:19px;height:19px;flex-shrink:0;margin:2px 0 0;accent-color:var(--gold);cursor:pointer;}
+.ack-box label{font-size:var(--text-sm);line-height:1.62;cursor:pointer;}
+.ack-box .ack-hd{display:block;color:var(--text);margin-bottom:3px;}
+.ack-box .ack-bd{display:block;color:var(--soft);font-size:var(--text-xs);}
+/* Looks unavailable but stays clickable, so pressing it can say why rather
+   than doing nothing. A truly disabled button cannot explain itself. */
+#checkActions .btn.needs-ack{background:#E3D8CB;}
+@media(prefers-reduced-motion:reduce){.ack-box{transition:none;}}
 .checks-toggle{margin-top:14px;font-size:var(--text-xs);color:var(--gold);background:none;border:none;cursor:pointer;padding:0;letter-spacing:.08em;text-transform:uppercase;font-family:inherit;}
 /* Legend */
 .bleed-legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:10px;padding-top:12px;border-top:1px dashed var(--border);font-size:var(--text-xs);color:var(--soft);letter-spacing:.02em;}
@@ -782,12 +806,22 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div class="check-card">
           <div class="proof-head">
             <h3>File quality report</h3>
-            <div id="checkSummary" class="check-summary"></div>
           </div>
+          <!-- The traffic light. Lives outside #checkResults because
+               refreshSizeRow() inserts the artwork-size row at that list's
+               head, and would otherwise push the light down the page. -->
+          <div id="checkLight" class="check-light" hidden></div>
           <div id="checkResults"></div>
         </div>
       </div>
       <div id="checkActions" class="hidden" style="margin-top:8px;">
+        <div id="ackBox" class="ack-box" hidden>
+          <input type="checkbox" id="ackCheck" onchange="setChecksAcknowledged(this.checked)"/>
+          <label for="ackCheck">
+            <span class="ack-hd" id="ackHead"></span>
+            <span class="ack-bd">We print exactly what you supply. If the finished cards show the problems we&rsquo;ve flagged here, we can&rsquo;t reprint them free of charge.</span>
+          </label>
+        </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
           <button class="btn" id="proceedBtn" onclick="proceedFromChecks()">Continue to Paper &amp; Quantity</button>
           <button class="btn-out" onclick="goStep(1)">Upload a Different File</button>
@@ -2497,8 +2531,10 @@ async function refreshFaceChecks(){
   renderSlotNotices();
   renderFaceNotice();
   refreshSizeRow();
-  updateProceedButton();
+  // Both patch rows into the report, so they go before the button — which
+  // now repaints the traffic light and the tick box from what the report says.
   refreshSidesRow();
+  updateProceedButton();
 }
 
 // The quality report covered format, file size, DPI and pages, and said nothing
@@ -2664,7 +2700,15 @@ function updateProceedButton(){
     reason.hidden = !text;
     if (!/^\u2713/.test(text || '')) reason.classList.remove('good');
   };
+  // The lamp and the box describe the same report this button acts on, so
+  // they are brought up to date here rather than at every call site.
+  refreshCheckLight();
+  refreshAckBox();
+  const counts = checkCounts();
+  const flagged = counts.err + counts.warn;
   btn.style.background = '';
+  btn.classList.remove('needs-ack');
+  btn.removeAttribute('aria-disabled');
   if (sides.length > 1 && !allFacesReady()){
     btn.textContent = 'Continue to Paper & Quantity';
     btn.classList.add('is-waiting');
@@ -2681,10 +2725,22 @@ function updateProceedButton(){
           + ' a different file \u2014 see above.'
         : 'One side still needs fixing before we can carry on.');
     btn.dataset.blocked = '1';
-  } else if (!checksPassed){
-    btn.textContent = 'Continue Anyway';
+  } else if (flagged && !checksAcknowledged){
+    // Something is flagged and nobody has said they are happy with it. The
+    // button stays live — pressing it takes them to the box rather than
+    // doing nothing — but it stops looking like the way forward.
+    btn.textContent = counts.err ? 'Continue Anyway' : 'Continue to Paper & Quantity';
     btn.classList.remove('is-waiting');
-    say('Some checks flagged something. You can carry on if you are happy.');
+    btn.classList.add('needs-ack');
+    btn.setAttribute('aria-disabled', 'true');
+    say('Tick the box above and we\u2019ll carry on.');
+    btn.dataset.blocked = 'ack';
+  } else if (flagged){
+    // Told, and happy to proceed. Say nothing more — the box above is
+    // already carrying the message, and repeating it is nagging.
+    btn.textContent = counts.err ? 'Continue Anyway' : 'Continue to Paper & Quantity';
+    btn.classList.remove('is-waiting');
+    say('');
     btn.dataset.blocked = '';
   } else {
     btn.textContent = 'Continue to Paper & Quantity';
@@ -2707,6 +2763,19 @@ function updateProceedButton(){
 }
 
 function proceedFromChecks(){
+  // Flagged, and not yet accepted. Take them to the box and mark it, rather
+  // than refusing silently — on a long report it can be below the fold.
+  if (document.getElementById('proceedBtn').dataset.blocked === 'ack'){
+    const box = document.getElementById('ackBox');
+    if (box && !box.hidden){
+      box.scrollIntoView({ behavior:'smooth', block:'center' });
+      box.classList.add('nudge');
+      setTimeout(function(){ box.classList.remove('nudge'); }, 1100);
+      const cb = document.getElementById('ackCheck');
+      if (cb) cb.focus({ preventScroll:true });
+    }
+    return;
+  }
   if (document.getElementById('proceedBtn').dataset.blocked === '1'){
     // The slots live in step 1, so scrolling to them from step 2 scrolled to a
     // hidden element and appeared to do nothing at all.
@@ -2793,6 +2862,15 @@ function checkFile(file){
 
 // Show spinner in checks panel while running
 function renderChecksLoading(){
+  // Nothing has been checked yet, so there is no verdict to show and nothing
+  // to accept. A lamp left lit from the last file would be a lie.
+  const light = document.getElementById('checkLight');
+  if (light){ light.hidden = true; light.innerHTML = ''; }
+  const ack = document.getElementById('ackBox');
+  if (ack) ack.hidden = true;
+  const cb = document.getElementById('ackCheck');
+  if (cb) cb.checked = false;
+  checksAcknowledged = false; acknowledgedFor = ''; ackGivenAt = null;
   document.getElementById('checkResults').innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;padding:16px 0;color:var(--soft);font-size:var(--text-sm);">
       <div style="width:16px;height:16px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div>
@@ -3222,15 +3300,6 @@ function _checkRow(c){
 function renderChecks(checks){
   const needsEye = checks.filter(c => c.status==='err' || c.status==='warn');
   const passed   = checks.filter(c => c.status==='ok' || c.status==='info');
-  const errs = checks.filter(c=>c.status==='err').length;
-  const warns = checks.filter(c=>c.status==='warn').length;
-
-  const summaryEl = document.getElementById('checkSummary');
-  if (summaryEl){
-    summaryEl.textContent = errs ? `${errs} to fix${warns?` · ${warns} to check`:''}`
-                          : warns ? `${warns} to check · ${passed.length} passed`
-                          : `All ${passed.length} checks passed`;
-  }
   const head = needsEye.length
     ? ''
     : `<div class="check-note" style="padding:4px 0 10px;">Your file looks good — nothing needs your attention.</div>`;
@@ -3243,7 +3312,142 @@ function renderChecks(checks){
   // re-added every time this list is rebuilt — switching face rebuilds it, and
   // the row was being wiped a moment after it was added.
   if (typeof refreshSizeRow === 'function') refreshSizeRow();
+  // The lamp and the tick box read the finished list, so they go last.
+  if (typeof updateProceedButton === 'function') updateProceedButton();
 }
+// ── THE TRAFFIC LIGHT AND THE ACKNOWLEDGEMENT ─────────────
+// Both read the report back off the page rather than off the checks array.
+// The artwork-size and sides rows are patched in AFTER renderChecks runs and
+// can turn an amber green, so counting the array would light the wrong lamp
+// and warn about a problem that is no longer on screen.
+function checkCounts(){
+  const rows = document.querySelectorAll('#checkResults .check-row');
+  let err = 0, warn = 0, pass = 0;
+  rows.forEach(function(r){
+    const i = r.querySelector('.check-icon');
+    if (!i) return;
+    if (i.classList.contains('err')) err++;
+    else if (i.classList.contains('warn')) warn++;
+    else pass++;                      // ok and info both read as "passed"
+  });
+  return { err: err, warn: warn, pass: pass, total: err + warn + pass };
+}
+
+// Exactly WHICH things are flagged, as one string. Change the file, the size
+// or the side and this changes with it — which is what clears a tick given
+// for a different set of problems. Without it, someone could accept a soft
+// image, swap in a file that is the wrong size, and walk through on a tick
+// that was never about this file.
+function flaggedSignature(){
+  const out = [];
+  document.querySelectorAll('#checkResults .check-row').forEach(function(r){
+    const i = r.querySelector('.check-icon');
+    if (!i) return;
+    const bad = i.classList.contains('err') ? 'err' : i.classList.contains('warn') ? 'warn' : '';
+    if (!bad) return;
+    const label = r.getAttribute('data-check')
+      || (r.querySelector('.check-label') ? r.querySelector('.check-label').textContent : '');
+    out.push(label + ':' + bad + ':'
+      + (r.querySelector('.check-val') ? r.querySelector('.check-val').textContent : ''));
+  });
+  return out.sort().join('|');
+}
+
+let checksAcknowledged = false;   // has the customer ticked the box?
+let acknowledgedFor    = '';      // the signature they ticked it for
+let ackGivenAt         = null;    // when, so the order can record it
+
+function setChecksAcknowledged(on){
+  checksAcknowledged = !!on;
+  acknowledgedFor = on ? flaggedSignature() : '';
+  ackGivenAt = on ? new Date().toISOString() : null;
+  updateProceedButton();
+}
+
+function refreshCheckLight(){
+  const el = document.getElementById('checkLight');
+  if (!el) return;
+  const c = checkCounts();
+  if (!c.total){ el.hidden = true; el.innerHTML = ''; return; }
+  const lamp = c.err ? 'red' : c.warn ? 'amber' : 'green';
+  let head, sub;
+  if (c.err){
+    head = c.err + (c.err === 1 ? ' thing to fix' : ' things to fix');
+    sub  = (c.warn ? c.warn + ' more to check \u00b7 ' : '') + c.pass + ' passed';
+  } else if (c.warn){
+    head = c.warn + (c.warn === 1 ? ' thing to check' : ' things to check');
+    sub  = c.pass + ' of ' + c.total + ' checks passed';
+  } else {
+    head = 'Good to print';
+    sub  = c.total + ' checks \u00b7 nothing needs your attention';
+  }
+  el.hidden = false;
+  // The lamps are markup; the words are written in as text below, so nothing
+  // that came out of a file is ever parsed as HTML.
+  el.innerHTML =
+      '<div class="tl-lamps" role="img" aria-label="' + head + '">'
+    +   '<i class="tl-lamp red'   + (lamp === 'red'   ? ' on' : '') + '"></i>'
+    +   '<i class="tl-lamp amber' + (lamp === 'amber' ? ' on' : '') + '"></i>'
+    +   '<i class="tl-lamp green' + (lamp === 'green' ? ' on' : '') + '"></i>'
+    + '</div>'
+    + '<div class="tl-words"><strong></strong><span></span></div>';
+  el.querySelector('.tl-words strong').textContent = head;
+  el.querySelector('.tl-words span').textContent = sub;
+}
+
+function refreshAckBox(){
+  const box  = document.getElementById('ackBox');
+  const cb   = document.getElementById('ackCheck');
+  const head = document.getElementById('ackHead');
+  if (!box || !cb) return;
+  const c = checkCounts();
+  const flagged = c.err + c.warn;
+  const clear = function(){
+    checksAcknowledged = false; acknowledgedFor = ''; ackGivenAt = null; cb.checked = false;
+  };
+  // Ticked for a different set of problems, or for problems that have since
+  // been fixed? Then it was not ticked for this.
+  if (checksAcknowledged && flaggedSignature() !== acknowledgedFor) clear();
+  if (!flagged){
+    box.hidden = true;
+    if (checksAcknowledged) clear();
+    return;
+  }
+  box.hidden = false;
+  cb.checked = checksAcknowledged;
+  if (head) head.textContent = flagged === 1
+    ? 'I\u2019ve read the point flagged above and I\u2019d like to go ahead anyway.'
+    : 'I\u2019ve read the ' + flagged + ' things flagged above and I\u2019d like to go ahead anyway.';
+}
+
+// What we warned about and that they said go ahead anyway, for the order.
+// Returns null unless the tick is still good for what is on screen right now,
+// so a stale acknowledgement cannot ride along with a file it was never about.
+function artworkAckRecord(){
+  if (!checksAcknowledged || !acknowledgedFor) return null;
+  if (flaggedSignature() !== acknowledgedFor) return null;
+  const text = function(row, sel){
+    const el = row.querySelector(sel);
+    return el ? el.textContent : '';
+  };
+  const flagged = [];
+  document.querySelectorAll('#checkResults .check-row').forEach(function(r){
+    const i = r.querySelector('.check-icon');
+    if (!i) return;
+    const level = i.classList.contains('err') ? 'error'
+                : i.classList.contains('warn') ? 'warning' : '';
+    if (!level) return;
+    flagged.push({
+      check: r.getAttribute('data-check') || text(r, '.check-label'),
+      level: level,
+      value: text(r, '.check-val'),
+      note:  text(r, '.check-note')
+    });
+  });
+  const head = document.getElementById('ackHead');
+  return { at: ackGivenAt, wording: head ? head.textContent : '', flagged: flagged };
+}
+
 function togglePassedChecks(){
   _passedChecksOpen = !_passedChecksOpen;
   const el = document.getElementById('passedChecks');
@@ -4155,6 +4359,12 @@ async function addToCartUpload(){
     printArtworkUrl: uploadedPrintUrl,
     printSpec: printSpec,
     basis: priceBasis,
+    // What we flagged, in the words they saw, and when they accepted it. A
+    // tick box does not move the legal responsibility — you cannot sign away
+    // "as described" with a checkbox — but it does let a complaint be
+    // answered with what the customer was actually shown, rather than with
+    // "the system would have told them". Null on a clean file.
+    artworkAck: (typeof artworkAckRecord === 'function') ? artworkAckRecord() : null,
     // Design-studio extras (only present when in design mode)
     addedAt: Date.now(),
     source: designMode ? 'design-studio' : 'upload',

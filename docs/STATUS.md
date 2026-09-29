@@ -219,6 +219,12 @@ instead, which ships with macOS and has a real event loop:
 It has `readFile()` and `print()`, and it is what the admin session tests run
 on.
 
+One rule worth keeping: a test that holds its own copy of the code under test
+is a test of the copy. `tools/test-quality-report.js` instead cuts the seven
+functions it checks straight out of `upload-and-print.html` at run time, by
+matching braces. Break the page and the test fails; that was proved by breaking
+it three different ways and watching 6, then 4, then 1 assertion go red.
+
 ---
 
 ## 6. The admin session expires after an hour, silently
@@ -742,6 +748,27 @@ A long day. In the order it happened:
 and delivery is free and unfunded.
 
 ### Cleared 29 September
+
+- **The file quality report now shows a traffic light**, and a customer who is
+  walking past a warning has to say so. Three lamps at the top of the report,
+  one lit — green, amber or red, with the count in words beside it. When
+  anything is flagged, an amber panel appears above the Continue button and the
+  button greys until it is ticked. It stays clickable, so pressing it takes
+  them to the box rather than doing nothing.
+
+  The tick is tied to the exact set of problems it was given for. Change the
+  file, change the size, add a side, and it clears itself — nobody accepts a
+  soft image and then walks a wrong-sized file through on the same tick. What
+  was flagged, the words they read and the moment they accepted it are stored
+  on the order as `artworkAck`.
+
+  Worth being straight about: a tick box does **not** move the legal
+  responsibility. You cannot sign away "as described" with a checkbox. What it
+  buys is a record — a complaint can be answered with what the customer was
+  actually shown, rather than with "the system would have told them". That is
+  why the record matters more than the gate.
+
+  Covered by `tools/test-quality-report.js`, 50 assertions.
 
 - **The database's structure is now in the repo.** 61 migrations have been
   applied to Supabase; six migration files exist, and even those were applied
