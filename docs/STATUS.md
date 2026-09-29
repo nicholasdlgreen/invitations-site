@@ -741,6 +741,22 @@ A long day. In the order it happened:
 **Still true after all of it:** margins are 0, the payload is 11MB and growing,
 and delivery is free and unfunded.
 
+### Cleared 29 September
+
+- **The database's structure is now in the repo.** 61 migrations have been
+  applied to Supabase; six migration files exist, and even those were applied
+  through the connector rather than the CLI, so 55 schema changes lived nowhere
+  but the live database. `supabase/schema.sql` is a readable snapshot of all of
+  it — 40 tables, 63 policies, 14 functions, 3 triggers — with notes where the
+  DDL alone would mislead. `tools/dump-schema.md` holds the queries to remake it
+  after the next change. It is a record, not a migration, and no substitute for
+  the daily backups.
+
+  Two things it turned up: `studio_events` carries two identical INSERT
+  policies, so tightening one would do nothing; and `discount_redemptions` has
+  no INSERT policy at all, which means the whole discount audit trail depends on
+  the `redeem_discount()` function staying exactly as it is.
+
 ### Next up
 
 | # | What | Why it is first |
