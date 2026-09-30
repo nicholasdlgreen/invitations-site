@@ -264,6 +264,12 @@ body.wide-step .step-bar{display:none;}
   background:var(--gold);color:#fff;display:none;align-items:center;justify-content:center;font-size:11px;z-index:2;}
 .wizard-new .fp-size.on .tick{display:flex;}
 
+.wizard-new #format-note,.wizard-new #orient-note,.wizard-new #sides-note{display:none!important;}
+.wizard-new .fp-shape-row{display:flex;gap:40px;flex-wrap:wrap;margin-top:22px;}
+.wizard-new .fp-shape-cell > div[id$="-toggle"]{margin:0!important;}
+.wizard-new .fp-lab{font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--pale);margin:0 0 9px;}
+
+
 </style>
 <script src="/vendor/supabase-js-2.116.0.min.js" defer></script>
 <script src="/supabase-config.js"></script>
@@ -1922,7 +1928,7 @@ async function loadPrintSizes() {
 // Flat or folded, drawn only when the product is sold both ways. Choosing a
 // format re-renders the sizes, because they differ, and drops a chosen size
 // the other format cannot do rather than carrying it silently forward.
-function renderFormatToggle() {
+function _fp_renderFormatToggle() {
   const box = document.getElementById('format-toggle');
   const note = document.getElementById('format-note');
   if (!box) return;
@@ -1950,7 +1956,10 @@ function renderFormatToggle() {
     return;
   }
 
-  const LABEL = { flat: 'Flat card', folded: 'Folded card' };
+  // Short, as the approved mockup has them: the label above the pair already
+  // says what is being chosen.
+  const LABEL = NEW_WIZARD ? { flat: 'Flat', folded: 'Folded' }
+                           : { flat: 'Flat card', folded: 'Folded card' };
   box.style.display = '';
   box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
     + 'background:var(--white);padding:4px;">'
@@ -1967,10 +1976,15 @@ function renderFormatToggle() {
     + '</div>';
 
   if (note) {
-    note.style.display = '';
-    note.textContent = isFoldedPiece()
-      ? 'Your artwork is the front of the card. We print it and fold it for you — the inside is left blank for your own message. The size shown is the finished card.'
-      : 'A single flat card. The size shown is the card itself.';
+    // The approved step 1 is the size cards and the two labelled questions.
+    // Nothing else.
+    if (NEW_WIZARD) { note.style.display = 'none'; }
+    else {
+      note.style.display = '';
+      note.textContent = isFoldedPiece()
+        ? 'Your artwork is the front of the card. We print it and fold it for you — the inside is left blank for your own message. The size shown is the finished card.'
+        : 'A single flat card. The size shown is the card itself.';
+    }
   }
 }
 
@@ -1990,7 +2004,7 @@ function updateProofFoldNote(){
   }
 }
 
-function renderSidesToggle() {
+function _fp_renderSidesToggle() {
   const box  = document.getElementById('sides-toggle');
   const note = document.getElementById('sides-note');
   if (!box) return;
@@ -2028,7 +2042,7 @@ function renderSidesToggle() {
 // Portrait or landscape. The same sheet either way — so this asks about the
 // artwork, not about a different product, and it costs nothing. Hidden for a
 // square, which cannot be turned, and until a size has been chosen.
-function renderOrientationToggle() {
+function _fp_renderOrientationToggle() {
   const box  = document.getElementById('orient-toggle');
   const note = document.getElementById('orient-note');
   if (!box) return;
@@ -2059,10 +2073,13 @@ function renderOrientationToggle() {
       }).join('')
     + '</div>';
   if (note) {
-    note.style.display = '';
-    const d = sizeSpec(selectedSize);
-    note.textContent = 'Your card will be ' + Math.round(d.mmW) + '×' + Math.round(d.mmH)
-      + 'mm. Landscape costs the same as portrait — it is the same sheet of paper, turned.';
+    if (NEW_WIZARD) { note.style.display = 'none'; }
+    else {
+      note.style.display = '';
+      const d = sizeSpec(selectedSize);
+      note.textContent = 'Your card will be ' + Math.round(d.mmW) + '×' + Math.round(d.mmH)
+        + 'mm. Landscape costs the same as portrait — it is the same sheet of paper, turned.';
+    }
   }
 }
 
@@ -2138,6 +2155,51 @@ function selectFold(f) {
   if (typeof updatePrice === 'function') updatePrice();
 }
 
+// The approved step 1: the size cards first, then the two questions beneath
+// them as a labelled pair. The page's own markup has the format toggle ABOVE
+// the grid and the orientation toggle below it with a paragraph between, so
+// under the flag the three are gathered into one row after the grid. Done in
+// the DOM rather than with CSS order, because the two toggles have to sit side
+// by side inside a shared row and order alone cannot nest them.
+function arrangeShapeRow() {
+  if (!NEW_WIZARD) return;
+  const grid = document.getElementById('size-grid');
+  const fmt  = document.getElementById('format-toggle');
+  const ori  = document.getElementById('orient-toggle');
+  if (!grid || !grid.parentNode) return;
+  let row = document.getElementById('fp-shape-row');
+  if (!row) {
+    row = document.createElement('div');
+    row.id = 'fp-shape-row';
+    row.className = 'fp-shape-row';
+    grid.parentNode.insertBefore(row, grid.nextSibling);
+  }
+  [['format-toggle', 'Flat or folded'], ['orient-toggle', 'Which way up'],
+   ['sides-toggle', 'Printed sides']].forEach(function (pair) {
+    const el = document.getElementById(pair[0]);
+    if (!el) return;
+    let cell = document.getElementById(pair[0] + '-cell');
+    if (!cell) {
+      cell = document.createElement('div');
+      cell.id = pair[0] + '-cell';
+      cell.className = 'fp-shape-cell';
+      cell.innerHTML = '<div class="fp-lab">' + pair[1] + '</div>';
+      row.appendChild(cell);
+    }
+    if (el.parentNode !== cell) cell.appendChild(el);
+    // A toggle the product does not offer takes its label with it.
+    cell.style.display = (el.style.display === 'none') ? 'none' : '';
+  });
+}
+
+
+// Each of these can change whether a toggle is on screen, and the row that
+// holds them has to follow. Wrapping is safer than editing three functions
+// with several early returns between them.
+function renderFormatToggle(){ _fp_renderFormatToggle.apply(null, arguments); arrangeShapeRow(); }
+function renderOrientationToggle(){ _fp_renderOrientationToggle.apply(null, arguments); arrangeShapeRow(); }
+function renderSidesToggle(){ _fp_renderSidesToggle.apply(null, arguments); arrangeShapeRow(); }
+
 function renderSizeCards() {
   const grid = document.getElementById('size-grid');
   if (!grid) return;
@@ -2177,6 +2239,7 @@ function renderSizeCards() {
     </div>`;
   }).join('');
 
+  arrangeShapeRow();
   paintSizeArt(keys);
   // Keep any existing choice highlighted; drop it if it is no longer offered.
   if (selectedSize && !keys.includes(selectedSize)) selectedSize = null;
