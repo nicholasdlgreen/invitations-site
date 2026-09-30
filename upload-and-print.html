@@ -70,8 +70,7 @@ body.wide-step .step-bar{display:none;}
        or the map changes appearance halfway. Only under the flag: the other
        products keep their numbered rail until each is switched over. */
     html.wizard-new #s3wrap .rl b{display:none;}
-    html.wizard-new #s3wrap .rl{gap:0;}
-    html.wizard-new #s3wrap .rl{padding-bottom:6px;}
+    html.wizard-new #s3wrap .rl{gap:0;padding-bottom:6px;}
     html.wizard-new #s3wrap .rl.now{box-shadow:inset 0 -1px 0 0 var(--tier,var(--gold));}
     @media(max-width:768px){
       html.wizard-new .step-label{display:inline;}
@@ -2338,10 +2337,21 @@ const _siteDataReady = loadSiteData();
 // catalogue. Until it arrives the bar is held invisible rather than shown with
 // the wrong steps on it and swapped a moment later. It is revealed either way,
 // so a catalogue that never comes does not leave the page looking headless.
+// step3.js is deferred, so in practice it has run long before this resolves.
+// In practice is not always: a slow or failed fetch of it would leave
+// drawPageBar unable to draw, and revealing then would show the OLD five-step
+// bar — Upload · File Check · Paper & Quantity · Basket · Checkout — under a
+// page whose rail says six other things. So a failed draw is tried once more
+// after everything has loaded, and only then does the bar appear either way.
+// It is never left invisible for good.
 _siteDataReady
-  .then(() => { drawPageBar(currentStep); })
-  .catch(() => {})
-  .then(() => { document.documentElement.classList.add('bar-ready'); });
+  .then(() => drawPageBar(currentStep))
+  .catch(() => false)
+  .then(drawn => {
+    const reveal = () => document.documentElement.classList.add('bar-ready');
+    if (drawn || !NEW_WIZARD || document.readyState === 'complete') return reveal();
+    window.addEventListener('load', () => { drawPageBar(currentStep); reveal(); }, { once: true });
+  });
 loadPrintSizes();
 loadDeliveryOptions();
   

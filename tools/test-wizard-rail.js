@@ -238,7 +238,7 @@ is(/#s3wrap \.rl\.now\{box-shadow:inset 0 -1px 0 0 var\(--tier,var\(--gold\)\);\
 is(/html\.wizard-new \.step-label\{white-space:nowrap;letter-spacing:\.14em;color:var\(--pale\);padding-bottom:5px;\}/.test(HTML),
    true, 'every word reserves the space the rule sits in, or the one that has '
    + 'it rides above the rest of the line');
-is(/html\.wizard-new #s3wrap \.rl\{padding-bottom:6px;\}/.test(HTML), true,
+is(/html\.wizard-new #s3wrap \.rl\{gap:0;padding-bottom:6px;\}/.test(HTML), true,
    'the rail reserves it too');
 is(/'<div class="step-label' \+ \(i<cur\?' done':i===cur\?' active':''\)/.test(HTML), true,
    'and the word carries done and now, now that no circle does');
@@ -266,8 +266,13 @@ is(/== 'order':/.test(SERVE), true,
 
 is(/html\.wizard-new \.step-bar\{visibility:hidden;\}/.test(HTML), true,
    'until it can be drawn it is held invisible, not shown saying the wrong thing');
-is(/\.then\(\(\) => \{ document\.documentElement\.classList\.add\('bar-ready'\); \}\)/.test(HTML), true,
-   'and revealed either way, so a failed catalogue does not leave a headless page');
+// A failed draw must not reveal the OLD five-step bar under a six-step rail.
+is(/if \(drawn \|\| !NEW_WIZARD \|\| document\.readyState === 'complete'\) return reveal\(\);/.test(HTML),
+   true, 'a draw that failed is tried again once everything has loaded, rather '
+   + 'than uncovering the five-step bar it was meant to replace');
+is(/window\.addEventListener\('load', \(\) => \{ drawPageBar\(currentStep\); reveal\(\); \}, \{ once: true \}\);/.test(HTML),
+   true, 'and it is revealed after that attempt either way, never left hidden '
+   + 'for good');
 
 print('\n' + pass + ' passed, ' + fail + ' failed\n');
 if (fail) throw new Error(fail + ' assertion(s) failed');
