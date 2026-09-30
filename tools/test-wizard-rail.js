@@ -250,14 +250,13 @@ print('\nWHICH PRODUCTS IT IS ON FOR');
 is(/railSkips: \(\) => NEW_WIZARD \? \['s1'\] : \[\],/.test(HTML), true,
    'the shop actually asks for the range to come off the line — the stub '
    + 'adapter above proves the mechanism, not that anyone uses it');
-is(/\|\| PRODUCT\.slug === 'wedding-invitations';/.test(HTML), true,
-   'it asks the resolved product, not the query string: customers arrive at '
-   + '/wedding-invitations/order, which Netlify rewrites without the browser '
-   + 'ever seeing ?product= — reading the query left the wizard off on the '
-   + 'only route anybody takes');
-is(/_q\.get\('product'\)/.test(HTML), false,
-   'and never goes back to reading it off the query string');
-is(/const NEW_WIZARD = /.test(HTML), true, 'and it is still one switch, read once');
+is(/const NEW_WIZARD = new URLSearchParams\(location\.search\)\.get\('wizard'\) !== 'old';/.test(HTML),
+   true, 'on for every product — it is the template for the range, and a page '
+   + 'that behaves one way on wedding invitations and another on thank you '
+   + 'cards is two products, not twenty-three');
+is(/PRODUCT\.slug === '/.test(HTML), false,
+   'nothing is keyed to one slug: that left it off on twenty-two of the '
+   + 'twenty-three, which is the fault it replaces');
 
 // The dev server has to serve that route too, or it cannot be checked at all.
 var SERVE = readFile('tools/serve.py');
