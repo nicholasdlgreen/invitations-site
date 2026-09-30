@@ -91,7 +91,12 @@
       var swatches = mine.map(function (p) {
         return '<span class="sw" style="background-image:url(\'' + esc(A.imageFor(p.name) || '') + '\')"></span>';
       }).join('');
-      var from = (A.tierFrom && A.tierFrom(f.id)) || null;
+      // No price on the range pod. A figure here is a figure before the
+      // specification is finished — the size, the stock, the finishing and the
+      // quantity all still to come — so it is a number nobody can act on, and
+      // it is not the number they will pay. Only a full price builder would
+      // earn one. A.tierFrom is left on the adapter unused, so this is one
+      // line to put back if that changes.
       var count = mine.length + (mine.length === 1 ? ' paper' : ' papers');
       return '<button class="feel ' + f.id + (S.feel === f.id ? ' on' : '') + '" onclick="Step3.feel(\'' + f.id + '\')">'
         + (f.flag ? '<span class="flag">' + esc(f.flag) + '</span>' : '')
@@ -100,7 +105,6 @@
         + '<span class="cap"><span class="nm">' + esc(f.name) + '</span>'
         + '<span class="sub">' + esc(f.sub) + '</span>'
         + '<span class="meta"><span class="cnt">' + count + '</span>'
-        + (from == null ? '' : '<span class="frm">from <b>' + gbp(from) + '</b></span>')
         + '</span></span></button>';
     }).join('');
   }
