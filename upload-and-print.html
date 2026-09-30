@@ -44,6 +44,26 @@ body.wide-step #s3wrap{--s3-top:75px;}
    both sit at the top of the page and count different things, which reads as
    a mistake. The site bar comes back the moment you leave this step. */
 body.wide-step .step-bar{display:none;}
+    html.wizard-new .step-bar{visibility:hidden;}
+    html.wizard-new.bar-ready .step-bar{visibility:visible;}
+    /* Nine steps do not fit on one line of a 760px measure, and the number is
+       not fixed — a product sold on one range has eight, and the next range we
+       add could make ten. So it wraps rather than running off the page, and a
+       label keeps itself on one line so "How many" is not split down the
+       middle. The labels stay on at phone width too: five numbered circles
+       could be read off the page, nine cannot, and step 3's rail already
+       wraps with its labels showing — the two are meant to look the same. */
+    html.wizard-new .step-bar{flex-wrap:wrap;row-gap:12px;}
+    html.wizard-new .step-item{flex:0 0 auto;gap:10px;}
+    html.wizard-new .step-label{white-space:nowrap;}
+    html.wizard-new .step-line{flex:1 1 16px;min-width:12px;margin:0 12px;}
+    @media(max-width:768px){
+      html.wizard-new .step-label{display:inline;}
+      html.wizard-new .step-bar{row-gap:10px;}
+      html.wizard-new .step-item{gap:8px;}
+      html.wizard-new .step-num{width:26px;height:26px;}
+      html.wizard-new .step-line{margin:0 8px;}
+    }
 
 .step-bar{display:flex;align-items:center;gap:0;margin-bottom:34px;}
 .step-item{display:flex;align-items:center;gap:12px;flex:1;}
@@ -1336,25 +1356,6 @@ let ENVELOPES = [
 // made an early size render throw.
 const NEW_WIZARD = new URLSearchParams(location.search).get('wizard') === 'new';
 if (NEW_WIZARD) document.documentElement.classList.add('wizard-new');
-// The bar and the rail are never on screen together — the bar hides itself on
-// step 3, where the rail takes over. But they name the same two steps
-// differently: you do "Upload" and "File Check", then meet a rail saying you
-// did "Size" and "Artwork". The rail is right about what they are — step 1 is
-// choosing a size, and the upload only unlocks once you have — so the bar is
-// brought into line. Run at load as well as on every step, because goStep does
-// not run when the page first draws.
-function nameTheFirstTwoSteps() {
-  const l1 = document.getElementById('sl1'), l2 = document.getElementById('sl2');
-  if (l1) l1.textContent = 'Size';
-  if (l2) l2.textContent = 'Artwork';
-}
-if (NEW_WIZARD) {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', nameTheFirstTwoSteps);
-  } else {
-    nameTheFirstTwoSteps();
-  }
-}
 
 let SIZE_SPECS = {
   'A5':    {label:'A5 (148×210mm)',    mmW:148,mmH:210,minPx:1748},
@@ -2310,6 +2311,14 @@ function applySizeFilter() { renderSizeCards(); }
 // saw one range and removed itself, and _step3Ready latched — so Luxury and
 // Eco were unreachable for the rest of the visit.
 const _siteDataReady = loadSiteData();
+// The bar is drawn from the same journey the rail uses, and that needs the
+// catalogue. Until it arrives the bar is held invisible rather than shown with
+// the wrong steps on it and swapped a moment later. It is revealed either way,
+// so a catalogue that never comes does not leave the page looking headless.
+_siteDataReady
+  .then(() => { drawPageBar(currentStep); })
+  .catch(() => {})
+  .then(() => { document.documentElement.classList.add('bar-ready'); });
 loadPrintSizes();
 loadDeliveryOptions();
   
@@ -4132,18 +4141,45 @@ function togglePassedChecks(){
 // scrolling then would yank the customer away from the top of the page.
 let _steppedOnce = false;
 
+// The bar and the rail are never on screen together: the bar hides itself on
+// step 3, where the rail takes over. They used to be two different maps — the
+// bar said Size · Artwork · Paper & Quantity · Basket · Checkout, and then the
+// rail said Size · Artwork · Range · Paper · Finishing · How many · Delivery.
+// A customer shown one map and handed another halfway has no map at all, so
+// both are now drawn from Step3's own journey() and cannot drift apart.
+//
+// Returns false if it could not do it — before the catalogue has arrived, or
+// on the design-studio route, which hides the first two steps and renumbers
+// what is left. The caller then leaves the markup's own five steps alone.
+function drawPageBar(n){
+  if (!NEW_WIZARD || designMode) return false;
+  const bar = document.querySelector('.step-bar');
+  if (!bar || !window.Step3 || !Step3.journey) return false;
+  let steps = null;
+  try { steps = Step3.journey(step3Adapter()); } catch (e) { steps = null; }
+  if (!steps || !steps.length) return false;
+  // Step 3 is the whole middle of this list and hides the bar while it runs,
+  // so it has no single entry to highlight. The list still has to be right for
+  // the moment the customer steps back out of it.
+  const at = { 1:'step1', 2:'step2', 4:'basket', 5:'checkout' }[n];
+  const cur = steps.findIndex(x => x.id === at);
+  bar.innerHTML = steps.map((x,i) =>
+    (i ? '<div class="step-line"></div>' : '')
+    + '<div class="step-item">'
+    + '<div class="step-num' + (i<cur?' done':i===cur?' active':'') + '">' + (i+1) + '</div>'
+    + '<div class="step-label' + (i===cur?' active':'') + '">' + esc(x.label) + '</div>'
+    + '</div>').join('');
+  document.documentElement.classList.add('bar-ready');
+  return true;
+}
+
 function goStep(n){
-  // The bar and the rail are never on screen together — the bar hides itself
-  // on step 3, where the rail takes over. But they name the same two steps
-  // differently: you do "Upload" and "File Check", then meet a rail saying you
-  // did "Size" and "Artwork". The rail is right about what those steps are —
-  // step 1 is choosing a size, the upload only unlocks once you have — so the
-  // bar is brought into line rather than the other way round.
-  if (NEW_WIZARD) nameTheFirstTwoSteps();
   const _changing = _steppedOnce && n !== currentStep;
   _steppedOnce = true;
   [1,2,3,4,5].forEach(i=>{
     document.getElementById('step'+i)?.classList.toggle('hidden',i!==n);
+  });
+  if (!drawPageBar(n)) [1,2,3,4,5].forEach(i=>{
     document.getElementById('sn'+i).className='step-num'+(i<n?' done':i===n?' active':'');
     document.getElementById('sl'+i).className='step-label'+(i===n?' active':'');
   });
@@ -4427,6 +4463,21 @@ function step3Adapter(){
       ? [{ id: 'step1', label: 'Size', host: true },
          { id: 'step2', label: 'Artwork', host: true }]
       : [],
+    // The two it owns after. Marked ahead, so the rail shows them without
+    // pretending they are somewhere you can already click to.
+    trailingSteps: () => NEW_WIZARD
+      ? [{ id: 'basket', label: 'Basket', host: true, ahead: true },
+         { id: 'checkout', label: 'Checkout', host: true, ahead: true }]
+      : [],
+    // Clicking a completed step in the rail has to actually go back to it.
+    // These panels are hidden by the page, not by step 3, so scrolling to one
+    // would have looked like the click did nothing at all.
+    goToHostStep: id => {
+      const n = { step1: 1, step2: 2, basket: 4, checkout: 5 }[id];
+      if (!n) return false;
+      goStep(n);
+      return true;
+    },
     papers:     () => step3Papers().map(p => ({
                    name: p.name, subtitle: p.subtitle, description: p.description, weights: p.weights || []
                  })),

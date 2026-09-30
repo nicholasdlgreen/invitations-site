@@ -416,13 +416,17 @@
     // what they are, and so a host that supplies none behaves exactly as
     // before: the journey starts at Range and is numbered from 1.
     var lead = (A.leadingSteps && A.leadingSteps()) || [];
+    // And the steps the host owns AFTER this one — basket and checkout. They
+    // are named here so the rail and the page's own bar can be drawn from one
+    // list. A map that changes shape halfway through is not a map.
+    var trail = (A.trailingSteps && A.trailingSteps()) || [];
     return lead.concat([
       { id: 's1', label: 'Range', skip: !!soleFeel() },
       { id: 'stocks', label: stockLabel() },
       { id: 's2', label: 'Finishing', skip: noFinish },
       { id: 's3', label: 'How many' },
       { id: 's4', label: 'Delivery' }
-    ]).filter(function (x) { return !x.skip; });
+    ]).concat(trail).filter(function (x) { return !x.skip; });
   }
   // "Paper" over a sheet of foamex is wrong. The weight carries its unit, so
   // the stock says which it is without a second list to keep in step.
@@ -441,10 +445,11 @@
     var r = el('rail'); if (!r) return;
     r.innerHTML = '<div class="railIn">' + steps.map(function (x, i) {
       var sec = el(x.id);
-      // A host step lives outside this component and has no locked class. It
-      // is behind us by definition — we could not be here otherwise — so it is
-      // done, and always clickable to go back to.
-      var isOpen = x.host ? true : (sec && !sec.classList.contains('locked'));
+      // A host step lives outside this component and has no locked class. One
+      // behind us is done by definition — we could not be standing here
+      // otherwise — so it stays clickable to go back to. One ahead of us has
+      // not been reached and must not look as though it has.
+      var isOpen = x.host ? !x.ahead : (sec && !sec.classList.contains('locked'));
       var cls = (i < cur ? 'done' : (i === cur ? 'now' : '')) + (isOpen ? ' can' : '');
       return (i ? '<span class="rsep">&mdash;</span>' : '')
         + '<button class="rl ' + cls.trim() + '"'
@@ -462,6 +467,10 @@
 
   // Only ever on a click of theirs. Nothing here moves the page by itself.
   function jump(id) {
+    // A step the host owns is not in this component's markup, and the page
+    // may well have hidden its panel. Scrolling to it would look like the
+    // click did nothing, so it is handed back to the host to act on.
+    if (A && A.goToHostStep && A.goToHostStep(id)) return;
     var e = el(id); if (!e) return;
     window.scrollTo({ top: e.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
   }
@@ -602,6 +611,18 @@
     },
     delivery: function (id) { S.del = id; advanceTo('s4'); A.onSelect(S); redraw(); renumber(); },
     jump: jump,
+    // The journey as this file sees it, so the host page's own bar is drawn
+    // from the very same code rather than a copy of it kept in step by hand.
+    // Pass an adapter to ask before the step has been started; without one it
+    // answers for the step as it stands, and null if it has not started.
+    journey: function (adapter) {
+      if (!adapter) return A ? journey() : null;
+      var wasA = A, wasS = S;
+      A = adapter;
+      S = { feel: null, paper: null, weight: null, finishes: {}, env: null,
+            qty: null, del: null, openFin: null, at: 's1' };
+      try { return journey(); } finally { A = wasA; S = wasS; }
+    },
     redraw: redraw
   };
 })(window);
