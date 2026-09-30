@@ -101,3 +101,24 @@ never told at the end that they answered it wrongly.
 
 So the decision is not A or B. It is whether to build A alone, or build A and
 let a file skip the front of it.
+
+## Decided, 30 September
+
+**The start point is size and shape, as it is today.** Size and range turn out
+to be completely independent — every range is buyable in every size on every
+product, place cards included — so there was no technical reason for the order
+and it was a positioning choice.
+
+**The range stays its own step**, where it is now, and **there are no presets**.
+The range does that job. This also removes a collision I had introduced: my
+mockup had "Eco" as both a preset and a paper range, which cannot both be on
+one page under one word. Option D is therefore dropped.
+
+### Still open
+
+- **Where the artwork goes** — before the specification as today, or after it
+  as option A proposed.
+- **Whether the file derives the specification** (idea 1): 73% of correct
+  exports identify themselves, 95% after one question.
+- **The visual design.** Rejected. To be redone once the structure above is
+  settled, and not before.
