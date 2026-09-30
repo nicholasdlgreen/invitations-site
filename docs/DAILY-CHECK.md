@@ -72,3 +72,22 @@ step missing and all three ranges unreachable. Verified against the fixed page:
 
 Those are the next ones worth adding, roughly in that order, and all of them
 matter more once the shop is taking money.
+
+## Running the site locally
+
+The preview server is sandboxed: it may read the temp tree and never the repo.
+So the pages it serves are a copy, and that copy has to be refreshed.
+
+```bash
+python3 tools/preview-sync.py
+```
+
+Then start the dev server (`invitations-site` in `.claude/launch.json`). Run the
+sync again after editing anything you want to see — it copies only what a
+browser fetches, so the 121MB repo becomes about 15MB and a re-run touches only
+what changed.
+
+This lives at a path derived from the project rather than the session, which is
+what broke before: the old config pointed into a session scratchpad that is
+wiped between sessions, so the dev server failed to start every time a new one
+began.

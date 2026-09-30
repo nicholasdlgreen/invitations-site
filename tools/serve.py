@@ -10,7 +10,14 @@ Pretty URLs resolve the way Netlify does: /wedding-invitations -> that .html.
 """
 import http.server, os, socketserver, sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# The preview server is only allowed to RUN from the scratchpad, so this file
+# is copied there and cannot work out the site root from its own location. A
+# sibling site-root.txt says where the site is; failing that, the parent of
+# this file's directory, which is right when it runs from the repo.
+_here = os.path.dirname(os.path.abspath(__file__))
+_marker = os.path.join(_here, 'site-root.txt')
+ROOT = (open(_marker).read().strip() if os.path.isfile(_marker)
+        else os.path.dirname(_here))
 PORT = int(os.environ.get('PORT', '8081'))
 
 
