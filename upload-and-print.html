@@ -44,6 +44,25 @@ body.wide-step #s3wrap{--s3-top:75px;}
    both sit at the top of the page and count different things, which reads as
    a mistake. The site bar comes back the moment you leave this step. */
 body.wide-step .step-bar{display:none;}
+    html.wizard-new body.past-order .step-bar{display:none;}
+    html.wizard-new .step-bar{visibility:hidden;}
+    html.wizard-new.bar-ready .step-bar{visibility:visible;}
+    /* The number of steps is not fixed — a product sold on one range has six —
+       so the bar wraps rather than running off the page, and a label keeps
+       itself on one line so a two-word label is not split down the middle. The
+       labels stay on at phone width, where step 3's rail already wraps with
+       its labels showing: the two are meant to look the same. */
+    html.wizard-new .step-bar{flex-wrap:wrap;row-gap:12px;}
+    html.wizard-new .step-item{flex:0 0 auto;gap:10px;}
+    html.wizard-new .step-label{white-space:nowrap;}
+    html.wizard-new .step-line{flex:1 1 16px;min-width:12px;margin:0 12px;}
+    @media(max-width:768px){
+      html.wizard-new .step-label{display:inline;}
+      html.wizard-new .step-bar{row-gap:10px;}
+      html.wizard-new .step-item{gap:8px;}
+      html.wizard-new .step-num{width:26px;height:26px;}
+      html.wizard-new .step-line{margin:0 8px;}
+    }
 
 .step-bar{display:flex;align-items:center;gap:0;margin-bottom:34px;}
 .step-item{display:flex;align-items:center;gap:12px;flex:1;}
@@ -240,6 +259,39 @@ body.wide-step .step-bar{display:none;}
 .co-err{background:#FCEAEA;color:var(--err);border-radius:10px;padding:12px 16px;font-size:var(--text-sm);margin-bottom:16px;display:none;}
 .modal-close{background:none;border:none;font-size:var(--text-h3);color:var(--pale);cursor:pointer;line-height:1;padding:4px;}
 @media(max-width:768px){.paper-grid{grid-template-columns:1fr 1fr;}.step-label{display:none;}}
+
+/* ── the seven-step wizard, behind ?wizard=new ──────────────────────────────
+   The size tile drawn as a card, borrowing the range pod's parts so the first
+   thing you meet and the second read as one family. Everything here is scoped
+   to .wizard-new, so with the flag off not one rule applies. */
+.wizard-new #size-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important;gap:14px!important;}
+.wizard-new .fp-size{position:relative;border:1.5px solid var(--border);background:var(--white);
+  border-radius:14px;overflow:hidden;cursor:pointer;text-align:left;
+  box-shadow:0 1px 2px rgba(61,46,36,.05);
+  transition:transform .3s cubic-bezier(.2,.7,.3,1),box-shadow .3s,border-color .2s,background .2s;}
+.wizard-new .fp-size:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(61,46,36,.11);}
+.wizard-new .fp-size.on{border-color:var(--gold);background:#FDFAF5;
+  box-shadow:0 0 0 1px var(--gold),0 10px 22px rgba(61,46,36,.11);}
+.wizard-new .fp-size .art{display:flex;align-items:flex-end;justify-content:center;height:74px;
+  background:#F6F1EA;padding-bottom:12px;}
+.wizard-new .fp-size .cap{display:block;padding:10px 13px 12px;}
+.wizard-new .fp-size .nm{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;line-height:1.15;}
+.wizard-new .fp-size.on .nm{color:var(--gold);}
+.wizard-new .fp-size .dim{display:block;font-size:11.5px;color:var(--pale);margin-top:3px;}
+.wizard-new .fp-size .sub{display:block;font-size:11.5px;color:var(--soft);margin-top:2px;}
+.wizard-new .fp-size .tick{position:absolute;right:10px;top:10px;width:20px;height:20px;border-radius:50%;
+  background:var(--gold);color:#fff;display:none;align-items:center;justify-content:center;font-size:11px;z-index:2;}
+.wizard-new .fp-size.on .tick{display:flex;}
+
+.wizard-new .fp-size.cant{opacity:.45;cursor:default;box-shadow:none;}
+.wizard-new .fp-size.cant:hover{transform:none;box-shadow:none;}
+.wizard-new .fp-size .sub.cant{font-style:italic;}
+.wizard-new #format-note,.wizard-new #orient-note,.wizard-new #sides-note{display:none!important;}
+.wizard-new .fp-shape-row{display:flex;gap:40px;flex-wrap:wrap;margin-top:22px;}
+.wizard-new .fp-shape-cell > div[id$="-toggle"]{margin:0!important;}
+.wizard-new .fp-lab{font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--pale);margin:0 0 9px;}
+
+
 </style>
 <script src="/vendor/supabase-js-2.116.0.min.js" defer></script>
 <script src="/supabase-config.js"></script>
@@ -1291,6 +1343,29 @@ let ENVELOPES = [
 // Sizes come from the print_sizes table (managed in admin). These defaults are
 // only a safety net for the first paint and for the rare case where Supabase is
 // unreachable — the live list replaces them as soon as it loads.
+// The seven-step wizard, behind a flag while it is being reviewed. Off, the
+// page behaves exactly as it does today: step 3 owns its own 1-to-5 journey
+// inside the page's step 3. On, the rail spans all seven, the numbering is
+// continuous, the size tiles are drawn as cards, and a finish the paper cannot
+// take is shown greyed rather than removed.
+//
+// Declared here, at the top, because renderSizeCards and selectSize read it and
+// they run long before the step 3 adapter is defined. A const is in the
+// temporal dead zone until its declaration runs, so leaving it further down
+// made an early size render throw.
+// Wedding invitations is the product this was built and checked end to end on,
+// so that is where it is on for everyone — size first, then the shape of the
+// card. ?wizard=new turns it on anywhere else for a look; the other twenty-one
+// products keep the old step 1 until each has been through the same check.
+//
+// It asks PRODUCT, not the query string. Customers arrive at the clean URL
+// /wedding-invitations/order, which Netlify rewrites without the browser ever
+// seeing ?product= — so reading the query string left the wizard OFF on the
+// only route anybody actually takes, and on the whole day this was wrong.
+const NEW_WIZARD = new URLSearchParams(location.search).get('wizard') === 'new'
+  || PRODUCT.slug === 'wedding-invitations';
+if (NEW_WIZARD) document.documentElement.classList.add('wizard-new');
+
 let SIZE_SPECS = {
   'A5':    {label:'A5 (148×210mm)',    mmW:148,mmH:210,minPx:1748},
   'A6':    {label:'A6 (105×148mm)',    mmW:105,mmH:148,minPx:1240},
@@ -1885,7 +1960,7 @@ async function loadPrintSizes() {
 // Flat or folded, drawn only when the product is sold both ways. Choosing a
 // format re-renders the sizes, because they differ, and drops a chosen size
 // the other format cannot do rather than carrying it silently forward.
-function renderFormatToggle() {
+function _fp_renderFormatToggle() {
   const box = document.getElementById('format-toggle');
   const note = document.getElementById('format-note');
   if (!box) return;
@@ -1913,7 +1988,10 @@ function renderFormatToggle() {
     return;
   }
 
-  const LABEL = { flat: 'Flat card', folded: 'Folded card' };
+  // Short, as the approved mockup has them: the label above the pair already
+  // says what is being chosen.
+  const LABEL = NEW_WIZARD ? { flat: 'Flat', folded: 'Folded' }
+                           : { flat: 'Flat card', folded: 'Folded card' };
   box.style.display = '';
   box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
     + 'background:var(--white);padding:4px;">'
@@ -1930,10 +2008,15 @@ function renderFormatToggle() {
     + '</div>';
 
   if (note) {
-    note.style.display = '';
-    note.textContent = isFoldedPiece()
-      ? 'Your artwork is the front of the card. We print it and fold it for you — the inside is left blank for your own message. The size shown is the finished card.'
-      : 'A single flat card. The size shown is the card itself.';
+    // The approved step 1 is the size cards and the two labelled questions.
+    // Nothing else.
+    if (NEW_WIZARD) { note.style.display = 'none'; }
+    else {
+      note.style.display = '';
+      note.textContent = isFoldedPiece()
+        ? 'Your artwork is the front of the card. We print it and fold it for you — the inside is left blank for your own message. The size shown is the finished card.'
+        : 'A single flat card. The size shown is the card itself.';
+    }
   }
 }
 
@@ -1953,7 +2036,7 @@ function updateProofFoldNote(){
   }
 }
 
-function renderSidesToggle() {
+function _fp_renderSidesToggle() {
   const box  = document.getElementById('sides-toggle');
   const note = document.getElementById('sides-note');
   if (!box) return;
@@ -1991,7 +2074,7 @@ function renderSidesToggle() {
 // Portrait or landscape. The same sheet either way — so this asks about the
 // artwork, not about a different product, and it costs nothing. Hidden for a
 // square, which cannot be turned, and until a size has been chosen.
-function renderOrientationToggle() {
+function _fp_renderOrientationToggle() {
   const box  = document.getElementById('orient-toggle');
   const note = document.getElementById('orient-note');
   if (!box) return;
@@ -2022,10 +2105,13 @@ function renderOrientationToggle() {
       }).join('')
     + '</div>';
   if (note) {
-    note.style.display = '';
-    const d = sizeSpec(selectedSize);
-    note.textContent = 'Your card will be ' + Math.round(d.mmW) + '×' + Math.round(d.mmH)
-      + 'mm. Landscape costs the same as portrait — it is the same sheet of paper, turned.';
+    if (NEW_WIZARD) { note.style.display = 'none'; }
+    else {
+      note.style.display = '';
+      const d = sizeSpec(selectedSize);
+      note.textContent = 'Your card will be ' + Math.round(d.mmW) + '×' + Math.round(d.mmH)
+        + 'mm. Landscape costs the same as portrait — it is the same sheet of paper, turned.';
+    }
   }
 }
 
@@ -2101,6 +2187,51 @@ function selectFold(f) {
   if (typeof updatePrice === 'function') updatePrice();
 }
 
+// The approved step 1: the size cards first, then the two questions beneath
+// them as a labelled pair. The page's own markup has the format toggle ABOVE
+// the grid and the orientation toggle below it with a paragraph between, so
+// under the flag the three are gathered into one row after the grid. Done in
+// the DOM rather than with CSS order, because the two toggles have to sit side
+// by side inside a shared row and order alone cannot nest them.
+function arrangeShapeRow() {
+  if (!NEW_WIZARD) return;
+  const grid = document.getElementById('size-grid');
+  const fmt  = document.getElementById('format-toggle');
+  const ori  = document.getElementById('orient-toggle');
+  if (!grid || !grid.parentNode) return;
+  let row = document.getElementById('fp-shape-row');
+  if (!row) {
+    row = document.createElement('div');
+    row.id = 'fp-shape-row';
+    row.className = 'fp-shape-row';
+    grid.parentNode.insertBefore(row, grid.nextSibling);
+  }
+  [['format-toggle', 'Flat or folded'], ['orient-toggle', 'Which way up'],
+   ['sides-toggle', 'Printed sides']].forEach(function (pair) {
+    const el = document.getElementById(pair[0]);
+    if (!el) return;
+    let cell = document.getElementById(pair[0] + '-cell');
+    if (!cell) {
+      cell = document.createElement('div');
+      cell.id = pair[0] + '-cell';
+      cell.className = 'fp-shape-cell';
+      cell.innerHTML = '<div class="fp-lab">' + pair[1] + '</div>';
+      row.appendChild(cell);
+    }
+    if (el.parentNode !== cell) cell.appendChild(el);
+    // A toggle the product does not offer takes its label with it.
+    cell.style.display = (el.style.display === 'none') ? 'none' : '';
+  });
+}
+
+
+// Each of these can change whether a toggle is on screen, and the row that
+// holds them has to follow. Wrapping is safer than editing three functions
+// with several early returns between them.
+function renderFormatToggle(){ _fp_renderFormatToggle.apply(null, arguments); arrangeShapeRow(); }
+function renderOrientationToggle(){ _fp_renderOrientationToggle.apply(null, arguments); arrangeShapeRow(); }
+function renderSidesToggle(){ _fp_renderSidesToggle.apply(null, arguments); arrangeShapeRow(); }
+
 function renderSizeCards() {
   const grid = document.getElementById('size-grid');
   if (!grid) return;
@@ -2110,7 +2241,18 @@ function renderSizeCards() {
   renderOrientationToggle();
   const available = getAvailableSizes();
   let keys = Object.keys(SIZE_SPECS);
-  if (available.size) keys = keys.filter(k => available.has(k));
+  // With the wizard on, a size this format cannot be made in is greyed rather
+  // than removed — the same rule as an unavailable finish. It also stops the
+  // page moving under the cursor: choosing Folded takes Square 210 off the
+  // list, the grid loses a row, and everything below it jumps up by 175px.
+  // Nothing scrolls; the content shrinks, which reads as a jump and is worse,
+  // because the control you just pressed is the one that moves.
+  const offered = (NEW_WIZARD && currentProduct && Array.isArray(currentProduct.available_sizes)
+                   && currentProduct.available_sizes.length)
+    ? currentProduct.available_sizes.filter(k => SIZE_SPECS[k])
+    : null;
+  if (offered && offered.length) keys = offered;
+  else if (available.size) keys = keys.filter(k => available.has(k));
   if (!keys.length) keys = Object.keys(SIZE_SPECS);      // never show an empty step
 
   // Every tile is drawn to the same long side, so A5 really does look taller
@@ -2119,6 +2261,21 @@ function renderSizeCards() {
   grid.innerHTML = keys.map(k => {
     const z = sizeSpec(k);
     const esc = String(k).replace(/"/g, '&quot;');
+    // Two shapes of the same tile. The new one carries classes instead of
+    // inline styles so the stylesheet can own it, and borrows the range pod's
+    // parts — a picture, a name, the measurement underneath — so the first
+    // thing you meet and the second read as one family.
+    if (NEW_WIZARD) {
+      const can = !offered || available.has(k);
+      return `<div id="size-opt-${esc}" class="fp-size${can ? '' : ' cant'}"${can ? ` onclick="selectSize('${esc}')"` : ''}>
+        <span class="tick">&#10003;</span>
+        <span class="art"><span id="size-art-${esc}"></span></span>
+        <span class="cap"><span class="nm" id="size-name-${esc}">${z.shortLabel || k}</span>
+          <span class="dim">${Math.round(z.mmW)}&times;${Math.round(z.mmH)}mm</span>
+          ${can ? (z.badge ? `<span class="sub">${z.badge}</span>` : '')
+                : '<span class="sub cant">Not available folded</span>'}</span>
+      </div>`;
+    }
     return `<div id="size-opt-${esc}" onclick="selectSize('${esc}')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;">
       <div id="size-art-${esc}" style="display:flex;justify-content:center;align-items:flex-end;height:58px;margin-bottom:12px;"></div>
       <div id="size-name-${esc}" style="font-size:var(--text-sm);font-weight:500;color:var(--text);margin-bottom:2px;">${z.shortLabel || k}</div>
@@ -2127,9 +2284,11 @@ function renderSizeCards() {
     </div>`;
   }).join('');
 
+  arrangeShapeRow();
   paintSizeArt(keys);
   // Keep any existing choice highlighted; drop it if it is no longer offered.
   if (selectedSize && !keys.includes(selectedSize)) selectedSize = null;
+  if (NEW_WIZARD && selectedSize && offered && !available.has(selectedSize)) selectedSize = null;
   if (selectedSize) selectSize(selectedSize);
 }
 
@@ -2161,6 +2320,14 @@ function applySizeFilter() { renderSizeCards(); }
 // saw one range and removed itself, and _step3Ready latched — so Luxury and
 // Eco were unreachable for the rest of the visit.
 const _siteDataReady = loadSiteData();
+// The bar is drawn from the same journey the rail uses, and that needs the
+// catalogue. Until it arrives the bar is held invisible rather than shown with
+// the wrong steps on it and swapped a moment later. It is revealed either way,
+// so a catalogue that never comes does not leave the page looking headless.
+_siteDataReady
+  .then(() => { drawPageBar(currentStep); })
+  .catch(() => {})
+  .then(() => { document.documentElement.classList.add('bar-ready'); });
 loadPrintSizes();
 loadDeliveryOptions();
   
@@ -2252,6 +2419,7 @@ function selectSize(id){
   Object.keys(SIZE_SPECS).forEach(s=>{
     const el=document.getElementById('size-opt-'+s); if(!el)return;
     const sel=s===id;
+    if (NEW_WIZARD) { el.classList.toggle('on', sel); return; }
     el.style.borderColor=sel?'var(--gold)':'var(--border)';
     el.style.background=sel?'rgba(184,151,106,.06)':'var(--white)';
     const nm=document.getElementById('size-name-'+s);
@@ -3982,11 +4150,46 @@ function togglePassedChecks(){
 // scrolling then would yank the customer away from the top of the page.
 let _steppedOnce = false;
 
+// The bar and the rail are never on screen together: the bar hides itself on
+// step 3, where the rail takes over. They used to be two different maps — the
+// bar said Size · Artwork · Paper & Quantity · Basket · Checkout, and then the
+// rail said Size · Artwork · Range · Paper · Finishing · Quantity · Delivery.
+// A customer shown one map and handed another halfway has no map at all, so
+// both are now drawn from Step3's own journey() and cannot drift apart.
+//
+// Returns false if it could not do it — before the catalogue has arrived, or
+// on the design-studio route, which hides the first two steps and renumbers
+// what is left. The caller then leaves the markup's own five steps alone.
+function drawPageBar(n){
+  if (!NEW_WIZARD || designMode) return false;
+  const bar = document.querySelector('.step-bar');
+  if (!bar || !window.Step3 || !Step3.journey) return false;
+  let steps = null;
+  try { steps = Step3.journey(step3Adapter()); } catch (e) { steps = null; }
+  if (!steps || !steps.length) return false;
+  // Only the first two steps are in the bar's gift. Step 3 is the whole middle
+  // of the list and draws its own rail; the basket and the checkout are past
+  // the end of it. The bar hides itself on all three, so nothing is lit — but
+  // the list still has to be right for stepping back out of step 3.
+  const at = { 1: 'step1', 2: 'step2' }[n];
+  const cur = steps.findIndex(x => x.id === at);
+  bar.innerHTML = steps.map((x,i) =>
+    (i ? '<div class="step-line"></div>' : '')
+    + '<div class="step-item">'
+    + '<div class="step-num' + (i<cur?' done':i===cur?' active':'') + '">' + (i+1) + '</div>'
+    + '<div class="step-label' + (i===cur?' active':'') + '">' + esc(x.label) + '</div>'
+    + '</div>').join('');
+  document.documentElement.classList.add('bar-ready');
+  return true;
+}
+
 function goStep(n){
   const _changing = _steppedOnce && n !== currentStep;
   _steppedOnce = true;
   [1,2,3,4,5].forEach(i=>{
     document.getElementById('step'+i)?.classList.toggle('hidden',i!==n);
+  });
+  if (!drawPageBar(n)) [1,2,3,4,5].forEach(i=>{
     document.getElementById('sn'+i).className='step-num'+(i<n?' done':i===n?' active':'');
     document.getElementById('sl'+i).className='step-label'+(i===n?' active':'');
   });
@@ -3994,6 +4197,8 @@ function goStep(n){
   // Step 3 is drawn on a wider measure than the rest of the page, and hides
   // the site's own step bar while it shows its own. See .wide-step.
   document.body.classList.toggle('wide-step', n === 3);
+  // The order is finished at the basket, so the bar that maps it goes with it.
+  document.body.classList.toggle('past-order', n >= 4);
   document.querySelectorAll('.cart-btn').forEach(b => {
     // It opens the basket on every step now, so it must not look or read like
     // a button that will not.
@@ -4110,6 +4315,23 @@ function step3Finishes(paperName){
   // figure in finish_sells, and that figure is ZERO. We were doing a £22 job
   // for nothing on every folded order that ticked it.
   const fam = familyForPaper(paperName);
+  // With the wizard on, a finish this paper cannot take is handed over marked
+  // unavailable instead of being dropped, so the step can grey it. The rule
+  // that decides it is unchanged — this only stops the answer being invisible.
+  if (NEW_WIZARD) {
+    const usable = new Set();
+    (CONFIG.finishTypes || []).forEach(t => {
+      const n = (t.name || '').toLowerCase().trim();
+      if (n === 'fold') return;
+      if (caps.includes(n) && (!allowed.length || allowed.includes(n))
+          && (t.options || []).some(o => o.name && o.name.toLowerCase() !== 'none')) usable.add(t.name);
+    });
+    return (CONFIG.finishTypes || [])
+      .filter(t => (t.name || '').toLowerCase().trim() !== 'fold')
+      .filter(t => !allowed.length || allowed.includes((t.name || '').toLowerCase().trim()))
+      .filter(t => (t.options || []).some(o => o.name && o.name.toLowerCase() !== 'none'))
+      .map(t => Object.assign({}, t, { unavailable: !usable.has(t.name) }));
+  }
   return (CONFIG.finishTypes || [])
     // Which way the card opens is not a question we can ask, because it is not
     // a question we can answer differently. The crease axis is derived from the
@@ -4247,6 +4469,36 @@ function step3Artwork(){
 
 function step3Adapter(){
   return {
+    // The two steps this page owns before step 3 begins. Empty unless the
+    // wizard is on, which is what keeps the change inert.
+    leadingSteps: () => NEW_WIZARD
+      ? [{ id: 'step1', label: 'Size', host: true },
+         { id: 'step2', label: 'Artwork', host: true }]
+      : [],
+    // The range is still chosen, exactly as before. It is just not one of the
+    // numbered steps, so the line at the top reads 1 to 6.
+    railSkips: () => NEW_WIZARD ? ['s1'] : [],
+    // Nothing after. The journey the mockup settles is the seven from the size
+    // to the delivery; the basket and the checkout are what happens once it is
+    // finished, and putting them in made nine steps that wrapped to four rows
+    // of furniture above the first question.
+    trailingSteps: () => [],
+    // Clicking a completed step in the rail has to actually go back to it.
+    // These panels are hidden by the page, not by step 3, so scrolling to one
+    // would have looked like the click did nothing at all.
+    goToHostStep: id => {
+      const n = { step1: 1, step2: 2 }[id];
+      if (!n) return false;
+      goStep(n);
+      return true;
+    },
+    // "A5 folded, portrait" — the size and the two shape answers, in the words
+    // the controls in step 1 use. Nothing new is invented here.
+    shapeLabel: () => {
+      if (!NEW_WIZARD || !selectedSize) return '';
+      const bits = [selectedSize, isFoldedPiece() ? 'folded' : 'flat'];
+      return bits.join(' ') + (selectedOrientation ? ', ' + selectedOrientation : '');
+    },
     papers:     () => step3Papers().map(p => ({
                    name: p.name, subtitle: p.subtitle, description: p.description, weights: p.weights || []
                  })),

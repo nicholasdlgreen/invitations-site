@@ -30,6 +30,15 @@
   ];
 
   function el(id) { return document.getElementById(id); }
+  // Sections the host wants left out of the numbered line at the top. They are
+  // still drawn, still answered, still part of the order — the range is chosen
+  // exactly as before. They are simply not counted as one of the steps, so the
+  // line reads 1 to 6 and the section itself carries no number.
+  function offRail(id) {
+    var list = (A && A.railSkips && A.railSkips()) || [];
+    for (var i = 0; i < list.length; i++) if (list[i] === id) return true;
+    return false;
+  }
   // Most stocks are paper and measured in gsm; a display board is measured in
   // millimetres of thickness. The weight carries its own unit so "5mm" never
   // comes out as "5gsm".
@@ -187,12 +196,23 @@
       if (S.openFin && !offered[S.openFin]) S.openFin = null;
       tellPage();
     }
-    if (!types.length) {
-      // Nothing can be applied to this paper, so the section is simply not
-      // here. We show what IS available and say nothing about what is not.
+    if (!types.length || !types.some(function (t) { return !t.unavailable; })) {
+      // Nothing that can actually be applied. A section of nothing but dead
+      // rows is worse than no section, so it still goes.
       open('s2', false); renumber(); return;
     }
     el('finBody').innerHTML = types.map(function (t) {
+      // An option the chosen paper cannot take. Shown, and shown to be
+      // unavailable, rather than quietly removed — a customer who never sees
+      // foiling cannot tell whether we do not offer it or this paper will not
+      // hold it. The reason itself is not given here: what is unavailable and
+      // why is a rules question, and this only draws what it is told.
+      if (t.unavailable) {
+        return '<div class="finRow cant"><button class="finBtn" type="button" disabled>'
+          + '<span><span class="h">' + esc(t.name) + '</span><br>'
+          + '<span class="d">' + esc(t.description || '') + '</span></span>'
+          + '<span class="v">Not available</span><span class="c"></span></button></div>';
+      }
       var sel = S.finishes[t.name] || 'None';
       var isSet = String(sel).toLowerCase() !== 'none';
       var opened = (S.openFin === t.name);
@@ -335,9 +355,6 @@
         + '<span class="e">' + (per2 == null ? '' : gbp(per2) + ' each') + '</span></button>';
     }
 
-    var hint = range
-      ? 'Any number from ' + range.min + ' to ' + range.max
-      : 'Any number';
     tiles += '<div class="qty-own-wrap">'
       + '<label class="qty-own-lb" for="qtyOwn">A different amount</label>'
       + '<span class="qty-own-row">'
@@ -351,7 +368,10 @@
       + ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();Step3.ownQty(this.value)}">'
       + '<button class="qty-own-go" type="button" onclick="Step3.ownQty(document.getElementById(\'qtyOwn\').value)">Use</button>'
       + '</span>'
-      + '<span class="qty-own-hint" id="qtyOwnHint">' + esc(hint) + '</span></div>';
+      // Empty. The range used to be spelled out here — "Any number from 1 to
+      // 500" — and it is not wanted. The element stays because a number
+      // outside what the printer will quote still has to say so; see ownQty.
+      + '<span class="qty-own-hint" id="qtyOwnHint"></span></div>';
 
     el('qtys').innerHTML = tiles;
     open('s3', true); renumber();
@@ -377,34 +397,53 @@
     var e = el(id); if (e) e.className = 'stage ' + (on ? 'open' : 'locked');
   }
   function renumber() {
-    var n = 0;
+    // Start after the host's own steps, so a page that owns size and artwork
+    // numbers its first stage 3 rather than 1 and the journey reads as one.
+    var n = ((A.leadingSteps && A.leadingSteps()) || []).length;
     ['s1', 'stocks', 's2', 's3', 's4'].forEach(function (id) {
       var sec = el(id); if (!sec) return;
       // A step hidden because it had nothing to decide must not take a number
       // with it, or the first thing on screen is headed 2.
       if (sec.style.display === 'none') return;
       var b = sec.querySelector('.num b'); if (!b) return;
-      if (sec.classList.contains('locked') && id !== 's1') return;
+      // Off the top line means off the numbering too, or the heading beside
+      // the range would claim a number the line above does not have.
+      if (offRail(id)) { b.textContent = ''; return; }
+      // A locked step used to be left alone, which meant it kept whatever
+      // number step3.html was written with until it opened. Beside a top line
+      // that had already moved on, it read as a mistake — "2 Your paper" under
+      // a line calling paper step 3. It is numbered whether it is open or not.
       n += 1; b.textContent = n;
     });
     drawRail();
   }
   // The whole journey from the first moment. It does not grow as you go — the
   // steps are all there and the highlight moves along them.
-  function journey() {
+  function journey(withHidden) {
     var noEnv = !((A.envelopes && A.envelopes()) || []).length;
     // Finishing holds the envelopes as well, so it is only skipped when this
     // stock can take neither.
     var noFinish = !!S.paper
       && (A.finishTypesFor(S.paper) || []).length === 0
       && noEnv;
-    return [
+    // The steps the HOST page owns, before this one begins — size and artwork
+    // on the shop. Supplied by the adapter so this file does not need to know
+    // what they are, and so a host that supplies none behaves exactly as
+    // before: the journey starts at Range and is numbered from 1.
+    var lead = (A.leadingSteps && A.leadingSteps()) || [];
+    // And the steps the host owns AFTER this one — basket and checkout. They
+    // are named here so the rail and the page's own bar can be drawn from one
+    // list. A map that changes shape halfway through is not a map.
+    var trail = (A.trailingSteps && A.trailingSteps()) || [];
+    return lead.concat([
       { id: 's1', label: 'Range', skip: !!soleFeel() },
       { id: 'stocks', label: stockLabel() },
       { id: 's2', label: 'Finishing', skip: noFinish },
-      { id: 's3', label: 'How many' },
+      { id: 's3', label: 'Quantity' },
       { id: 's4', label: 'Delivery' }
-    ].filter(function (x) { return !x.skip; });
+    ]).concat(trail).filter(function (x) {
+      return !x.skip && (withHidden || !offRail(x.id));
+    });
   }
   // "Paper" over a sheet of foamex is wrong. The weight carries its unit, so
   // the stock says which it is without a second list to keep in step.
@@ -419,11 +458,25 @@
   }
   function drawRail() {
     var steps = journey(), cur = 0;
-    for (var i = 0; i < steps.length; i++) if (steps[i].id === S.at) cur = i;
+    // The customer can be standing on a section that is not on the line — the
+    // range. Lighting nothing would send the highlight back to the first step,
+    // which is what it did: choosing a range lit "Size". So it moves forward
+    // to the step that section leads into, which for the range is the paper.
+    var all = journey(true), from = 0;
+    for (var a = 0; a < all.length; a++) if (all[a].id === S.at) from = a;
+    var atId = S.at;
+    for (var b = from; b < all.length; b++) {
+      if (!offRail(all[b].id)) { atId = all[b].id; break; }
+    }
+    for (var i = 0; i < steps.length; i++) if (steps[i].id === atId) cur = i;
     var r = el('rail'); if (!r) return;
     r.innerHTML = '<div class="railIn">' + steps.map(function (x, i) {
       var sec = el(x.id);
-      var isOpen = sec && !sec.classList.contains('locked');
+      // A host step lives outside this component and has no locked class. One
+      // behind us is done by definition — we could not be standing here
+      // otherwise — so it stays clickable to go back to. One ahead of us has
+      // not been reached and must not look as though it has.
+      var isOpen = x.host ? !x.ahead : (sec && !sec.classList.contains('locked'));
       var cls = (i < cur ? 'done' : (i === cur ? 'now' : '')) + (isOpen ? ' can' : '');
       return (i ? '<span class="rsep">&mdash;</span>' : '')
         + '<button class="rl ' + cls.trim() + '"'
@@ -441,6 +494,10 @@
 
   // Only ever on a click of theirs. Nothing here moves the page by itself.
   function jump(id) {
+    // A step the host owns is not in this component's markup, and the page
+    // may well have hidden its panel. Scrolling to it would look like the
+    // click did nothing, so it is handed back to the host to act on.
+    if (A && A.goToHostStep && A.goToHostStep(id)) return;
     var e = el(id); if (!e) return;
     window.scrollTo({ top: e.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
   }
@@ -468,8 +525,13 @@
       });
     }
 
+    // The size and the shape were chosen two steps before this bar appeared
+    // and are named nowhere else on it, so the running summary did not say
+    // what was being bought — only what it was printed on.
+    var shape = (A.shapeLabel && A.shapeLabel()) || '';
     el('sum').innerHTML = (S.paper && S.weight)
-      ? '<b>' + esc(S.paper) + '</b> &middot; ' + S.weight + (S.weightUnit || 'gsm') + ' &middot; '
+      ? (shape ? esc(shape) + ' &middot; ' : '')
+        + '<b>' + esc(S.paper) + '</b> &middot; ' + S.weight + (S.weightUnit || 'gsm') + ' &middot; '
         + (picks.length ? esc(picks.join(' & ')) : 'no finishing')
         + (envName ? ' &middot; ' + esc(envName) : '')
         + (S.qty ? ' &middot; ' + S.qty + ' cards' : '')
@@ -581,6 +643,18 @@
     },
     delivery: function (id) { S.del = id; advanceTo('s4'); A.onSelect(S); redraw(); renumber(); },
     jump: jump,
+    // The journey as this file sees it, so the host page's own bar is drawn
+    // from the very same code rather than a copy of it kept in step by hand.
+    // Pass an adapter to ask before the step has been started; without one it
+    // answers for the step as it stands, and null if it has not started.
+    journey: function (adapter) {
+      if (!adapter) return A ? journey() : null;
+      var wasA = A, wasS = S;
+      A = adapter;
+      S = { feel: null, paper: null, weight: null, finishes: {}, env: null,
+            qty: null, del: null, openFin: null, at: 's1' };
+      try { return journey(); } finally { A = wasA; S = wasS; }
+    },
     redraw: redraw
   };
 })(window);
