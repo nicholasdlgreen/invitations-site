@@ -1,11 +1,16 @@
-# Where we are — 27 September 2026
+# Where we are — 30 September 2026
 
 *Every figure below was checked against the live site, the live database or a
 generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
 
-**40 commits on 27 September, all pushed** (817 in the repo). 27 September ran long and covered five threads:
+**29 commits on 30 September, all pushed** (873 in the repo). 30 September was
+one thread and one thread only: the order page, rebuilt to a single structure
+and turned on for all twenty-three products. It is written up in §0c, including
+the four times it was wrong on the live site before it was right.
+
+**40 commits on 27 September, all pushed.** 27 September ran long and covered five threads:
 orientation across the whole site, the flat-or-folded choice, a publish that
 stopped working entirely, a sweep of marketing copy that was promising things we
 do not sell, and a price comparison against five competitors. Two incidents are
@@ -62,10 +67,25 @@ the autovacuum fix from §11 holding.
    `routes` is a hand-maintained column and changing it changes which family
    prices the product, so it needs a route edit and a Publish, not a UI change.
 
-6. **The ordering wizard is being redesigned as one structure** for all 22
-   products — `docs/WIZARD-BRIEF.md`. Part of that brief: admin must be able to
-   add or remove a paper stock or a finishing option and have the wizard follow,
-   on every product, without a code change.
+6. **The order page is rebuilt and live on all 23 products** — §0c. What is
+   still open on it, in the order it matters:
+
+   - **Prices at the quantity step.** The tiles still carry a per-card figure
+     (`10 · £1.84 each`). Deliberately left: how price is presented is its own
+     piece of work and waits on the margins in item 1.
+   - **Rules.** A finish the paper cannot take is greyed and says "Not
+     available"; it does not say *why*. The availability data itself is thin —
+     the corner and lamination allowlists come from probing one product form at
+     one weight (§13), and `finish_rates` has no weight column, so
+     availability-by-weight cannot currently be expressed at all.
+   - **The artwork step's own appearance** has not been touched. It is where
+     the old uploader was left.
+   - **`/invitations` is a retired product with a live URL.** `active = false`
+     in `product_types`, linked from neither the products page nor the sitemap,
+     but the URL answers and falls back to all fifteen sizes in the code's
+     defaults because `currentProduct` comes back null. It does the same with
+     the flag off, so it is not new. Either take the URL down or set the
+     product active.
 
 7. **A tent fold is not producible, and was being offered anyway.** A tent card
    is portrait with the crease at the *top*, and the geometry cannot express
@@ -82,15 +102,97 @@ the autovacuum fix from §11 holding.
    easy half. Worth doing only if we want tent place cards and table numbers,
    which the market does sell.
 
-8. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+8. **`docs/WIZARD-BRIEF.md` is spent.** It was the brief for the order page;
+   the page is built (§0c) and the signed-off artefact is
+   `scratch/order-page.html`, which is not in the repo. Either move that page
+   into `docs/` so the thing we build against survives, or delete the brief.
+   Leaving a brief that describes seven steps beside a page that has six is how
+   the wrong artefact gets built from next time.
+
+9. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
    and `test-section-race`. They read fixtures from a scratchpad that no longer
    exists. Small job, but a real failure can hide behind noise that is always
    there.
 
-9. **The migration backups are still in the database.**
+10. **The migration backups are still in the database.**
    `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
    the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
    can put it back. Drop both once the six-box step 3 has bedded in.
+
+---
+
+## 0c. 30 September — the order page, in one place
+
+One structure for the whole range, live on all twenty-three products at
+`/<slug>/order`. The signed-off design is `scratch/order-page.html`, written as
+a standalone page and checked against the shipped page point by point.
+
+**Six steps, one line.** `SIZE — ARTWORK — PAPER — FINISHING — QUANTITY —
+DELIVERY`. Words only: no rings, no figures, the word you are on in full colour
+with a gold hairline under it, the ones behind in the mid tone, the ones ahead
+pale. The rule is not decoration — a warm grey and a warm brown are too close
+to carry the state alone.
+
+**The page's bar and step 3's rail are now one list.** They were two: the bar
+said Size · Artwork · Paper & Quantity · Basket · Checkout and three steps later
+the rail said something else entirely. Both are drawn from `Step3.journey()`, so
+they cannot drift, and the list bends to the product in one place — a range with
+one paper in it drops out of both in the same breath. Signage, table plans and
+welcome signs say **Board**, not Paper, because their stock is measured in
+millimetres.
+
+**The range is still chosen and is not a numbered step.** Same three pods, same
+filtering of the papers behind it. It carries no number, and standing on it
+lights Paper — the step it leads into — rather than falling back to lighting
+Size.
+
+**Size first, then the shape of the card.** Five size cards drawn as cards, the
+uploader straight after, and Flat or folded · Which way up · Printed sides in a
+labelled row *below* the grid. A size the chosen shape cannot be made in is
+greyed rather than removed: taking Square 210 out when Folded is picked shrank
+the grid by 175px and everything below it jumped, under the cursor that had just
+pressed the control.
+
+**His wording, on 30 September.** Quantity, not "How many" — in the line and on
+the section heading, so every product's step 3 now says Quantity. "Any number
+from 1 to 500" came off from under the typed box; the box and its Use button
+stay, and so does the element, because a number the printer will not quote still
+has to say why. Corners is the title, so the signed-off page was changed, not the
+catalogue. The bar names the size and shape before the paper —
+`A5 flat, portrait · Uncoated · 300gsm · no finishing · 100 cards · Standard`.
+
+**What it was checked against.** All twenty-three order pages walked at the URL
+customers use, reading what each rendered: five size cards for the invitation
+range, four for the card range, three for signage, two for order of service, one
+for place cards — matching `available_sizes` in every case but `/invitations`,
+which is retired (§0 item 6). `tools/test-wizard-rail.js` holds 60 assertions,
+every one mutation-tested. `tools/serve.py` now resolves `/<slug>/order` the way
+Netlify does.
+
+### Four times it was wrong on the live site first
+
+Worth writing down, because three of the four are the same mistake.
+
+1. **The whole thing was behind `?wizard=new` and nobody said so.** Every check
+   was run on `upload-and-print.html?product=...`. Customers arrive at
+   `/wedding-invitations/order`, which Netlify serves as a **200 rewrite** — the
+   browser never sees the query string, `location.search` is empty. So the flag
+   read false on the only route anyone takes, and the old step 1 was live all
+   day. The page had already solved this forty lines higher up in `PRODUCT`,
+   which resolves the slug from the path.
+2. **The dev server did not serve that route either**, so it could not have been
+   caught locally. Fixed.
+3. **Basket and Checkout were added to an agreed seven-step structure**, making
+   nine, which wrapped to four rows of furniture above the first question. Not a
+   small fix and should not have been made without asking.
+4. **Told to "get rid of range as a step so it is only 6", the range section was
+   removed from the page** — the pods and the filtering with it — instead of
+   being left off the numbered line. A terse correction during a run of mistakes
+   is a correction, and should be read narrowly.
+
+The standing rule from all four: **verify on the URL a customer uses, reached
+the way a customer reaches it.** See [[no-unagreed-structure]] and
+[[site-health-checks]].
 
 ---
 
@@ -789,6 +891,30 @@ one it needs to see.
 
 Everything outstanding, in one place and in the order I would do it. The
 sections above give the reasoning; this is the list.
+
+### Cleared 30 September
+
+- **The order page rebuilt to one structure and turned on for all 23
+  products** — six steps, one line, size first, the range off the numbering
+  (§0c). Walked at `/<slug>/order` on every product.
+- **The page bar and step 3's rail stopped being two different maps.** Both are
+  drawn from `Step3.journey()` now, so a product's own shape — a single range,
+  a board rather than paper — changes both together or neither.
+- **Clicking a completed step in the rail went nowhere.** It scrolled to a
+  panel the page had hidden, which looked exactly like the click had failed.
+- **A section that had not opened yet kept whatever number `step3.html` was
+  written with**, so "2 Your paper" sat under a line calling paper step 3.
+  Every section is numbered now, open or not.
+- **Choosing Folded moved the page under the cursor** — the grid lost a row and
+  everything below it jumped 175px. Sizes are greyed, not removed.
+- **The crease sentence and the from-price came off the site** (both asked for
+  on 29 September, shipped 30th).
+- **"Any number from 1 to 500" came off** from under the typed quantity box.
+- **The step is called Quantity**, everywhere, on every product.
+- **`tools/serve.py` resolves `/<slug>/order`**, so the URL customers use can
+  be opened locally at all. Its absence is why four wrong versions reached the
+  live site before this was right — see the end of §0c.
+- **`tools/test-wizard-rail.js`** — 60 assertions, each mutation-tested.
 
 ### Cleared 27 September
 
