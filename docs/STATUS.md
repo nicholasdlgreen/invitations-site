@@ -62,7 +62,12 @@ the autovacuum fix from §11 holding.
    `routes` is a hand-maintained column and changing it changes which family
    prices the product, so it needs a route edit and a Publish, not a UI change.
 
-6. **A tent fold is not producible, and was being offered anyway.** A tent card
+6. **The ordering wizard is being redesigned as one structure** for all 22
+   products — `docs/WIZARD-BRIEF.md`. Part of that brief: admin must be able to
+   add or remove a paper stock or a finishing option and have the wizard follow,
+   on every product, without a code change.
+
+7. **A tent fold is not producible, and was being offered anyway.** A tent card
    is portrait with the crease at the *top*, and the geometry cannot express
    that: `buildPressFile` decides the crease axis with one line,
    `const acrossTheMiddle = selectedOrientation === 'landscape'`, so a portrait
@@ -77,12 +82,12 @@ the autovacuum fix from §11 holding.
    easy half. Worth doing only if we want tent place cards and table numbers,
    which the market does sell.
 
-7. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+8. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
    and `test-section-race`. They read fixtures from a scratchpad that no longer
    exists. Small job, but a real failure can hide behind noise that is always
    there.
 
-8. **The migration backups are still in the database.**
+9. **The migration backups are still in the database.**
    `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
    the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
    can put it back. Drop both once the six-box step 3 has bedded in.
