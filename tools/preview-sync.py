@@ -59,11 +59,16 @@ def main():
                 copy_if_changed(src, os.path.join(DEST, os.path.relpath(src, REPO)), stats)
 
     # The server is copied over too, with a note saying what to serve, because
-    # it cannot work that out from where it is running.
+    # it cannot work that out from where it is running. Only when it has
+    # actually changed: rewriting it under a server that is already running on
+    # it kills that server, which is a confusing way to find out you synced.
     here = os.path.dirname(DEST)
-    shutil.copy2(os.path.join(REPO, 'tools', 'serve.py'), os.path.join(here, 'serve.py'))
-    with open(os.path.join(here, 'site-root.txt'), 'w') as fh:
-        fh.write(DEST + '\n')
+    copy_if_changed(os.path.join(REPO, 'tools', 'serve.py'),
+                    os.path.join(here, 'serve.py'), stats)
+    marker = os.path.join(here, 'site-root.txt')
+    if not os.path.isfile(marker) or open(marker).read().strip() != DEST:
+        with open(marker, 'w') as fh:
+            fh.write(DEST + '\n')
 
     print('%s\n  %d copied, %d already current' % (DEST, stats['copied'], stats['same']))
     return 0

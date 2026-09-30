@@ -729,7 +729,6 @@ was fetched and injected via innerHTML — that was the bug behind the
         <div id="format-toggle" style="display:none;margin-bottom:16px;"></div>
         <div id="size-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;"></div>
         <p id="format-note" style="display:none;font-size:var(--text-xs);color:var(--pale);margin:10px 0 0;line-height:1.7;"></p>
-        <div id="open-toggle" style="display:none;margin:14px 0 0;"></div>
         <div id="orient-toggle" style="display:none;margin:14px 0 0;"></div>
         <p id="orient-note" style="display:none;font-size:var(--text-xs);color:var(--pale);margin:8px 0 0;line-height:1.7;"></p>
         <div id="sides-toggle" style="display:none;margin:14px 0 0;"></div>
@@ -1938,48 +1937,6 @@ function renderFormatToggle() {
   }
 }
 
-// Which way the card opens, asked at the size step next to flat-or-folded
-// because it is the same decision. It used to sit in Finishing, two steps
-// later, on five products — and on the thirteen others that sell a folded card
-// it was never asked at all. The names are the ones the finish already used,
-// moved rather than rewritten, and it is still handed to the printer as the
-// Fold finish so the spec is unchanged. Folding is free: there are no Fold
-// rates, because a folded card is already priced on its own paper.
-const OPEN_LABEL = { 'Long edge': 'Opens like a book', 'Short edge': 'Opens upwards', 'Tent': 'Stands up on its own' };
-// A tent fold stands on a table, which is the point of a place card and
-// meaningless on an invitation.
-const TENT_PRODUCTS = ['place-cards', 'table-numbers'];
-function openOptionsFor(){
-  const o = ['Long edge', 'Short edge'];
-  if (TENT_PRODUCTS.includes(PRODUCT.slug)) o.push('Tent');
-  return o;
-}
-function renderOpenToggle(){
-  const box = document.getElementById('open-toggle');
-  if (!box) return;
-  if (!isFoldedPiece()) { box.style.display = 'none'; return; }
-  const opts = openOptionsFor();
-  if (!opts.includes(selectedFinishes.Fold)) selectedFinishes.Fold = opts[0];
-  box.style.display = '';
-  box.innerHTML = '<div style="font-size:var(--text-sm);color:var(--text);margin-bottom:8px;">Which way the card opens</div>'
-    + '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
-    + 'background:var(--white);padding:4px;">'
-    + opts.map(o => {
-        const on = o === selectedFinishes.Fold;
-        return '<button type="button" onclick="selectOpen(\'' + o + '\')" '
-          + 'style="font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:7px 16px;'
-          + 'border-radius:999px;transition:all .2s;'
-          + (on ? 'background:var(--gold);color:#fff;' : 'background:none;color:var(--soft);')
-          + '">' + OPEN_LABEL[o] + '</button>';
-      }).join('')
-    + '</div>';
-}
-function selectOpen(o){
-  selectedFinishes.Fold = o;
-  renderOpenToggle();
-  if (typeof updatePrice === 'function') updatePrice();
-}
-
 // The proof shows one card face. Say which face it is, whenever the format
 // changes and again when a file is checked, since either can happen first.
 function updateProofFoldNote(){
@@ -2122,7 +2079,6 @@ function selectFold(f) {
   if (selectedSize && still.size && !still.has(selectedSize)) selectedSize = null;
   selectedWeight = null;
   renderSizeCards();
-  renderOpenToggle();
   updateProofFoldNote();
   // The printer may not offer a back on both formats, so the side choice is
   // re-derived for the format just picked.
@@ -2148,7 +2104,6 @@ function renderSizeCards() {
   const grid = document.getElementById('size-grid');
   if (!grid) return;
   renderFormatToggle();
-  renderOpenToggle();
   renderSidesToggle();
   renderSideSlots();
   renderOrientationToggle();
@@ -4155,12 +4110,13 @@ function step3Finishes(paperName){
   // for nothing on every folded order that ticked it.
   const fam = familyForPaper(paperName);
   return (CONFIG.finishTypes || [])
-    // Which way the card opens is asked at the size step now, next to flat or
-    // folded, because it is the same decision. It used to be here as well: on
-    // a Christmas card you answered "folded" up there and "Fold: long edge"
-    // again down here, while thirteen other products that sell a folded card
-    // never asked at all. Filtered in code rather than only in the catalogue
-    // so it goes the moment this deploys, without waiting for a Publish.
+    // Which way the card opens is not a question we can ask, because it is not
+    // a question we can answer differently. The crease axis is derived from the
+    // orientation and from nothing else — buildPressFile does
+    // `acrossTheMiddle = selectedOrientation === 'landscape'` — so a portrait
+    // card creases down its side and a landscape one across its middle, always.
+    // Offering "opens upwards" on a portrait card would put an instruction in
+    // the order spec that contradicts the imposed PDF sent with it.
     .filter(t => (t.name||'').toLowerCase().trim() !== 'fold')
     .filter(t => caps.includes((t.name||'').toLowerCase().trim()))
     .filter(t => !allowed.length || allowed.includes((t.name||'').toLowerCase().trim()))
@@ -4442,10 +4398,6 @@ function renderFinishGrid() {
     // Anything already chosen on a paper that cannot take it must be dropped,
     // or a stale selection would keep being priced and sent to the printer.
     Object.keys(selectedFinishes).forEach(k => {
-      // Fold is not a finish the paper can decline — every stock we fold, we
-      // fold. Pruning it here dropped "folded on the long edge" from the spec
-      // on any Fedrigoni stock, which the printer takes as no instruction.
-      if (k.toLowerCase().trim() === 'fold') return;
       if (!caps.includes(k.toLowerCase().trim())) delete selectedFinishes[k];
     });
     const stillReal = Object.keys(selectedFinishes).map(k => selectedFinishes[k])
@@ -6545,11 +6497,6 @@ function googleCustomerReviewsOptIn(order){
   designMode = true;
   designState = saved;
 
-  // Arriving from the studio, steps 1 and 2 are hidden below — the studio has
-  // already asked the size, the format and, now, which way the card opens. The
-  // answer has to be carried across or the spec would fall back to the default
-  // and quietly fold a short-edge card on the long edge.
-  if (saved.foldDirection) selectedFinishes.Fold = saved.foldDirection;
 
   // 1. Update the page hero
   const heroTag = document.querySelector('.upload-wrap .tag');

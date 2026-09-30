@@ -796,10 +796,6 @@ was fetched and injected via innerHTML — that was the bug behind the
               <div class="ds-turn-pills" id="ds-turn-pills"></div>
             </div>
           </div>
-          <div class="ds-fold" id="ds-open" style="display:none">
-            <div class="ds-fold-q">Which way the card opens</div>
-            <div class="ds-fold-pills" id="ds-open-pills"></div>
-          </div>
         </div>
       </div>
 
@@ -1699,7 +1695,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       // Both halves of the answer are needed before the choice can be drawn,
       // and these two loads race — so each one redraws.
       renderFoldChoice();
-      renderOpenChoice();
       applyFoldedness();
       paintSizeCards();
       var avail = (rows && rows[0] && Array.isArray(rows[0].available_sizes) && rows[0].available_sizes.length)
@@ -1817,7 +1812,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       if(cfg.base_prompt) CONFIG_BASE_PROMPT = cfg.base_prompt;
       CONFIG_FOLDED = cfg.folded === true;
       renderFoldChoice();
-      renderOpenChoice();
       applyFoldedness();
       paintSizeCards();
       // update the page title + subtitle
@@ -1909,53 +1903,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     });
   }
 
-  // Which way the card opens, asked here rather than two steps later in
-  // Finishing. It was in both places: on a Christmas card you answered "folded"
-  // in step 1 and then "Fold: long edge" again further on, and on thirteen
-  // other products that sell a folded card nobody was ever asked at all.
-  //
-  // The names and the wording are the ones already live on the finish, moved
-  // rather than rewritten. Folding costs nothing — there are no Fold rates,
-  // because a folded card is already priced on its own paper — so asking here
-  // cannot change a price.
-  var OPEN_CHOICE = 'Long edge';
-  // A tent fold stands on a table, which is the whole point of a place card and
-  // meaningless on an invitation.
-  var TENT_PRODUCTS = ['place-cards', 'table-numbers'];
-  function openOptions(){
-    var o = [
-      ['Long edge',  'Opens like a book', 'book'],
-      ['Short edge', 'Opens upwards',     'top']
-    ];
-    if (TENT_PRODUCTS.indexOf(PRODUCT_SLUG) > -1) o.push(['Tent', 'Stands up on its own', 'tent']);
-    return o;
-  }
-  function renderOpenChoice(){
-    var box   = document.getElementById('ds-open');
-    var pills = document.getElementById('ds-open-pills');
-    if (!box || !pills) return;
-    // Nothing to ask about a card that is not folded.
-    if (!isFoldedNow()) { box.style.display = 'none'; return; }
-    var opts = openOptions();
-    if (!opts.some(function(o){ return o[0] === OPEN_CHOICE; })) OPEN_CHOICE = opts[0][0];
-    box.style.display = 'block';
-    pills.innerHTML = opts.map(function(o){
-      var on = o[0] === OPEN_CHOICE;
-      var art = o[2] === 'top'  ? '<i style="width:16px;height:13px;border-top-width:4px"></i>'
-              : o[2] === 'tent' ? '<i style="width:13px;height:16px;border-bottom-width:4px"></i>'
-              :                   '<i class="fold"></i>';
-      return '<button type="button" data-open="' + o[0] + '"' + (on ? ' class="on"' : '') + '>'
-           + art + o[1] + '</button>';
-    }).join('');
-    pills.querySelectorAll('button').forEach(function(b){
-      b.addEventListener('click', function(){
-        if (b.dataset.open === OPEN_CHOICE) return;
-        OPEN_CHOICE = b.dataset.open;
-        renderOpenChoice();
-      });
-    });
-  }
-
   function setFold(f){
     if (f === FOLD_CHOICE) return;
     FOLD_CHOICE = f;
@@ -1963,7 +1910,6 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     // would sell a flat card carrying a message nobody can read.
     if (!isFoldedNow()) { INSIDE_PRINTED = false; setInsidePrinted(false); }
     renderFoldChoice();
-    renderOpenChoice();
     applyFoldedness();
     paintSizeCards();
     buildBrief();
@@ -2719,8 +2665,7 @@ function artworkFileName(prefix, ext){
             templateId: 'ai-' + Date.now(),
             size: size || 'A5',
             productSlug: PRODUCT_SLUG,
-      foldDirection: isFoldedNow() ? OPEN_CHOICE : null,
-            foldDirection: isFoldedNow() ? OPEN_CHOICE : null,
+     
             // How this card is made, so the order step and the press file
             // agree with what was actually designed. A printed inside is a
             // second printed face, which is what "double" means here.
@@ -2757,7 +2702,7 @@ function artworkFileName(prefix, ext){
       .catch(function(){
         // if upload fails, still proceed with just the thumbnail (order can't print without artwork, but flow continues)
         makeThumb(printImage, function(thumb){
-          var design = { source:'ai-studio', templateName:'Your bespoke design', templateId:'ai-'+Date.now(), size: size||'A5', productSlug: PRODUCT_SLUG, foldDirection: isFoldedNow() ? OPEN_CHOICE : null, artworkUrl:null, thumbnail:thumb, text:{ name1:(parts[0]||'').trim(), name2:(parts[1]||'').trim() } };
+          var design = { source:'ai-studio', templateName:'Your bespoke design', templateId:'ai-'+Date.now(), size: size||'A5', productSlug: PRODUCT_SLUG, artworkUrl:null, thumbnail:thumb, text:{ name1:(parts[0]||'').trim(), name2:(parts[1]||'').trim() } };
           try { sessionStorage.setItem('foreverprint_design', JSON.stringify(design)); } catch(e){}
           window.location.href = '/upload-and-print.html?product=' + encodeURIComponent(PRODUCT_SLUG)
                                + '&source=design-studio';
@@ -3018,7 +2963,7 @@ function artworkFileName(prefix, ext){
       if(szBtn){ document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');}); szBtn.classList.add('sel'); size=restore.size;
                  if (restore.orientation) orientation = restore.orientation;
                  if (restore.fold) FOLD_CHOICE = restore.fold;
-                 renderFoldChoice(); renderOpenChoice(); applyFoldedness();
+                 renderFoldChoice(); applyFoldedness();
                  renderTurnToggle(); paintSizeCards(); applySize(); }
     }
     setTimeout(function(){
