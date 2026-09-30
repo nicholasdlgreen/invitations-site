@@ -264,6 +264,9 @@ body.wide-step .step-bar{display:none;}
   background:var(--gold);color:#fff;display:none;align-items:center;justify-content:center;font-size:11px;z-index:2;}
 .wizard-new .fp-size.on .tick{display:flex;}
 
+.wizard-new .fp-size.cant{opacity:.45;cursor:default;box-shadow:none;}
+.wizard-new .fp-size.cant:hover{transform:none;box-shadow:none;}
+.wizard-new .fp-size .sub.cant{font-style:italic;}
 .wizard-new #format-note,.wizard-new #orient-note,.wizard-new #sides-note{display:none!important;}
 .wizard-new .fp-shape-row{display:flex;gap:40px;flex-wrap:wrap;margin-top:22px;}
 .wizard-new .fp-shape-cell > div[id$="-toggle"]{margin:0!important;}
@@ -2209,7 +2212,18 @@ function renderSizeCards() {
   renderOrientationToggle();
   const available = getAvailableSizes();
   let keys = Object.keys(SIZE_SPECS);
-  if (available.size) keys = keys.filter(k => available.has(k));
+  // With the wizard on, a size this format cannot be made in is greyed rather
+  // than removed — the same rule as an unavailable finish. It also stops the
+  // page moving under the cursor: choosing Folded takes Square 210 off the
+  // list, the grid loses a row, and everything below it jumps up by 175px.
+  // Nothing scrolls; the content shrinks, which reads as a jump and is worse,
+  // because the control you just pressed is the one that moves.
+  const offered = (NEW_WIZARD && currentProduct && Array.isArray(currentProduct.available_sizes)
+                   && currentProduct.available_sizes.length)
+    ? currentProduct.available_sizes.filter(k => SIZE_SPECS[k])
+    : null;
+  if (offered && offered.length) keys = offered;
+  else if (available.size) keys = keys.filter(k => available.has(k));
   if (!keys.length) keys = Object.keys(SIZE_SPECS);      // never show an empty step
 
   // Every tile is drawn to the same long side, so A5 really does look taller
@@ -2223,12 +2237,14 @@ function renderSizeCards() {
     // parts — a picture, a name, the measurement underneath — so the first
     // thing you meet and the second read as one family.
     if (NEW_WIZARD) {
-      return `<div id="size-opt-${esc}" class="fp-size" onclick="selectSize('${esc}')">
+      const can = !offered || available.has(k);
+      return `<div id="size-opt-${esc}" class="fp-size${can ? '' : ' cant'}"${can ? ` onclick="selectSize('${esc}')"` : ''}>
         <span class="tick">&#10003;</span>
         <span class="art"><span id="size-art-${esc}"></span></span>
         <span class="cap"><span class="nm" id="size-name-${esc}">${z.shortLabel || k}</span>
           <span class="dim">${Math.round(z.mmW)}&times;${Math.round(z.mmH)}mm</span>
-          ${z.badge ? `<span class="sub">${z.badge}</span>` : ''}</span>
+          ${can ? (z.badge ? `<span class="sub">${z.badge}</span>` : '')
+                : '<span class="sub cant">Not available folded</span>'}</span>
       </div>`;
     }
     return `<div id="size-opt-${esc}" onclick="selectSize('${esc}')" style="border:1.5px solid var(--border);border-radius:16px;padding:18px 10px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;">
@@ -2243,6 +2259,7 @@ function renderSizeCards() {
   paintSizeArt(keys);
   // Keep any existing choice highlighted; drop it if it is no longer offered.
   if (selectedSize && !keys.includes(selectedSize)) selectedSize = null;
+  if (NEW_WIZARD && selectedSize && offered && !available.has(selectedSize)) selectedSize = null;
   if (selectedSize) selectSize(selectedSize);
 }
 
