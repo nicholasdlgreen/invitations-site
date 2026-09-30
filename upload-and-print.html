@@ -4245,8 +4245,20 @@ function step3Artwork(){
   return null;
 }
 
+// The seven-step wizard, behind a flag while it is being reviewed. Off, the
+// page behaves exactly as it does today: step 3 owns its own 1-to-5 journey
+// inside the page's step 3. On, the rail spans all seven and the numbering is
+// continuous, so there is one journey rather than a step containing steps.
+const NEW_WIZARD = new URLSearchParams(location.search).get('wizard') === 'new';
+
 function step3Adapter(){
   return {
+    // The two steps this page owns before step 3 begins. Empty unless the
+    // wizard is on, which is what keeps the change inert.
+    leadingSteps: () => NEW_WIZARD
+      ? [{ id: 'step1', label: 'Size', host: true },
+         { id: 'step2', label: 'Artwork', host: true }]
+      : [],
     papers:     () => step3Papers().map(p => ({
                    name: p.name, subtitle: p.subtitle, description: p.description, weights: p.weights || []
                  })),

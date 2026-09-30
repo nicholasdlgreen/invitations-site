@@ -377,7 +377,9 @@
     var e = el(id); if (e) e.className = 'stage ' + (on ? 'open' : 'locked');
   }
   function renumber() {
-    var n = 0;
+    // Start after the host's own steps, so a page that owns size and artwork
+    // numbers its first stage 3 rather than 1 and the journey reads as one.
+    var n = ((A.leadingSteps && A.leadingSteps()) || []).length;
     ['s1', 'stocks', 's2', 's3', 's4'].forEach(function (id) {
       var sec = el(id); if (!sec) return;
       // A step hidden because it had nothing to decide must not take a number
@@ -398,13 +400,18 @@
     var noFinish = !!S.paper
       && (A.finishTypesFor(S.paper) || []).length === 0
       && noEnv;
-    return [
+    // The steps the HOST page owns, before this one begins — size and artwork
+    // on the shop. Supplied by the adapter so this file does not need to know
+    // what they are, and so a host that supplies none behaves exactly as
+    // before: the journey starts at Range and is numbered from 1.
+    var lead = (A.leadingSteps && A.leadingSteps()) || [];
+    return lead.concat([
       { id: 's1', label: 'Range', skip: !!soleFeel() },
       { id: 'stocks', label: stockLabel() },
       { id: 's2', label: 'Finishing', skip: noFinish },
       { id: 's3', label: 'How many' },
       { id: 's4', label: 'Delivery' }
-    ].filter(function (x) { return !x.skip; });
+    ]).filter(function (x) { return !x.skip; });
   }
   // "Paper" over a sheet of foamex is wrong. The weight carries its unit, so
   // the stock says which it is without a second list to keep in step.
@@ -423,7 +430,10 @@
     var r = el('rail'); if (!r) return;
     r.innerHTML = '<div class="railIn">' + steps.map(function (x, i) {
       var sec = el(x.id);
-      var isOpen = sec && !sec.classList.contains('locked');
+      // A host step lives outside this component and has no locked class. It
+      // is behind us by definition — we could not be here otherwise — so it is
+      // done, and always clickable to go back to.
+      var isOpen = x.host ? true : (sec && !sec.classList.contains('locked'));
       var cls = (i < cur ? 'done' : (i === cur ? 'now' : '')) + (isOpen ? ' can' : '');
       return (i ? '<span class="rsep">&mdash;</span>' : '')
         + '<button class="rl ' + cls.trim() + '"'
