@@ -78,6 +78,7 @@ transition:all .2s;display:inline-flex;align-items:center;gap:8px;background:non
 .ds-fold-pills i.fold{border-left-width:4px;}
 .ds-fold-pills button.on i{border-color:rgba(255,255,255,.85);}
 .ds-shape{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;}
+.ds-shape-note{font-size:var(--text-xs);color:var(--pale);margin:10px 0 0;line-height:1.7;}
 .ds-shape .ds-fold,.ds-shape .ds-turn{margin-top:0;}
 .ds-shape .ds-fold-pills button,.ds-shape .ds-turn-pills button{padding:8px 14px;}
 .ds-turn{display:none;}
@@ -796,6 +797,7 @@ was fetched and injected via innerHTML — that was the bug behind the
               <div class="ds-turn-pills" id="ds-turn-pills"></div>
             </div>
           </div>
+          <p class="ds-shape-note" id="ds-shape-note" style="display:none;"></p>
         </div>
       </div>
 
@@ -1552,7 +1554,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     f.addEventListener('click', function(){
       document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');});
       f.classList.add('sel'); size=f.dataset.size;
-      renderTurnToggle(); paintSizeCards(); applySize(); buildBrief();
+      renderTurnToggle(); renderShapeNote(); paintSizeCards(); applySize(); buildBrief();
     });
   });
   renderTurnToggle();
@@ -1695,6 +1697,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       // Both halves of the answer are needed before the choice can be drawn,
       // and these two loads race — so each one redraws.
       renderFoldChoice();
+      renderShapeNote();
       applyFoldedness();
       paintSizeCards();
       var avail = (rows && rows[0] && Array.isArray(rows[0].available_sizes) && rows[0].available_sizes.length)
@@ -1725,13 +1728,13 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         f.addEventListener('click', function(){
           wrap.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');});
           f.classList.add('sel'); size=f.dataset.size;
-          renderTurnToggle(); paintSizeCards(); applySize(); buildBrief();
+          renderTurnToggle(); renderShapeNote(); paintSizeCards(); applySize(); buildBrief();
         });
       });
       if(first){
         var firstEl = wrap.querySelector('.ds-size[data-size="'+first+'"]');
         if(firstEl){ firstEl.classList.add('sel'); size=first;
-                     renderTurnToggle(); paintSizeCards(); applySize(); buildBrief(); }
+                     renderTurnToggle(); renderShapeNote(); paintSizeCards(); applySize(); buildBrief(); }
       }
     })
     .catch(function(){ /* silent — hardcoded sizes remain */ });
@@ -1812,6 +1815,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       if(cfg.base_prompt) CONFIG_BASE_PROMPT = cfg.base_prompt;
       CONFIG_FOLDED = cfg.folded === true;
       renderFoldChoice();
+      renderShapeNote();
       applyFoldedness();
       paintSizeCards();
       // update the page title + subtitle
@@ -1903,6 +1907,25 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     });
   }
 
+  // Which way up decides the shape of the card AND, on a folded one, where the
+  // crease goes — a portrait card creases down its side, a landscape one
+  // across its middle, and the press file is built from that and nothing else.
+  // Worth saying out loud at the point the choice is made, or it looks like a
+  // question we forgot to ask.
+  function renderShapeNote(){
+    var note = document.getElementById('ds-shape-note');
+    if (!note) return;
+    // Tied to the toggle it explains rather than re-deriving when a card can
+    // turn: a square has no other way up, the toggle hides itself, and a line
+    // about portrait and landscape underneath it explains a choice that is not
+    // on the screen. Reading the toggle keeps the two from drifting apart.
+    var turn = document.getElementById('ds-turn');
+    var canChoose = !!(turn && turn.offsetParent !== null);
+    if (!isFoldedNow() || !canChoose) { note.style.display = 'none'; return; }
+    note.style.display = '';
+    note.textContent = 'A portrait card opens like a book; a landscape card opens upwards.';
+  }
+
   function setFold(f){
     if (f === FOLD_CHOICE) return;
     FOLD_CHOICE = f;
@@ -1910,6 +1933,7 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     // would sell a flat card carrying a message nobody can read.
     if (!isFoldedNow()) { INSIDE_PRINTED = false; setInsidePrinted(false); }
     renderFoldChoice();
+    renderShapeNote();
     applyFoldedness();
     paintSizeCards();
     buildBrief();
@@ -2963,8 +2987,8 @@ function artworkFileName(prefix, ext){
       if(szBtn){ document.querySelectorAll('.ds-size').forEach(function(x){x.classList.remove('sel');}); szBtn.classList.add('sel'); size=restore.size;
                  if (restore.orientation) orientation = restore.orientation;
                  if (restore.fold) FOLD_CHOICE = restore.fold;
-                 renderFoldChoice(); applyFoldedness();
-                 renderTurnToggle(); paintSizeCards(); applySize(); }
+                 renderFoldChoice(); renderShapeNote(); applyFoldedness();
+                 renderTurnToggle(); renderShapeNote(); paintSizeCards(); applySize(); }
     }
     setTimeout(function(){
       enterGeneratedMode(restore.image);   // this calls enableDrag (sets 50/50)
