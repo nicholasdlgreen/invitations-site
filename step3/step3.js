@@ -187,12 +187,23 @@
       if (S.openFin && !offered[S.openFin]) S.openFin = null;
       tellPage();
     }
-    if (!types.length) {
-      // Nothing can be applied to this paper, so the section is simply not
-      // here. We show what IS available and say nothing about what is not.
+    if (!types.length || !types.some(function (t) { return !t.unavailable; })) {
+      // Nothing that can actually be applied. A section of nothing but dead
+      // rows is worse than no section, so it still goes.
       open('s2', false); renumber(); return;
     }
     el('finBody').innerHTML = types.map(function (t) {
+      // An option the chosen paper cannot take. Shown, and shown to be
+      // unavailable, rather than quietly removed — a customer who never sees
+      // foiling cannot tell whether we do not offer it or this paper will not
+      // hold it. The reason itself is not given here: what is unavailable and
+      // why is a rules question, and this only draws what it is told.
+      if (t.unavailable) {
+        return '<div class="finRow cant"><button class="finBtn" type="button" disabled>'
+          + '<span><span class="h">' + esc(t.name) + '</span><br>'
+          + '<span class="d">' + esc(t.description || '') + '</span></span>'
+          + '<span class="v">Not available</span><span class="c"></span></button></div>';
+      }
       var sel = S.finishes[t.name] || 'None';
       var isSet = String(sel).toLowerCase() !== 'none';
       var opened = (S.openFin === t.name);
