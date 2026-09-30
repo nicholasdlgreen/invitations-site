@@ -83,3 +83,21 @@ Ranked:
 
 Never AI: the price, the final specification without explicit confirmation, and
 anything without the manual path still behind it.
+
+## The two tracks, side by side
+
+`scratch/wizard-two-tracks.html` — the same order reaching the same price two
+ways, screen by screen.
+
+- **A, traditional:** 6 screens, 10 decisions, presets needed to make it
+  bearable. Works for everyone, including someone with no file.
+- **B, file-led:** 5 screens, 6 decisions, two of them confirmations. Needs no
+  presets — the file is the shortcut. Does not work without a file.
+
+**Neither reaches a price faster.** Paper and quantity have to be asked either
+way, and they are two of the four screens before a total. B's win is not speed:
+it is that the customer is never asked something the file already knows, and
+never told at the end that they answered it wrongly.
+
+So the decision is not A or B. It is whether to build A alone, or build A and
+let a file skip the front of it.
