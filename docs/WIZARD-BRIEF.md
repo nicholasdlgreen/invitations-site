@@ -114,12 +114,21 @@ The range does that job. This also removes a collision I had introduced: my
 mockup had "Eco" as both a preset and a paper range, which cannot both be on
 one page under one word. Option D is therefore dropped.
 
-### Still open
+### Also decided
 
-- **Where the artwork goes** — before the specification as today, or after it
-  as option A proposed.
-- **Whether the file derives the specification** (idea 1): 73% of correct
-  exports identify themselves, 95% after one question.
+- **The artwork goes last**, after the whole specification. Option A.
+- **Idea 1 is parked** — deriving the specification from the file does not make
+  enough difference to be worth the risk now. The measurement stands if we
+  return to it: 73% of correct exports identify themselves, 95% after asking
+  "is it folded?". `tools/test-spec-from-file.py`.
+- **No prices on the size cards.** A figure before the specification is
+  finished is a number nobody can act on. Only a full price builder, like
+  printed.com's presets, would earn one — and presets are already ruled out.
+- **No explanatory lines on the page.** "A portrait card opens like a book; a
+  landscape card opens upwards" was added and removed the same day. Wording is
+  proposed, never shipped, and this kind of line is not wanted at all.
+
+### Still open
 - **The visual design.** The first attempt was rejected for looking like a
   wireframe, which it did: I drew a new design language beside an existing one
   instead of using the existing one. Redone as `scratch/wizard-design.html`,
@@ -132,3 +141,8 @@ one page under one word. Option D is therefore dropped.
   recommendation as something to add **already exist**, as `.bar` / `.sum` /
   `.tot` / `.go-btn` in step3.html. The design system is further along than my
   research assumed.
+- **The range pods still carry a from-price**, and the reasoning for taking it
+  off the size cards applies to them too — at step 2 of 6 the specification is
+  no more finished than at step 1. Left alone for now because it is shipped
+  behaviour that was worked out deliberately, but it is inconsistent and needs
+  a decision.

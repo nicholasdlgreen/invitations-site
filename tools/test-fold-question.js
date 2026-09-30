@@ -110,26 +110,15 @@ is('nothing hands a direction across    ', NO_FOLD_HANDOFF, true);
 is('nothing writes a Fold instruction   ', NOTHING_WRITES_FOLD, true);
 is('no tent fold is offered             ', NO_TENT, true);
 
-print('\nAnd the page says what the orientation is quietly deciding');
-var LINE = 'A portrait card opens like a book; a landscape card opens upwards.';
-is('the studio says it            ', STUDIO.indexOf(LINE) > -1, true);
-is('the order page says it        ', ORDER.indexOf(LINE) > -1, true);
-is('only on a folded card, studio ', /if \(!isFoldedNow\(\) \|\| !canChoose\)/.test(STUDIO), true);
-is('only on a folded card, order  ', /isFoldedPiece\(\)\s*\?\s*' A portrait card opens/.test(ORDER), true);
-// A square has no other way up, so the toggle hides itself and a line about
-// portrait and landscape underneath it would explain a choice that is not
-// there. The note reads the toggle rather than re-deriving the rule.
-is('tied to the toggle it explains', /var canChoose = !!\(turn && turn\.offsetParent !== null\);/.test(STUDIO), true);
-
-// The size tiles are rebuilt from the database, which throws away the click
-// handler wired at load and replaces it. Patching only the one in the markup
-// left the note stuck on for a square — every handler that redraws the turn
-// toggle has to redraw the note with it.
-var turnCalls = (STUDIO.match(/renderTurnToggle\(\);[^\n]*/g) || [])
-  .filter(function(l){ return /paintSizeCards|applySize/.test(l); });
-is('every size handler redraws the note', turnCalls.length > 0
-   && turnCalls.every(function(l){ return l.indexOf('renderShapeNote()') > -1; }), true);
-is('...and there is more than one of them', turnCalls.length >= 3, true);
+print('\nAnd it does not explain itself in a sentence nobody asked for');
+// Added 30 September, removed the same day. Nicholas does not want this kind
+// of explanatory line on the page, and the rule is that wording is proposed
+// and not shipped. The geometry it described is still true and is commented
+// where the crease axis is decided; it is not said to the customer.
+var LINE = 'A portrait card opens like a book';
+is('the studio does not say it   ', STUDIO.indexOf(LINE) > -1, false);
+is('the order page does not say it', /\+ ' A portrait card opens/.test(ORDER), false);
+is('and nothing draws such a note', /renderShapeNote|ds-shape-note/.test(STUDIO), false);
 
 print('\nThe two questions that remain are a labelled pair, not two loose rows');
 is('flat or folded is labelled ', /<div class="ds-fold-q">Flat or folded\?<\/div>/.test(STUDIO), true);

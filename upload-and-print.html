@@ -2025,12 +2025,7 @@ function renderOrientationToggle() {
     note.style.display = '';
     const d = sizeSpec(selectedSize);
     note.textContent = 'Your card will be ' + Math.round(d.mmW) + '×' + Math.round(d.mmH)
-      + 'mm. Landscape costs the same as portrait — it is the same sheet of paper, turned.'
-      // On a folded card this choice also decides where the crease goes, which
-      // is not obvious and is the only place the card says so.
-      + (isFoldedPiece()
-          ? ' A portrait card opens like a book; a landscape card opens upwards.'
-          : '');
+      + 'mm. Landscape costs the same as portrait — it is the same sheet of paper, turned.';
   }
 }
 
