@@ -120,5 +120,15 @@ one page under one word. Option D is therefore dropped.
   as option A proposed.
 - **Whether the file derives the specification** (idea 1): 73% of correct
   exports identify themselves, 95% after one question.
-- **The visual design.** Rejected. To be redone once the structure above is
-  settled, and not before.
+- **The visual design.** The first attempt was rejected for looking like a
+  wireframe, which it did: I drew a new design language beside an existing one
+  instead of using the existing one. Redone as `scratch/wizard-design.html`,
+  which loads the real `step3.css` and the real paper photographs, so the range
+  pods, rail and price bar on it are the shipped components rather than
+  drawings of them. Only the size stage is new, and it borrows the range pod's
+  shape — picture, caption, meta row with a from-price.
+
+  Worth recording: the persistent summary and sticky price bar I listed in the
+  recommendation as something to add **already exist**, as `.bar` / `.sum` /
+  `.tot` / `.go-btn` in step3.html. The design system is further along than my
+  research assumed.
