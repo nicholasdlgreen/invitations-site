@@ -44,15 +44,14 @@ body.wide-step #s3wrap{--s3-top:75px;}
    both sit at the top of the page and count different things, which reads as
    a mistake. The site bar comes back the moment you leave this step. */
 body.wide-step .step-bar{display:none;}
+    html.wizard-new body.past-order .step-bar{display:none;}
     html.wizard-new .step-bar{visibility:hidden;}
     html.wizard-new.bar-ready .step-bar{visibility:visible;}
-    /* Nine steps do not fit on one line of a 760px measure, and the number is
-       not fixed — a product sold on one range has eight, and the next range we
-       add could make ten. So it wraps rather than running off the page, and a
-       label keeps itself on one line so "How many" is not split down the
-       middle. The labels stay on at phone width too: five numbered circles
-       could be read off the page, nine cannot, and step 3's rail already
-       wraps with its labels showing — the two are meant to look the same. */
+    /* The number of steps is not fixed — a product sold on one range has six —
+       so the bar wraps rather than running off the page, and a label keeps
+       itself on one line so "How many" is not split down the middle. The
+       labels stay on at phone width, where step 3's rail already wraps with
+       its labels showing: the two are meant to look the same. */
     html.wizard-new .step-bar{flex-wrap:wrap;row-gap:12px;}
     html.wizard-new .step-item{flex:0 0 auto;gap:10px;}
     html.wizard-new .step-label{white-space:nowrap;}
@@ -1354,7 +1353,12 @@ let ENVELOPES = [
 // they run long before the step 3 adapter is defined. A const is in the
 // temporal dead zone until its declaration runs, so leaving it further down
 // made an early size render throw.
-const NEW_WIZARD = new URLSearchParams(location.search).get('wizard') === 'new';
+// Wedding invitations is the product this was built and checked end to end on,
+// so that is where it is on for everyone — size first, then the shape of the
+// card. ?wizard=new turns it on anywhere else for a look; the other twenty-one
+// products keep the old step 1 until each has been through the same check.
+const _q = new URLSearchParams(location.search);
+const NEW_WIZARD = _q.get('wizard') === 'new' || _q.get('product') === 'wedding-invitations';
 if (NEW_WIZARD) document.documentElement.classList.add('wizard-new');
 
 let SIZE_SPECS = {
@@ -4158,10 +4162,11 @@ function drawPageBar(n){
   let steps = null;
   try { steps = Step3.journey(step3Adapter()); } catch (e) { steps = null; }
   if (!steps || !steps.length) return false;
-  // Step 3 is the whole middle of this list and hides the bar while it runs,
-  // so it has no single entry to highlight. The list still has to be right for
-  // the moment the customer steps back out of it.
-  const at = { 1:'step1', 2:'step2', 4:'basket', 5:'checkout' }[n];
+  // Only the first two steps are in the bar's gift. Step 3 is the whole middle
+  // of the list and draws its own rail; the basket and the checkout are past
+  // the end of it. The bar hides itself on all three, so nothing is lit — but
+  // the list still has to be right for stepping back out of step 3.
+  const at = { 1: 'step1', 2: 'step2' }[n];
   const cur = steps.findIndex(x => x.id === at);
   bar.innerHTML = steps.map((x,i) =>
     (i ? '<div class="step-line"></div>' : '')
@@ -4187,6 +4192,8 @@ function goStep(n){
   // Step 3 is drawn on a wider measure than the rest of the page, and hides
   // the site's own step bar while it shows its own. See .wide-step.
   document.body.classList.toggle('wide-step', n === 3);
+  // The order is finished at the basket, so the bar that maps it goes with it.
+  document.body.classList.toggle('past-order', n >= 4);
   document.querySelectorAll('.cart-btn').forEach(b => {
     // It opens the basket on every step now, so it must not look or read like
     // a button that will not.
@@ -4463,17 +4470,19 @@ function step3Adapter(){
       ? [{ id: 'step1', label: 'Size', host: true },
          { id: 'step2', label: 'Artwork', host: true }]
       : [],
-    // The two it owns after. Marked ahead, so the rail shows them without
-    // pretending they are somewhere you can already click to.
-    trailingSteps: () => NEW_WIZARD
-      ? [{ id: 'basket', label: 'Basket', host: true, ahead: true },
-         { id: 'checkout', label: 'Checkout', host: true, ahead: true }]
-      : [],
+    // The range is still chosen, exactly as before. It is just not one of the
+    // numbered steps, so the line at the top reads 1 to 6.
+    railSkips: () => NEW_WIZARD ? ['s1'] : [],
+    // Nothing after. The journey the mockup settles is the seven from the size
+    // to the delivery; the basket and the checkout are what happens once it is
+    // finished, and putting them in made nine steps that wrapped to four rows
+    // of furniture above the first question.
+    trailingSteps: () => [],
     // Clicking a completed step in the rail has to actually go back to it.
     // These panels are hidden by the page, not by step 3, so scrolling to one
     // would have looked like the click did nothing at all.
     goToHostStep: id => {
-      const n = { step1: 1, step2: 2, basket: 4, checkout: 5 }[id];
+      const n = { step1: 1, step2: 2 }[id];
       if (!n) return false;
       goStep(n);
       return true;

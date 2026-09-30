@@ -30,6 +30,15 @@
   ];
 
   function el(id) { return document.getElementById(id); }
+  // Sections the host wants left out of the numbered line at the top. They are
+  // still drawn, still answered, still part of the order — the range is chosen
+  // exactly as before. They are simply not counted as one of the steps, so the
+  // line reads 1 to 6 and the section itself carries no number.
+  function offRail(id) {
+    var list = (A && A.railSkips && A.railSkips()) || [];
+    for (var i = 0; i < list.length; i++) if (list[i] === id) return true;
+    return false;
+  }
   // Most stocks are paper and measured in gsm; a display board is measured in
   // millimetres of thickness. The weight carries its own unit so "5mm" never
   // comes out as "5gsm".
@@ -397,14 +406,20 @@
       // with it, or the first thing on screen is headed 2.
       if (sec.style.display === 'none') return;
       var b = sec.querySelector('.num b'); if (!b) return;
-      if (sec.classList.contains('locked') && id !== 's1') return;
+      // Off the top line means off the numbering too, or the heading beside
+      // the range would claim a number the line above does not have.
+      if (offRail(id)) { b.textContent = ''; return; }
+      // A locked step used to be left alone, which meant it kept whatever
+      // number step3.html was written with until it opened. Beside a top line
+      // that had already moved on, it read as a mistake — "2 Your paper" under
+      // a line calling paper step 3. It is numbered whether it is open or not.
       n += 1; b.textContent = n;
     });
     drawRail();
   }
   // The whole journey from the first moment. It does not grow as you go — the
   // steps are all there and the highlight moves along them.
-  function journey() {
+  function journey(withHidden) {
     var noEnv = !((A.envelopes && A.envelopes()) || []).length;
     // Finishing holds the envelopes as well, so it is only skipped when this
     // stock can take neither.
@@ -426,7 +441,9 @@
       { id: 's2', label: 'Finishing', skip: noFinish },
       { id: 's3', label: 'How many' },
       { id: 's4', label: 'Delivery' }
-    ]).concat(trail).filter(function (x) { return !x.skip; });
+    ]).concat(trail).filter(function (x) {
+      return !x.skip && (withHidden || !offRail(x.id));
+    });
   }
   // "Paper" over a sheet of foamex is wrong. The weight carries its unit, so
   // the stock says which it is without a second list to keep in step.
@@ -441,7 +458,17 @@
   }
   function drawRail() {
     var steps = journey(), cur = 0;
-    for (var i = 0; i < steps.length; i++) if (steps[i].id === S.at) cur = i;
+    // The customer can be standing on a section that is not on the line — the
+    // range. Lighting nothing would send the highlight back to the first step,
+    // which is what it did: choosing a range lit "Size". So it moves forward
+    // to the step that section leads into, which for the range is the paper.
+    var all = journey(true), from = 0;
+    for (var a = 0; a < all.length; a++) if (all[a].id === S.at) from = a;
+    var atId = S.at;
+    for (var b = from; b < all.length; b++) {
+      if (!offRail(all[b].id)) { atId = all[b].id; break; }
+    }
+    for (var i = 0; i < steps.length; i++) if (steps[i].id === atId) cur = i;
     var r = el('rail'); if (!r) return;
     r.innerHTML = '<div class="railIn">' + steps.map(function (x, i) {
       var sec = el(x.id);

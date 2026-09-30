@@ -50,8 +50,7 @@ function adapter(over) {
     finishTypesFor: function () { return FINISHES.map(function (n) { return { name: n }; }); },
     leadingSteps:  function () { return [{ id: 'step1', label: 'Size', host: true },
                                          { id: 'step2', label: 'Artwork', host: true }]; },
-    trailingSteps: function () { return [{ id: 'basket', label: 'Basket', host: true, ahead: true },
-                                         { id: 'checkout', label: 'Checkout', host: true, ahead: true }]; }
+    trailingSteps: function () { return []; }
   };
   for (var k in (over || {})) a[k] = over[k];
   return a;
@@ -88,23 +87,28 @@ function is(got, want, what) {
 
 print('\nONE LIST, DRAWN TWICE');
 var j = Step3.journey(ADAPTER).map(function (x) { return x.label; });
-is(j, ['Size','Artwork','Range','Paper','Finishing','How many','Delivery','Basket','Checkout'],
-   'the journey runs from the size to the checkout without a gap');
+is(j, ['Size','Artwork','Range','Paper','Finishing','How many','Delivery'],
+   'the seven steps of the approved mockup, size through delivery');
 drawPageBar(1);
 is(barLabels(), j, 'and the page bar is that same list, not a second one');
-is(barLabels().length, 9, 'nine steps, the same nine the rail will show');
+is(barLabels().length, 7, 'seven steps, the same seven the rail will show');
+// Nine of them wrapped to four rows of furniture above the first question.
+is(Step3.journey(adapter({ trailingSteps: function () { return []; } })).length, 7,
+   'the basket and the checkout are what happens after the order, not part of it');
 
 print('\nWHERE THE CUSTOMER IS');
 drawPageBar(1); is(barActive(), 'Size',     'step 1 is Size');
 drawPageBar(2); is(barActive(), 'Artwork',  'step 2 is Artwork');
-drawPageBar(4); is(barActive(), 'Basket',   'the basket is step 8 of 9, not step 4 of 5');
-drawPageBar(5); is(barActive(), 'Checkout', 'and the checkout is the last of them');
-drawPageBar(4);
-is(/step-num done">3</.test(BAR.innerHTML), true,
-   'everything between artwork and the basket is behind you by then');
 drawPageBar(3);
 is(barActive(), null, 'step 3 draws its own rail, so nothing in the bar is lit');
-is(barLabels().length, 9, 'but the list is still whole, ready for stepping back out');
+is(barLabels().length, 7, 'but the list is still whole, ready for stepping back out');
+drawPageBar(4); is(barActive(), null, 'the basket is past the end of the order');
+drawPageBar(5); is(barActive(), null, 'and so is the checkout');
+is(/html\.wizard-new body\.past-order \.step-bar\{display:none;\}/.test(HTML), true,
+   'so the bar hides on both, as it already does on step 3, rather than '
+   + 'sitting there with nothing lit on it');
+is(/classList\.toggle\('past-order', n >= 4\)/.test(HTML), true,
+   'and the page says when that is');
 
 print('\nTHE LIST BENDS TO THE PRODUCT, AND BOTH BEND TOGETHER');
 // A product on one range has no range to choose. Whatever step 3 drops, the
@@ -115,7 +119,7 @@ var js = Step3.journey(SOLE).map(function (x) { return x.label; });
 is(js.indexOf('Range'), -1, 'one range is not a choice, so the step goes');
 drawPageBar(1);
 is(barLabels(), js, 'and it goes from the bar in the same breath');
-is(barLabels().length, 8, 'eight steps now, numbered without a hole');
+is(barLabels().length, 6, 'six steps now, numbered without a hole');
 
 var NOFIN = adapter({ finishTypesFor: function () { return []; } });
 is(Step3.journey(NOFIN).map(function (x) { return x.label; }).indexOf('Finishing') >= 0, true,
@@ -133,7 +137,7 @@ is(Step3.journey(), null, 'and before step 3 has started, it says so rather than
 
 var SRC = readFile('step3/step3.js');
 is(/var isOpen = x\.host \? !x\.ahead :/.test(SRC), true,
-   'a step ahead of you is drawn, but not as somewhere you can click to');
+   'a step ahead of you would be drawn, but not as somewhere you can click to');
 is(/if \(A && A\.goToHostStep && A\.goToHostStep\(id\)\) return;/.test(SRC), true,
    'and clicking a step the PAGE owns is handed back to the page — scrolling '
    + 'to a panel the page has hidden looks like the click did nothing');
@@ -156,6 +160,48 @@ is(drawPageBar(1), true, 'otherwise it draws');
 
 is(/if \(!drawPageBar\(n\)\) \[1,2,3,4,5\]\.forEach/.test(HTML), true,
    'and when it will not draw, the five steps in the markup are left alone');
+print('\nOFF THE TOP LINE, STILL ON THE PAGE');
+// The range is still chosen, with the same three pods. It is simply not one of
+// the numbered steps, so the line reads 1 to 6. Taking it OFF the page was a
+// different thing entirely, and wrong.
+var SKIPPED = adapter({ railSkips: function () { return ['s1']; } });
+ADAPTER = SKIPPED;
+var jn = Step3.journey(SKIPPED).map(function (x) { return x.label; });
+is(jn, ['Size','Artwork','Paper','Finishing','How many','Delivery'],
+   'six steps on the line, and the paper is the third of them');
+drawPageBar(1);
+is(barLabels(), jn, 'and the bar says the same six');
+is(Step3.journey(adapter()).map(function (x) { return x.label; }).indexOf('Range'), 2,
+   'a product not switched over still counts its range as a step');
+
+var SRC3 = readFile('step3/step3.js');
+is(/function stockList/.test(SRC3), false,
+   'the papers are NOT thrown into one list — the range still filters them');
+is(/function drawFeels/.test(SRC3), true, 'and the range pods are still drawn');
+is(/var mine = papersIn\(S\.feel\);/.test(SRC3), true,
+   'the paper step still shows the papers in the range that was chosen');
+is(/if \(offRail\(id\)\) \{ b\.textContent = ''; return; \}/.test(SRC3), true,
+   'a section off the line carries no number, so its heading cannot claim one '
+   + 'the line above does not have');
+is(/\/\/ number step3\.html was written with until it opened/.test(SRC3)
+   || /kept whatever/.test(SRC3), true,
+   'and a locked section is numbered too, rather than keeping a stale one');
+is(/for \(var b = from; b < all\.length; b\+\+\) \{/.test(SRC3), true,
+   'standing on a section that is off the line lights the step it leads into, '
+   + 'not the first step of all');
+
+ADAPTER = adapter();
+print('\nWHICH PRODUCTS IT IS ON FOR');
+// It was built and walked end to end on wedding invitations, so that is where
+// it is on for everyone. The other twenty-one keep the old step 1 until each
+// has had the same treatment — they are not switched on by being nearby.
+is(/railSkips: \(\) => NEW_WIZARD \? \['s1'\] : \[\],/.test(HTML), true,
+   'the shop actually asks for the range to come off the line — the stub '
+   + 'adapter above proves the mechanism, not that anyone uses it');
+is(/_q\.get\('wizard'\) === 'new' \|\| _q\.get\('product'\) === 'wedding-invitations'/.test(HTML),
+   true, 'wedding invitations gets it without asking for it');
+is(/const NEW_WIZARD = /.test(HTML), true, 'and it is still one switch, read once');
+
 is(/html\.wizard-new \.step-bar\{visibility:hidden;\}/.test(HTML), true,
    'until it can be drawn it is held invisible, not shown saying the wrong thing');
 is(/\.then\(\(\) => \{ document\.documentElement\.classList\.add\('bar-ready'\); \}\)/.test(HTML), true,
