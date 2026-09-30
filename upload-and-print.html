@@ -47,21 +47,35 @@ body.wide-step .step-bar{display:none;}
     html.wizard-new body.past-order .step-bar{display:none;}
     html.wizard-new .step-bar{visibility:hidden;}
     html.wizard-new.bar-ready .step-bar{visibility:visible;}
-    /* The number of steps is not fixed — a product sold on one range has six —
-       so the bar wraps rather than running off the page, and a label keeps
-       itself on one line so a two-word label is not split down the middle. The
-       labels stay on at phone width, where step 3's rail already wraps with
-       its labels showing: the two are meant to look the same. */
-    html.wizard-new .step-bar{flex-wrap:wrap;row-gap:12px;}
-    html.wizard-new .step-item{flex:0 0 auto;gap:10px;}
-    html.wizard-new .step-label{white-space:nowrap;}
-    html.wizard-new .step-line{flex:1 1 16px;min-width:12px;margin:0 12px;}
+    /* Words only — no ring, no figure. Six numbered circles plus six labels
+       came to 824px in a 760px column and broke onto two rows, four on a
+       phone. The words alone are 392px, so they fit on one line with room to
+       breathe. The word you are on is in full colour with a hairline under
+       it; the ones behind are in the mid tone, the ones ahead pale. The rule
+       matters: a warm grey and a warm brown are close, and closer still on a
+       bright screen, so the state is not left to colour alone.
+       The number of steps is not fixed — a product sold on one range has five
+       — so it still wraps rather than running off the page, and a label keeps
+       itself on one line so a two-word label is not split down the middle. */
+    html.wizard-new .step-bar{flex-wrap:wrap;row-gap:10px;}
+    html.wizard-new .step-item{flex:0 0 auto;gap:0;padding:2px 0;}
+    html.wizard-new .step-num{display:none;}
+    /* Every word reserves the space the rule sits in, not just the one that
+       has it, or the word you are on rides 2.5px above the rest of the line. */
+    html.wizard-new .step-label{white-space:nowrap;letter-spacing:.14em;color:var(--pale);padding-bottom:5px;}
+    html.wizard-new .step-label.done{color:var(--soft);}
+    html.wizard-new .step-label.active{color:var(--text);box-shadow:inset 0 -1px 0 0 var(--gold);}
+    html.wizard-new .step-line{flex:1 1 16px;min-width:14px;margin:0 16px;}
+    /* Step 3 draws its own rail from the same list, so it has to look the same
+       or the map changes appearance halfway. Only under the flag: the other
+       products keep their numbered rail until each is switched over. */
+    html.wizard-new #s3wrap .rl b{display:none;}
+    html.wizard-new #s3wrap .rl{gap:0;}
+    html.wizard-new #s3wrap .rl{padding-bottom:6px;}
+    html.wizard-new #s3wrap .rl.now{box-shadow:inset 0 -1px 0 0 var(--tier,var(--gold));}
     @media(max-width:768px){
       html.wizard-new .step-label{display:inline;}
-      html.wizard-new .step-bar{row-gap:10px;}
-      html.wizard-new .step-item{gap:8px;}
-      html.wizard-new .step-num{width:26px;height:26px;}
-      html.wizard-new .step-line{margin:0 8px;}
+      html.wizard-new .step-line{margin:0 10px;}
     }
 
 .step-bar{display:flex;align-items:center;gap:0;margin-bottom:34px;}
@@ -4177,7 +4191,8 @@ function drawPageBar(n){
     (i ? '<div class="step-line"></div>' : '')
     + '<div class="step-item">'
     + '<div class="step-num' + (i<cur?' done':i===cur?' active':'') + '">' + (i+1) + '</div>'
-    + '<div class="step-label' + (i===cur?' active':'') + '">' + esc(x.label) + '</div>'
+    // The word carries the state now that there is no circle to carry it.
+    + '<div class="step-label' + (i<cur?' done':i===cur?' active':'') + '">' + esc(x.label) + '</div>'
     + '</div>').join('');
   document.documentElement.classList.add('bar-ready');
   return true;

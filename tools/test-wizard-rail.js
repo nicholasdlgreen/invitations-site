@@ -223,6 +223,26 @@ is(/return say\('The most we can print in one order is ' \+ range\.max/.test(SRC
    'and that message is still there for when it is actually needed');
 is(/>Use<\/button>/.test(SRC4), true, 'the Use button is untouched');
 
+print('\nWORDS ONLY, WITH A RULE UNDER THE ONE YOU ARE ON');
+// Six numbered circles plus six labels came to 824px in a 760px column and
+// broke onto two rows, four on a phone. The words alone are 392px.
+is(/html\.wizard-new \.step-num\{display:none;\}/.test(HTML), true,
+   'no numbered circle on the line');
+is(/html\.wizard-new #s3wrap \.rl b\{display:none;\}/.test(HTML), true,
+   'and none on step 3\u2019s rail either, or the map changes appearance halfway');
+is(/\.step-label\.active\{color:var\(--text\);box-shadow:inset 0 -1px 0 0 var\(--gold\);\}/.test(HTML),
+   true, 'the word you are on is picked out by a rule as well as by colour \u2014 '
+   + 'a warm grey and a warm brown are too close to carry it alone');
+is(/#s3wrap \.rl\.now\{box-shadow:inset 0 -1px 0 0 var\(--tier,var\(--gold\)\);\}/.test(HTML),
+   true, 'and the rail says it the same way');
+is(/html\.wizard-new \.step-label\{white-space:nowrap;letter-spacing:\.14em;color:var\(--pale\);padding-bottom:5px;\}/.test(HTML),
+   true, 'every word reserves the space the rule sits in, or the one that has '
+   + 'it rides above the rest of the line');
+is(/html\.wizard-new #s3wrap \.rl\{padding-bottom:6px;\}/.test(HTML), true,
+   'the rail reserves it too');
+is(/'<div class="step-label' \+ \(i<cur\?' done':i===cur\?' active':''\)/.test(HTML), true,
+   'and the word carries done and now, now that no circle does');
+
 print('\nWHICH PRODUCTS IT IS ON FOR');
 // It was built and walked end to end on wedding invitations, so that is where
 // it is on for everyone. The other twenty-one keep the old step 1 until each
