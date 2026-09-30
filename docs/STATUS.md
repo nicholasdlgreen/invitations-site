@@ -62,12 +62,27 @@ the autovacuum fix from §11 holding.
    `routes` is a hand-maintained column and changing it changes which family
    prices the product, so it needs a route edit and a Publish, not a UI change.
 
-6. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+6. **A tent fold is not producible, and was being offered anyway.** A tent card
+   is portrait with the crease at the *top*, and the geometry cannot express
+   that: `buildPressFile` decides the crease axis with one line,
+   `const acrossTheMiddle = selectedOrientation === 'landscape'`, so a portrait
+   card always creases down its side. The uploader's slot layout and the spread
+   proportions follow the same rule. Until 30 September the Finishing step
+   offered **Tent** on Christmas, greeting, thank you, graduation and
+   engagement cards — and *not* on place cards or table numbers, the two
+   products where a tent is the natural form. Anyone who had picked it would
+   have received a side-creased card. Nobody did: there are no orders yet.
+   To sell it, the crease axis has to become independent of orientation in
+   `buildPressFile` first, and the uploader and preview follow; the UI is the
+   easy half. Worth doing only if we want tent place cards and table numbers,
+   which the market does sell.
+
+7. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
    and `test-section-race`. They read fixtures from a scratchpad that no longer
    exists. Small job, but a real failure can hide behind noise that is always
    there.
 
-7. **The migration backups are still in the database.**
+8. **The migration backups are still in the database.**
    `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
    the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
    can put it back. Drop both once the six-box step 3 has bedded in.
