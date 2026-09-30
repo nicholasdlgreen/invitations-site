@@ -1357,8 +1357,13 @@ let ENVELOPES = [
 // so that is where it is on for everyone — size first, then the shape of the
 // card. ?wizard=new turns it on anywhere else for a look; the other twenty-one
 // products keep the old step 1 until each has been through the same check.
-const _q = new URLSearchParams(location.search);
-const NEW_WIZARD = _q.get('wizard') === 'new' || _q.get('product') === 'wedding-invitations';
+//
+// It asks PRODUCT, not the query string. Customers arrive at the clean URL
+// /wedding-invitations/order, which Netlify rewrites without the browser ever
+// seeing ?product= — so reading the query string left the wizard OFF on the
+// only route anybody actually takes, and on the whole day this was wrong.
+const NEW_WIZARD = new URLSearchParams(location.search).get('wizard') === 'new'
+  || PRODUCT.slug === 'wedding-invitations';
 if (NEW_WIZARD) document.documentElement.classList.add('wizard-new');
 
 let SIZE_SPECS = {

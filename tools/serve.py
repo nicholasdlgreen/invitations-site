@@ -27,12 +27,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def translate_path(self, path):
         local = super().translate_path(path)
+        if os.path.exists(local) or os.path.splitext(local)[1]:
+            return local
+        # /<slug>/order is the configurator, and it is how customers actually
+        # reach it — the landing page's own button points there. Netlify
+        # rewrites it to upload-and-print.html WITHOUT the browser ever seeing
+        # a query string. Not serving it here meant the only route anybody
+        # takes could not be opened locally at all, and a day's work was
+        # checked on a URL no customer uses.
+        if os.path.basename(local.rstrip('/')) == 'order':
+            return os.path.join(ROOT, 'upload-and-print.html')
         # /slug with no extension is /slug.html on Netlify, and every product
         # page is reached that way.
-        if not os.path.exists(local) and not os.path.splitext(local)[1]:
-            html = local.rstrip('/') + '.html'
-            if os.path.isfile(html):
-                return html
+        html = local.rstrip('/') + '.html'
+        if os.path.isfile(html):
+            return html
         return local
 
     def end_headers(self):

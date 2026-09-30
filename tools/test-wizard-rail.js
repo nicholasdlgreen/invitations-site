@@ -198,9 +198,19 @@ print('\nWHICH PRODUCTS IT IS ON FOR');
 is(/railSkips: \(\) => NEW_WIZARD \? \['s1'\] : \[\],/.test(HTML), true,
    'the shop actually asks for the range to come off the line — the stub '
    + 'adapter above proves the mechanism, not that anyone uses it');
-is(/_q\.get\('wizard'\) === 'new' \|\| _q\.get\('product'\) === 'wedding-invitations'/.test(HTML),
-   true, 'wedding invitations gets it without asking for it');
+is(/\|\| PRODUCT\.slug === 'wedding-invitations';/.test(HTML), true,
+   'it asks the resolved product, not the query string: customers arrive at '
+   + '/wedding-invitations/order, which Netlify rewrites without the browser '
+   + 'ever seeing ?product= — reading the query left the wizard off on the '
+   + 'only route anybody takes');
+is(/_q\.get\('product'\)/.test(HTML), false,
+   'and never goes back to reading it off the query string');
 is(/const NEW_WIZARD = /.test(HTML), true, 'and it is still one switch, read once');
+
+// The dev server has to serve that route too, or it cannot be checked at all.
+var SERVE = readFile('tools/serve.py');
+is(/== 'order':/.test(SERVE), true,
+   "the local server resolves /<slug>/order the way Netlify does");
 
 is(/html\.wizard-new \.step-bar\{visibility:hidden;\}/.test(HTML), true,
    'until it can be drawn it is held invisible, not shown saying the wrong thing');
