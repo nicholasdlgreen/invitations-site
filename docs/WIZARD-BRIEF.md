@@ -51,3 +51,35 @@ ecommerce research rather than opinion:
 - **We show no price per unit**, on a product sold exclusively in packs. 81% of
   sites miss this; it is the largest single gap in Baymard's product-page
   benchmark.
+
+## A second question, asked 30 September
+
+Whether the wizard should exist in this form at all, given what is now
+possible. Written up in `scratch/wizard-ai-options.html`. **The recommendation
+above is held, not withdrawn.**
+
+The conclusion: the *questions* are not outdated — a press needs the size, the
+stock, the sides and the quantity, and no technology changes that. What has
+dated is the assumption behind the form, that the only way to learn them is to
+ask a human. For an Upload & Print customer the file already answers half.
+
+Ranked:
+
+1. **The file answers the questions.** Deterministic, no model. We already
+   extract page count and dimensions from any PDF, and `mapPagesToSlots()`
+   already matches file geometry against a specification. Inverting it — search
+   every size × fold × sides for the one the file fits — is a loop around
+   tested code. Turns the file report from a list of mistakes into "here is
+   what you have". Cannot derive paper, finishing or quantity.
+2. **Say what you want in a sentence.** Constrained extraction into the
+   existing form; the rate table still prices it. `help-chat.js` already calls
+   Claude, so the pattern exists.
+3. **Recommend the paper from the artwork.** Ink coverage and type weight from
+   the render we already do, mapped onto real print craft. The only one a
+   competitor cannot buy off the shelf. Must stay advice, never a silent
+   change.
+4. **Chat to a price.** Weakest. Slower than clicking for an audience that
+   knows what it wants, and it hides the options.
+
+Never AI: the price, the final specification without explicit confirmation, and
+anything without the manual path still behind it.
