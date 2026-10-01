@@ -254,6 +254,76 @@ the autovacuum fix from §11 holding.
    has been exercised properly, the two withheld cases should be looked at
    again, and the code is one branch away from offering all five.
 
+   **How PrintedEasy charge for foiling — measured 1 October 2026.** 269
+   probes, every one reproducible, sentinel-checked. Method: their reply to
+   `POST /product/pricing/<slug>` carries **`scodixFoilPostPrice`**, which is 0
+   with foiling off and exactly the delta with it on. So the charge can be read
+   directly rather than diffed. The repo's own scraper *strips* every scodix
+   field, which is why this was never visible before.
+
+   **The three things that change the price:**
+   - **Sides.** One side vs both: **+£21 at 25, +£26 at 100, +£35 at 250.** The
+     largest single lever by far.
+   - **Number of areas.** One and Two cost the SAME. Three costs more: +£3 at
+     25, +£5 at 100, +£9 at 250.
+   - **Quantity and size together.** Flat at ~£86 up to 250–500, then climbing.
+     Card sizes stay flat across our whole ladder; A4 and up climb steeply
+     (postcards A4 silk: £88 at 25 → £128 at 500).
+
+   **What does NOT change the price at all — every value tested:**
+   coverage percent (1, 2, 3, 4, 5, 7, 10, 25, 50 — all identical); build
+   height (flat, low rise, medium, high); common vs different guide; bleed
+   (`foil-price` yes/no); number of foil colours (Two/Three). **So the foiled
+   AREA does not enter their price.** Our measurement of it is useful to the
+   customer and to the press, but it is not a cost input.
+
+   **"All Over" is broken on their endpoint.** It returns
+   `{"error": "Undefined array key \"\""}`, a total of 0 and a *negative*
+   foil price. This is the £0.00 that defeated the 23 September attempt — it
+   was never evidence that foiling is free. It cannot be priced through the API.
+
+   **The charge across everything we sell**, one area, one side, ex VAT:
+
+   | | 25 | 100 | 250 | 500 |
+   |---|---|---|---|---|
+   | A6, DL, Square, A5 — Silk 300 | £87–88 | £86–88 | £85–89 | £86–93 |
+   | same — Uncoated 300 | £89–90 | £87–91 | £87–90 | £88–95 |
+   | Business card — Silk 300 | £85 | £86 | £83 | £80 |
+   | A4 — Silk 300 | £88 | £94 | £107 | £128 |
+   | Cartonboard 280 | | £83 | | |
+   | Ice White 300 | £94 | £95 | £95 | £95 |
+
+   **The route barely matters.** A5, Silk 300, 100: £86 on greeting-cards,
+   £86 on postcards, £86 on flyers, £87 on folded-leaflets — while the card
+   underneath ranges £29 to £56. It is a machine charge, not a product one.
+   Foiling remains absent from luxury-flat and luxury-folded (`showScodix=0`).
+
+   **VAT.** `totalSellingPrice` on **postcards is ex VAT** (£115, with
+   `sellingPriceWithVAT` £138); on **greeting-cards the two are identical**, so
+   no VAT is added there. The foiling charge itself is the same £86 ex VAT on
+   both. Confirms the inconsistency recorded in the cost-base notes.
+
+   **For reference against the £70 we currently charge:** £86 less 20% is
+   £68.80, and £90 less 20% is £72. The flat £70 is close to right for the
+   common case — one area, one side, a card size, up to 500. It is wrong for
+   both sides (the charge rises by a third) and for A4 at volume.
+
+9d. **Two catalogue faults found while probing, neither about foiling.**
+   - **Cartonboard: we sell 255gsm and PrintedEasy only price 280gsm.** On both
+     postcards and greeting-cards, 255 returns exactly the 999-sentinel price
+     while 280 returns a distinct, much higher one (£119 and £151 against £29
+     and £58 at A5/100). Every Cartonboard rate we hold is therefore a
+     fallback, not a quote.
+   - **Uncoated 120gsm is a fallback on postcards** — identical to the
+     sentinel. We list it as "Featherweight".
+
+   **And a blind spot in the sentinel test itself, worth recording.** Where a
+   stock has exactly ONE real weight, the 999 sentinel falls back to that very
+   weight and the test wrongly condemns it. Ice White 300 looked like a
+   fallback for this reason; it is real, proven instead by showing the price
+   moves properly with quantity (£66 / £106 / £185 / £308 at 25/100/250/500).
+   A sentinel match is a reason to look harder, not a verdict.
+
    **Still open on foiling:** the pricing; how Route B is offered on the FIRST
    foiling screen rather than only after a failure (parked by Nicholas until
    this is live and tested); and the two questions for PrintedEasy by email —
