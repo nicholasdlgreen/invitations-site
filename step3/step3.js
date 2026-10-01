@@ -592,13 +592,19 @@
         + (S.qty ? ' &middot; ' + S.qty + ' cards' : '')
         + (S.qty && delName ? ' &middot; ' + esc(delName) : '')
       : '';
-    var ready = !!(S.paper && S.weight && S.qty && S.del);
+    // The host can hold the basket back for something only it knows about — a
+    // foil layer that has not been supplied, or has been refused. Taking the
+    // money for an order the press cannot be given is worse than one more step.
+    var blocked = (A.addBlocked && A.addBlocked()) || null;
+    var ready = !!(S.paper && S.weight && S.qty && S.del) && !blocked;
     el('tot').innerHTML = (ready && m.total != null)
       ? gbp(m.total) + '<small>' + gbp(m.total / S.qty) + ' a card · inc. VAT</small>' : '';
     el('bar').className = 'bar' + ((S.paper && S.weight) ? ' up' : '');
     var add = el('add');
     add.disabled = !ready;
-    add.textContent = ready ? 'Add to basket' : (S.qty ? 'Choose delivery' : 'Choose a quantity');
+    add.textContent = blocked ? blocked
+                     : ready ? 'Add to basket'
+                     : (S.qty ? 'Choose delivery' : 'Choose a quantity');
     drawRail();
   }
 

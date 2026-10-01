@@ -91,6 +91,12 @@ body.wide-step .step-bar{display:none;}
     #s3wrap .foilSwap{margin-left:auto;font-family:inherit;font-size:var(--text-xs);letter-spacing:.14em;
       text-transform:uppercase;color:var(--gold);background:none;border:0;cursor:pointer;white-space:nowrap;}
     #s3wrap .foilChecks{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+    #s3wrap .foilSum{display:flex;align-items:center;gap:14px;background:#FDFAF5;border:1px solid var(--gold-lt);
+      border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+    #s3wrap .foilSum .disc{width:26px;height:26px;border-radius:50%;flex:none;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);}
+    #s3wrap .foilSum .tx{font-size:13.5px;color:var(--text);}
+    #s3wrap .foilSum .tx small{display:block;font-size:11.5px;color:var(--soft);margin-top:3px;}
     html.wizard-new #s3wrap .rl.now{box-shadow:inset 0 -1px 0 0 var(--tier,var(--gold));}
     @media(max-width:768px){
       html.wizard-new .step-label{display:inline;}
@@ -4550,6 +4556,7 @@ function step3Adapter(){
     // Step 3 does not know what a file upload is. It asks for this block and
     // draws whatever comes back.
     foilBlock: foilBlock,
+    addBlocked: addBlockedReason,
     // Nothing after. The journey the mockup settles is the seven from the size
     // to the delivery; the basket and the checkout are what happens once it is
     // finished, and putting them in made nine steps that wrapped to four rows
@@ -5133,9 +5140,95 @@ async function inspectFoilLayer(file){
     out.dark = dark / total;
     out.offColour = off / total;
     if (x1 >= 0) out.box = { x0:x0, y0:y0, x1:x1, y1:y1, pxW:cv.width, pxH:cv.height };
+    if (x1 >= 0 && out.pageMm) Object.assign(out, measureFoilAreas(d, cv.width, cv.height, out.pageMm));
     out.ok = true;
   } catch(e){ console.warn('[foil] could not read the foil layer:', e.message); }
   return out;
+}
+
+// How many areas, how big, and does any of it run off the edge — the three
+// things PrintedEasy ask and make their own customers guess at.
+//
+// "Areas" cannot mean marks. Charlotte & James is sixteen separate marks and
+// one area to anybody looking at the card, and their price tiers are One, Two,
+// Three, Foil on Foil and All Over — places on the card, not letters. So the
+// marks are grouped: anything within 6mm of its neighbour is the same area,
+// which puts the letters of a word together and the lines of a block together,
+// and still separates a monogram at the top from a border at the foot.
+function measureFoilAreas(data, w, h, pageMm){
+  // A coarse grid. This is a yes-or-no question about where the ink is, and
+  // flood-filling two million pixels to answer it is wasted work.
+  const GW = Math.min(300, w), sx = w / GW, GH = Math.max(1, Math.round(h / sx));
+  const sy = h / GH;
+  const g = new Uint8Array(GW * GH);
+  for (let gy = 0; gy < GH; gy++) {
+    for (let gx = 0; gx < GW; gx++) {
+      const px0 = Math.floor(gx*sx), px1 = Math.min(w, Math.ceil((gx+1)*sx));
+      const py0 = Math.floor(gy*sy), py1 = Math.min(h, Math.ceil((gy+1)*sy));
+      let hit = 0;
+      for (let y = py0; y < py1 && !hit; y++)
+        for (let x = px0; x < px1; x++) {
+          const i = (y*w + x) * 4;
+          if (Math.max(data[i],data[i+1],data[i+2]) < 110) { hit = 1; break; }
+        }
+      g[gy*GW + gx] = hit;
+    }
+  }
+  // Grow each mark by 6mm so neighbours touch, then count what is left. The
+  // growing is only used for GROUPING — every measurement below is taken from
+  // the original marks, so the sizes are not inflated by it.
+  const mmPerCell = pageMm.w / GW;
+  const r = Math.max(1, Math.round(6 / mmPerCell));
+  const grown = new Uint8Array(GW * GH);
+  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+    if (!g[y*GW + x]) continue;
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      const ny = y+dy, nx = x+dx;
+      if (ny >= 0 && ny < GH && nx >= 0 && nx < GW) grown[ny*GW + nx] = 1;
+    }
+  }
+  const seen = new Int32Array(GW * GH).fill(-1);
+  const areas = [];
+  const stack = [];
+  for (let start = 0; start < grown.length; start++) {
+    if (!grown[start] || seen[start] >= 0) continue;
+    const id = areas.length;
+    let ax0 = GW, ay0 = GH, ax1 = -1, ay1 = -1, cells = 0;
+    stack.length = 0; stack.push(start); seen[start] = id;
+    while (stack.length) {
+      const p = stack.pop(), px = p % GW, py = (p / GW) | 0;
+      // Measured from the real mark, not from the grown one.
+      if (g[p]) {
+        cells++;
+        if (px < ax0) ax0 = px; if (px > ax1) ax1 = px;
+        if (py < ay0) ay0 = py; if (py > ay1) ay1 = py;
+      }
+      const n = [p-1, p+1, p-GW, p+GW];
+      for (let k = 0; k < 4; k++) {
+        const q = n[k];
+        if (q < 0 || q >= grown.length) continue;
+        if (k < 2 && ((q % GW) !== ((k === 0) ? px-1 : px+1))) continue;  // no wrap
+        if (grown[q] && seen[q] < 0) { seen[q] = id; stack.push(q); }
+      }
+    }
+    if (ax1 < 0) continue;
+    const wMm = (ax1 - ax0 + 1) * mmPerCell;
+    const hMm = (ay1 - ay0 + 1) * (pageMm.h / GH);
+    // Smaller than a millimetre either way is a stray pixel, not an area.
+    if (wMm < 1 && hMm < 1) continue;
+    areas.push({ wMm: Math.round(wMm*10)/10, hMm: Math.round(hMm*10)/10, cells: cells });
+  }
+  areas.sort(function(a,b){ return (b.wMm*b.hMm) - (a.wMm*a.hMm); });
+  // Does any of it run off the trim edge? The page carries 3mm of bleed all
+  // round, so anything in that margin is foil over the cut.
+  const bleedCellsX = Math.max(1, Math.round(PRINT_BLEED_MM / mmPerCell));
+  const bleedCellsY = Math.max(1, Math.round(PRINT_BLEED_MM / (pageMm.h / GH)));
+  let bleeds = false;
+  for (let y = 0; y < GH && !bleeds; y++) for (let x = 0; x < GW; x++) {
+    if (!g[y*GW + x]) continue;
+    if (x < bleedCellsX || x >= GW - bleedCellsX || y < bleedCellsY || y >= GH - bleedCellsY) { bleeds = true; break; }
+  }
+  return { areas: areas, bleeds: bleeds };
 }
 
 // The checks, in the same shape the artwork step already uses, so they draw
@@ -5213,6 +5306,7 @@ function foilBlock(typeName, chosen){
   } else {
     body = '<div class="foilFile"><span class="nm">' + esc(foilLayer.file.name) + '</span>'
       + '<button type="button" class="foilSwap" onclick="pickFoilLayer()">Replace</button></div>'
+      + (foilLayerAccepted() ? foilSummaryHtml(chosen) : '')
       + '<div class="foilChecks">' + foilChecks().map(function(c){
           const ic = c.status === 'ok' ? '&#10003;' : c.status === 'err' ? '&#10007;' : '!';
           return '<div class="check-row"><div class="check-icon ' + c.status + '">' + ic + '</div><div>'
@@ -5222,6 +5316,67 @@ function foilBlock(typeName, chosen){
         }).join('') + '</div>';
   }
   return '<div class="foilStep"><div class="foilLab">Your foil layer</div>' + body + '</div>';
+}
+
+// What we worked out, said back in one line. It is also every answer the
+// printer's form asks for, which is the point of the whole step.
+function foilSummary(){
+  if (!foilLayer || !foilLayerAccepted()) return null;
+  const r = foilLayer.report;
+  const areas = r.areas || [];
+  if (!areas.length) return null;
+  return {
+    colour: selectedFinishes && selectedFinishes['Foiling'],
+    areas: areas.map(function(a){ return { wMm:a.wMm, hMm:a.hMm }; }),
+    bleeds: !!r.bleeds,
+    coverage: Math.round(r.dark * 1000) / 10,
+    face: 'front'
+  };
+}
+
+function foilSummaryHtml(chosen){
+  const sm = foilSummary();
+  if (!sm) return '';
+  const words = ['one','two','three','four','five','six'];
+  const n = sm.areas.length;
+  const biggest = sm.areas[0];
+  const where = (words[n-1] || n) + (n === 1 ? ' area' : ' areas');
+  const size = n === 1 ? biggest.wMm + ' \u00d7 ' + biggest.hMm + 'mm'
+                       : 'largest ' + biggest.wMm + ' \u00d7 ' + biggest.hMm + 'mm';
+  return '<div class="foilSum">'
+    + '<span class="disc" style="' + foilDotStyle(chosen) + '"></span>'
+    + '<span class="tx">' + esc(chosen) + ' foil &middot; ' + where + ' &middot; ' + size
+    + ' &middot; ' + esc(sm.face)
+    + (sm.bleeds ? ' &middot; runs off the edge' : '')
+    + '<small>Measured from your foil layer. Nothing here was estimated.</small></span></div>';
+}
+
+// The same eight foils as the swatch, as a flat dot.
+function foilDotStyle(opt){
+  const o = String(opt || '').toLowerCase();
+  if (/rose/.test(o))   return 'background:#D08E74';
+  if (/silver/.test(o)) return 'background:#C3C9D0';
+  if (/copper/.test(o)) return 'background:#C0713F';
+  if (/red/.test(o))    return 'background:#C32C3B';
+  if (/blue/.test(o))   return 'background:#2A6CB4';
+  if (/green/.test(o))  return 'background:#2B8955';
+  if (/holo/.test(o))   return 'background:conic-gradient(from 210deg,#8FD9E8,#C7A8E8,#F2A8C4,#F6D79B,#BFE8A8,#8FD9E8)';
+  return 'background:#CBA52B';
+}
+
+// Foiling chosen with no usable foil layer is an order we cannot place: the
+// press has nothing to make the plate from. The basket button says so rather
+// than taking the money and leaving it for someone to notice later.
+function addBlockedReason(){
+  const chosen = selectedFinishes && selectedFinishes['Foiling'];
+  if (!chosen || String(chosen).toLowerCase() === 'none') return null;
+  // Busy comes first. takeFoilLayer sets it BEFORE it has a report to store,
+  // so on the very first file foilLayer is still null while we are already
+  // reading it — and the button asked for a layer that was in its hands.
+  if (foilBusy)   return 'Checking your foil layer\u2026';
+  if (!foilLayer) return 'Add your foil layer';
+  if (!foilLayerAccepted()) return 'Fix your foil layer';
+  return null;
 }
 
 function pickFoilLayer(){
@@ -5332,6 +5487,23 @@ async function buildAndUploadPressFile(){
   return { url:null, geom:null };
 }
 
+// The foil layer goes to storage like the artwork does, so it survives the
+// navigation to checkout. It is a black-and-white mask and weighs almost
+// nothing, so it is sent at Add to basket rather than prepared early.
+async function uploadFoilLayer(){
+  if (!foilLayer || !foilLayerAccepted()) return null;
+  try {
+    const name = artworkFileName('foil', 'pdf');
+    const res = await fetch(ART_BUCKET + name, { method:'POST',
+      headers:{ 'apikey':ART_KEY, 'Authorization':'Bearer '+ART_KEY,
+                'Content-Type':'application/pdf', 'x-upsert':'true' },
+      body: foilLayer.file });
+    if (res.ok) return ART_PUBLIC + name;
+    console.error('[foil] upload failed:', res.status);
+  } catch(e){ console.error('[foil] upload error:', e.message); }
+  return null;
+}
+
 async function _doPrepareArtwork(){
   const art = await uploadOriginalArtwork();
   const press = await buildAndUploadPressFile();
@@ -5435,6 +5607,16 @@ async function addToCartUpload(){
                         faces: panelsNeeded().map(function(k){ return PANEL_LABEL[k] || k; }) }
                    : null;
 
+  // The foil layer, and what we measured from it. Every figure here is an
+  // answer the printer's form asks for, so whoever places the order is reading
+  // rather than guessing: how many areas, how big each one is, and whether any
+  // of it runs off the cut.
+  var foil = foilSummary();
+  if (foil) {
+    foil.url = await uploadFoilLayer();
+    if (printSpec) printSpec.foil = foil;
+  }
+
   // What the price was based on. The server recalculates from this and refuses
   // anything cheaper than it should be — otherwise a tampered cart could buy a
   // £150 order for 50p, because the browser was the only thing setting prices.
@@ -5458,6 +5640,9 @@ async function addToCartUpload(){
     orientation: selectedOrientation || 'portrait',
     printedSides: selectedSides || 'single',
     envelopeId: envelopesEnabled ? selectedEnvColour : null,
+    // What the foil actually is. The cost of foiling moves with the size of
+    // the area, which is why it is recorded rather than left to the flat fee.
+    foil: foil || null,
     deliveryCost: deliveryCost
   };
 
@@ -5481,6 +5666,7 @@ async function addToCartUpload(){
     icon:'✦',
     artworkUrl: uploadedArtworkUrl,
     printArtworkUrl: uploadedPrintUrl,
+    foilLayerUrl: foil ? foil.url : null,
     printSpec: printSpec,
     basis: priceBasis,
     // What we flagged, in the words they saw, and when they accepted it. A

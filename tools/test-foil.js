@@ -147,6 +147,90 @@ is(statuses(), ['err:Foil layer'], 'and so is a PDF we cannot open');
 foilLayer = null;
 is(foilLayerAccepted(), false, 'with nothing uploaded, nothing is accepted');
 
+print('\nHOW MANY AREAS, AND HOW BIG');
+// "Areas" cannot mean marks. Charlotte & James is sixteen marks and one area
+// to anyone looking at the card, and the printer's tiers are One, Two, Three,
+// Foil on Foil, All Over — places on the card, not letters.
+var PRINT_BLEED_MM = 3;
+eval(grabHost('measureFoilAreas'));
+
+// A page of RGBA pixels, white, with black rectangles painted on it.
+function page(wPx, hPx, rects) {
+  var d = new Uint8ClampedArray(wPx * hPx * 4).fill(255);
+  rects.forEach(function (r) {
+    for (var y = r.y; y < r.y + r.h; y++)
+      for (var x = r.x; x < r.x + r.w; x++) {
+        var i = (y * wPx + x) * 4;
+        d[i] = d[i+1] = d[i+2] = 0;
+      }
+  });
+  return d;
+}
+// 154 x 216mm at 1px per mm keeps the arithmetic legible.
+var MM = { w: 154, h: 216 };
+function measure(rects) { return measureFoilAreas(page(154, 216, rects), 154, 216, MM); }
+
+// Nine letters 6mm apart, then a second line 4mm below: one block.
+var letters = [];
+for (var i = 0; i < 9; i++) letters.push({ x: 48 + i*6, y: 90, w: 4, h: 8 });
+for (var i = 0; i < 5; i++) letters.push({ x: 62 + i*6, y: 102, w: 4, h: 8 });
+var r1 = measure(letters);
+is(r1.areas.length, 1, 'two lines of lettering are ONE area, not fourteen marks');
+is(r1.areas[0].wMm >= 50 && r1.areas[0].wMm <= 56, true, 'measured across the whole block');
+is(r1.areas[0].hMm >= 18 && r1.areas[0].hMm <= 24, true, 'and down both lines');
+is(r1.bleeds, false, 'and it is nowhere near the edge');
+
+// The same names, plus a rule right down at the foot: two places on the card.
+var r2 = measure(letters.concat([{ x: 50, y: 190, w: 54, h: 2 }]));
+is(r2.areas.length, 2, 'a rule at the foot is a second area');
+is(r2.areas[0].wMm >= r2.areas[1].wMm * 0.5, true, 'and they are reported largest first');
+
+// Grouping must not inflate the measurement: the size comes from the marks.
+var r3 = measure([{ x: 60, y: 100, w: 20, h: 10 }]);
+is(r3.areas[0].wMm <= 22 && r3.areas[0].hMm <= 12, true,
+   'one mark measures its own size \u2014 the 6mm used to group is not added to it');
+
+// Anything in the 3mm bleed margin is foil over the cut, which the printer asks about.
+is(measure([{ x: 0, y: 100, w: 40, h: 10 }]).bleeds, true, 'a mark off the left edge bleeds');
+is(measure([{ x: 60, y: 0,  w: 30, h: 8  }]).bleeds, true, 'and off the top');
+is(measure([{ x: 60, y: 100, w: 30, h: 8 }]).bleeds, false, 'while one in the middle does not');
+
+print('\nWHAT THE BASKET WAITS FOR');
+var selectedFinishes = {};
+eval(grabHost('addBlockedReason'));
+foilLayer = null; foilBusy = false;
+selectedFinishes = {};
+is(addBlockedReason(), null, 'no foil chosen, nothing to wait for');
+selectedFinishes = { Foiling: 'None' };
+is(addBlockedReason(), null, 'and None is not a choice of foil');
+selectedFinishes = { Foiling: 'Gold' };
+is(addBlockedReason(), 'Add your foil layer', 'gold with no layer holds the basket');
+foilBusy = true;
+is(/Checking/.test(addBlockedReason()), true, 'and says so while it is being checked');
+foilBusy = false;
+foilLayer = layer({ pageMm:{w:148,h:210} });
+is(addBlockedReason(), 'Fix your foil layer', 'a refused layer holds it too');
+foilLayer = layer();
+is(addBlockedReason(), null, 'a good one lets it through');
+
+print('\nWHAT REACHES THE ORDER');
+is(/foil\.url = await uploadFoilLayer\(\);/.test(HTML), true,
+   'the foil layer is sent to storage, so it survives the trip to checkout');
+is(/if \(printSpec\) printSpec\.foil = foil;/.test(HTML), true,
+   'and is recorded on the print spec with what we measured');
+is(/foil: foil \|\| null,/.test(HTML), true,
+   'and on the price basis, because the cost of foiling moves with the area');
+is(/foilLayerUrl: foil \? foil\.url : null,/.test(HTML), true,
+   'and on the basket line itself');
+// foilSummary opens with the same line, so matching it anywhere in the file
+// proved nothing — the second time today that a loose source assertion passed
+// against the wrong function. Pinned to this one.
+is(/async function uploadFoilLayer\(\)\{\n  if \(!foilLayer \|\| !foilLayerAccepted\(\)\) return null;/.test(HTML),
+   true, 'nothing is uploaded for a layer we refused');
+is(/var blocked = \(A\.addBlocked && A\.addBlocked\(\)\) \|\| null;/.test(SRC), true,
+   'step 3 asks the page whether it may take the money');
+is(/&& !blocked;/.test(SRC), true, 'and will not while the answer is a reason');
+
 print('\nWHERE THE BLOCK APPEARS');
 is(/if \(!\/foil\/i\.test\(typeName\)\) return '';/.test(HTML), true,
    'only on the foiling row');
