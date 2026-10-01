@@ -111,7 +111,18 @@ the autovacuum fix from §11 holding.
    cleanup job exists.** It needs a scheduled function that lists the bucket
    and removes anything older than seven days with no order against it.
 
-9. **`cart.js` asks the wrong question about where it is.** It decides whether
+9. **`delivery.html` publishes delivery prices we do not charge.** Express is
+   shown as a flat **£12.00** and Next Day as a flat **£18.00**. Neither is
+   real: Express is +20% of the order with a £20 minimum, Express Plus +40%
+   with a £40 minimum — £21.60 and £43.20 on a £108 order, and more on a bigger
+   one. A published price a customer could hold us to. Corrected on 1 October:
+   the day counts (Standard 5–7 → 3, Express 2–3 → 2) and the next-day cut-off
+   (12pm → 1pm). **The two prices were deliberately left alone**, because
+   replacing them means deciding how a percentage-with-a-minimum is presented
+   to a customer, and how price is presented is parked until the margins in
+   item 1. It cannot ship like this.
+
+10. **`cart.js` asks the wrong question about where it is.** It decides whether
    you are on the order page with `pathname.includes('upload-and-print')`,
    which is **false on the clean `/<slug>/order` URL every customer uses**. The
    page's own override masks it today, so nothing is broken; if that override
@@ -120,12 +131,12 @@ the autovacuum fix from §11 holding.
    the product they were configuring. Same family as the flag that was read
    off the query string on 30 September. Found 1 October, not fixed.
 
-10. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+11. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
    and `test-section-race`. They read fixtures from a scratchpad that no longer
    exists. Small job, but a real failure can hide behind noise that is always
    there.
 
-11. **The migration backups are still in the database.**
+12. **The migration backups are still in the database.**
    `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
    the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
    can put it back. Drop both once the six-box step 3 has bedded in.
