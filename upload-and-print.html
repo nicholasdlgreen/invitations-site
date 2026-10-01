@@ -713,7 +713,7 @@ Basket <span class="cart-count" id="cartCount">0</span>
 <div class="cart-row"><span>Subtotal (excl. VAT)</span><span id="cartNet">£0.00</span></div>
 <div class="cart-row vat"><span>VAT (20%)</span><span id="cartVat">£0.00</span></div>
 <div class="cart-row total serif"><span>Total</span><span id="cartTotal">£0.00</span></div>
-<button class="btn" onclick="goToCheckout()" style="width:100%;justify-content:center;">Continue to Checkout</button>
+<button class="btn" id="drawerGoBtn" onclick="goToCheckout()" style="width:100%;justify-content:center;">Continue to Checkout</button>
 </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -4244,6 +4244,9 @@ function goStep(n){
   // Step 3 is drawn on a wider measure than the rest of the page, and hides
   // the site's own step bar while it shows its own. See .wide-step.
   document.body.classList.toggle('wide-step', n === 3);
+  // The basket drawer's button says where it will take you, which depends on
+  // where you are. currentStep is set above, so this reads the new value.
+  if (typeof paintDrawerButton === 'function') paintDrawerButton();
   document.querySelectorAll('.cart-btn').forEach(b => {
     // It opens the basket on every step now, so it must not look or read like
     // a button that will not.
@@ -6855,8 +6858,20 @@ function googleCustomerReviewsOptIn(order){
     goStep(4);
   };
 
-  // If anything still reaches the drawer's checkout (an older cached page,
-  // say), send it through the basket rather than over the top of it.
+  // The drawer's own button used to jump straight to payment, skipping the
+  // basket step and everything on it, so every click was sent to the basket
+  // instead. That was right from the steps before the basket and wrong from
+  // the two after it: on the basket it sent you to the basket you were already
+  // looking at, so nothing happened and the button read as broken — and on the
+  // checkout it threw you backwards out of a delivery address you were part
+  // way through typing.
+  //
+  // It moves you one step FORWARD along the journey now, and never backwards.
+  function drawerGoesTo(){
+    if (currentStep === 5) return null;   // already at the end of the line
+    return currentStep === 4 ? 5 : 4;
+  }
+
   window.goToCheckout = function(){
     let live = [];
     try { live = JSON.parse(localStorage.getItem('inv_cart') || '[]'); } catch(e){}
@@ -6865,8 +6880,27 @@ function googleCustomerReviewsOptIn(order){
       return;
     }
     if (typeof closeCart === 'function') { try { closeCart(); } catch(e){} }
-    goStep(4);
+    const to = drawerGoesTo();
+    // From the checkout it only closes the drawer. Sending someone back to the
+    // basket from a half-filled address form is worse than doing nothing.
+    if (to) goStep(to);
   };
+
+  // And it says where it is actually going. It read "Continue to Checkout"
+  // from step 1, where it goes to the basket.
+  window.paintDrawerButton = function(){
+    const b = document.getElementById('drawerGoBtn');
+    if (!b) return;
+    const to = drawerGoesTo();
+    b.textContent = to === 5 ? 'Continue to Checkout'
+                  : to === 4 ? 'Continue to Basket'
+                  : 'Back to Checkout';
+  };
+  // goStep repaints it on every move, but it runs before this block is
+  // installed, so the first words have to be set here or the button would say
+  // "Continue to Checkout" on step 1 until the customer moved.
+  paintDrawerButton();
+
   // Keep a handle on the original in case it is ever needed again.
   window._drawerCheckout = drawerCheckout;
 })();

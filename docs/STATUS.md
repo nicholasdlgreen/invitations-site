@@ -111,12 +111,21 @@ the autovacuum fix from §11 holding.
    cleanup job exists.** It needs a scheduled function that lists the bucket
    and removes anything older than seven days with no order against it.
 
-9. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+9. **`cart.js` asks the wrong question about where it is.** It decides whether
+   you are on the order page with `pathname.includes('upload-and-print')`,
+   which is **false on the clean `/<slug>/order` URL every customer uses**. The
+   page's own override masks it today, so nothing is broken; if that override
+   ever failed to install, the basket drawer's button would navigate the
+   customer away to a fresh `/upload-and-print.html?action=checkout` and lose
+   the product they were configuring. Same family as the flag that was read
+   off the query string on 30 September. Found 1 October, not fixed.
+
+10. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
    and `test-section-race`. They read fixtures from a scratchpad that no longer
    exists. Small job, but a real failure can hide behind noise that is always
    there.
 
-10. **The migration backups are still in the database.**
+11. **The migration backups are still in the database.**
    `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
    the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
    can put it back. Drop both once the six-box step 3 has bedded in.
