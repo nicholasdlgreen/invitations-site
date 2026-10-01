@@ -44,7 +44,6 @@ body.wide-step #s3wrap{--s3-top:75px;}
    both sit at the top of the page and count different things, which reads as
    a mistake. The site bar comes back the moment you leave this step. */
 body.wide-step .step-bar{display:none;}
-    html.wizard-new body.past-order .step-bar{display:none;}
     html.wizard-new .step-bar{visibility:hidden;}
     html.wizard-new.bar-ready .step-bar{visibility:visible;}
     /* Words only — no ring, no figure. Six numbered circles plus six labels
@@ -4181,18 +4180,38 @@ let _steppedOnce = false;
 // Returns false if it could not do it — before the catalogue has arrived, or
 // on the design-studio route, which hides the first two steps and renumbers
 // what is left. The caller then leaves the markup's own five steps alone.
+// Once the order is in the basket the six configurator steps are all behind
+// you, and listing them again would be noise — so they collapse into one word
+// and the line carries on through what is left. It used to stop at Delivery
+// and vanish, which left the checkout with no title AND no map: the customer
+// could not tell they had arrived, or how much further there was to go.
+//
+// Payment is Stripe's own page, not one of ours. It is named because the
+// question the line answers is "how much further", and the honest answer is
+// one more thing after this.
+const TAIL_STEPS = [
+  { id: 'order',    label: 'Your order' },
+  { id: 'basket',   label: 'Basket' },
+  { id: 'checkout', label: 'Checkout' },
+  { id: 'payment',  label: 'Payment' }
+];
+
 function drawPageBar(n){
   if (!NEW_WIZARD || designMode) return false;
   const bar = document.querySelector('.step-bar');
   if (!bar || !window.Step3 || !Step3.journey) return false;
-  let steps = null;
-  try { steps = Step3.journey(step3Adapter()); } catch (e) { steps = null; }
-  if (!steps || !steps.length) return false;
-  // Only the first two steps are in the bar's gift. Step 3 is the whole middle
-  // of the list and draws its own rail; the basket and the checkout are past
-  // the end of it. The bar hides itself on all three, so nothing is lit — but
-  // the list still has to be right for stepping back out of step 3.
-  const at = { 1: 'step1', 2: 'step2' }[n];
+
+  // Steps 1 and 2 are on the configurator line; 4 and 5 are on the tail. Step
+  // 3 is the whole middle of the configurator line and draws its own rail, so
+  // the bar hides there — but the list still has to be right for the moment
+  // the customer steps back out of it.
+  const tail = n >= 4;
+  let steps = TAIL_STEPS;
+  if (!tail) {
+    try { steps = Step3.journey(step3Adapter()); } catch (e) { steps = null; }
+    if (!steps || !steps.length) return false;
+  }
+  const at = { 1: 'step1', 2: 'step2', 4: 'basket', 5: 'checkout' }[n];
   const cur = steps.findIndex(x => x.id === at);
   bar.innerHTML = steps.map((x,i) =>
     (i ? '<div class="step-line"></div>' : '')
@@ -4219,8 +4238,6 @@ function goStep(n){
   // Step 3 is drawn on a wider measure than the rest of the page, and hides
   // the site's own step bar while it shows its own. See .wide-step.
   document.body.classList.toggle('wide-step', n === 3);
-  // The order is finished at the basket, so the bar that maps it goes with it.
-  document.body.classList.toggle('past-order', n >= 4);
   document.querySelectorAll('.cart-btn').forEach(b => {
     // It opens the basket on every step now, so it must not look or read like
     // a button that will not.

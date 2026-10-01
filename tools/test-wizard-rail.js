@@ -64,6 +64,11 @@ var ADAPTER = adapter();
 function step3Adapter() { return ADAPTER; }
 document.querySelector = function (sel) { return sel === '.step-bar' ? BAR : null; };
 document.documentElement = { classList: { add: function () {} } };
+// drawPageBar reads TAIL_STEPS, which lives beside it rather than inside it,
+// so the list the shop actually ships is cut out too — not a copy kept here.
+var _tail = HTML.slice(HTML.indexOf('const TAIL_STEPS = ['));
+_tail = _tail.slice(0, _tail.indexOf('];') + 2);
+eval(_tail.replace('const ', 'var '));
 eval(grab('drawPageBar'));
 
 function barLabels() {
@@ -102,13 +107,14 @@ drawPageBar(2); is(barActive(), 'Artwork',  'step 2 is Artwork');
 drawPageBar(3);
 is(barActive(), null, 'step 3 draws its own rail, so nothing in the bar is lit');
 is(barLabels().length, 7, 'but the list is still whole, ready for stepping back out');
-drawPageBar(4); is(barActive(), null, 'the basket is past the end of the order');
-drawPageBar(5); is(barActive(), null, 'and so is the checkout');
-is(/html\.wizard-new body\.past-order \.step-bar\{display:none;\}/.test(HTML), true,
-   'so the bar hides on both, as it already does on step 3, rather than '
-   + 'sitting there with nothing lit on it');
-is(/classList\.toggle\('past-order', n >= 4\)/.test(HTML), true,
-   'and the page says when that is');
+// Past the order the line does not end — it changes to the tail.
+drawPageBar(4);
+is(barLabels(), ['Your order','Basket','Checkout','Payment'], 'the basket is on the tail');
+is(barActive(), 'Basket', 'with Basket lit');
+drawPageBar(5);
+is(barActive(), 'Checkout', 'and the checkout lights Checkout');
+is(/<div class="step-label done">Basket</.test(BAR.innerHTML), true,
+   'with the basket behind it filled in');
 
 print('\nTHE LIST BENDS TO THE PRODUCT, AND BOTH BEND TOGETHER');
 // A product on one range has no range to choose. Whatever step 3 drops, the
@@ -195,6 +201,23 @@ is(/for \(var b = from; b < all\.length; b\+\+\) \{/.test(SRC3), true,
    + 'not the first step of all');
 
 ADAPTER = adapter();
+
+print('\nTHE LINE CARRIES ON PAST THE ORDER');
+// It used to stop at Delivery and vanish, which left the checkout with no
+// title AND no map — the customer could not tell they had arrived, or how
+// much further there was to go.
+is(/const TAIL_STEPS = \[/.test(HTML), true, 'there is a second list for after the order');
+['Your order','Basket','Checkout','Payment'].forEach(function (w) {
+  is(new RegExp("label: '" + w + "'").test(HTML), true, 'the line still says ' + w);
+});
+is(/\{ id: 'order',    label: 'Your order' \}/.test(HTML), true,
+   'the six configurator steps collapse into one word, because by here they '
+   + 'are all behind you and listing them again would be noise');
+is(/const tail = n >= 4;/.test(HTML), true, 'the tail starts at the basket');
+is(/const at = \{ 1: 'step1', 2: 'step2', 4: 'basket', 5: 'checkout' \}\[n\];/.test(HTML),
+   true, 'the basket lights Basket and the checkout lights Checkout');
+is(/past-order/.test(HTML), false,
+   'and nothing hides the bar after the order any more');
 
 print('\nWHAT THE BAR SAYS, AND WHAT THE QUANTITY BOX DOES NOT');
 var SRC4 = readFile('step3/step3.js');
