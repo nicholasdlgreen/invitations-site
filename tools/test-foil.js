@@ -231,6 +231,17 @@ is(/var blocked = \(A\.addBlocked && A\.addBlocked\(\)\) \|\| null;/.test(SRC), 
    'step 3 asks the page whether it may take the money');
 is(/&& !blocked;/.test(SRC), true, 'and will not while the answer is a reason');
 
+print('\nTHE ROW STAYS OPEN WHILE THERE IS MORE TO ASK');
+// Choosing a colour closed the row, which shut the panel on the foil-layer
+// upload the choice had just revealed. The customer had to reopen the row to
+// find the thing they now had to do.
+is(/var more = \(A\.foilBlock && A\.foilBlock\(t, o\)\) \|\| '';/.test(SRC), true,
+   'choosing an option asks the host whether anything is left to answer');
+is(/S\.openFin = more \? t : null;/.test(SRC), true,
+   'and the row stays open while there is, and closes when there is not');
+is(/S\.finishes\[t\] = o; S\.openFin = null;/.test(SRC), false,
+   'never closed unconditionally again');
+
 print('\nWHERE THE BLOCK APPEARS');
 is(/if \(!\/foil\/i\.test\(typeName\)\) return '';/.test(HTML), true,
    'only on the foiling row');

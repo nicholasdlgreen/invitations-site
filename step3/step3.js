@@ -664,7 +664,18 @@
     },
     toggleFin: function (t) { S.openFin = (S.openFin === t ? null : t); drawFinishing(); },
     finish: function (t, o) {
-      S.finishes[t] = o; S.openFin = null;
+      S.finishes[t] = o;
+      // Choosing an option closes the row, because for lamination or corners
+      // there is nothing left to do in it. Foiling is not like that: picking
+      // the colour is the first half, and the foil layer is asked for
+      // underneath. Closing shut the panel on the very thing the choice had
+      // just revealed, and the customer had to reopen the row to find it.
+      //
+      // So the row closes when it is finished with, and stays open while the
+      // host still has something to ask. The host answers by handing over a
+      // block or an empty string, which it already does to draw it.
+      var more = (A.foilBlock && A.foilBlock(t, o)) || '';
+      S.openFin = more ? t : null;
       advanceTo('s3');
       A.onSelect(S); redraw(); renumber();
     },
