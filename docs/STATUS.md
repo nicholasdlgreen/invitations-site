@@ -102,19 +102,12 @@ the autovacuum fix from §11 holding.
    easy half. Worth doing only if we want tent place cards and table numbers,
    which the market does sell.
 
-8. **`docs/WIZARD-BRIEF.md` is spent.** It was the brief for the order page;
-   the page is built (§0c) and the signed-off artefact is
-   `scratch/order-page.html`, which is not in the repo. Either move that page
-   into `docs/` so the thing we build against survives, or delete the brief.
-   Leaving a brief that describes seven steps beside a page that has six is how
-   the wrong artefact gets built from next time.
-
-9. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+8. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
    and `test-section-race`. They read fixtures from a scratchpad that no longer
    exists. Small job, but a real failure can hide behind noise that is always
    there.
 
-10. **The migration backups are still in the database.**
+9. **The migration backups are still in the database.**
    `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
    the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
    can put it back. Drop both once the six-box step 3 has bedded in.
@@ -124,8 +117,14 @@ the autovacuum fix from §11 holding.
 ## 0c. 30 September — the order page, in one place
 
 One structure for the whole range, live on all twenty-three products at
-`/<slug>/order`. The signed-off design is `scratch/order-page.html`, written as
-a standalone page and checked against the shipped page point by point.
+`/<slug>/order`. The signed-off design is **`docs/ORDER-PAGE.html`**, written as
+a standalone page and checked against the shipped page point by point. Build
+against that file, not against a description of it. `docs/WIZARD-BRIEF.md` was
+deleted on 1 October — it described seven steps and the artwork going last, both
+overtaken, and a stale brief beside a built page is how the wrong artefact gets
+built from. The four standing points worth keeping (scope, admin drives the
+contents, one structure for every product, no copy or price before the
+specification is finished) are carried in that file's own header.
 
 **Six steps, one line.** `SIZE — ARTWORK — PAPER — FINISHING — QUANTITY —
 DELIVERY`. Words only: no rings, no figures, the word you are on in full colour
@@ -167,7 +166,8 @@ range, four for the card range, three for signage, two for order of service, one
 for place cards — matching `available_sizes` in every case but `/invitations`,
 which is retired (§0 item 6). `tools/test-wizard-rail.js` holds 60 assertions,
 every one mutation-tested. `tools/serve.py` now resolves `/<slug>/order` the way
-Netlify does.
+Netlify does. `/docs/*` is 404'd in `_redirects`, so the signed-off page sitting
+in `docs/` is not reachable from the shop.
 
 ### Four times it was wrong on the live site first
 

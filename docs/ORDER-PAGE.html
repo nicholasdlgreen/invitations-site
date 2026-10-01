@@ -1,0 +1,261 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The order page — Upload &amp; Print</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@200;300;400;500&display=swap">
+<link rel="stylesheet" href="/step3/step3.css">
+<style>
+  :root{--cream:#FAF7F2;--white:#fff;--line:#EFE7E0;--text:#3D2E24;--soft:#7A6558;--pale:#B0A098;--gold:#B8976A;color-scheme:light}
+  html,body{margin:0;background:var(--cream);color:var(--text);font-family:'Jost',system-ui,sans-serif}
+  .hdr{max-width:1060px;margin:0 auto;padding:22px 32px 0;font-size:13px;color:var(--soft);line-height:1.7}
+  .hdr h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.9rem;color:var(--text);margin:0 0 6px}
+  .hdr b{color:var(--text);font-weight:400}
+  .hdr code{background:#fff;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:11.5px}
+  .hdr hr{border:0;border-top:1px solid var(--line);margin:18px 0 0}
+  .hdr .q{background:#FDF6EC;border:1px solid #E8D9C2;border-radius:10px;padding:12px 15px;margin:14px 0 0}
+
+  /* ── 1 · size & shape ──────────────────────────────────────────────────── */
+  #s3wrap .sizes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+  @media(max-width:860px){#s3wrap .sizes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  #s3wrap .size{position:relative;padding:0;border:1.5px solid var(--line);background:var(--white);font-family:inherit;
+    text-align:left;cursor:pointer;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(61,46,36,.05);
+    transition:transform .3s cubic-bezier(.2,.7,.3,1),box-shadow .3s,border-color .2s;}
+  #s3wrap .size:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(61,46,36,.11);}
+  #s3wrap .size.on{border-color:var(--gold);background:#FDFAF5;box-shadow:0 0 0 1px var(--gold),0 10px 22px rgba(61,46,36,.11);}
+  #s3wrap .size .art{display:flex;align-items:flex-end;justify-content:center;height:74px;background:#F6F1EA;padding-bottom:12px;}
+  #s3wrap .size .card{background:#fff;border:1px solid #D9CEC2;border-radius:2px;box-shadow:0 2px 5px rgba(61,46,36,.10);}
+  #s3wrap .size.on .card{border-color:var(--gold);}
+  #s3wrap .size .cap{display:block;padding:10px 13px 12px;}
+  #s3wrap .size .nm{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;line-height:1.15;}
+  #s3wrap .size.on .nm{color:var(--gold);}
+  #s3wrap .size .dim{display:block;font-size:11.5px;color:var(--pale);margin-top:3px;}
+  #s3wrap .size .sub{display:block;font-size:11.5px;color:var(--soft);margin-top:2px;}
+  #s3wrap .size .tick{position:absolute;right:10px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--gold);
+    color:#fff;display:none;align-items:center;justify-content:center;font-size:11px;}
+  #s3wrap .size.on .tick{display:flex}
+  /* A size this shape cannot be made in stays on the page, greyed, so nothing
+     moves underneath when the shape changes. */
+  #s3wrap .size.cant{opacity:.42;cursor:not-allowed;box-shadow:none;}
+  #s3wrap .size.cant:hover{transform:none;box-shadow:none;}
+
+  #s3wrap .shapeq{display:flex;gap:40px;flex-wrap:wrap;margin-top:22px;}
+  #s3wrap .lab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pale);margin-bottom:8px;}
+  #s3wrap .pillrow{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;background:var(--white);padding:4px;}
+  #s3wrap .pillrow button{font-family:inherit;font-size:13.5px;border:0;background:none;color:var(--soft);
+    padding:7px 16px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
+  #s3wrap .pillrow button.on{background:var(--gold);color:#fff;}
+  #s3wrap .pillrow i{display:block;width:11px;height:14px;border:1.5px solid var(--pale);border-radius:2px;}
+  #s3wrap .pillrow i.fold{border-left-width:4px;}
+  #s3wrap .pillrow button.on i{border-color:rgba(255,255,255,.85);}
+
+  /* ── the range pods, made compact ──────────────────────────────────────── */
+  #s3wrap .feel .sws{height:56px;}
+  #s3wrap .feel .cap{padding:11px 14px 12px;}
+  #s3wrap .feel .nm{font-size:18px;}
+  #s3wrap .feel .sub{font-size:11.5px;margin-top:3px;}
+  #s3wrap .feel .meta{margin-top:9px;padding-top:8px;}
+  #s3wrap .feel .tick{width:20px;height:20px;font-size:11px;right:10px;top:10px;}
+  #s3wrap .feel .flag{top:9px;right:9px;}
+
+  /* ── 3 · the stock card ────────────────────────────────────────────────── */
+  #s3wrap .stock{grid-template-columns:168px minmax(0,1fr);}
+  #s3wrap .stock .pic{min-height:190px;}
+  #s3wrap .stock .info{padding:16px 18px 18px;}
+  #s3wrap .stock .nm{font-size:20px;}
+  #s3wrap .stock .ds{font-size:13px;margin-top:7px;}
+  #s3wrap .swatches{display:flex;gap:9px;margin-bottom:14px;flex-wrap:wrap;}
+  #s3wrap .swatches .sw{width:46px;height:46px;border-radius:50%;background-size:max(100%,760px);background-position:center;
+    background-color:#F1EAE2;border:1.5px solid var(--line);cursor:pointer;position:relative;}
+  #s3wrap .swatches .sw.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--white),0 0 0 3px var(--gold);}
+  #s3wrap .opts{display:flex;gap:8px;flex-wrap:wrap;}
+  #s3wrap .opt{font-family:inherit;font-size:13px;border:1.5px solid var(--line);background:var(--white);border-radius:999px;
+    padding:7px 14px;cursor:pointer;color:var(--soft);}
+  #s3wrap .opt.on{border-color:var(--gold);background:#FDFAF5;color:var(--text);}
+
+  /* ── 4 · finishing ─────────────────────────────────────────────────────── */
+  #s3wrap .finRow{border:1.5px solid var(--line);border-radius:12px;background:var(--white);margin-bottom:9px;overflow:hidden;}
+  #s3wrap .finBtn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;background:none;border:0;
+    font-family:inherit;text-align:left;padding:13px 16px;cursor:pointer;}
+  #s3wrap .finBtn .h{font-size:14.5px;color:var(--text);}
+  #s3wrap .finBtn .d{font-size:12px;color:var(--soft);}
+  #s3wrap .finBtn .v{font-size:12.5px;color:var(--pale);white-space:nowrap;}
+  #s3wrap .finRow.cant{opacity:.5;}
+  #s3wrap .finRow.cant .v{font-style:italic;}
+
+  /* ── 5 · quantity ──────────────────────────────────────────────────────── */
+  #s3wrap .qtys{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;}
+  #s3wrap .qty{font-family:inherit;border:1.5px solid var(--line);background:var(--white);border-radius:12px;padding:11px 8px;
+    cursor:pointer;text-align:center;display:block;}
+  #s3wrap .qty.on{border-color:var(--gold);background:#FDFAF5;}
+  #s3wrap .qty .n{display:block;font-size:16px;color:var(--text);}
+
+  /* ── 6 · delivery ──────────────────────────────────────────────────────── */
+  /* No .del.on background override here. The shipped step3.css turns a chosen
+     delivery card solid and its text white; the old mockup overrode the
+     background and left the white text on cream, which read as blank. */
+  #s3wrap .dels{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;}
+
+  /* ── the artwork step ──────────────────────────────────────────────────── */
+  #s3wrap .drop{border:1.5px dashed color-mix(in srgb,var(--gold) 45%,var(--line));border-radius:16px;background:var(--white);
+    padding:38px 24px;text-align:center;}
+  #s3wrap .drop .big{font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;}
+  #s3wrap .drop .sm{font-size:13px;color:var(--soft);margin-top:7px;line-height:1.7;}
+  #s3wrap .drop .btn{margin-top:16px;font-family:inherit;font-size:13px;letter-spacing:.12em;text-transform:uppercase;
+    background:var(--text);color:var(--cream);border:0;border-radius:999px;padding:12px 26px;cursor:pointer;}
+  #s3wrap .spec{display:inline-flex;flex-wrap:wrap;gap:7px;margin-top:16px;justify-content:center;}
+  #s3wrap .spec span{font-size:11.5px;color:var(--soft);background:var(--cream);border:1px solid var(--line);
+    border-radius:999px;padding:4px 11px;}
+
+  /* A section that is on the page but not one of the numbered steps has no
+     number beside it, so its heading cannot claim one the line does not have. */
+  #s3wrap .stage.unnumbered .num b{visibility:hidden;}
+</style></head><body>
+
+<div class="hdr">
+  <h1>The order page · Upload &amp; Print</h1>
+  <p>Written from scratch against the signed-off design, as a standalone page. Nothing here touches the live site. Every stage is shown open at once so the whole journey reads in one go; in use one is open and the rest are collapsed.</p>
+  <p><b>What this is built to:</b> size first · the uploader straight after size and shape · <b>six numbered steps</b> · the range still chosen, but off the numbered line · no presets · no prices beyond the total in the bar, which the shipped bar already carries.</p>
+  <p><b>Signed off 30 September 2026</b>, with these decisions folded in: step 5 is <b>Quantity</b>; the finishing row is <b>Corners</b>; the typed amount keeps its <b>Use</b> box and no longer spells out the range; the bar names the size and shape before the paper; step 1 keeps its existing heading; prices are not today’s question.</p>
+
+  <p><b>This file is the thing to build against.</b> It replaced <code>docs/WIZARD-BRIEF.md</code>, which was deleted on 1 October: the brief described seven steps and the artwork going last, and both had been overtaken. A stale brief beside a built page is how the wrong artefact gets built from. Four standing points were carried over from it rather than lost:</p>
+  <ul>
+    <li><b>Scope is Upload &amp; Print.</b> The design studio serves people who arrive without artwork and is not touched by this.</li>
+    <li><b>Admin has to drive it.</b> Adding or removing a paper stock or a finishing option in admin must change this page, on every product, with no code change. The structure is fixed; the contents are data. A page only a developer can change will drift again.</li>
+    <li><b>One structure, every product.</b> Variation only where a product genuinely differs — a foam board has no envelopes — never as a side effect of which price rows happen to exist.</li>
+    <li><b>No explanatory lines, and no price before the specification is finished.</b> Wording is proposed, never shipped.</li>
+  </ul>
+  <p>Parked, with the measurement kept in case we return to it: reading the specification out of the uploaded file. 73% of correct exports identify themselves, 95% after asking “is it folded?” — <code>tools/test-spec-from-file.py</code>.</p>
+  <hr/>
+</div>
+
+<div id="s3wrap">
+
+<div class="rail"><div class="railIn">
+  <button class="rl done can"><b>1</b>Size</button><span class="rsep">—</span>
+  <button class="rl now can"><b>2</b>Artwork</button><span class="rsep">—</span>
+  <button class="rl"><b>3</b>Paper</button><span class="rsep">—</span>
+  <button class="rl"><b>4</b>Finishing</button><span class="rsep">—</span>
+  <button class="rl"><b>5</b>Quantity</button><span class="rsep">—</span>
+  <button class="rl"><b>6</b>Delivery</button>
+</div></div>
+
+<div class="wrap">
+
+  <section class="stage open">
+    <div class="num"><b>1</b><h2>Size &amp; shape</h2></div>
+    <div class="ind">
+      <div class="sizes">
+        <button class="size"><span class="art"><span class="card" style="width:32px;height:45px"></span></span>
+          <span class="cap"><span class="nm">A6</span><span class="dim">105 × 148mm</span><span class="sub">Intimate</span></span></button>
+        <button class="size on"><span class="tick">✓</span><span class="art"><span class="card" style="width:37px;height:52px"></span></span>
+          <span class="cap"><span class="nm">A5</span><span class="dim">148 × 210mm</span><span class="sub">Most popular</span></span></button>
+        <button class="size"><span class="art"><span class="card" style="width:25px;height:52px"></span></span>
+          <span class="cap"><span class="nm">DL</span><span class="dim">99 × 210mm</span><span class="sub">Slim</span></span></button>
+        <button class="size"><span class="art"><span class="card" style="width:42px;height:42px"></span></span>
+          <span class="cap"><span class="nm">Square</span><span class="dim">148 × 148mm</span><span class="sub">Distinctive</span></span></button>
+        <button class="size cant" disabled><span class="art"><span class="card" style="width:52px;height:52px"></span></span>
+          <span class="cap"><span class="nm">Square 210</span><span class="dim">210 × 210mm</span><span class="sub">A statement</span></span></button>
+      </div>
+      <div class="shapeq">
+        <div><div class="lab">Flat or folded</div>
+          <div class="pillrow"><button><i></i>Flat</button><button class="on"><i class="fold"></i>Folded</button></div></div>
+        <div><div class="lab">Which way up</div>
+          <div class="pillrow"><button class="on">Portrait</button><button>Landscape</button></div></div>
+        <div><div class="lab">Printed sides</div>
+          <div class="pillrow"><button class="on">Single sided</button><button>Double sided</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage open">
+    <div class="num"><b>2</b><h2>Your artwork</h2></div>
+    <div class="ind">
+      <div class="drop">
+        <div class="big">Drop your artwork here</div>
+        <div class="sm">One PDF, or several. We will work out what goes where.</div>
+        <button class="btn">Choose a file</button>
+        <div class="spec"><span>A5 folded, portrait</span><span>Single sided</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage open unnumbered">
+    <div class="num"><b>·</b><h2>Choose your range</h2></div>
+    <div class="ind"><div class="feels">
+      <button class="feel signature on"><span class="flag">Most popular</span><span class="tick">✓</span>
+        <span class="sws"><span class="sw" style="background-image:url(/img/paper/uncoated.jpg)"></span><span class="sw" style="background-image:url(/img/paper/silk.jpg)"></span></span>
+        <span class="cap"><span class="nm">Signature</span><span class="sub">Smooth, crisp and substantial. Colour prints sharp and type stays clean.</span>
+          <span class="meta"><span class="cnt">4 papers</span></span></span></button>
+      <button class="feel luxury">
+        <span class="sws"><span class="sw" style="background-image:url(/img/paper/tintoretto.jpg)"></span><span class="sw" style="background-image:url(/img/paper/nettuno.jpg)"></span><span class="sw" style="background-image:url(/img/paper/acquerello.jpg)"></span><span class="sw" style="background-image:url(/img/paper/polardawn.jpg)"></span></span>
+        <span class="cap"><span class="nm">Luxury</span><span class="sub">Italian mill papers with a grain you feel before you read a word. Made by Fedrigoni.</span>
+          <span class="meta"><span class="cnt">4 papers</span></span></span></button>
+      <button class="feel kinder"><span class="flag">Kinder</span>
+        <span class="sws"><span class="sw" style="background-image:url(/img/paper/recycled.jpg)"></span></span>
+        <span class="cap"><span class="nm">Eco</span><span class="sub">Wholly recycled and thick with it, flecked with natural fibre you can see.</span>
+          <span class="meta"><span class="cnt">1 paper</span></span></span></button>
+    </div></div>
+  </section>
+
+  <section class="stage open">
+    <div class="num"><b>3</b><h2>Your paper</h2></div>
+    <div class="ind">
+      <div class="swatches">
+        <span class="sw on" style="background-image:url(/img/paper/uncoated.jpg)"></span>
+        <span class="sw" style="background-image:url(/img/paper/silk.jpg)"></span>
+        <span class="sw" style="background-image:url(/img/paper/cartonboard.jpg)"></span>
+        <span class="sw" style="background-image:url(/img/paper/icewhite.jpg)"></span>
+      </div>
+      <div class="stock">
+        <div class="pic" style="background-image:url(/img/paper/uncoated.jpg)"></div>
+        <div class="info">
+          <div class="nm">Uncoated</div>
+          <div class="ds">No coating at all, so the surface is matt, soft to the touch and faintly toothy. Ink sinks in very slightly, which mutes colour a little and gives printing a quiet, considered look. The easiest of our papers to write on, if guests will be adding a note.</div>
+          <div class="lab" style="margin-top:14px">Thickness</div>
+          <div class="opts"><button class="opt">250gsm</button><button class="opt on">300gsm</button><button class="opt">350gsm</button><button class="opt">400gsm</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage open">
+    <div class="num"><b>4</b><h2>Finishing</h2></div>
+    <div class="ind">
+      <div class="finRow"><button class="finBtn"><span><span class="h">Lamination</span><br><span class="d">A coating that changes the feel.</span></span><span class="v">Not added</span></button></div>
+      <div class="finRow"><button class="finBtn"><span><span class="h">Foiling</span><br><span class="d">A shimmering metallic finish on your design details.</span></span><span class="v">Not added</span></button></div>
+      <div class="finRow"><button class="finBtn"><span><span class="h">Spot UV</span><br><span class="d">A glossy raised highlight on chosen details.</span></span><span class="v">Not added</span></button></div>
+      <div class="finRow cant"><button class="finBtn" disabled><span><span class="h">Corners</span><br><span class="d">Softer in the hand, and less prone to bumping.</span></span><span class="v">Not available</span></button></div>
+    </div>
+  </section>
+
+  <section class="stage open">
+    <div class="num"><b>5</b><h2>Quantity</h2></div>
+    <div class="ind"><div class="qtys">
+      <button class="qty"><span class="n">10</span></button>
+      <button class="qty"><span class="n">25</span></button>
+      <button class="qty"><span class="n">50</span></button>
+      <button class="qty on"><span class="n">100</span></button>
+      <button class="qty"><span class="n">150</span></button>
+      <button class="qty"><span class="n">200</span></button>
+      <button class="qty"><span class="n">250</span></button>
+      <button class="qty"><span class="n">Use</span></button>
+    </div></div>
+  </section>
+
+  <section class="stage open">
+    <div class="num"><b>6</b><h2>When you need them</h2></div>
+    <div class="ind"><div class="dels">
+      <button class="del on"><div class="n">Standard</div><div class="b">Printed, checked and posted.</div><div class="a">Arrives Thu 9 October</div></button>
+      <button class="del"><div class="n">Express</div><div class="b">Straight to the front of the press.</div><div class="a">Arrives Mon 6 October</div></button>
+    </div></div>
+  </section>
+
+</div>
+
+<div class="bar"><div class="barIn">
+  <div class="sum">A5 flat, portrait · <b>Uncoated</b> · 300gsm · no finishing · 100 cards · Standard</div>
+  <div class="tot">£108.00</div>
+  <button class="go-btn">Add to basket</button>
+</div></div>
+
+</div>
+</body></html>
