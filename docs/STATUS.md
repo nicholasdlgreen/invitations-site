@@ -171,11 +171,9 @@ the autovacuum fix from §11 holding.
      limit. Greeting Cards and Postcards state no maximum at all, and their
      configurator offers an "All Over" option. Unknown for the sizes we sell.
 
-   Also recorded: their foil colours are Gold, Silver, Copper, Rose Gold, Red,
-   Blue, Holographic and Green — eight, where we offer three. The swatches for
-   all eight are built (1 October); the five new colours are not yet in
-   finish_types, because that table is read live by the page and adding them
-   widens an offer we still cannot fulfil.
+   **Done 1 October:** all eight of their foils are now ours — Gold, Silver,
+   Copper, Rose Gold, Red, Blue, Holographic and Green, in `finish_types` with
+   a swatch each. We had three.
 
 10. **`delivery.html` publishes delivery prices we do not charge.** Express is
    shown as a flat **£12.00** and Next Day as a flat **£18.00**. Neither is

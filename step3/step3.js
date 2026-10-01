@@ -241,7 +241,29 @@
           }).join('')
         + '</div></div></div></div>';
     }).join('');
+    sizeOpenFinPanel();
     open('s2', true); renumber();
+  }
+
+  // The open panel's height was a fixed 460px in the stylesheet, which is what
+  // the animation needs to slide against. It is also a guillotine: foiling has
+  // nine options, and at phone width they stack one per column and come to
+  // 1,813px — so seven of the eight colours were cut off and could not be
+  // reached at all. It was already too tight for four options before the five
+  // new foils were added.
+  //
+  // The cap is now measured from the content rather than guessed, so the
+  // animation still has something to slide against and nothing is ever hidden
+  // behind it.
+  function sizeOpenFinPanel() {
+    var rows = document.querySelectorAll('#s3wrap .finRow');
+    for (var i = 0; i < rows.length; i++) {
+      var panel = rows[i].querySelector('.finPanel');
+      if (!panel) continue;
+      var inner = panel.firstChild;
+      panel.style.maxHeight = (rows[i].className.indexOf('open') >= 0 && inner)
+        ? (inner.scrollHeight + 2) + 'px' : '';
+    }
   }
 
   // Corners and fold change the SHAPE of the card, not what it is made of, so
