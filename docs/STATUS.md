@@ -5,11 +5,15 @@ generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
 
-**22 commits on 1 October, all pushed** (896 in the repo). The day was almost
+**24 commits on 1 October, all pushed** (898 in the repo). The day was almost
 entirely **foiling**, taken from "we offer it and cannot deliver it" to a thing
 that can be bought on both routes at a price we have actually measured. Two
 faults found along the way had nothing to do with foiling and one of my own
 conclusions had to be withdrawn.
+
+**Where it stopped.** The studio foiling panel is built, tested and committed
+but **not yet tried by Nicholas** — he said he would test it shortly. The last
+commit is `9cfe9b9`. Nothing is waiting on me.
 
 **The foiling thread, in order:**
 
@@ -36,8 +40,11 @@ conclusions had to be withdrawn.
 6. **Foiling in the Design Studio.** A studio customer who chose foiling could
    not complete the order at all — asked for a PDF they cannot make, with Route
    B blind on that route. The studio now builds the foil layer itself from the
-   names it draws, with **zero pixels of registration offset, measured**
-   (§9h).
+   text it draws, with **zero pixels of registration offset, measured** (§9h).
+7. **And then reworked to per-line, the same day.** Choose a colour, then
+   choose which lines are foiled, with their own design on screen showing the
+   contrast. The reassurance panel came out entirely. Two bugs found by running
+   it — NaN bands and a stuck rebuild race — both written up in §9h.
 
 **Two faults found in passing, neither about foiling:**
 
@@ -97,6 +104,12 @@ evidence base for setting them (§14).**
 >   foil choice may hide the five premium papers.
 > - **Uncoated 120gsm is unresolved** (§9g). Ask, do not infer — this is the
 >   same reasoning that got Cartonboard wrong.
+>
+> **Waiting on you, not on me:** try the studio foiling panel. It was built
+> after the last push and has been tested end to end here, but with a
+> **synthetic background** rather than a live Flux generation — that costs an
+> API call. Everything downstream of the background is the real path. One real
+> generation is the check worth doing before trusting it.
 >
 > Nothing on this list is a blocker. Foiling is done for trading purposes.
 
