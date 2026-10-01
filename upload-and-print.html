@@ -5415,24 +5415,25 @@ function foilPickHtml(){
     + '</div></div>';
 }
 
-// The way out of a red. Replace is kept \u2014 it is the right answer for a file we
-// simply could not open \u2014 but it stops being the only one.
+// The way out of a red.
+//
+// Route B would work on EVERY red, including a file we cannot open, because it
+// is built from their artwork and never touches the foil layer at all. It is
+// held back from the last two on purpose: until the fixing has been tested
+// properly we would rather refuse than offer something unproven, and the
+// customer whose export is broken is being told the thing that is actually
+// wrong. To be looked at again in testing \u2014 see docs/STATUS.md item 9.
 function foilWayOutHtml(){
   const L = foilLight();
   if (!L || L.lamp !== 'red' || foilPick) return '';
   const unreadable = foilChecks().some(function(c){
     return c.status === 'err' && (c.label === 'Foil layer' || c.label === 'File type'); });
   if (unreadable)
-    return '<div class="foilOut"><h4>Start again from the template</h4>'
-      + '<p>The template is already the right size for your card, with the trim, bleed '
-        + 'and safe area marked.</p>'
-      + '<div class="row"><button type="button" class="go" onclick="pickFoilLayer()">Choose another file</button>'
-      + '<span class="alt">or <button type="button" onclick="downloadFoilTemplate()">download the '
-      + esc(selectedSize || '') + ' template</button></span></div></div>';
-  return '<div class="foilOut"><h4>Would you like us to make it instead?</h4>'
-    + '<p>You don\u2019t need a second file. Point at the parts of the design you have '
-      + 'already uploaded, and we will build the foil layer from it.</p>'
-    + '<div class="row"><button type="button" class="go" onclick="openFoilPicker()">Make it from my artwork</button>'
+    return '<div class="foilOut"><div class="row">'
+      + '<button type="button" class="go" onclick="pickFoilLayer()">Upload a different file</button>'
+      + '</div></div>';
+  return '<div class="foilOut"><h4>Would you like us to fix it instead?</h4>'
+    + '<div class="row"><button type="button" class="go" onclick="openFoilPicker()">Fix it</button>'
     + '<span class="alt">or <button type="button" onclick="pickFoilLayer()">upload a different file</button></span>'
     + '</div></div>';
 }
@@ -5468,8 +5469,14 @@ function foilBlock(typeName, chosen){
       + '<div class="sm">One PDF. We will check it against your artwork before you pay.</div>'
       + '<button type="button" class="foilBtn" onclick="pickFoilLayer()">Choose a file</button></div>';
   } else {
+    // Replace and "upload a different file" do the same thing. On a red the
+    // second one is directly below, so this one goes: the offer is made once.
+    // On a green or an amber there is nothing below it, and taking it away
+    // would leave no way to change the file at all.
+    const out = foilWayOutHtml();
     body = '<div class="foilFile"><span class="nm">' + esc(foilLayer.file.name) + '</span>'
-      + '<button type="button" class="foilSwap" onclick="pickFoilLayer()">Replace</button></div>'
+      + (out ? '' : '<button type="button" class="foilSwap" onclick="pickFoilLayer()">Replace</button>')
+      + '</div>'
       + foilLightHtml()
       + (foilLayerAccepted() ? foilSummaryHtml(chosen) : '')
       + '<div class="foilChecks">' + foilChecks().map(function(c){
@@ -5479,7 +5486,7 @@ function foilBlock(typeName, chosen){
             + '<div class="check-val">' + c.val + '</div>'
             + '<div class="check-note">' + esc(c.note) + '</div></div></div>';
         }).join('') + '</div>'
-      + foilWayOutHtml();
+      + out;
   }
   return '<div class="foilStep"><div class="foilLab">Your foil layer</div>' + body + '</div>';
 }

@@ -357,13 +357,13 @@ is(artworkPalette(aa, W, H, 6).length, 1,
 // Lying on the line is not enough on its own, and this is the case that says
 // so: a charcoal sits almost exactly on the line from black to the paper and
 // is still a colour somebody chose. What tells a fade from a colour is size.
-var two = card([
+var inkAndCharcoal = card([
   { x: 60, y: 120, w: 160, h: 60, rgb: [38, 46, 62] },
   { x: 60, y: 300, w: 160, h: 60, rgb: [72, 72, 74] }
 ]);
 is(rgbToSegment([72,72,74], [38,46,62], [255,255,255]) <= FOIL_AA_TOL, true,
    'the charcoal does lie on the line from the ink to the paper');
-is(artworkPalette(two, W, H, 6).length, 2,
+is(artworkPalette(inkAndCharcoal, W, H, 6).length, 2,
    'but it is as big as the ink is, so it is a colour and not an edge');
 // Shrink it to the size a real fade would be and it becomes one.
 var edged = card([
@@ -378,6 +378,75 @@ pal.forEach(function (e) {
   var hit = count(extractFoilMask(art, W, H, [e.rgb], FOIL_PICK_TOL));
   is(hit > 0, true, 'the swatch rgb(' + e.rgb.join(',') + ') actually selects something');
 });
+
+print('\nWHAT THE CUSTOMER IS OFFERED, STATE BY STATE');
+// The block itself, cut out of the shipped page and run. These are the three
+// decisions taken on 1 October and they are not derivable from anything else
+// in the file, so they are checked here rather than trusted.
+var PRINT_BLEED_MM = 3, selectedSize = 'A5', foilPick = null, foilBusy = false;
+var foilLayer = null, selectedFinishes = { Foiling: 'Gold' };
+var SIZES = { A5: { mmW: 148, mmH: 210 } };
+function sizeSpec(k){ return SIZES[k] || null; }
+function esc(x){ return String(x).replace(/[&<>"]/g, function(ch){
+  return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[ch]; }); }
+function facesForFoil(){ return 1; }
+function foilSummaryHtml(){ return '<div class="foilSum">summary</div>'; }
+var CHECKS = [];
+function foilChecks(){ return CHECKS; }
+function foilLayerAccepted(){ return !!CHECKS.length && !CHECKS.some(function(c){ return c.status === 'err'; }); }
+eval(grabHost('foilLight'));
+eval(grabHost('foilLightHtml'));
+eval(grabHost('foilWayOutHtml'));
+eval(grabHost('foilBlock'));
+
+function row(status, label){ return { status:status, label:label, val:'v', note:'n' }; }
+function show(checks){
+  CHECKS = checks;
+  foilLayer = { file: { name:'theirs.pdf' } };
+  return foilBlock('Foiling', 'Gold');
+}
+function shows(html, s){ return html.indexOf(s) >= 0; }
+
+var GREEN = [row('ok','Size'), row('ok','Colour'), row('ok','What to foil')];
+var AMBER = GREEN.concat([row('warn','Template guides')]);
+
+print('  \u2014 1. Replace sits where there is nothing below it');
+var green = show(GREEN), amber = show(AMBER);
+is(shows(green, '>Replace<'), true, 'a green keeps Replace: there is no other way to change the file');
+is(shows(amber, '>Replace<'), true, 'and so does an amber, for the same reason');
+is(shows(green, 'foilOut'), false, 'neither has an offer below it');
+
+var red = show([row('ok','Size'), row('err','Colour'), row('ok','What to foil')]);
+is(shows(red, '>Replace<'), false,
+   'a red drops it \u2014 upload a different file is directly below, and the offer is made once');
+is(shows(red, 'upload a different file'), true, 'which is still there');
+
+print('  \u2014 2. Fix it is offered on the three reds we are confident about');
+[['Colour', 'a copy of their artwork'], ['What to foil', 'a blank page'], ['Size', 'the wrong page size']]
+  .forEach(function (c) {
+    var h = show([row('err', c[0])]);
+    is(shows(h, '>Fix it<'), true, 'Fix it is offered for ' + c[1]);
+    is(shows(h, 'Would you like us to fix it instead?'), true, 'under the agreed heading');
+  });
+
+// Route B would work on these two as well \u2014 it is built from their artwork and
+// never opens the foil layer. It is withheld until the fixing has been tested.
+[['Foil layer', 'a file we could not open'], ['File type', 'something that was never a PDF']]
+  .forEach(function (c) {
+    var h = show([row('err', c[0])]);
+    is(shows(h, 'Fix it'), false, 'Fix it is NOT offered for ' + c[1] + ', pending testing');
+    is(shows(h, '>Upload a different file<'), true, 'just the one way on');
+    is(shows(h, '<h4>'), false, 'with no heading');
+    is(shows(h, 'template'), false, 'and no template link');
+  });
+// Mixed: unreadable wins, because the safe answer has to survive company.
+var bothRed = show([row('err','Colour'), row('err','Foil layer')]);
+is(shows(bothRed, 'Fix it'), false, 'one unreadable check is enough to withhold it');
+
+print('  \u2014 3. The description text is gone');
+is(shows(show([row('err','Colour')]), 'You don\u2019t need a second file'), false,
+   'the paragraph under the heading has gone');
+is(show([row('err','Colour')]).match(/<p>/g), null, 'there is no body copy in the block at all');
 
 print('\n' + pass + ' passed, ' + fail + ' failed\n');
 if (fail) throw new Error(fail + ' assertion(s) failed');

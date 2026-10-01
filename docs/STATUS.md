@@ -235,6 +235,25 @@ the autovacuum fix from §11 holding.
    The traffic light from step 2 now sits on the foil layer too, all three
    lamps. **No acknowledgement tick-box on amber** — that was not agreed.
 
+   **The red state, as Nicholas settled it on 1 October.** The offer reads
+   **"Would you like us to fix it instead?"** with a **Fix it** button and no
+   description text under the heading. His reasoning on the wording: "Either we
+   are fixing or we aren't. If we are then Fix it." **Replace is dropped from
+   the red** — "upload a different file" sits directly below it and the offer
+   is only needed once — but **kept on green and amber**, where there is nothing
+   below and removing it would leave no way to change the file at all.
+
+   **Fix it is withheld from two of the five reds, and this is a decision to
+   revisit.** Route B would work on all five: it is built from their artwork
+   and never opens the foil layer, so a file we cannot read is not a file we
+   cannot work around. It is offered on *Colour*, *What to foil* and *Size*,
+   and withheld from *File type* and *Foil layer could not be read*. Nicholas,
+   1 October: "we will need to test that you can fix things and we can't do
+   that now so it is better to reject and be safe and come back to it in
+   testing." **So this is a testing item, not a limitation** — once the fixing
+   has been exercised properly, the two withheld cases should be looked at
+   again, and the code is one branch away from offering all five.
+
    **Still open on foiling:** the pricing; how Route B is offered on the FIRST
    foiling screen rather than only after a failure (parked by Nicholas until
    this is live and tested); and the two questions for PrintedEasy by email —
