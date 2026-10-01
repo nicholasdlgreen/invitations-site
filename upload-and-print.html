@@ -5485,10 +5485,16 @@ function foilBlock(typeName, chosen){
   const w = spec ? Math.round((spec.mmW + 2*PRINT_BLEED_MM) * 10) / 10 : null;
   const h = spec ? Math.round((spec.mmH + 2*PRINT_BLEED_MM) * 10) / 10 : null;
   let body;
+  // A studio design brings its own foil layer. Fetch it the moment foiling is
+  // first chosen — not on page load, because most customers never pick it and
+  // it would be a download nobody asked for.
+  if (studioFoilUrl() && !foilLayer && !foilBusy && !studioFoilTried) loadStudioFoilLayer();
   if (foilPick) {
     body = foilPickHtml();
   } else if (foilBusy) {
     body = '<div class="foilDrop"><div class="sm">Checking your foil layer\u2026</div></div>';
+  } else if (!foilLayer && studioFoilUrl() && !studioFoilTried) {
+    body = '<div class="foilDrop"><div class="sm">Preparing your foil layer\u2026</div></div>';
   } else if (!foilLayer) {
     body = '<div class="foilSpec"><ul>'
       + '<li>A second PDF, the <b>same size as your artwork</b>'
@@ -5514,9 +5520,18 @@ function foilBlock(typeName, chosen){
     // On a green or an amber there is nothing below it, and taking it away
     // would leave no way to change the file at all.
     const out = foilWayOutHtml();
-    body = '<div class="foilFile"><span class="nm">' + esc(foilLayer.file.name) + '</span>'
-      + (out ? '' : '<button type="button" class="foilSwap" onclick="pickFoilLayer()">Replace</button>')
-      + '</div>'
+    // A studio customer never supplied a file, so a filename and a Replace
+    // button would be answering a question they were never asked. They are
+    // told it is done instead.
+    const mine = !!studioFoilUrl() && foilLayerAccepted();
+    body = (mine
+        ? '<div class="foilSum"><span class="disc" style="background:#EAF4EE;color:#5A9E6F;'
+          + 'display:flex;align-items:center;justify-content:center;font-size:13px">&#10003;</span>'
+          + '<span class="tx">Your foil layer is ready'
+          + '<small>Made from the names in your design. Nothing to upload.</small></span></div>'
+        : '<div class="foilFile"><span class="nm">' + esc(foilLayer.file.name) + '</span>'
+          + (out ? '' : '<button type="button" class="foilSwap" onclick="pickFoilLayer()">Replace</button>')
+          + '</div>')
       + foilLightHtml()
       + (foilLayerAccepted() ? foilSummaryHtml(chosen) : '')
       + '<div class="foilChecks">' + foilChecks().map(function(c){
@@ -6086,6 +6101,49 @@ async function useFoilFromArtwork(){
               if (window.Step3 && Step3.redraw) Step3.redraw(); return; }
   foilPick = null;
   await takeFoilLayer(file);
+}
+
+// ── THE STUDIO'S OWN FOIL LAYER ───────────────────────────────────────────
+//
+// A design studio customer has no foil file and no way to make one. Until now
+// choosing foiling here asked them for a 154 x 216mm PDF with the foiled parts
+// in solid black, the basket refused to release without it, and Route B could
+// not rescue them either — it reads the artwork they uploaded, and in studio
+// mode there is no uploaded artwork at all. It was a hard stop.
+//
+// The studio now draws the foil layer itself, in the same pass that draws the
+// names onto the card, and hands over a URL. Nobody is asked for anything.
+//
+// It comes in through the SAME door an uploaded file does: fetched, turned
+// into a File, and handed to takeFoilLayer, so inspectFoilLayer measures it
+// and the same checks judge it. If the studio ever produces something the
+// press could not use, the checks that catch a bad upload catch it here too.
+let studioFoilTried = false;
+
+function studioFoilUrl(){
+  return (designMode && designState && designState.foilLayerUrl) || null;
+}
+
+async function loadStudioFoilLayer(){
+  const url = studioFoilUrl();
+  // Once only. A failed fetch falls back to asking for an upload, and asking
+  // twice would just be a slower way of asking once.
+  if (!url || studioFoilTried || foilLayer || foilBusy) return;
+  studioFoilTried = true;
+  foilBusy = true;
+  if (window.Step3 && Step3.redraw) Step3.redraw();
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const file = new File([blob], 'foil-layer-from-your-design.pdf', { type:'application/pdf' });
+    foilBusy = false;
+    await takeFoilLayer(file);
+  } catch(e){
+    console.warn('[studio-foil] could not load the foil layer:', e.message);
+    foilBusy = false;
+    if (window.Step3 && Step3.redraw) Step3.redraw();
+  }
 }
 
 function pickFoilLayer(){

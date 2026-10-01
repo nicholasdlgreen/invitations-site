@@ -2476,7 +2476,28 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       lines.forEach(function(l){ total += l.mt + l.px*1.32 + l.mb; });
       var y = centreY - total/2;
 
+      // THE FOIL LAYER, built from the very same pass.
+      //
+      // A studio customer has no foil file and no way to make one, and until
+      // now picking foiling on the order page was a dead end: it asked for a
+      // PDF they could not produce and the basket would not release. They do
+      // not need to produce one. We are DRAWING their names, right here, at
+      // known coordinates on a known canvas \u2014 so the same loop can write them
+      // a second time in solid black on white, and that is a foil layer that
+      // lines up by construction rather than by extraction.
+      //
+      // It is built whether or not anyone ever asks for foiling, because it
+      // costs one canvas pass and it means the order page never has to come
+      // back here for anything. Text only: the Flux background is
+      // photographic and no press could make a plate from it.
+      var fcv = document.createElement('canvas');
+      fcv.width = PW; fcv.height = PH;
+      var fctx = fcv.getContext('2d');
+      fctx.fillStyle = '#FFFFFF'; fctx.fillRect(0, 0, PW, PH);
+      fctx.textAlign = 'center';
+
       ctx.textAlign = 'center';
+      var fy = y;                      // the same starting baseline, kept apart
       lines.forEach(function(l){
         y += l.mt;
         var fam = l.italic ? "italic " : "";
@@ -2486,11 +2507,21 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         var txt = l.upper ? l.text.toUpperCase() : l.text;
         ctx.fillText(txt, centreX, y + l.px);
         y += l.px*1.32 + l.mb;
+
+        // and the same line, same font, same x, same baseline, in black
+        fy += l.mt;
+        fctx.font = fam;
+        fctx.fillStyle = '#000000';
+        fctx.fillText(txt, centreX, fy + l.px);
+        fy += l.px*1.32 + l.mb;
       });
 
       // export as JPEG data URL (high quality)
       var dataUrl = cv.toDataURL('image/jpeg', 0.95);
-      callback(dataUrl);
+      // PNG for the foil layer, not JPEG: it is solid black on white and JPEG
+      // would ring every edge with grey, which is exactly what the colour
+      // check on the order page refuses.
+      callback(dataUrl, fcv.toDataURL('image/png'), { pw:PW, ph:PH, trimMmW:trimMmW, trimMmH:trimMmH });
     };
     img.onerror = function(){ callback(null); };
     img.src = bg.src;
@@ -2533,6 +2564,44 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
   // The flattened image is already trim + 3mm bleed at 300 DPI. This wraps it
   // in a PDF page of exactly that size plus a 5mm margin carrying vector crop
   // marks, and records TrimBox/BleedBox so the press knows where to cut.
+  // The foil layer as a PDF, at trim plus bleed and nothing else.
+  //
+  // Deliberately NOT the press page buildAiPrintPdf makes: that one is larger
+  // because it carries crop marks, and the order page's checks measure a foil
+  // layer against the artwork's own size, bleed included. This has to be the
+  // same artefact an uploading customer would hand over \u2014 one page, trim plus
+  // bleed, black on white \u2014 so that the same inspectFoilLayer judges both and
+  // nothing downstream can tell which route made it.
+  function buildStudioFoilPdf(foilDataUrl, sizeKey){
+    var spec = sizeInfo(sizeKey) || sizeInfo('A5') || { dim: '148 \u00d7 210mm' };
+    var mm = (spec.dim || '').match(/(\d+)\s*\u00d7\s*(\d+)/);
+    if (!mm || !foilDataUrl) return Promise.resolve(null);
+    var trimMmW = parseInt(mm[1],10), trimMmH = parseInt(mm[2],10);
+    var MM = 72/25.4, b = 3;
+    return loadPdfLib().then(function(PDFLibRef){
+      var PDFDocument = PDFLibRef.PDFDocument;
+      return dataUrlToBlob(foilDataUrl).arrayBuffer().then(function(buf){
+        return PDFDocument.create().then(function(doc){
+          // embedPng, because the canvas was exported as PNG to keep the
+          // edges clean. A JPEG would grey every edge and the colour check
+          // would refuse it.
+          return doc.embedPng(buf).then(function(img){
+            var pageW = (trimMmW + 2*b) * MM, pageH = (trimMmH + 2*b) * MM;
+            var page = doc.addPage([pageW, pageH]);
+            page.drawImage(img, { x:0, y:0, width:pageW, height:pageH });
+            return doc.save().then(function(bytes){
+              return { blob: new Blob([bytes], { type:'application/pdf' }),
+                       pageMm: { w: trimMmW + 2*b, h: trimMmH + 2*b } };
+            });
+          });
+        });
+      });
+    }).catch(function(e){
+      console.warn('[studio-foil] could not build the foil layer:', e.message);
+      return null;
+    });
+  }
+
   function buildAiPrintPdf(printImageDataUrl, sizeKey){
     var spec = sizeInfo(sizeKey) || sizeInfo('A5') || { dim: '148 × 210mm' };
     var mm = (spec.dim || '').match(/(\d+)\s*×\s*(\d+)/);
@@ -2611,7 +2680,7 @@ function artworkFileName(prefix, ext){
     btn.textContent = 'Preparing your design…';
     btn.disabled = true;
 
-    flattenToPrintFile(function(printImage){
+    flattenToPrintFile(function(printImage, foilImage){
       if(!printImage){ btn.textContent = '↻ Try again'; btn.disabled=false; return; }
 
       // The inside, if they asked for one. Type on the card's own paper, built
@@ -2656,6 +2725,34 @@ function artworkFileName(prefix, ext){
           .catch(function(e){ console.warn('[ai-print-pdf] upload error:', e.message); return { artworkUrl: artworkUrl, printUrl: null }; });
         });
       })
+      // 2b. the foil layer, built from the same text pass and carried along
+      //     whether or not foiling is ever chosen. If anything here fails the
+      //     order page simply asks for an upload, exactly as it does today —
+      //     a missing foil layer must never block a design that is otherwise
+      //     ready to order.
+      .then(function(res){
+        if (!foilImage) return res;
+        return buildStudioFoilPdf(foilImage, size).then(function(built){
+          if (!built) return res;
+          var foilName = artworkFileName('foil-ai', 'pdf');
+          return fetch(SB_URL + '/storage/v1/object/artwork/' + foilName, {
+            method: 'POST',
+            headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+                       'Content-Type': 'application/pdf', 'x-upsert': 'false' },
+            body: built.blob
+          })
+          .then(function(fr){
+            if (fr.ok) {
+              console.log('[studio-foil]', built.pageMm.w + 'x' + built.pageMm.h + 'mm foil layer ready');
+              res.foilLayerUrl = SB_URL + '/storage/v1/object/public/artwork/' + foilName;
+            } else {
+              console.warn('[studio-foil] upload failed:', fr.status);
+            }
+            return res;
+          })
+          .catch(function(e){ console.warn('[studio-foil] upload error:', e.message); return res; });
+        });
+      })
       .then(function(res){
         // 3. make a small thumbnail for display on the order pages
         makeThumb(printImage, function(thumb){
@@ -2681,6 +2778,11 @@ function artworkFileName(prefix, ext){
             insidePrinted: !!insideImage,
             artworkUrl: res.artworkUrl,        // flattened artwork (trim + bleed)
             printArtworkUrl: res.printUrl,     // press-ready PDF at the exact size
+            // The names in solid black on white, at trim plus bleed, drawn in
+            // the same pass that drew them on the card. Carried whether or not
+            // foiling is ever chosen; null if anything went wrong, in which
+            // case the order page falls back to asking for an upload.
+            foilLayerUrl: res.foilLayerUrl || null,
             thumbnail: thumb,                  // small image for display only
             // Every box this product actually has, keyed by its own key. The
             // five read here before were the wedding invitation's, so a

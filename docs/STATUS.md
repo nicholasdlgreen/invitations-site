@@ -453,6 +453,64 @@ the autovacuum fix from §11 holding.
    moves properly with quantity (£66 / £106 / £185 / £308 at 25/100/250/500).
    A sentinel match is a reason to look harder, not a verdict.
 
+9h. **Foiling in the Design Studio — built 1 October (Option B simplified).**
+
+   **The bug.** A studio customer who chose foiling could not complete the
+   order at all. They were offered all eight colours, ungreyed, then asked for
+   "a second PDF, 154 × 216mm, the parts to be foiled in 100% black", and the
+   basket refused to release. Route B could not rescue them either: it reads
+   the uploaded artwork, and in studio mode `sideFiles` is empty. A hard stop,
+   confirmed on the running page before anything was changed.
+
+   **The fact that solved it.** The studio does not hand over a flat picture by
+   accident — it DRAWS the names itself. `flattenToPrintFile` composites the
+   Flux background and then writes the text on top with `ctx.fillText`, at
+   coordinates it has computed. Only the exported JPEG is flat. So the foil
+   layer does not have to be extracted from anything: the same loop writes the
+   same lines a second time, same font, same x, same baseline, in solid black
+   on white.
+
+   **Registration is therefore exact by construction, and was measured rather
+   than asserted.** Rendering the print file over a plain white background so
+   its text could be isolated, and comparing its bounding box with the foil
+   layer's: **0 pixels on all four edges**, 1818 × 2550 both.
+
+   **It is built unconditionally and nobody is asked.** The studio makes it,
+   uploads it beside the artwork, and puts `foilLayerUrl` on the design. On the
+   order page it comes in through the SAME door an uploaded file does — fetched
+   on first sight of a foil choice, turned into a File, handed to
+   `takeFoilLayer` — so `inspectFoilLayer` measures it and the same checks judge
+   it. Measured end to end: 154 × 216mm, black on white, 0.000% off-colour,
+   1.19% of the card, two areas at 84.2 × 34.9mm and 50.8 × 33.9mm, green,
+   accepted, **basket releases**.
+
+   Where an uploader sees a spec list and a drop zone, a studio customer sees
+   **"Your foil layer is ready — made from the names in your design. Nothing to
+   upload."** No filename and no Replace, because they never supplied a file.
+   **Nothing changes for an uploader.**
+
+   **Nicholas's decisions, for the record.** Text only — the Flux background is
+   photographic and no press could plate it. **All or nothing**, not per
+   element. **Nothing asked in the studio**: he was shown the colour-chosen-in-
+   the-studio version and rejected it, because only four of our nine papers can
+   be foiled and the five that cannot are the premium Italian ones, so a foil
+   chosen before the paper always risks being withdrawn. The range pods and the
+   finishing order are untouched; the new behaviour sits inside the existing
+   **Foiling** row, second of four after Lamination.
+
+   **Deliberately NOT built: the template route.** `design-studio-customise.html`
+   produces no print artwork at all, and `design-studio-templates.html` is
+   linked only from itself and from customise — the studio landing page goes
+   straight to the AI route. The whole branch is unreachable without typing a
+   URL. Foiling it would be work on a dead path. **If that branch is ever
+   revived it will need its own foil layer**, and it is the easier of the two:
+   its text is already real SVG elements with ids.
+
+   **Still open:** showing the gold in the studio as a selling layer, which is
+   the Option A he parked. It can be added on top of this without rework, and
+   it carries the decision about whether a foil choice may hide the five
+   premium papers.
+
    **Still open on foiling:** the pricing; how Route B is offered on the FIRST
    foiling screen rather than only after a failure (parked by Nicholas until
    this is live and tested); and the two questions for PrintedEasy by email —

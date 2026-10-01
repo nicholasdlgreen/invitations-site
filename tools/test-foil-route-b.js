@@ -394,6 +394,12 @@ function foilSummaryHtml(){ return '<div class="foilSum">summary</div>'; }
 var CHECKS = [];
 function foilChecks(){ return CHECKS; }
 function foilLayerAccepted(){ return !!CHECKS.length && !CHECKS.some(function(c){ return c.status === 'err'; }); }
+// The studio supplies its own foil layer and foilBlock asks about it. These
+// tests are about the UPLOAD route, so there is none; the studio has its own
+// section at the end of this file.
+var designMode = false, designState = null, studioFoilTried = false;
+function loadStudioFoilLayer(){}
+eval(grabHost('studioFoilUrl'));
 eval(grabHost('foilLight'));
 eval(grabHost('foilLightHtml'));
 eval(grabHost('foilWayOutHtml'));
@@ -447,6 +453,81 @@ print('  \u2014 3. The description text is gone');
 is(shows(show([row('err','Colour')]), 'You don\u2019t need a second file'), false,
    'the paragraph under the heading has gone');
 is(show([row('err','Colour')]).match(/<p>/g), null, 'there is no body copy in the block at all');
+
+print('\nTHE DESIGN STUDIO BRINGS ITS OWN FOIL LAYER');
+// A studio customer has no foil file and no way to make one. Before this,
+// choosing foiling asked them for a 154x216mm PDF with the foiled parts in
+// solid black, the basket refused to release without it, and Route B could not
+// rescue them either \u2014 it reads the artwork they uploaded, and in studio mode
+// there is none. A hard stop, confirmed on the running page.
+function studio(url){
+  designMode = true;
+  designState = { size:'A5', productSlug:'wedding-invitations', foilLayerUrl: url || null };
+  studioFoilTried = false; foilBusy = false; foilLayer = null;
+}
+function uploader(){
+  designMode = false; designState = null; studioFoilTried = false;
+  foilBusy = false; foilLayer = null;
+}
+
+studio('https://example/foil.pdf');
+is(studioFoilUrl(), 'https://example/foil.pdf', 'a studio design carries its foil layer');
+uploader();
+is(studioFoilUrl(), null, 'an uploading customer carries none');
+// designMode and designState are set together on the order page, so a stale
+// designState with the mode off should not be possible \u2014 but it is the kind of
+// thing a half-finished navigation leaves behind, and an uploader must never
+// be handed somebody else's foil layer.
+designMode = false;
+designState = { size:'A5', foilLayerUrl:'https://example/someone-elses.pdf' };
+is(studioFoilUrl(), null,
+   'a leftover design state with the studio mode OFF is ignored');
+uploader();
+
+// While it is being fetched.
+studio('https://example/foil.pdf');
+CHECKS = [];
+var waiting = foilBlock('Foiling', 'Gold');
+is(shows(waiting, 'Preparing your foil layer'), true,
+   'it says it is preparing one rather than asking for a file');
+is(shows(waiting, 'Drop your foil layer here'), false, 'the drop zone is not shown');
+is(shows(waiting, 'Download the'), false, 'and neither is the template');
+
+// Once it has arrived and passed.
+studio('https://example/foil.pdf');
+studioFoilTried = true;
+var ready = show(GREEN);
+is(shows(ready, 'Your foil layer is ready'), true, 'when it is in, they are told it is done');
+is(shows(ready, 'Made from the names in your design'), true, 'and where it came from');
+is(shows(ready, 'Nothing to upload'), true, 'and that there is nothing for them to do');
+is(shows(ready, '>Replace<'), false,
+   'with no Replace button \u2014 they never supplied a file, so there is nothing to replace');
+is(shows(ready, 'theirs.pdf'), false, 'and no filename, for the same reason');
+
+// The uploader is untouched by any of it.
+uploader();
+var up = show(GREEN);
+is(shows(up, '>Replace<'), true, 'an uploading customer still gets Replace');
+is(shows(up, 'theirs.pdf'), true, 'and still sees the name of the file they chose');
+is(shows(up, 'Your foil layer is ready'), false, 'and is never told it was made for them');
+
+// If the studio's layer is refused, it must NOT claim to be ready.
+studio('https://example/foil.pdf');
+studioFoilTried = true;
+var bad = show([row('err','Colour')]);
+is(shows(bad, 'Your foil layer is ready'), false,
+   'a refused layer never says it is ready, whoever made it');
+is(shows(bad, 'Would you like us to fix it instead?'), true,
+   'the red state applies to the studio too \u2014 the checks do not care who made the file');
+
+// And a studio design whose foil layer never got built falls back to the
+// upload flow rather than stranding anyone.
+studio(null);
+var none = foilBlock('Foiling', 'Gold');
+is(shows(none, 'Drop your foil layer here'), true,
+   'no layer url means the normal upload flow, not a dead end');
+is(shows(none, 'Preparing your foil layer'), false, 'and nothing is promised that is not coming');
+uploader();
 
 print('\n' + pass + ' passed, ' + fail + ' failed\n');
 if (fail) throw new Error(fail + ' assertion(s) failed');
