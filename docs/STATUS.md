@@ -102,12 +102,21 @@ the autovacuum fix from §11 holding.
    easy half. Worth doing only if we want tent place cards and table numbers,
    which the market does sell.
 
-8. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+8. **Artwork from people who never order is not deleted.** Agreed 1 October:
+   anything uploaded but never ordered comes out of Supabase storage after
+   **one week**. Since 1 October the artwork and the press file are sent when
+   the customer leaves the file check, not when they press Add to basket, so
+   abandoned baskets now leave files behind. The names are random UUIDs and so
+   unguessable, but the bucket is public and nothing deletes them. **No
+   cleanup job exists.** It needs a scheduled function that lists the bucket
+   and removes anything older than seven days with no order against it.
+
+9. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
    and `test-section-race`. They read fixtures from a scratchpad that no longer
    exists. Small job, but a real failure can hide behind noise that is always
    there.
 
-9. **The migration backups are still in the database.**
+10. **The migration backups are still in the database.**
    `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
    the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
    can put it back. Drop both once the six-box step 3 has bedded in.

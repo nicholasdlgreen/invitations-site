@@ -3436,6 +3436,12 @@ function proceedFromChecks(){
     if (el) setTimeout(function(){ el.scrollIntoView({ behavior:'smooth', block:'center' }); }, 60);
     return;
   }
+  // Here, and only here. This function has four other ways out — an unticked
+  // acknowledgement, a face still missing, a file still unplaced — and none of
+  // them means the customer is happy with their artwork. Pressing on to the
+  // paper is the first moment that does, so it is the first moment worth
+  // spending their connection on.
+  prepareArtworkInBackground();
   goStep(3);
 }
 
@@ -5041,6 +5047,127 @@ function updatePrice(){
   setText('priceTotal', '£'+total.toFixed(2));
 }
 
+// ── THE ARTWORK, PREPARED EARLY ───────────────────────────
+// Measured 1 October: Add to basket took 1.3s for a small flat card and 8.7s
+// for a folded double-sided one — 12.8MB going UP the customer's own
+// connection, on a click that should answer at once. Every other click on the
+// page is under 110ms.
+//
+// None of it can be made faster: the bytes and the connection are what they
+// are. But none of it has to happen THEN. The file cannot change after the
+// customer leaves the file check, and neither can anything the press file is
+// built from — the size, the fold, which way up, the printed sides and where
+// the artwork sits are all settled in steps 1 and 2. The paper, the weight,
+// the finishing and the quantity take no part in it; the builder reads none of
+// them. So the whole job can run while they are choosing those, which is
+// typically half a minute of a connection doing nothing.
+//
+// The guarantee, and the thing to hold this to: the prepared work is used ONLY
+// if a fingerprint of everything it was built from still matches. Otherwise it
+// is thrown away and the work happens at Add to basket exactly as it did
+// before. The worst case is the old behaviour. It cannot send a stale file.
+const ART_BUCKET = 'https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/';
+const ART_PUBLIC = 'https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/public/artwork/';
+const ART_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+
+function _fileId(f){ return f ? (f.name + '/' + f.size + '/' + (f.lastModified || 0)) : ''; }
+
+// Everything the two files are built from. Change any of it — go back and pick
+// a different size, switch flat to folded, turn it landscape, drop a new file,
+// nudge the artwork in the frame — and this string changes with it.
+function artworkFingerprint(){
+  var slots = Object.keys(sideFiles || {}).sort().map(function(k){
+    var e = sideFiles[k] || {};
+    return k + ':' + _fileId(e.file) + ':' + (e.page || '') + ':' + (e.pageRight || '')
+             + ':' + (e.spread ? 'spread' : '');
+  }).join('|');
+  // buildPressFileForAllFaces writes the position on screen into faceAdjust
+  // before it imposes anything, because the face being looked at has not been
+  // saved yet. That means the BUILD changes this fingerprint as a side effect
+  // of running — so the first prepare always looked stale and the work was
+  // thrown away and done again. The same sync is applied here, so this
+  // describes what the builder will use rather than whatever happens to be in
+  // the variable at the moment it is asked.
+  var adj = Object.assign({}, faceAdjust || {});
+  if (typeof sidesNeeded === 'function' && sidesNeeded().length > 1 && activeFace) {
+    adj[activeFace] = Object.assign({}, artworkAdjust || {});
+  }
+  return [ _fileId(currentFile), selectedSize, selectedFold, selectedOrientation,
+           selectedSides, slots,
+           JSON.stringify(adj), JSON.stringify(artworkAdjust || {}) ].join('~');
+}
+
+async function uploadOriginalArtwork(){
+  if (!currentFile) return null;
+  try {
+    const ext = (currentFile.name.split('.').pop() || 'dat').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const name = artworkFileName('artwork', ext);
+    const res = await fetch(ART_BUCKET + name, { method:'POST',
+      headers:{ 'apikey':ART_KEY, 'Authorization':'Bearer '+ART_KEY,
+                'Content-Type': currentFile.type || 'application/octet-stream', 'x-upsert':'true' },
+      body: currentFile });
+    if (res.ok) return ART_PUBLIC + name;
+    console.error('Artwork upload failed:', res.status, await res.text().catch(function(){ return ''; }));
+  } catch(e){ console.error('Artwork upload error:', e.message); }
+  return null;
+}
+
+// Correct size, mirrored 3mm bleed, crop marks, 300 DPI. Returns the geometry
+// as well as the URL, because the basket line records what was imposed.
+async function buildAndUploadPressFile(){
+  if (!currentFile || designMode) return { url:null, geom:null };
+  try {
+    const built = await buildPressFileForAllFaces(selectedSize);
+    if (!built) return { url:null, geom:null };
+    const name = artworkFileName('print', 'pdf');
+    const res = await fetch(ART_BUCKET + name, { method:'POST',
+      headers:{ 'apikey':ART_KEY, 'Authorization':'Bearer '+ART_KEY,
+                'Content-Type':'application/pdf', 'x-upsert':'true' },
+      body: built.blob });
+    if (!res.ok) { console.error('[print-raster] upload failed:', res.status); return { url:null, geom:null }; }
+    console.log('[print-pdf] built', built.pageMm.w + 'x' + built.pageMm.h + 'mm page for', selectedSize);
+    return { url: ART_PUBLIC + name, geom: built };
+  } catch(e){ console.error('[print-raster] error:', e.message); }
+  return { url:null, geom:null };
+}
+
+async function _doPrepareArtwork(){
+  const art = await uploadOriginalArtwork();
+  const press = await buildAndUploadPressFile();
+  return { artworkUrl: art, printUrl: press.url, geom: press.geom };
+}
+
+// What has been prepared, and what it was prepared from. A promise, not a
+// result: Add to basket may be pressed while this is still in flight, and it
+// must wait on the same job rather than starting a second one.
+let _preparedArtwork = null;
+
+// Called when the customer leaves the file check, which is the first moment we
+// know they are happy with what they uploaded. Never for the design studio,
+// which reaches step 3 by its own route and uploads its own SVG.
+function prepareArtworkInBackground(){
+  if (designMode || !currentFile) return;
+  const fp = artworkFingerprint();
+  if (_preparedArtwork && _preparedArtwork.fp === fp) return;   // in hand, or in flight
+  const job = _doPrepareArtwork();
+  job.catch(function(){});   // a failure here is not an error on this screen
+  _preparedArtwork = { fp: fp, job: job };
+}
+
+// Used by Add to basket. Prepared work if it is still valid, otherwise the
+// work done here and now.
+async function artworkForBasket(){
+  if (_preparedArtwork && _preparedArtwork.fp === artworkFingerprint()) {
+    try {
+      const r = await _preparedArtwork.job;
+      // A prepare that came back with nothing is a failed upload, not a
+      // completed one. Try again here rather than ordering without artwork.
+      if (r && r.artworkUrl) return r;
+    } catch(e){ /* fall through and do it now */ }
+  }
+  return _doPrepareArtwork();
+}
+
 async function addToCartUpload(){
   const paper=CONFIG.papers.find(p=>p.id===selectedPaper)||CONFIG.papers[0];
 
@@ -5090,49 +5217,22 @@ async function addToCartUpload(){
   if (selectedFinish && selectedFinish !== 'None') paperLabel += ' · ' + selectedFinish;
   paperLabel += envLabel;
 
-  // Upload the artwork to storage NOW, while currentFile is still in memory.
-  // (Going to checkout navigates to a fresh page where currentFile is lost —
-  //  that's why the artwork was coming through NULL. Uploading here and storing
-  //  the URL in the cart item means it survives navigation, like the AI route.)
-  var uploadedArtworkUrl = null;
-  if (currentFile) {
-    try {
-      const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
-      const fileName=artworkFileName('artwork', (currentFile.name.split('.').pop()||'dat').replace(/[^a-zA-Z0-9]/g,'').toLowerCase());
-      const uploadRes=await fetch(`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/${fileName}`,{method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':currentFile.type||'application/octet-stream','x-upsert':'true'},body:currentFile});
-      if(uploadRes.ok){
-        uploadedArtworkUrl=`https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/public/artwork/${fileName}`;
-      } else {
-        console.error('Artwork upload failed:', uploadRes.status, await uploadRes.text().catch(()=> ''));
-      }
-    } catch(e){ console.error('Artwork upload error:', e.message); }
-  }
-
-  // Build the press-ready version now, while the file is still in memory:
-  // correct size, mirrored 3mm bleed, crop marks, 300 DPI.
-  var uploadedPrintUrl = null, printSpec = null;
-  if (currentFile && !designMode) {
-    try {
-      const built = await buildPressFileForAllFaces(selectedSize);
-      if (built) {
-        const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
-        const pName = artworkFileName('print', 'pdf');
-        const pRes = await fetch('https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/artwork/' + pName, {method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/pdf','x-upsert':'true'},body:built.blob});
-        if (pRes.ok) {
-          uploadedPrintUrl = 'https://jvcpzmumkyjdyibmwlsd.supabase.co/storage/v1/object/public/artwork/' + pName;
-          printSpec = { trimMm: built.trimMm, pageMm: built.pageMm, rasterPx: built.rasterPx,
+  // The artwork and the press file. Prepared in the background when the
+  // customer left the file check, if nothing they depend on has changed since;
+  // otherwise done here and now, exactly as this always did.
+  const _art = await artworkForBasket();
+  var uploadedArtworkUrl = _art.artworkUrl;
+  var uploadedPrintUrl = _art.printUrl;
+  // The finishes are recorded on the spec but take no part in building it, so
+  // they are read here, where they are final, rather than at prepare time.
+  var printSpec = _art.geom ? { trimMm: _art.geom.trimMm, pageMm: _art.geom.pageMm,
+                        rasterPx: _art.geom.rasterPx,
                         finishes: Object.assign({}, selectedFinishes || {}),
                         fold: selectedFold || 'flat',
                         orientation: selectedOrientation || 'portrait',
                         printedSides: selectedSides || 'single',
-                        faces: panelsNeeded().map(function(k){ return PANEL_LABEL[k] || k; }) };
-          console.log('[print-pdf] built', built.pageMm.w + 'x' + built.pageMm.h + 'mm page for', selectedSize);
-        } else {
-          console.error('[print-raster] upload failed:', pRes.status);
-        }
-      }
-    } catch(e){ console.error('[print-raster] error:', e.message); }
-  }
+                        faces: panelsNeeded().map(function(k){ return PANEL_LABEL[k] || k; }) }
+                   : null;
 
   // What the price was based on. The server recalculates from this and refuses
   // anything cheaper than it should be — otherwise a tampered cart could buy a
