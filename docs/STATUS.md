@@ -371,9 +371,56 @@ the autovacuum fix from §11 holding.
    with the supplier's own page, and with the nil-versus-price test above,
    before touching a catalogue entry.
 
-   The 280gsm board is roughly four times the price of the 255 for a 12%
-   thickness increase. That is their pricing, not an error of ours, and we do
-   not sell it.
+   **What the 280 actually costs, measured properly on 1 October.** The first
+   pass said "roughly four times the price for a 12% thickness increase".
+   Nicholas did not believe it — "it will be more, but not 4 times" — and asked
+   for it to be re-run across several products with the spec held identical.
+   He was right. The number was real; the explanation was wrong.
+
+   **It is a fixed charge of about £90, not a paper cost.** Postcards, A5,
+   single sided:
+
+   | qty | 255 | 280 | gap | gap per card |
+   |---|---|---|---|---|
+   | 1 | £23 | £117 | **+£94** | £94.00 |
+   | 25 | £24 | £117 | +£93 | £3.72 |
+   | 100 | £29 | £119 | +£90 | £0.90 |
+   | 500 | £48 | £132 | +£84 | £0.17 |
+   | 2500 | £143 | £201 | **+£58** | £0.02 |
+
+   **The gap SHRINKS as the run grows.** A heavier paper would do the opposite —
+   more sheets, more cost. Shrinking is the signature of a setup fee. The same
+   shape holds on greeting-cards, where the premium falls from 194% at one card
+   to **10% at 2500** — and 10% is almost exactly the weight difference, so that
+   is the real paper cost and everything above it is the fee. Double sided is
+   the same shape with a larger fee (+£143 at 25, +£78 at 2500).
+
+   **The board itself is only ~10% heavier**, from their own reply, not
+   inferred: `thicknessPerItem` 400 → 450 micron, and `totalWeight` for the job
+   0.793kg → 0.870kg, which is +9.8% and matches 255 → 280 exactly.
+
+   **Two things that look wrong on their side, worth knowing before anyone
+   buys 280.** The marginal cost runs backwards — pricing the last 1,500 cards
+   of a 2,500 run, 255 costs £0.048 a card and 280 costs £0.036, so the heavier
+   board is cheaper at the margin, which cannot be right for paper. And several
+   add-ons return NEGATIVE prices on 280: HD printing, Pantone and RGB all come
+   back as −119, which is minus the order total. That is the same fault
+   signature as their broken All Over foiling option (9c).
+
+   **Our stored costs were checked against their live list and are exact.**
+   All 24 sampled combinations — both families, A5/A6/DL, 25/100/250/500 — match
+   list × 0.80 to the penny. Nothing was changed.
+
+   | | flat-card A5 | folded-card A5 |
+   |---|---|---|
+   | x25 | £19.20 | £40.80 |
+   | x100 | £23.20 | £46.40 |
+   | x250 | £28.00 | £58.40 |
+   | x500 | £38.40 | £76.80 |
+
+   **If 280 is ever wanted:** about £90 on the order whatever the size, then
+   roughly 10% more paper. Unsellable below a few hundred, reasonable at
+   volume. Every figure above reproduced on a second independent session.
 
 9g. **Uncoated 120gsm — unresolved, deliberately.** It was listed above as a
    fallback on the same reasoning that got Cartonboard wrong, so it does not
