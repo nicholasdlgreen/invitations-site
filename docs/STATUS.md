@@ -151,8 +151,31 @@ the autovacuum fix from §11 holding.
    the foiled area, is the one we could answer exactly. Staged plan in the
    1 October review.
 
+   **Two rules to confirm with PrintedEasy by email.** Their site answers one
+   of the three questions a foil step has to answer and not the other two:
+
+   - **Does the foil sit over the print, or replace it?** Answered: over. Their
+     words are that the foil guide "fits directly over the top of" the main
+     print, and they ask for two PDFs, not three. So the customer's artwork is
+     unchanged and there is no third file. printed.com by contrast want the
+     foiled elements removed from the print file — we follow our printer.
+   - **Is there a minimum size of detail?** Not published anywhere on their
+     site: no foiling guide, nothing in the artwork checklist, nothing in the
+     FAQs. **We are using 7pt, which is the trade norm and my recommendation,
+     not their figure.** It needs confirming before it is printed on the page
+     as a rule, because refusing a customer's artwork on a number we invented
+     is worse than not checking.
+   - **What is the maximum foiled area?** Their Business Cards page says "the
+     maximum Foiling area is 90mm x 60mm", which is about the size of a
+     business card — so it reads as the whole card rather than a universal
+     limit. Greeting Cards and Postcards state no maximum at all, and their
+     configurator offers an "All Over" option. Unknown for the sizes we sell.
+
    Also recorded: their foil colours are Gold, Silver, Copper, Rose Gold, Red,
-   Blue, Holographic and Green. Our three are all genuinely on that list.
+   Blue, Holographic and Green — eight, where we offer three. The swatches for
+   all eight are built (1 October); the five new colours are not yet in
+   finish_types, because that table is read live by the page and adding them
+   widens an offer we still cannot fulfil.
 
 10. **`delivery.html` publishes delivery prices we do not charge.** Express is
    shown as a flat **£12.00** and Next Day as a flat **£18.00**. Neither is

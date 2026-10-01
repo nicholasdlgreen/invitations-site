@@ -272,8 +272,21 @@
         + 'linear-gradient(145deg,' + a + ' 0%,' + b + ' 26%,' + c + ' 48%,' + b + ' 64%,' + d + ' 100%)';
     }
     if (/foil/i.test(type)) {
+      // The eight foils PrintedEasy actually run, read off their own colour
+      // list on 1 October. We offered three of them.
       if (/rose/.test(o))   return metal('#8E5745', '#F6D6C6', '#D08E74', '#7E4A39');
       if (/silver/.test(o)) return metal('#6F757D', '#FBFCFD', '#C3C9D0', '#666C74');
+      if (/copper/.test(o)) return metal('#6F3317', '#F4C9A4', '#C0713F', '#5E2B12');
+      if (/red/.test(o))    return metal('#6E101B', '#F8B9BF', '#C32C3B', '#5C0C16');
+      if (/blue/.test(o))   return metal('#0F2F57', '#BFD9F7', '#2A6CB4', '#0B2446');
+      if (/green/.test(o))  return metal('#114027', '#C2E8CF', '#2B8955', '#0D3320');
+      // Holographic is not one metal. It is a sheen that changes with the
+      // angle, so a single linear ramp reads as a flat colour and lies about
+      // what arrives. The hue sweep is the honest picture of it.
+      if (/holo/.test(o))
+        return 'background:'
+          + 'radial-gradient(circle at 33% 25%,rgba(255,255,255,.92) 0%,rgba(255,255,255,.30) 28%,rgba(255,255,255,0) 54%),'
+          + 'conic-gradient(from 210deg,#8FD9E8,#C7A8E8,#F2A8C4,#F6D79B,#BFE8A8,#8FD9E8)';
       return metal('#7E6018', '#FBEFC2', '#CBA52B', '#6E5414');
     }
     if (/spot/i.test(type))
