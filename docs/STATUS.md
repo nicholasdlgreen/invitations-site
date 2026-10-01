@@ -333,50 +333,64 @@ the autovacuum fix from §11 holding.
    Not fixed here; this job was foiling. **13 active products can fold and
    offer Corners.**
 
-9f. **Cartonboard: the product mapping is right, the WEIGHT is wrong.**
-   Checked 1 October, both sides of the question.
+9f. **Cartonboard: CORRECTED — there was never anything wrong with it.**
+   An earlier version of this entry said we sell Scancote at a weight
+   PrintedEasy do not price. **That was wrong.** Nicholas asked for it to be
+   re-reviewed before anything was changed, and the re-review overturned it.
+   Nothing was changed, which is the only reason this is a note and not an
+   incident.
 
-   **Ours:** Cartonboard is offered on **18 active products** — effectively the
-   whole card range — across both `flat-card` and `folded-card`. We list exactly
-   one weight: **255gsm**.
+   **What is actually true.** Their stock called `cartonboard` is shown to
+   customers as **SCANCOTE**, and it is offered in **two** weights, both real:
+   **255gsm (400 micron)** and **280gsm (450 micron)**. 255 is their default.
+   **We sell 255gsm. That is correct.** They carry it on postcards and
+   greeting-cards, which are exactly the two routes we buy those families
+   through, so the mapping was never in question either.
 
-   **Theirs:** they carry it on **postcards and greeting-cards**, which are
-   precisely the two routes `ROUTES` already sends those families to. They call
-   it **SCANCOTE** on screen; `cartonboard` is only the form value. It is on
-   neither luxury route nor flyers. **So the product mapping is correct and
-   nothing needs re-routing.**
+   | postcards, A5 | x25 | x100 | x250 | x500 | |
+   |---|---|---|---|---|---|
+   | cartonboard 255 | £24 | £29 | £35 | £48 | real — their default, and ours |
+   | cartonboard 280 | £117 | £119 | £124 | £132 | real — the heavier board |
+   | cartonboard 250 / 350 / 400 | nil | nil | nil | nil | not Scancote weights |
+   | silk 280 | nil | nil | nil | nil | not a Silk weight |
 
-   **The weight is the fault.** Their own menu offers 250/300/350/400 for
-   Scancote — verified by clicking it as a customer, with the click confirmed
-   to have registered — and the endpoint prices **none of them**. The only
-   weight that returns a real price is **280gsm**, which their menu never
-   shows. Eight independent confirmations:
+   **The test that settles it:** an invalid stock-and-weight pair returns
+   **nil**, not a substitute. Silk at 280 is nil; Scancote at 250, 350 and 400
+   are nil. Both Scancote weights return a price, with a sensible curve. So
+   both are real.
 
-   | A5 | x25 | x100 | x250 | x500 |
-   |---|---|---|---|---|
-   | postcards 280gsm | £117 | £119 | £124 | £132 |
-   | postcards 255gsm | £24 | £29 | £35 | £48 |
-   | postcards sentinel 999 | £24 | £29 | £35 | £48 |
-   | greeting-cards 280gsm | £145 | £151 | £159 | £175 |
-   | greeting-cards 255gsm | £51 | £58 | £73 | £96 |
-   | greeting-cards sentinel 999 | £51 | £58 | £73 | £96 |
+   **How the wrong conclusion was reached, because it will happen again.** The
+   999 sentinel returned the same figure as 255 — and the sentinel rule says
+   distrust anything that matches it. But 999 falls back to the stock's
+   **default weight**, and for Scancote the default IS 255. So the sentinel was
+   returning 255's genuine price and the rule condemned a real product.
 
-   255gsm equals the nonsense sentinel at **every quantity on both routes**,
-   while 280gsm is distinct and roughly four times higher. So every Cartonboard
-   rate we hold is a default the endpoint substituted, not a quote — and it is
-   a cheap default, so the real stock costs about **4x what we think**.
+   **This is the exact blind spot written up in 9c an hour earlier, after Ice
+   White tripped the same wire.** The warning was recorded and then walked into
+   anyway. The rule is now: **a sentinel match is never a verdict.** Confirm
+   with the supplier's own page, and with the nil-versus-price test above,
+   before touching a catalogue entry.
 
-   This also means `FAMILY_SPEC['folded-card']` in `printedeasy_finishes.py`
-   measures every folded-card finishing uplift against Cartonboard 255 — a
-   substitution. The uplifts may survive it, since both sides of the difference
-   use the same substituted base, but it is not a sound footing. Foiling is
-   deliberately measured on Silk 300 instead.
+   The 280gsm board is roughly four times the price of the 255 for a 12%
+   thickness increase. That is their pricing, not an error of ours, and we do
+   not sell it.
 
-   **Nothing changed pending Nicholas's decision.** The options are to move
-   Cartonboard to 280gsm, or to drop it, and either way it wants confirming
-   with PrintedEasy that 280 is the Scancote they actually stock.
+9g. **Uncoated 120gsm — unresolved, deliberately.** It was listed above as a
+   fallback on the same reasoning that got Cartonboard wrong, so it does not
+   get asserted here. The facts: their postcards page offers Uncoated at
+   250/300/350/400 and not 120, yet 120 returns a price (£22/£24/£29/£34 at
+   25/100/250/500) — cheaper than 250 at every rung, which is what a lighter
+   stock should be. The 999 sentinel returns exactly 120's figures, but here it
+   is falling back to the LOWEST weight rather than the default, so the match
+   proves nothing either way. **Ask PrintedEasy whether 120gsm Uncoated is
+   buyable on the postcards route.** It is one minor line — "Featherweight",
+   for inserts.
 
-9d. **Two catalogue faults found while probing, neither about foiling.**
+9d. **SUPERSEDED — see 9f and 9g.** Both "faults" below were read off a
+   sentinel match and both were wrong or unproven. Kept only so the reasoning
+   can be followed; **neither was acted on**.
+
+   ~~Two catalogue faults found while probing, neither about foiling.~~
    - **Cartonboard: we sell 255gsm and PrintedEasy only price 280gsm.** On both
      postcards and greeting-cards, 255 returns exactly the 999-sentinel price
      while 280 returns a distinct, much higher one (£119 and £151 against £29
