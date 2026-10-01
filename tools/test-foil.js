@@ -101,6 +101,12 @@ function grabHost(name) {
   return HTML.slice(i, k + 1);
 }
 var foilLayer = null;
+// foilChecks works out what the layer SHOULD be from the card as it stands,
+// so the harness has to know what card we are on.
+var PRINT_BLEED_MM = 3;
+var selectedSize = 'A5';
+var SIZES = { 'A5': { mmW:148, mmH:210 }, 'A6': { mmW:105, mmH:148 } };
+function sizeSpec(k){ return SIZES[k] || null; }
 eval(grabHost('foilChecks'));
 eval(grabHost('foilLayerAccepted'));
 
@@ -151,7 +157,6 @@ print('\nHOW MANY AREAS, AND HOW BIG');
 // "Areas" cannot mean marks. Charlotte & James is sixteen marks and one area
 // to anyone looking at the card, and the printer's tiers are One, Two, Three,
 // Foil on Foil, All Over — places on the card, not letters.
-var PRINT_BLEED_MM = 3;
 eval(grabHost('measureFoilAreas'));
 
 // A page of RGBA pixels, white, with black rectangles painted on it.
@@ -229,6 +234,33 @@ is(/conic-gradient/.test(foilDotStyle('Holographic')), true,
    'and holographic is a sweep here too, not a flat pastel');
 is(foilDotStyle('Champagne'), foilDotStyle('Gold'),
    'an unrecognised foil falls back to gold rather than to no dot at all');
+
+print('\nTHE VERDICT IS MADE NOW, NOT WHEN THE FILE ARRIVED');
+// The customer can go back from the rail and change the size. The foil layer
+// they already gave us is then the wrong size, but the verdict was frozen at
+// upload time: an A5 layer sailed through on an A6 card and the basket
+// released.
+selectedSize = 'A5';
+foilLayer = layer();                       // a 154 x 216mm layer, right for A5
+is(foilLayerAccepted(), true, 'the layer is right for the card it was made for');
+selectedSize = 'A6';                       // they go back and change the size
+is(foilLayerAccepted(), false,
+   'and wrong for the card once the size has changed underneath it');
+is(statuses()[0], 'err:Size', 'which is said as a size fault');
+is(/111 \u00d7 154mm/.test(foilChecks()[0].note), true,
+   'quoting what the layer should be for the NEW size, not the old one');
+selectedSize = 'A5';
+is(foilLayerAccepted(), true, 'and right again if they change back');
+is(/r\.want\.w/.test(HTML), false,
+   'the size captured at upload time is never used for the verdict');
+
+print('\nNO COLOUR, NO FOIL');
+// Switching to a paper that cannot be foiled clears the colour but keeps the
+// uploaded layer in hand, which is right. What was not right: the order then
+// carried a foil spec with no colour, and a foil plate the press would have
+// made for a job with no foiling in it.
+is(/const colour = selectedFinishes && selectedFinishes\['Foiling'\];\n  if \(!colour \|\| String\(colour\)\.toLowerCase\(\) === 'none'\) return null;/.test(HTML),
+   true, 'no foil spec at all unless a colour is actually chosen');
 
 print('\nWHAT REACHES THE ORDER');
 is(/foil\.url = await uploadFoilLayer\(\);/.test(HTML), true,

@@ -5245,13 +5245,21 @@ function foilChecks(){
     return [{ status:'err', label:'Foil layer', val:'Could not be read',
               note:'We could not open this PDF. Try exporting it again, or start from the template.' }];
   }
-  if (r.want && r.pageMm) {
-    const near = Math.abs(r.pageMm.w - r.want.w) <= 1 && Math.abs(r.pageMm.h - r.want.h) <= 1;
+  // What the card is NOW, not what it was when the file was dropped. The
+  // customer can go back and change the size from the rail, and the foil layer
+  // they already gave us is then the wrong size — but the verdict was frozen
+  // at upload time, so an A5 layer sailed through on an A6 card and the basket
+  // released. The measurements below stay as they were read; only the
+  // judgement is made again.
+  const now = sizeSpec(selectedSize);
+  const want = now ? { w: now.mmW + 2*PRINT_BLEED_MM, h: now.mmH + 2*PRINT_BLEED_MM } : r.want;
+  if (want && r.pageMm) {
+    const near = Math.abs(r.pageMm.w - want.w) <= 1 && Math.abs(r.pageMm.h - want.h) <= 1;
     out.push(near
       ? { status:'ok', label:'Size', val: mm(r.pageMm.w)+' \u00d7 '+mm(r.pageMm.h)+'mm',
           note:'Matches your artwork, bleed included.' }
       : { status:'err', label:'Size', val: mm(r.pageMm.w)+' \u00d7 '+mm(r.pageMm.h)+'mm',
-          note:'Your artwork is '+mm(r.want.w)+' \u00d7 '+mm(r.want.h)+'mm with bleed. The foil layer has to '
+          note:'Your artwork is '+mm(want.w)+' \u00d7 '+mm(want.h)+'mm with bleed. The foil layer has to '
              + 'be the same, or it will not line up. Start from the template.' });
   }
   const pct = n => (n * 100 < 0.1 ? '<0.1' : (n * 100).toFixed(1)) + '%';
@@ -5321,12 +5329,19 @@ function foilBlock(typeName, chosen){
 // What we worked out, said back in one line. It is also every answer the
 // printer's form asks for, which is the point of the whole step.
 function foilSummary(){
+  // A colour has to be chosen. Switching to a paper that cannot be foiled
+  // clears the choice but leaves the uploaded layer in hand, which is right —
+  // switch back and it is still there. What was not right is that the order
+  // then carried a foil spec with no colour and a foil plate the press would
+  // have made for a job with no foiling in it.
+  const colour = selectedFinishes && selectedFinishes['Foiling'];
+  if (!colour || String(colour).toLowerCase() === 'none') return null;
   if (!foilLayer || !foilLayerAccepted()) return null;
   const r = foilLayer.report;
   const areas = r.areas || [];
   if (!areas.length) return null;
   return {
-    colour: selectedFinishes && selectedFinishes['Foiling'],
+    colour: colour,
     areas: areas.map(function(a){ return { wMm:a.wMm, hMm:a.hMm }; }),
     bleeds: !!r.bleeds,
     coverage: Math.round(r.dark * 1000) / 10,
