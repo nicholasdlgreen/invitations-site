@@ -1773,13 +1773,27 @@ function totalFinishSell() {
   Object.keys(selectedFinishes || {}).forEach(typeName => {
     const opt = selectedFinishes[typeName];
     if (!opt || String(opt).toLowerCase() === 'none') return;
-    // null means "this route cannot be charged for that", which the finishing
-    // section should already have prevented. Skip it rather than letting it
-    // turn the whole basket total into NaN.
+    // null means "this route cannot be charged for that". It is still skipped
+    // rather than allowed to turn the total into NaN — but skipping it is no
+    // longer the end of the story: unpricedFinish() below reports it and the
+    // basket refuses. The old comment said the finishing section "should
+    // already have prevented" this, and for a year under the wizard it did not.
     const v = lookupFinishSell(typeName, opt);
     if (typeof v === 'number' && isFinite(v)) sum += v;
   });
   return sum;
+}
+
+// A finish that is selected and cannot be priced on this route. Returns its
+// name, or null when everything chosen has a price.
+function unpricedFinish() {
+  const names = Object.keys(selectedFinishes || {});
+  for (let i = 0; i < names.length; i++) {
+    const opt = selectedFinishes[names[i]];
+    if (!opt || String(opt).toLowerCase() === 'none') continue;
+    if (lookupFinishSell(names[i], opt) === null) return names[i];
+  }
+  return null;
 }
 
 // Every lamination option on this site is specified "both sides" — that is what
@@ -4427,18 +4441,44 @@ function step3Finishes(paperName){
   // unavailable instead of being dropped, so the step can grey it. The rule
   // that decides it is unchanged — this only stops the answer being invisible.
   if (NEW_WIZARD) {
+    // What this paper can take AND what this ROUTE can be charged for. The
+    // second half was missing, and it cost real money: the printer does not
+    // round the corners of a creased card, so there is no folded-card rate,
+    // and a folded order was offered Corners anyway. lookupFinishSell did its
+    // job and returned null; totalFinishSell skips a null; the customer paid
+    // NOTHING for a £16.80 operation. Measured on the live page, 1 October.
+    //
+    // The pre-wizard branch below has always filtered on finishPricedOn. The
+    // wizard branch did not, and the wizard is now on for everything — so
+    // turning it on reopened a hole that had been closed. Same rule, applied
+    // in both places, so there is one answer to the question and not two.
+    const priceable = (t, o) => !o.name || o.name.toLowerCase() === 'none'
+                              || finishPricedOn(t.name, o.name, fam);
+    // A row is only usable if something on it is a real CHOICE that can be
+    // charged for. Corners is why the second half is needed: its free default
+    // is called "Square", not "None", and a free default has no ladder row of
+    // its own, so it fails open and makes the whole row look usable while the
+    // only option worth money cannot be sold. Same two-part rule as the
+    // pre-wizard branch below.
+    const realChoice = (t, o) => o.name && o.name.toLowerCase() !== 'none'
+                              && (!finishHasLadder(t.name) || optionHasLadder(t.name, o.name))
+                              && priceable(t, o);
     const usable = new Set();
     (CONFIG.finishTypes || []).forEach(t => {
       const n = (t.name || '').toLowerCase().trim();
       if (n === 'fold') return;
       if (caps.includes(n) && (!allowed.length || allowed.includes(n))
-          && (t.options || []).some(o => o.name && o.name.toLowerCase() !== 'none')) usable.add(t.name);
+          && (t.options || []).some(o => realChoice(t, o))) usable.add(t.name);
     });
     return (CONFIG.finishTypes || [])
       .filter(t => (t.name || '').toLowerCase().trim() !== 'fold')
       .filter(t => !allowed.length || allowed.includes((t.name || '').toLowerCase().trim()))
       .filter(t => (t.options || []).some(o => o.name && o.name.toLowerCase() !== 'none'))
-      .map(t => Object.assign({}, t, { unavailable: !usable.has(t.name) }));
+      // The option itself goes too, not just the row's badge. Leaving Rounded
+      // selectable under a greyed heading is how it got bought for nothing.
+      .map(t => Object.assign({}, t, {
+        options: (t.options || []).filter(o => priceable(t, o)),
+        unavailable: !usable.has(t.name) }));
   }
   return (CONFIG.finishTypes || [])
     // Which way the card opens is not a question we can ask, because it is not
@@ -5546,6 +5586,11 @@ function foilDotStyle(opt){
 // press has nothing to make the plate from. The basket button says so rather
 // than taking the money and leaving it for someone to notice later.
 function addBlockedReason(){
+  // Anything selected that this route cannot be charged for comes first: it is
+  // the one failure that would otherwise go through quietly, at a price that
+  // left the work out.
+  const unpriced = unpricedBlockReason();
+  if (unpriced) return unpriced;
   const chosen = selectedFinishes && selectedFinishes['Foiling'];
   if (!chosen || String(chosen).toLowerCase() === 'none') return null;
   // Busy comes first. takeFoilLayer sets it BEFORE it has a report to store,
@@ -5555,6 +5600,18 @@ function addBlockedReason(){
   if (!foilLayer) return 'Add your foil layer';
   if (!foilLayerAccepted()) return 'Fix your foil layer';
   return null;
+}
+
+// The basket's second line of defence. The finishing section should no longer
+// offer a finish this route cannot be charged for — but if one is ever
+// selected anyway, through a stale choice or a payload that changed under the
+// customer, the order must not go through at a price that silently left it out.
+function unpricedBlockReason() {
+  const name = unpricedFinish();
+  // Proposed wording, not yet agreed. It should never be seen — the finishing
+  // section greys the row and removes the option — so it exists to stop an
+  // order completing, not to be read.
+  return name ? name + ' is not available on this card' : null;
 }
 
 // How many faces this piece has. A flat card has one; a folded card has a

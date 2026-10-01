@@ -202,6 +202,12 @@ is(measure([{ x: 60, y: 100, w: 30, h: 8 }]).bleeds, false, 'while one in the mi
 
 print('\nWHAT THE BASKET WAITS FOR');
 var selectedFinishes = {};
+// addBlockedReason now asks unpricedBlockReason first, so a finish this route
+// cannot be charged for stops the order before the foiling checks are reached.
+var selectedFinishes = { Foiling: 'Gold' };
+function lookupFinishSell(){ return 0; }   // priced; the foiling checks are what this suite is about
+eval(grabHost('unpricedFinish'));
+eval(grabHost('unpricedBlockReason'));
 eval(grabHost('addBlockedReason'));
 foilLayer = null; foilBusy = false;
 selectedFinishes = {};

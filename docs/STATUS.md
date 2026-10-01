@@ -308,6 +308,74 @@ the autovacuum fix from §11 holding.
    common case — one area, one side, a card size, up to 500. It is wrong for
    both sides (the charge rises by a third) and for A4 at volume.
 
+9e. **A folded card is charged NOTHING for rounded corners. 13 products.**
+   Found 1 October while reviving `test-route-gating`, and confirmed on the
+   real published payload in the live page, not in a fixture:
+
+   | wedding invitation, Silk, A5, x100 | Corners shown? | charged | our cost |
+   |---|---|---|---|
+   | flat | yes | **£16.80** | £16.80 |
+   | folded | **yes, ungreyed** | **£0.00** | £16.80 |
+
+   The printer does not offer rounded corners on a creased card, so there is no
+   `folded-card` rate. `lookupFinishSell` correctly returns **null** — that part
+   was fixed earlier and still works — but `totalFinishSell` **skips a null**,
+   so the charge silently becomes zero.
+
+   The thing that used to prevent it was `step3Finishes` filtering on
+   `finishPricedOn`, which refused to offer a finish the route cannot be
+   charged for. **That filter exists only in the pre-wizard branch.** The
+   wizard branch marks a finish unavailable from the PAPER's capabilities alone
+   and never asks about the route — and the wizard is now on for everything. So
+   turning the wizard on reopened a hole that had been closed, and the one test
+   that guarded it was among the three that had stopped running.
+
+   Not fixed here; this job was foiling. **13 active products can fold and
+   offer Corners.**
+
+9f. **Cartonboard: the product mapping is right, the WEIGHT is wrong.**
+   Checked 1 October, both sides of the question.
+
+   **Ours:** Cartonboard is offered on **18 active products** — effectively the
+   whole card range — across both `flat-card` and `folded-card`. We list exactly
+   one weight: **255gsm**.
+
+   **Theirs:** they carry it on **postcards and greeting-cards**, which are
+   precisely the two routes `ROUTES` already sends those families to. They call
+   it **SCANCOTE** on screen; `cartonboard` is only the form value. It is on
+   neither luxury route nor flyers. **So the product mapping is correct and
+   nothing needs re-routing.**
+
+   **The weight is the fault.** Their own menu offers 250/300/350/400 for
+   Scancote — verified by clicking it as a customer, with the click confirmed
+   to have registered — and the endpoint prices **none of them**. The only
+   weight that returns a real price is **280gsm**, which their menu never
+   shows. Eight independent confirmations:
+
+   | A5 | x25 | x100 | x250 | x500 |
+   |---|---|---|---|---|
+   | postcards 280gsm | £117 | £119 | £124 | £132 |
+   | postcards 255gsm | £24 | £29 | £35 | £48 |
+   | postcards sentinel 999 | £24 | £29 | £35 | £48 |
+   | greeting-cards 280gsm | £145 | £151 | £159 | £175 |
+   | greeting-cards 255gsm | £51 | £58 | £73 | £96 |
+   | greeting-cards sentinel 999 | £51 | £58 | £73 | £96 |
+
+   255gsm equals the nonsense sentinel at **every quantity on both routes**,
+   while 280gsm is distinct and roughly four times higher. So every Cartonboard
+   rate we hold is a default the endpoint substituted, not a quote — and it is
+   a cheap default, so the real stock costs about **4x what we think**.
+
+   This also means `FAMILY_SPEC['folded-card']` in `printedeasy_finishes.py`
+   measures every folded-card finishing uplift against Cartonboard 255 — a
+   substitution. The uplifts may survive it, since both sides of the difference
+   use the same substituted base, but it is not a sound footing. Foiling is
+   deliberately measured on Silk 300 instead.
+
+   **Nothing changed pending Nicholas's decision.** The options are to move
+   Cartonboard to 280gsm, or to drop it, and either way it wants confirming
+   with PrintedEasy that 280 is the Scancote they actually stock.
+
 9d. **Two catalogue faults found while probing, neither about foiling.**
    - **Cartonboard: we sell 255gsm and PrintedEasy only price 280gsm.** On both
      postcards and greeting-cards, 255 returns exactly the 999-sentinel price

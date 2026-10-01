@@ -223,8 +223,11 @@ class PrintedEasy:
             if m:
                 f['_token'] = m.group(1)
             # The Scodix upsells carry their own confirmation dance and would
-            # add foiling to every probe. Foiling is a flat setup charge priced
-            # separately, so they stay off.
+            # add foiling to every probe, so they are stripped here and set
+            # back explicitly by scrape_foiling() when foiling is the thing
+            # being measured. Stripping them was also why foiling could not be
+            # priced at all until 1 October: every probe silently removed the
+            # fields that carry it.
             for k in list(f):
                 if k.startswith('scodix') or k in ('spot-uv-price', 'foil-price', 'spot-uv-remove',
                                                    'foiling-remove', 'spot-uv-remove-foiling'):
@@ -249,6 +252,154 @@ class PrintedEasy:
             return float(v)
         except (TypeError, ValueError):
             return None
+
+    def reply(self, slug, **over):
+        """The whole reply. Foiling needs `scodixFoilPostPrice` out of it, and
+        needs to see `error` — their All Over option returns a server error
+        with a NEGATIVE price, which differencing would have recorded as a
+        discount."""
+        body = {k: ('' if v is None else str(v)) for k, v in {**self.form(slug), **over}.items()}
+        req = urllib.request.Request(
+            f'{BASE}/product/pricing/{slug}', data=urllib.parse.urlencode(body).encode(),
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                     'X-Requested-With': 'XMLHttpRequest', 'User-Agent': UA,
+                     'Referer': f'{BASE}/products/{slug}'})
+        time.sleep(DELAY)
+        try:
+            return json.loads(self.op.open(req, timeout=40).read().decode())
+        except Exception:
+            return {}
+
+
+# ── FOILING ───────────────────────────────────────────────────────────────
+#
+# Measured 1 October 2026, 269 probes, every figure reproduced on a second run.
+# Foiling is not scraped by the generic loop above for three reasons:
+#
+# 1. **It is read, not differenced.** Their reply carries `scodixFoilPostPrice`,
+#    which is 0 with foiling off and exactly the delta with it on. The generic
+#    loop differences two whole-pound prices and carries the +/-1 pound noise
+#    the module docstring warns about; this does not.
+#
+# 2. **One probe answers for eight colours.** Their price does not vary by foil
+#    colour — nor by coverage percent (1, 2, 3, 4, 5, 7, 10, 25, 50 all
+#    identical), build height, common-or-different guide, or bleed. Every one of
+#    those was walked. So the foiled AREA is not a cost input to them, and one
+#    measurement is written out across the colours we sell.
+#
+# 3. **It is sold on the front only.** Our foil layer is a single page at the
+#    finished size, which can only be the front panel, so `applies_to` is
+#    'front' and the probe asks for one side. Both sides is dearer (+21 pounds
+#    at 25, +26 at 100, +35 at 250) and we do not sell it. If we ever do, it is
+#    a second applies_to, not a change to this one.
+#
+# What DOES move their price, for whenever this is revisited: sides, three
+# areas rather than one or two (one and two cost the same), and quantity once
+# past 250-500 on the larger sheets.
+#
+# "All Over" is not probed. It returns `{"error": "Undefined array key \"\""}`,
+# a zero total and a NEGATIVE foil price. That is a fault on their endpoint, not
+# a price, and it is the 0.00 pounds that was once mistaken for foiling being
+# free.
+
+FOIL_COLOURS = ['Gold', 'Silver', 'Copper', 'Rose Gold', 'Red', 'Blue',
+                'Holographic', 'Green']
+
+# The one spec the charge is measured at: foiling on, one side, one area, the
+# cheapest coverage. Every other field was proven not to move the price.
+FOIL_FIELDS = {'scodix_foil': 'true', 'scodix_foil_sides': '1',
+               'scodix_foil_different_guide': 'false',
+               'scodix_foil_number_of_areas': '1',
+               'scodix_foil_build_height': 'flat',
+               'scodix_foil_coverage_percent': '1',
+               'foil-price': 'no', 'showScodix': '1',
+               'scodix_spotUV': ''}
+
+# Where foiling can be bought at all.
+#
+# Only two routes. It is absent from luxury-flat and luxury-folded entirely
+# (`showScodix=0`, no scodix fields in the form), which is why the Italian
+# papers take no foiling on our side either — and ROUTES sends our
+# **folded-leaflet** family to luxury-folded, so that family cannot be foiled
+# either. Listing it here would have scraped a product with no foiling field
+# and recorded whatever came back, which is exactly how a pile of free
+# lamination rows got in once before.
+FOIL_FAMILIES = {'flat-card', 'folded-card'}
+
+# The generic FAMILY_SPEC prices folded-card on Cartonboard 255gsm, which the
+# 1 October probes showed is a weight PrintedEasy do not sell: it returns the
+# same price as a nonsense 999, while 280gsm returns a distinct and much higher
+# one. Foiling is measured on a stock proven real instead, so the figure cannot
+# rest on a substitution. The generic loop's own use of 255 is a separate
+# question and is written up in STATUS.
+FOIL_BASE_STOCK = {'flat-card': ('silk', '300'), 'folded-card': ('silk', '300')}
+
+# The sizes foiling is SOLD on, which is not the list the generic loop uses.
+# flat-card sells foiling on the business card size (place cards) and
+# FAMILY_SPEC does not list it.
+#
+# This matters more than it looks. Once ANY Foiling row exists,
+# lookupFinishSell treats the ladder as the only answer: a size the ladder does
+# not cover returns null and the finish is WITHDRAWN rather than falling back
+# to the flat figure. So a size missing from here does not quote a little
+# wrong — it stops being offered at all. Taken from
+# product_types.available_sizes on 1 October, for every active product whose
+# available_finishes include Foiling.
+FOIL_SIZES = {'flat-card':   ['A6', 'A5', 'DL', 'Square', 'Square-210', 'business-card'],
+              'folded-card': ['A6', 'A5', 'DL', 'Square']}
+
+
+def scrape_foiling(pe, families, ladder):
+    """The foiling charge, after the 20% discount, per family/size/quantity."""
+    rows, skipped, notes = [], [], []
+    for family in families:
+        if family not in FOIL_FAMILIES:
+            notes.append(f'{family}: PrintedEasy do not foil on this route')
+            continue
+        slug = ROUTES[family]
+        stock, gsm = FOIL_BASE_STOCK[family]
+        for our_size in FOIL_SIZES[family]:
+            for qty in ladder:
+                f = {'quantity': str(qty), 'stock-finish': stock,
+                     'stock-weight': gsm, 'printed-sides': 'single'}
+                f.update(size_fields(slug, our_size))
+                # The plain job first, so a spec they do not sell is not
+                # recorded as a foiling price.
+                plain = pe.reply(slug, **f, **{'scodix_foil': '', 'scodix_spotUV': ''})
+                base = plain.get('totalSellingPrice')
+                try:
+                    base = float(base)
+                except (TypeError, ValueError):
+                    base = 0.0
+                if base <= 0:
+                    skipped.append(f'{family} {our_size} x{qty}: the plain job is not sold')
+                    continue
+                d = pe.reply(slug, **f, **FOIL_FIELDS)
+                if d.get('error'):
+                    skipped.append(f'{family} {our_size} x{qty}: {d["error"]}')
+                    continue
+                try:
+                    charge = float(d.get('scodixFoilPostPrice'))
+                except (TypeError, ValueError):
+                    skipped.append(f'{family} {our_size} x{qty}: no foiling figure in the reply')
+                    continue
+                # A finish cannot make a job cheaper, and cannot be free.
+                if charge <= 0:
+                    skipped.append(f'{family} {our_size} x{qty}: foiling came back at {charge}')
+                    continue
+                total = float(d.get('totalSellingPrice') or 0)
+                if abs(total - base - charge) > 0.011:
+                    skipped.append(f'{family} {our_size} x{qty}: {charge} does not reconcile '
+                                   f'against {base} -> {total}')
+                    continue
+                cost = round(charge * 0.80, 2)
+                for colour in FOIL_COLOURS:
+                    rows.append({'supplier_family': family, 'finish_name': 'Foiling',
+                                 'option_name': colour, 'applies_to': 'front',
+                                 'size': our_size, 'quantity': qty, 'cost': cost})
+            print(f'foiling {family} {our_size}: {len(rows)} rows so far, '
+                  f'{len(skipped)} skipped', flush=True)
+    return rows, skipped, notes
 
 
 def size_fields(slug, our_size):
@@ -297,13 +448,21 @@ def main():
 
     ladder = QUICK_LADDER if a.quick else FULL_LADDER
     families = [a.only] if a.only else list(FAMILY_SPEC)
+    # Foiling is not in FINISHES: it is measured by scrape_foiling() below, on
+    # its own terms. --finish foiling therefore runs that and nothing else —
+    # and `generic` turns the loop below off entirely rather than letting it
+    # walk every family, size and quantity fetching base prices for a list of
+    # finishes that is now empty. The first run did exactly that and spent
+    # several minutes printing "0 rates" before it reached the foiling.
     finishes = [a.finish] if a.finish else list(FINISHES)
+    finishes = [f for f in finishes if f in FINISHES]
+    generic = bool(finishes)
 
     pe = PrintedEasy()
     rows, skipped, errors, substitutes, notoffered = [], [], [], set(), set()
     everMoved = set()
 
-    for family in families:
+    for family in (families if generic else []):
         slug = ROUTES.get(family)
         if not slug:
             errors.append(f'{family}: no route')
@@ -376,6 +535,17 @@ def main():
     rows = [r for r in rows if r['_key'] in everMoved]
     for r in rows:
         r.pop('_key', None)
+
+    # Foiling is measured on its own terms — read from the reply rather than
+    # differenced, one probe answering for eight colours, front only. See
+    # scrape_foiling().
+    if not a.finish or a.finish == 'foiling':
+        frows, fskip, fnotes = scrape_foiling(pe, families, ladder)
+        rows.extend(frows)
+        skipped.extend(fskip)
+        for n in fnotes:
+            notoffered.add(n)
+        print(f'\nfoiling: {len(frows)} rates, {len(fskip)} skipped')
 
     print(f'\nFINISHED {len(rows)} rates, {len(skipped)} not offered, {len(errors)} errors')
     if notoffered:
