@@ -101,6 +101,35 @@ body.wide-step .step-bar{display:none;}
       font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);
       border:1px solid var(--gold);border-radius:60px;padding:10px 20px;background:transparent;cursor:pointer;}
     #s3wrap .foilTmpl:hover{background:var(--gold);color:#fff;}
+    /* The way out of a red, and Route B's own panel. */
+    #s3wrap .foilOut{border:1px solid var(--gold-lt);background:#FDFAF5;border-radius:14px;
+      padding:18px 20px;margin-top:12px;}
+    #s3wrap .foilOut h4{font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;
+      font-size:19px;color:var(--text);margin-bottom:6px;}
+    #s3wrap .foilOut p{font-size:13px;color:var(--soft);line-height:1.75;margin-bottom:14px;}
+    #s3wrap .foilOut .row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+    #s3wrap .foilOut .go{font-family:inherit;font-size:12px;letter-spacing:.12em;
+      text-transform:uppercase;background:var(--gold);color:#fff;border:0;border-radius:999px;
+      padding:12px 24px;cursor:pointer;}
+    #s3wrap .foilOut .go[disabled]{background:#E3D8CB;color:#8A7868;cursor:default;}
+    #s3wrap .foilOut .alt{font-size:12.5px;color:var(--soft);}
+    #s3wrap .foilOut .alt button{font-family:inherit;font-size:12.5px;color:var(--gold);
+      background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0;}
+    /* The artwork, to be pointed at. A chequer behind it so a design with
+       white in it still reads as a card rather than as nothing. */
+    #s3wrap .foilPick canvas{display:block;width:100%;height:auto;border-radius:8px;
+      border:1px solid var(--border);cursor:crosshair;margin-bottom:12px;background:
+      repeating-conic-gradient(#F4EFE9 0% 25%,#FFFFFF 0% 50%) 50%/16px 16px;}
+    #s3wrap .pickSw{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px;}
+    #s3wrap .pickSw .sw{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);
+      cursor:pointer;padding:0;}
+    /* The ring was the gold, which on the gold swatch was a gold ring round a
+       gold circle and could not be seen at all. A white gap and a dark ring
+       read against every colour a design can contain. */
+    #s3wrap .pickSw .sw.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--text);border-color:transparent;}
+    #s3wrap .pickSay{font-size:13.5px;color:var(--soft);line-height:1.6;margin-bottom:6px;}
+    #s3wrap .pickSay.ok{color:var(--text);}
+    #s3wrap .pickNote{font-size:11.5px;color:var(--pale);line-height:1.6;margin-bottom:14px;}
     html.wizard-new #s3wrap .rl.now{box-shadow:inset 0 -1px 0 0 var(--tier,var(--gold));}
     @media(max-width:768px){
       html.wizard-new .step-label{display:inline;}
@@ -4561,6 +4590,10 @@ function step3Adapter(){
     // draws whatever comes back.
     foilBlock: foilBlock,
     addBlocked: addBlockedReason,
+    // Route B's panel holds a canvas, and the finishing body is redrawn by
+    // replacing its innerHTML — which destroys it. Painted back here, after
+    // every redraw, rather than hoping one never happens.
+    afterPaint: paintFoilPick,
     // Nothing after. The journey the mockup settles is the seven from the size
     // to the delivery; the basket and the checkout are what happens once it is
     // finished, and putting them in made nine steps that wrapped to four rows
@@ -5309,6 +5342,101 @@ function foilLayerAccepted(){
 }
 
 // What step 3 draws inside the Foiling row, once a colour has been chosen.
+// The verdict, in the words the artwork check already uses at step 2. One
+// light on this site, not two that say the same thing differently.
+function foilLight(){
+  const c = foilChecks();
+  if (!c.length) return null;
+  let err = 0, warn = 0, pass = 0;
+  c.forEach(function(x){ if (x.status === 'err') err++; else if (x.status === 'warn') warn++; else pass++; });
+  if (err) return { lamp:'red', head: err + (err === 1 ? ' thing to fix' : ' things to fix'),
+                    sub: (warn ? warn + ' more to check \u00b7 ' : '') + pass + ' passed' };
+  if (warn) return { lamp:'amber', head: warn + (warn === 1 ? ' thing to check' : ' things to check'),
+                     sub: pass + ' of ' + c.length + ' checks passed' };
+  return { lamp:'green', head:'Good to foil',
+           sub: c.length + ' checks \u00b7 nothing needs your attention' };
+}
+
+function foilLightHtml(){
+  const L = foilLight();
+  if (!L) return '';
+  return '<div class="check-light"><div class="tl-lamps" role="img" aria-label="' + esc(L.head) + '">'
+    + ['red','amber','green'].map(function(k){
+        return '<i class="tl-lamp ' + k + (L.lamp === k ? ' on' : '') + '"></i>'; }).join('')
+    + '</div><div class="tl-words"><strong>' + esc(L.head) + '</strong>'
+    + '<span>' + esc(L.sub) + '</span></div></div>';
+}
+
+// Route B's panel. Only offered on a red: amber passes, and a customer who has
+// already made a layer does not need us to make one for them.
+function foilPickHtml(){
+  if (!foilPick) return '';
+  if (foilPick.failed)
+    return '<div class="foilOut"><h4>We could not read your artwork</h4>'
+      + '<p>Something went wrong opening the design you uploaded. Please upload a foil layer instead.</p>'
+      + '<div class="row"><button type="button" class="go" onclick="closeFoilPicker()">Back</button></div></div>';
+  if (foilPick.busy || !foilPick.art)
+    return '<div class="foilOut"><h4>Opening your artwork\u2026</h4></div>';
+
+  const v = foilPick.verdict;
+  const pct = function(n){ return (n * 100 < 0.1 ? '<0.1' : (n * 100).toFixed(1)) + '%'; };
+  let say, ok = false;
+  if (!foilPick.targets.length) say = 'Click a part of your design, or pick a colour below.';
+  else if (!v || v.reason === 'nothing')  say = 'Almost none of your design is that colour. Try another part.';
+  else if (v.reason === 'speckled')
+    say = 'This is thousands of tiny flecks rather than shapes \u2014 a photograph or a '
+        + 'shaded area. The press cannot make a foil plate from it.';
+  else { ok = true;
+         say = pct(v.coverage) + ' of the card \u00b7 '
+             + v.marks + (v.marks === 1 ? ' area' : ' areas'); }
+
+  return '<div class="foilOut foilPick">'
+    + '<h4>Which parts should be foiled?</h4>'
+    + '<p>Click the parts of your design you want in foil. Everything that colour is '
+      + 'picked up, wherever it appears on the card.</p>'
+    + '<canvas id="foilPickCv" onclick="foilPickAt(event)"></canvas>'
+    + (foilPick.palette.length
+        ? '<div class="pickSw">' + foilPick.palette.map(function(e){
+            const on = foilPick.targets.some(function(t){
+              const dr = t[0]-e.rgb[0], dg = t[1]-e.rgb[1], db = t[2]-e.rgb[2];
+              return dr*dr + dg*dg + db*db <= FOIL_PICK_TOL*FOIL_PICK_TOL; });
+            return '<button type="button" class="sw' + (on ? ' on' : '') + '" '
+              + 'onclick="toggleFoilTarget(' + e.rgb.join(',') + ')" '
+              + 'style="background:rgb(' + e.rgb.join(',') + ')"></button>';
+          }).join('') + '</div>'
+        : '')
+    + '<div class="pickSay' + (ok ? ' ok' : '') + '">' + esc(say) + '</div>'
+    + '<div class="pickNote">The colour on screen only shows where the foil goes. '
+      + 'The foil itself is a mirror finish and cannot be shown on a screen.</div>'
+    + '<div class="row">'
+    + '<button type="button" class="go"' + (ok ? '' : ' disabled')
+      + ' onclick="useFoilFromArtwork()">Use this foil layer</button>'
+    + '<span class="alt">or <button type="button" onclick="closeFoilPicker()">go back</button></span>'
+    + '</div></div>';
+}
+
+// The way out of a red. Replace is kept \u2014 it is the right answer for a file we
+// simply could not open \u2014 but it stops being the only one.
+function foilWayOutHtml(){
+  const L = foilLight();
+  if (!L || L.lamp !== 'red' || foilPick) return '';
+  const unreadable = foilChecks().some(function(c){
+    return c.status === 'err' && (c.label === 'Foil layer' || c.label === 'File type'); });
+  if (unreadable)
+    return '<div class="foilOut"><h4>Start again from the template</h4>'
+      + '<p>The template is already the right size for your card, with the trim, bleed '
+        + 'and safe area marked.</p>'
+      + '<div class="row"><button type="button" class="go" onclick="pickFoilLayer()">Choose another file</button>'
+      + '<span class="alt">or <button type="button" onclick="downloadFoilTemplate()">download the '
+      + esc(selectedSize || '') + ' template</button></span></div></div>';
+  return '<div class="foilOut"><h4>Would you like us to make it instead?</h4>'
+    + '<p>You don\u2019t need a second file. Point at the parts of the design you have '
+      + 'already uploaded, and we will build the foil layer from it.</p>'
+    + '<div class="row"><button type="button" class="go" onclick="openFoilPicker()">Make it from my artwork</button>'
+    + '<span class="alt">or <button type="button" onclick="pickFoilLayer()">upload a different file</button></span>'
+    + '</div></div>';
+}
+
 function foilBlock(typeName, chosen){
   if (!/foil/i.test(typeName)) return '';
   if (!chosen || String(chosen).toLowerCase() === 'none') return '';
@@ -5316,7 +5444,9 @@ function foilBlock(typeName, chosen){
   const w = spec ? Math.round((spec.mmW + 2*PRINT_BLEED_MM) * 10) / 10 : null;
   const h = spec ? Math.round((spec.mmH + 2*PRINT_BLEED_MM) * 10) / 10 : null;
   let body;
-  if (foilBusy) {
+  if (foilPick) {
+    body = foilPickHtml();
+  } else if (foilBusy) {
     body = '<div class="foilDrop"><div class="sm">Checking your foil layer\u2026</div></div>';
   } else if (!foilLayer) {
     body = '<div class="foilSpec"><ul>'
@@ -5340,6 +5470,7 @@ function foilBlock(typeName, chosen){
   } else {
     body = '<div class="foilFile"><span class="nm">' + esc(foilLayer.file.name) + '</span>'
       + '<button type="button" class="foilSwap" onclick="pickFoilLayer()">Replace</button></div>'
+      + foilLightHtml()
       + (foilLayerAccepted() ? foilSummaryHtml(chosen) : '')
       + '<div class="foilChecks">' + foilChecks().map(function(c){
           const ic = c.status === 'ok' ? '&#10003;' : c.status === 'err' ? '&#10007;' : '!';
@@ -5347,13 +5478,12 @@ function foilBlock(typeName, chosen){
             + '<div class="check-label">' + esc(c.label) + '</div>'
             + '<div class="check-val">' + c.val + '</div>'
             + '<div class="check-note">' + esc(c.note) + '</div></div></div>';
-        }).join('') + '</div>';
+        }).join('') + '</div>'
+      + foilWayOutHtml();
   }
   return '<div class="foilStep"><div class="foilLab">Your foil layer</div>' + body + '</div>';
 }
 
-// What we worked out, said back in one line. It is also every answer the
-// printer's form asks for, which is the point of the whole step.
 function foilSummary(){
   // A colour has to be chosen. Switching to a paper that cannot be foiled
   // clears the choice but leaves the uploaded layer in hand, which is right —
@@ -5512,6 +5642,386 @@ async function downloadFoilTemplate(){
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
   } catch(e){ console.error('[foil] could not build the template:', e.message); }
+}
+
+// ── ROUTE B: THE FOIL LAYER MADE FROM THEIR OWN ARTWORK ───────────────────
+//
+// Route A asks for a second PDF. Plenty of people cannot make one, and until
+// now the answer to that was "Replace" — go away, learn, come back. This is
+// the other way through, and it needs no second file at all: the artwork is
+// already in hand from step 2, two steps before foiling is even offered.
+//
+// The question it asks is WHICH PARTS of their design to foil, never what
+// colour the foil is. The foil colour is one of the eight PrintedEasy run and
+// is already chosen upstairs — the foil block does not render without it. So
+// a customer who points at a black monogram gets a GOLD monogram, because gold
+// is what they picked. The colour it happens to be in their file is nothing
+// but a way of pointing at it.
+//
+// Pointing by colour is the right handle because wedding artwork is nearly
+// always flat colour: the monogram is one colour and the names another, so
+// pointing at the monogram picks it up everywhere it appears, including the
+// small repeats nobody would mask by hand.
+//
+// What it produces is EXACTLY what Route A produces — a PDF foil layer at
+// trim plus bleed — and it is handed to the same inspectFoilLayer and judged
+// by the same checks. Nothing downstream knows which route made it. If it ever
+// makes something bad, the checks that catch a bad upload catch it too.
+
+// How close a pixel has to be to something they pointed at. Straight RGB
+// distance, which tops out at 441.
+//
+// It is here to absorb JPEG noise and slight unevenness within what is one
+// colour to the eye — nothing more. It started at 64, which sounds modest and
+// is not: a warm gold and a muted sage sit 62 apart, so pointing at the
+// monogram foiled the leaves as well. It cannot be opened up to chase the
+// anti-aliased edge of lettering either, because that edge runs the whole way
+// to white and no tolerance reaches it without swallowing the design. The
+// mask lands a shade inside the printed edge, which is the right side to be
+// on: foil tucked under the print rather than overhanging it.
+const FOIL_PICK_TOL  = 36;
+// Below this and nothing was really picked.
+const FOIL_MIN_COVER = 0.0005;
+// A mark smaller than this is a fleck, not a shape. PrintedEasy will not foil
+// type below 7pt, which is about 2.5mm, so a square millimetre is already
+// generous.
+const FOIL_SPECK_MM2 = 1;
+// And if most of what they picked is flecks, it is a photograph or a gradient,
+// not a foil design. No plate can be made from it.
+const FOIL_SPECK_SHARE = 0.5;
+// How near a colour has to sit to the line between a real colour and the paper
+// before it is taken for the fade at the edge of lettering rather than a
+// colour of its own. Tight on purpose: a fade lands ON that line, within a
+// shade or two, while a colour that merely looks similar is tens away.
+const FOIL_AA_TOL    = 18;
+// Lying on that line is not enough on its own. A charcoal grey sits almost
+// exactly on the line from black to the paper and is still a colour someone
+// chose; so does an ivory on the line from blush. What separates a fade from a
+// colour is SIZE — a fade is a thin band around a shape and cannot be a large
+// part of the shape it edges, whereas a second colour in the design usually is.
+const FOIL_AA_SHARE  = 0.34;
+// What share of the picked pixels may sit on an edge. This is the measure that
+// tells grain from shapes, and it is here because the grid below could not:
+// photographic grain is finer than one cell, so every cell registered a hit
+// and a dusting of noise came through as one solid block covering 79% of the
+// card. A monogram is mostly middle; grain is all edge and no middle.
+const FOIL_EDGE_SHARE = 0.6;
+// No foil design has this many separate marks on one card. Grain has tens of
+// thousands, so once the count passes here the answer is settled.
+const FOIL_MAX_MARKS  = 5000;
+
+// Is this pixel one of the ones they pointed at?
+function foilPixelMatches(r, g, b, targets, tol){
+  for (let i = 0; i < targets.length; i++){
+    const t = targets[i];
+    const dr = r - t[0], dg = g - t[1], db = b - t[2];
+    if (dr*dr + dg*dg + db*db <= tol*tol) return true;
+  }
+  return false;
+}
+
+// One byte per pixel: 1 where the foil goes.
+function extractFoilMask(data, w, h, targets, tol){
+  const mask = new Uint8Array(w * h);
+  if (!targets || !targets.length) return mask;
+  for (let i = 0, px = 0; px < mask.length; i += 4, px++){
+    if (foilPixelMatches(data[i], data[i+1], data[i+2], targets, tol)) mask[px] = 1;
+  }
+  return mask;
+}
+
+// Can a plate be made from this, and how much of the card is it?
+//
+// The share of the foil that sits in flecks is the number that matters. A
+// photograph picked by colour dusts the whole card in single pixels that look
+// like coverage in a total and are nothing on a plate. Coverage alone cannot
+// tell those apart, so it is not asked to.
+function maskVerdict(mask, w, h, pageMm){
+  // Everything here is counted at FULL resolution. The first version used the
+  // coarse grid the area measurement uses, and a real photograph walked
+  // straight through it: grain is finer than a grid cell, so every cell took a
+  // hit, tens of thousands of specks fused into one solid mark, and 79% of the
+  // card came back as a legitimate All Over. A grid cannot be asked about the
+  // smallest thing on the page.
+  let hits = 0, edge = 0;
+  for (let y = 0; y < h; y++){
+    for (let x = 0; x < w; x++){
+      const i = y*w + x;
+      if (!mask[i]) continue;
+      hits++;
+      if (x === 0 || y === 0 || x === w-1 || y === h-1
+          || !mask[i-1] || !mask[i+1] || !mask[i-w] || !mask[i+w]) edge++;
+    }
+  }
+  const coverage = hits / (w * h);
+  const edgeShare = hits ? edge / hits : 0;
+  const nil = { coverage, edgeShare, speckShare:0, marks:0, ok:false, reason:'nothing' };
+  if (!hits) return nil;
+  if (coverage < FOIL_MIN_COVER) return nil;
+
+  // Connected marks. A typed stack with an index, because a mask covering most
+  // of the card would otherwise push the best part of a million numbers into a
+  // plain array.
+  const seen = new Uint8Array(mask.length);
+  const stack = new Int32Array(mask.length);
+  const pxMm2 = (pageMm.w / w) * (pageMm.h / h);
+  let marks = 0, speckPx = 0;
+  for (let start = 0; start < mask.length; start++){
+    if (!mask[start] || seen[start]) continue;
+    let sp = 0, n = 0;
+    stack[sp++] = start; seen[start] = 1;
+    while (sp){
+      const q = stack[--sp], qx = q % w;
+      n++;
+      if (qx > 0     && mask[q-1] && !seen[q-1]) { seen[q-1] = 1; stack[sp++] = q-1; }
+      if (qx < w-1   && mask[q+1] && !seen[q+1]) { seen[q+1] = 1; stack[sp++] = q+1; }
+      if (q >= w     && mask[q-w] && !seen[q-w]) { seen[q-w] = 1; stack[sp++] = q-w; }
+      if (q < mask.length-w && mask[q+w] && !seen[q+w]) { seen[q+w] = 1; stack[sp++] = q+w; }
+    }
+    marks++;
+    if (n * pxMm2 < FOIL_SPECK_MM2) speckPx += n;
+    // Past this there is nothing left to work out. Grain runs to tens of
+    // thousands of marks and no design does, so the answer is already known
+    // and the rest of the walk is time spent confirming it.
+    if (marks > FOIL_MAX_MARKS)
+      return { coverage, edgeShare, speckShare:1, marks, ok:false, reason:'speckled' };
+  }
+  const speckShare = hits ? speckPx / hits : 0;
+  if (speckShare > FOIL_SPECK_SHARE || edgeShare > FOIL_EDGE_SHARE)
+    return { coverage, edgeShare, speckShare, marks, ok:false, reason:'speckled' };
+  // A large area is NOT refused. PrintedEasy sell All Over as one of their
+  // five tiers, so a heavily foiled card is a thing they make, not a mistake.
+  return { coverage, edgeShare, speckShare, marks, ok:true, reason:null };
+}
+
+// The colours worth offering as swatches, commonest first.
+//
+// Near-white is left out. It is the paper, and the bleed is built by mirroring
+// the edges outward, so white is the biggest "colour" on almost every card and
+// would sit at the top of the list inviting a customer to foil the background.
+// Anyone who genuinely wants that can still point at it.
+// How far a colour sits from the straight line between two others.
+function rgbToSegment(p, a, b){
+  const ax = b[0]-a[0], ay = b[1]-a[1], az = b[2]-a[2];
+  const px = p[0]-a[0], py = p[1]-a[1], pz = p[2]-a[2];
+  const len2 = ax*ax + ay*ay + az*az;
+  let t = len2 ? (px*ax + py*ay + pz*az) / len2 : 0;
+  t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const dx = px - ax*t, dy = py - ay*t, dz = pz - az*t;
+  return Math.sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+function artworkPalette(data, w, h, want){
+  const STEP = 16, N = Math.ceil(256 / STEP), WHITE = [255, 255, 255];
+  const bins = new Map();
+  for (let i = 0; i < data.length; i += 4){
+    const r = data[i], g = data[i+1], b = data[i+2];
+    if (r >= 238 && g >= 238 && b >= 238) continue;      // the paper
+    const key = ((r/STEP)|0) * N * N + ((g/STEP)|0) * N + ((b/STEP)|0);
+    const e = bins.get(key);
+    if (e) { e.n++; e.r += r; e.g += g; e.b += b; }
+    else bins.set(key, { n:1, r:r, g:g, b:b });
+  }
+  const total = w * h;
+  const out = [];
+  Array.from(bins.values()).sort(function(a,b){ return b.n - a.n; }).forEach(function(e){
+    if (out.length >= (want || 6)) return;
+    const c = [Math.round(e.r/e.n), Math.round(e.g/e.n), Math.round(e.b/e.n)];
+    // Two bins can sit either side of a boundary and be the same colour to
+    // the eye. Offering both as separate swatches is a puzzle, not a choice.
+    for (let i = 0; i < out.length; i++){
+      const o = out[i].rgb;
+      const dr = c[0]-o[0], dg = c[1]-o[1], db = c[2]-o[2];
+      if (dr*dr + dg*dg + db*db <= FOIL_PICK_TOL*FOIL_PICK_TOL) return;
+    }
+    // Every edge of every letter fades to the paper, and those fades bin up
+    // into colours of their own. On a real invitation the first three
+    // swatches were the navy, the gold and the sage, and the next three were
+    // all greys off the navy's own edge — offered as things to foil, and
+    // picking any of them would have foiled a halo and nothing else.
+    for (let i = 0; i < out.length; i++){
+      if (rgbToSegment(c, out[i].rgb, WHITE) <= FOIL_AA_TOL
+          && e.n <= out[i].count * FOIL_AA_SHARE) return;
+    }
+    out.push({ rgb:c, share: e.n / total, count: e.n });
+  });
+  return out;
+}
+
+// ── ROUTE B, THE WORKING PARTS ────────────────────────────────────────────
+
+let foilPick = null;        // { art, targets, mask, verdict, busy } while open
+
+// The front face, composited EXACTLY as the press file will composite it:
+// the same geometry, the same position, the same zoom, the same mirrored
+// bleed. That is not tidiness — it is the whole reason the foil lines up. A
+// mask taken from the file they uploaded would ignore every adjustment they
+// made in step 2 and land the foil somewhere the print is not.
+async function frontFaceForFoil(sizeKey){
+  const spec = sizeSpec(sizeKey);
+  const src  = panelSource('front');
+  if (!spec || !src) return null;
+  let file = await faceAsFile(src.entry);
+  if (!file) return null;
+  if (/\.pdf$/i.test(file.name || '') || (file.type || '').toLowerCase() === 'application/pdf'){
+    const probe = await rasterisePdfPage(file, sizeKey, 300);
+    if (!probe) return null;
+    file = probe.file;
+  }
+  const img = await new Promise(function(resolve){
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload  = function(){ URL.revokeObjectURL(url); resolve(im); };
+    im.onerror = function(){ URL.revokeObjectURL(url); resolve(null); };
+    im.src = url;
+  });
+  if (!img) return null;
+  // Half the print DPI. The mask is a shape, not a photograph, and a full
+  // 300dpi A5 is 4.6 million pixels to walk every time they touch a swatch.
+  const g  = proofGeometry(printDpiFor(spec) / 25.4 / 2, spec, false);
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(g.W); cv.height = Math.round(g.H);
+  const ctx = cv.getContext('2d', { willReadFrequently:true });
+  ctx.__dpr = 1;
+  composeArtwork(ctx, img, g, faceAdjust['front'] || artworkAdjust);
+  return { canvas: cv, w: cv.width, h: cv.height,
+           data: ctx.getImageData(0, 0, cv.width, cv.height).data,
+           pageMm: { w: spec.mmW + 2*PRINT_BLEED_MM, h: spec.mmH + 2*PRINT_BLEED_MM } };
+}
+
+// Point at something, or stop pointing at it.
+function toggleFoilTarget(r, g, b){
+  if (!foilPick) return;
+  const rgb = [r, g, b];
+  const at = foilPick.targets.findIndex(function(t){
+    const dr = t[0]-r, dg = t[1]-g, db = t[2]-b;
+    return dr*dr + dg*dg + db*db <= FOIL_PICK_TOL*FOIL_PICK_TOL;
+  });
+  if (at >= 0) foilPick.targets.splice(at, 1); else foilPick.targets.push(rgb);
+  recomputeFoilPick();
+}
+
+function recomputeFoilPick(){
+  if (!foilPick || !foilPick.art) return;
+  const a = foilPick.art;
+  foilPick.mask = extractFoilMask(a.data, a.w, a.h, foilPick.targets, FOIL_PICK_TOL);
+  foilPick.verdict = foilPick.targets.length
+    ? maskVerdict(foilPick.mask, a.w, a.h, a.pageMm) : null;
+  if (window.Step3 && Step3.redraw) Step3.redraw();
+}
+
+// Clicking the artwork itself. The canvas is drawn at whatever size the panel
+// allows, so the click has to be put back into the artwork's own pixels before
+// a colour can be read off it.
+function foilPickAt(ev){
+  if (!foilPick || !foilPick.art) return;
+  const cv = ev.currentTarget, box = cv.getBoundingClientRect();
+  const a = foilPick.art;
+  const x = Math.floor((ev.clientX - box.left) / box.width  * a.w);
+  const y = Math.floor((ev.clientY - box.top)  / box.height * a.h);
+  if (x < 0 || y < 0 || x >= a.w || y >= a.h) return;
+  const i = (y * a.w + x) * 4;
+  toggleFoilTarget(a.data[i], a.data[i+1], a.data[i+2]);
+}
+
+// Draw the artwork, and lay the foil over it in the colour they chose, so what
+// they are looking at is the card rather than a diagram of it.
+function paintFoilPick(){
+  const cv = document.getElementById('foilPickCv');
+  if (!cv || !foilPick || !foilPick.art) return;
+  const a = foilPick.art;
+  cv.width = a.w; cv.height = a.h;
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(a.canvas, 0, 0);
+  if (!foilPick.mask || !foilPick.targets.length) return;
+  const chosen = (selectedFinishes && selectedFinishes['Foiling']) || '';
+  const tint = foilPreviewRgb(chosen);
+  const im = ctx.getImageData(0, 0, a.w, a.h), d = im.data;
+  for (let px = 0, i = 0; px < foilPick.mask.length; px++, i += 4){
+    if (foilPick.mask[px]) { d[i] = tint[0]; d[i+1] = tint[1]; d[i+2] = tint[2]; continue; }
+    // Everything NOT being foiled is faded back. Tinting the foil alone looks
+    // like nothing has happened when the part they pointed at was already that
+    // colour — a gold monogram picked for gold foil redrew itself identically
+    // and the customer had no way of telling the click had registered.
+    d[i]   += (255 - d[i])   * 0.62;
+    d[i+1] += (255 - d[i+1]) * 0.62;
+    d[i+2] += (255 - d[i+2]) * 0.62;
+  }
+  ctx.putImageData(im, 0, 0);
+}
+
+// A flat stand-in for the foil, only for the preview. Foil is a mirror and a
+// screen cannot show one, so this says WHERE it goes, not what it will look
+// like — which is why the panel says so in as many words.
+function foilPreviewRgb(name){
+  const o = String(name || '').toLowerCase();
+  if (/rose/.test(o))   return [208, 142, 116];
+  if (/silver/.test(o)) return [195, 201, 208];
+  if (/copper/.test(o)) return [192, 113,  63];
+  if (/red/.test(o))    return [195,  44,  59];
+  if (/blue/.test(o))   return [ 42, 108, 180];
+  if (/green/.test(o))  return [ 43, 137,  85];
+  if (/holo/.test(o))   return [167, 196, 222];
+  return [203, 165,  43];
+}
+
+// The mask, as the same artefact Route A hands over: one PDF page at trim plus
+// bleed, the foil in solid black on white. From here on nothing can tell which
+// route made it, and the same checks judge both.
+async function foilLayerFromMask(){
+  if (!foilPick || !foilPick.mask) return null;
+  const a = foilPick.art;
+  const cv = document.createElement('canvas');
+  cv.width = a.w; cv.height = a.h;
+  const ctx = cv.getContext('2d');
+  const im = ctx.createImageData(a.w, a.h), d = im.data;
+  for (let px = 0, i = 0; px < foilPick.mask.length; px++, i += 4){
+    const v = foilPick.mask[px] ? 0 : 255;
+    d[i] = d[i+1] = d[i+2] = v; d[i+3] = 255;
+  }
+  ctx.putImageData(im, 0, 0);
+  const blob = await new Promise(function(res){ cv.toBlob(res, 'image/png'); });
+  if (!blob) return null;
+  const L = await loadPdfLib();
+  const MM = 72 / 25.4;
+  const doc = await L.PDFDocument.create();
+  const png = await doc.embedPng(await blob.arrayBuffer());
+  const page = doc.addPage([a.pageMm.w * MM, a.pageMm.h * MM]);
+  page.drawImage(png, { x:0, y:0, width:a.pageMm.w * MM, height:a.pageMm.h * MM });
+  const bytes = await doc.save();
+  return new File([bytes], 'foil-layer-from-artwork.pdf', { type:'application/pdf' });
+}
+
+async function openFoilPicker(){
+  foilPick = { art:null, targets:[], mask:null, verdict:null, busy:true, palette:[] };
+  if (window.Step3 && Step3.redraw) Step3.redraw();
+  const art = await frontFaceForFoil(selectedSize);
+  if (!art){ foilPick = { art:null, targets:[], busy:false, failed:true, palette:[] };
+             if (window.Step3 && Step3.redraw) Step3.redraw(); return; }
+  foilPick.art = art;
+  foilPick.palette = artworkPalette(art.data, art.w, art.h, 6);
+  foilPick.busy = false;
+  if (window.Step3 && Step3.redraw) Step3.redraw();
+}
+
+function closeFoilPicker(){
+  foilPick = null;
+  if (window.Step3 && Step3.redraw) Step3.redraw();
+}
+
+// Accepting it. The file goes in through the SAME door an uploaded one does,
+// so it is measured, judged and summarised by the same code. If Route B ever
+// makes something the press cannot use, the checks that catch a bad upload
+// catch it here too.
+async function useFoilFromArtwork(){
+  if (!foilPick || !foilPick.verdict || !foilPick.verdict.ok) return;
+  foilPick.busy = true;
+  if (window.Step3 && Step3.redraw) Step3.redraw();
+  const file = await foilLayerFromMask();
+  if (!file){ foilPick.busy = false; foilPick.failed = true;
+              if (window.Step3 && Step3.redraw) Step3.redraw(); return; }
+  foilPick = null;
+  await takeFoilLayer(file);
 }
 
 function pickFoilLayer(){

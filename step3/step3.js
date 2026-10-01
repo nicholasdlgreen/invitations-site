@@ -247,6 +247,10 @@
         + '</div></div></div>';
     }).join('');
     sizeOpenFinPanel();
+    // The host's foil block can contain a canvas, and this line has just
+    // replaced the one that was there. Nothing inside innerHTML survives a
+    // repaint, so the host is told when to put it back.
+    if (A.afterPaint) A.afterPaint();
     open('s2', true); renumber();
   }
 

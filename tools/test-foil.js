@@ -73,7 +73,7 @@ is(/panel\.style\.maxHeight = \(rows\[i\]\.className\.indexOf\('open'\) >= 0 && 
    true, 'measured from the content of whichever row is open');
 is(/\(inner\.scrollHeight \+ 2\) \+ 'px' : ''/.test(SRC), true,
    'and cleared when it closes, so the row still animates shut');
-is(/sizeOpenFinPanel\(\);\n    open\('s2', true\)/.test(SRC), true,
+is(/\}\)\.join\(''\);\n    sizeOpenFinPanel\(\);/.test(SRC), true,
    'run every time the finishing section is drawn, because the number of '
    + 'options changes with the paper');
 
@@ -297,6 +297,16 @@ is(/S\.openFin = more \? t : null;/.test(SRC), true,
    'and the row stays open while there is, and closes when there is not');
 is(/S\.finishes\[t\] = o; S\.openFin = null;/.test(SRC), false,
    'never closed unconditionally again');
+
+print('\nTHE CANVAS SURVIVES A REDRAW');
+// Route B's panel holds a canvas the customer points at. The finishing body is
+// redrawn by replacing its innerHTML, which destroys everything inside it —
+// including a canvas and everything painted on it. The host is told, every
+// time, rather than left hoping a redraw never happens.
+is(/\}\)\.join\(''\);\n    sizeOpenFinPanel\(\);\n(.*\n)*?    if \(A\.afterPaint\) A\.afterPaint\(\);/.test(SRC),
+   true, 'step 3 tells the host once the finishing body has been replaced');
+is(/    afterPaint: paintFoilPick,/.test(HTML), true,
+   'and the host answers it by painting the artwork back');
 
 print('\nTHE TEMPLATE IS A FUNCTION OF TWO NUMBERS');
 // There is no library of template files and there does not need to be one. The

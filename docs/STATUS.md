@@ -205,9 +205,63 @@ the autovacuum fix from §11 holding.
    wrong one — and the grey never enters the area measurement, which still
    reports the lettering alone.
 
-   **Still open on foiling:** Route B ("make it from my artwork"), the pricing,
-   and the two questions for PrintedEasy by email — the 7pt minimum and the
-   maximum foiled area.
+   **Route B is built (1 October), as the way out of a red.** "Make it from my
+   artwork" asks WHICH PARTS of the design to foil — never what colour the foil
+   is, which is one of PrintedEasy's eight and is already chosen upstairs. It
+   needs no second file: the artwork is in hand from step 2, two steps earlier.
+
+   The mask is taken from the front face composited **exactly as the press file
+   composites it** — same geometry, same position, same zoom, same mirrored
+   bleed — so the foil lines up by construction. Measured: nudge the artwork
+   26.6mm right and the foil goes with it; zoom 1.4x and it scales by 1.40.
+
+   What it produces is **the same artefact Route A produces**: one PDF page at
+   trim plus bleed, black on white, handed to the same `inspectFoilLayer` and
+   judged by the same checks. Nothing downstream knows which route made it.
+
+   **What it refuses, and why two measures and not one:**
+   - **nothing** — the colour is barely in the design.
+   - **speckled** — a photograph or fine line work, on either of two measures.
+     The *size of the marks* catches scattered marks under a square millimetre;
+     the *share of pixels on an edge* catches grain, which has no middle. Each
+     has a case the other misses, proven both ways by mutation.
+   - **A large area is NOT refused.** All Over is one of their five tiers.
+
+   Measured end to end in the browser: a flat-colour invitation reads 0.6%
+   coverage, 3 marks, 19.2% edge — accepted, green, basket released, areas
+   measured at 39 × 21mm and 36.4 × 1mm. A photograph reads 79.3% coverage and
+   60.4% edge — refused.
+
+   The traffic light from step 2 now sits on the foil layer too, all three
+   lamps. **No acknowledgement tick-box on amber** — that was not agreed.
+
+   **Still open on foiling:** the pricing; how Route B is offered on the FIRST
+   foiling screen rather than only after a failure (parked by Nicholas until
+   this is live and tested); and the two questions for PrintedEasy by email —
+   the 7pt minimum and the maximum foiled area.
+
+9b. **"We can fix that for you" — parked deliberately, not forgotten.** Some of
+   the ways a foil layer fails are ones we could repair without the customer
+   touching anything. The clearest is **the wrong page size**: a layer exported
+   at trim size with no bleed is refused today, but we know the right page
+   size, and centring their page on a correct one is exact — no scaling,
+   nothing moves, nothing is lost. It is also likely to be the most common
+   mistake they make.
+
+   **Nicholas's two reasons for holding it back (1 October), both of which
+   outrank the convenience:**
+
+   1. **It is a chargeable moment.** Repairing a customer's file is work, and
+      offering it free inside the flow gives that away before anyone has
+      decided what it is worth.
+   2. **It moves responsibility for the output onto us.** The moment we touch
+      the file, "we print exactly what you supply" stops being true for that
+      order, and a reprint argument becomes ours to lose. So any fix we offer
+      has to be one we are **100% sure of** — not merely usually right.
+
+   Nothing is to be built here until both are settled. The size fix is the only
+   candidate that is arithmetically exact; anything involving redrawing,
+   rescaling or guessing intent is not in this category at all.
 
 10. **`delivery.html` publishes delivery prices we do not charge.** Express is
    shown as a flat **£12.00** and Next Day as a flat **£18.00**. Neither is
