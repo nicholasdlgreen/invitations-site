@@ -213,6 +213,23 @@ is(addBlockedReason(), 'Fix your foil layer', 'a refused layer holds it too');
 foilLayer = layer();
 is(addBlockedReason(), null, 'a good one lets it through');
 
+print('\nEVERY COLOUR, NOT JUST THE FIRST ONE');
+// Gold was the one that got walked through. These are the two places colour
+// is turned into something on screen, checked for all eight.
+var selectedFinishes = {};
+eval(grabHost('foilDotStyle'));
+var seenDot = {};
+FOILS.forEach(function (c) {
+  var dot = foilDotStyle(c);
+  is(typeof dot === 'string' && dot.length > 8, true, c + ' has a dot');
+  is(!!seenDot[dot], false, c + ' is not the same dot as another colour');
+  seenDot[dot] = true;
+});
+is(/conic-gradient/.test(foilDotStyle('Holographic')), true,
+   'and holographic is a sweep here too, not a flat pastel');
+is(foilDotStyle('Champagne'), foilDotStyle('Gold'),
+   'an unrecognised foil falls back to gold rather than to no dot at all');
+
 print('\nWHAT REACHES THE ORDER');
 is(/foil\.url = await uploadFoilLayer\(\);/.test(HTML), true,
    'the foil layer is sent to storage, so it survives the trip to checkout');
@@ -222,6 +239,13 @@ is(/foil: foil \|\| null,/.test(HTML), true,
    'and on the price basis, because the cost of foiling moves with the area');
 is(/foilLayerUrl: foil \? foil\.url : null,/.test(HTML), true,
    'and on the basket line itself');
+// Found by walking a colour through that had not been walked through before.
+// printSpec is null whenever the press file did not build, and the foil was
+// hung off it — so the order had a foil layer uploaded, a colour on the line,
+// and nothing anywhere saying what to foil.
+is(/foilSpec: foil \|\| null,/.test(HTML), true,
+   'the foil spec is on the line in its own right, not only inside the press '
+   + 'spec, which is null whenever the press file did not build');
 // foilSummary opens with the same line, so matching it anywhere in the file
 // proved nothing — the second time today that a loose source assertion passed
 // against the wrong function. Pinned to this one.

@@ -5614,6 +5614,10 @@ async function addToCartUpload(){
   var foil = foilSummary();
   if (foil) {
     foil.url = await uploadFoilLayer();
+    // On the press spec when there is one — and on the line either way. The
+    // spec is null whenever the press file did not build, and hanging the foil
+    // off it meant a job with a foil layer uploaded, a colour on the basket
+    // line, and nothing anywhere telling the printer what to foil.
     if (printSpec) printSpec.foil = foil;
   }
 
@@ -5667,6 +5671,7 @@ async function addToCartUpload(){
     artworkUrl: uploadedArtworkUrl,
     printArtworkUrl: uploadedPrintUrl,
     foilLayerUrl: foil ? foil.url : null,
+    foilSpec: foil || null,
     printSpec: printSpec,
     basis: priceBasis,
     // What we flagged, in the words they saw, and when they accepted it. A
