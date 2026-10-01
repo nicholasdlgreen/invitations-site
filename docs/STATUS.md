@@ -1,9 +1,68 @@
-# Where we are — 30 September 2026
+# Where we are — 1 October 2026
 
 *Every figure below was checked against the live site, the live database or a
 generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
+
+**22 commits on 1 October, all pushed** (896 in the repo). The day was almost
+entirely **foiling**, taken from "we offer it and cannot deliver it" to a thing
+that can be bought on both routes at a price we have actually measured. Two
+faults found along the way had nothing to do with foiling and one of my own
+conclusions had to be withdrawn.
+
+**The foiling thread, in order:**
+
+1. **The template became visible.** He downloaded it and asked whether a blank
+   page was correct. It very nearly was — four hairline corner ticks, 0.019% of
+   the page. Now a tinted bleed, a solid trim line, a dashed safe area and the
+   three words TRIM, BLEED, SAFE AREA. **7.8% non-white, measured.** No library
+   of template files: it is a function of two numbers (§9c).
+2. **Route B** — "make the foil layer from my artwork" for customers who cannot
+   produce one. Point at a colour; we build the mask. Four bugs the build
+   itself found, including a photograph being accepted as foilable (§9c).
+3. **The red state settled** — "Would you like us to fix it instead?", button
+   **Fix it**, no description, Replace dropped from the red only. Fix it is
+   withheld from two of the five reds pending testing, which is a decision to
+   revisit, not a limitation (§9c).
+4. **How PrintedEasy actually charge for foiling.** 269 probes. Their reply
+   carries `scodixFoilPostPrice`, which our own scraper had been stripping —
+   which is why this was never visible. Sides, three-or-more areas and quantity
+   move the price; **coverage, build height, guide and colour do not**, so the
+   foiled area is not a cost input. "All Over" is broken on their endpoint and
+   was once mistaken for foiling being free (§9c).
+5. **The prices went in.** 1,680 measured rates, £67.20–£72.00, list less 20%,
+   zero margin. **Published and live** (§9c).
+6. **Foiling in the Design Studio.** A studio customer who chose foiling could
+   not complete the order at all — asked for a PDF they cannot make, with Route
+   B blind on that route. The studio now builds the foil layer itself from the
+   names it draws, with **zero pixels of registration offset, measured**
+   (§9h).
+
+**Two faults found in passing, neither about foiling:**
+
+- **A folded card was charged nothing for rounded corners** — a £16.80 job,
+  free, across 13 products. The wizard reopened a hole that had been closed.
+  Fixed (§9e).
+- **The place card size was labelled "Business card"** — the only size Place
+  Cards sell, and we do not sell business cards. Renamed (commit `a596299`).
+
+**One thing I got wrong and withdrew.** I reported that Cartonboard was sold at
+a weight PrintedEasy do not price and that the real stock cost four times more.
+He did not believe it, asked for a re-review before anything was changed, and
+was right: **255gsm is correct and nothing needed changing** (§9f). The 280gsm
+gap turned out to be a ~£90 fixed charge rather than a paper cost (§9f).
+
+**A dead test came back.** `test-route-gating` had been throwing on line 1 for
+days, and it was the only test of the function that decides whether a finish is
+offered at all. Revived, and it is what found the corners leak. 25 checks.
+
+**Decided and closed today:** the template branch of the design studio
+(`design-studio-customise` / `design-studio-templates`) **is not being
+developed**. It produces no print artwork and is unreachable from the studio
+landing page. Confirmed by Nicholas, 1 October — no foiling work there.
+
+---
 
 **29 commits on 30 September, all pushed** (873 in the repo). 30 September was
 one thread and one thread only: the order page, rebuilt to a single structure
@@ -23,6 +82,23 @@ was quietly charging double.
 
 **Margins are still the only thing between us and trading — and there is now an
 evidence base for setting them (§14).**
+
+> **Where foiling got to, 1 October.** It is now sellable end to end on both
+> routes, at measured prices, and published. What is left is listed in §9c and
+> §9h and none of it blocks trading:
+>
+> - **Two questions for PrintedEasy, by email.** Is 7pt really their minimum
+>   type size for foil, and what is the maximum foiled area? Both are currently
+>   our inference from their Business Cards page, not their answer.
+> - **"Fix it" is withheld from two of the five reds** — an unreadable file and
+>   a non-PDF — pending a proper test of the fixing. Route B would work on both.
+> - **The gold preview in the studio** (the parked Option A). Can be added on
+>   top of what shipped without rework; it carries the question of whether a
+>   foil choice may hide the five premium papers.
+> - **Uncoated 120gsm is unresolved** (§9g). Ask, do not infer — this is the
+>   same reasoning that got Cartonboard wrong.
+>
+> Nothing on this list is a blocker. Foiling is done for trading purposes.
 
 Published 27 September 19:04 and verified: **78,431 sheet prices** (up from
 69,887), **14,700 finishing prices**, 22 products, 10 live papers. The publish
