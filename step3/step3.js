@@ -218,8 +218,8 @@
       var opened = (S.openFin === t.name);
       var dot = '';
       if (isSet && /foil/i.test(t.name)) {
-        var c = /rose/i.test(sel) ? '#D8A390' : (/silver/i.test(sel) ? '#C9CCD1' : '#C9A227');
-        dot = '<span class="dot" style="display:inline-block;vertical-align:-1px;margin-right:6px;background:' + c + '"></span>';
+        dot = '<span class="dot" style="display:inline-block;vertical-align:-1px;'
+            + 'margin-right:6px;' + foilDot(sel) + '"></span>';
       }
       return '<div class="finRow' + (opened ? ' open' : '') + '">'
         + '<button class="finBtn" onclick="Step3.toggleFin(\'' + q(t.name) + '\')">'
@@ -239,7 +239,12 @@
               + '</span><span class="cap"><span class="nm">' + esc(o.name) + '</span>'
               + '<span class="sub">' + esc(o.description || '') + '</span></span></button>';
           }).join('')
-        + '</div></div></div></div>';
+        + '</div>'
+        // The foil layer. Only the host knows what has been uploaded and what
+        // the checks said, so it hands the block over already drawn — the same
+        // split as everything else in this file.
+        + ((A.foilBlock && A.foilBlock(t.name, sel)) || '')
+        + '</div></div></div>';
     }).join('');
     sizeOpenFinPanel();
     open('s2', true); renumber();
@@ -270,6 +275,21 @@
   // the material disc says nothing about them — square corners came out as a
   // circle, identical to rounded. These draw the card instead. Returns null
   // for everything else, which falls through to the disc.
+  // A small solid dot for the chosen foil, shown beside the row. It knew gold,
+  // silver and rose gold, so copper, red, blue, green and holographic all came
+  // out gold. The mid tone of each swatch, so the dot and the disc agree.
+  function foilDot(opt) {
+    var o = String(opt).toLowerCase();
+    if (/rose/.test(o))   return 'background:#D08E74';
+    if (/silver/.test(o)) return 'background:#C3C9D0';
+    if (/copper/.test(o)) return 'background:#C0713F';
+    if (/red/.test(o))    return 'background:#C32C3B';
+    if (/blue/.test(o))   return 'background:#2A6CB4';
+    if (/green/.test(o))  return 'background:#2B8955';
+    if (/holo/.test(o))   return 'background:conic-gradient(from 210deg,#8FD9E8,#C7A8E8,#F2A8C4,#F6D79B,#BFE8A8,#8FD9E8)';
+    return 'background:#CBA52B';
+  }
+
   function shapeSwatch(type, opt) {
     var o = String(opt).toLowerCase();
     if (/corner/i.test(type)) {

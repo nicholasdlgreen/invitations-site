@@ -70,6 +70,27 @@ body.wide-step .step-bar{display:none;}
        products keep their numbered rail until each is switched over. */
     html.wizard-new #s3wrap .rl b{display:none;}
     html.wizard-new #s3wrap .rl{gap:0;padding-bottom:6px;}
+    /* ── the foil layer, inside the foiling row ─────────────────────────── */
+    #s3wrap .foilStep{border-top:1px solid var(--border);margin-top:16px;padding-top:16px;}
+    #s3wrap .foilLab{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--pale);margin-bottom:10px;}
+    #s3wrap .foilSpec{background:var(--cream);border:1px solid var(--border);border-radius:12px;
+      padding:14px 16px;margin-bottom:12px;}
+    #s3wrap .foilSpec ul{margin:0;padding-left:18px;}
+    #s3wrap .foilSpec li{font-size:12.5px;color:var(--soft);line-height:1.9;}
+    #s3wrap .foilSpec li b{color:var(--text);font-weight:400;}
+    #s3wrap .foilDrop{border:1.5px dashed var(--gold-lt);border-radius:14px;background:var(--white);
+      padding:28px 22px;text-align:center;}
+    #s3wrap .foilDrop .big{font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;color:var(--text);}
+    #s3wrap .foilDrop .sm{font-size:12.5px;color:var(--soft);margin-top:6px;line-height:1.7;}
+    #s3wrap .foilBtn{margin-top:14px;font-family:inherit;font-size:12px;letter-spacing:.12em;
+      text-transform:uppercase;background:var(--text);color:var(--cream);border:0;border-radius:999px;
+      padding:11px 24px;cursor:pointer;}
+    #s3wrap .foilFile{display:flex;align-items:center;gap:12px;background:var(--white);
+      border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;}
+    #s3wrap .foilFile .nm{font-size:13.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #s3wrap .foilSwap{margin-left:auto;font-family:inherit;font-size:var(--text-xs);letter-spacing:.14em;
+      text-transform:uppercase;color:var(--gold);background:none;border:0;cursor:pointer;white-space:nowrap;}
+    #s3wrap .foilChecks{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
     html.wizard-new #s3wrap .rl.now{box-shadow:inset 0 -1px 0 0 var(--tier,var(--gold));}
     @media(max-width:768px){
       html.wizard-new .step-label{display:inline;}
@@ -4526,6 +4547,9 @@ function step3Adapter(){
     // The range is still chosen, exactly as before. It is just not one of the
     // numbered steps, so the line at the top reads 1 to 6.
     railSkips: () => NEW_WIZARD ? ['s1'] : [],
+    // Step 3 does not know what a file upload is. It asks for this block and
+    // draws whatever comes back.
+    foilBlock: foilBlock,
     // Nothing after. The journey the mockup settles is the seven from the size
     // to the delivery; the basket and the checkout are what happens once it is
     // finished, and putting them in made nine steps that wrapped to four rows
@@ -5048,6 +5072,180 @@ function updatePrice(){
   setText('priceNet',   '£'+subtotalEx.toFixed(2));
   setText('priceVat',   '£'+vat.toFixed(2));
   setText('priceTotal', '£'+total.toFixed(2));
+}
+
+// ── THE FOIL LAYER ────────────────────────────────────────
+// PrintedEasy foil from a second PDF: the areas to be foiled in 100% black,
+// the same size as the artwork and in the same position, so it "fits directly
+// over the top of it" — their words, read off their own configurator on 1
+// October. Two files, not three: the foil sits OVER the print, so the
+// customer's artwork is not altered.
+//
+// Their own customers are given one sentence of instruction and no template,
+// and are then asked to estimate how much of the card the foil covers. We ask
+// for the file, check it properly, and measure the rest ourselves.
+let foilLayer = null;        // { file, report } once something has been dropped
+let foilBusy = false;
+
+// What the page can tell about a foil layer without asking the customer.
+// Rendered at a modest DPI — this is a black-and-white mask, so it does not
+// need 300, and a big page at 300 is a slow allocation for no gain.
+async function inspectFoilLayer(file){
+  const spec = sizeSpec(selectedSize);
+  const want = spec ? { w: spec.mmW + 2*PRINT_BLEED_MM, h: spec.mmH + 2*PRINT_BLEED_MM } : null;
+  const out = { pageMm:null, want:want, dark:0, offColour:0, box:null, ok:false };
+  if ((file.type || '').toLowerCase() !== 'application/pdf'
+      && !/\.pdf$/i.test(file.name || '')) { out.notPdf = true; return out; }
+  try {
+    await loadPdfJs();
+    if (!window.pdfjsLib) return out;
+    const pdf  = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    out.pages  = pdf.numPages;
+    const page = await pdf.getPage(1);
+    const base = page.getViewport({ scale: 1 });
+    out.pageMm = { w: base.width * 25.4 / 72, h: base.height * 25.4 / 72 };
+    const scale = Math.min(150 / 72, 2200 / Math.max(base.width, base.height));
+    const vp = page.getViewport({ scale: scale });
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.round(vp.width)); cv.height = Math.max(1, Math.round(vp.height));
+    const ctx = cv.getContext('2d', { willReadFrequently:true });
+    // A PDF is transparent where nothing is drawn. White it first, or every
+    // untouched pixel reads as black and the whole card looks foiled.
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+    let dark = 0, off = 0, x0 = cv.width, y0 = cv.height, x1 = -1, y1 = -1;
+    for (let i = 0, px = 0; i < d.length; i += 4, px++) {
+      const r = d[i], g = d[i+1], b = d[i+2];
+      const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+      if (mx < 110) {
+        dark++;
+        const x = px % cv.width, y = (px / cv.width) | 0;
+        if (x < x0) x0 = x; if (x > x1) x1 = x;
+        if (y < y0) y0 = y; if (y > y1) y1 = y;
+      // Anything that is neither close to black nor close to white is colour
+      // the press cannot turn into a foil plate. A little is anti-aliasing
+      // around the edges of lettering and is expected; a lot means they have
+      // sent a copy of their artwork.
+      } else if (mn < 225 && (mx - mn) > 26) { off++; }
+    }
+    const total = cv.width * cv.height;
+    out.dark = dark / total;
+    out.offColour = off / total;
+    if (x1 >= 0) out.box = { x0:x0, y0:y0, x1:x1, y1:y1, pxW:cv.width, pxH:cv.height };
+    out.ok = true;
+  } catch(e){ console.warn('[foil] could not read the foil layer:', e.message); }
+  return out;
+}
+
+// The checks, in the same shape the artwork step already uses, so they draw
+// with the same traffic lights and read the same way.
+function foilChecks(){
+  if (!foilLayer) return [];
+  const r = foilLayer.report, out = [];
+  const mm = n => Math.round(n * 10) / 10;
+  if (r.notPdf) {
+    return [{ status:'err', label:'File type', val:(foilLayer.file.name||'').split('.').pop().toUpperCase(),
+              note:'The foil layer has to be a PDF. That is what the press makes the foil plate from.' }];
+  }
+  if (!r.ok) {
+    return [{ status:'err', label:'Foil layer', val:'Could not be read',
+              note:'We could not open this PDF. Try exporting it again, or start from the template.' }];
+  }
+  if (r.want && r.pageMm) {
+    const near = Math.abs(r.pageMm.w - r.want.w) <= 1 && Math.abs(r.pageMm.h - r.want.h) <= 1;
+    out.push(near
+      ? { status:'ok', label:'Size', val: mm(r.pageMm.w)+' \u00d7 '+mm(r.pageMm.h)+'mm',
+          note:'Matches your artwork, bleed included.' }
+      : { status:'err', label:'Size', val: mm(r.pageMm.w)+' \u00d7 '+mm(r.pageMm.h)+'mm',
+          note:'Your artwork is '+mm(r.want.w)+' \u00d7 '+mm(r.want.h)+'mm with bleed. The foil layer has to '
+             + 'be the same, or it will not line up. Start from the template.' });
+  }
+  const pct = n => (n * 100 < 0.1 ? '<0.1' : (n * 100).toFixed(1)) + '%';
+  if (r.offColour > 0.02) {
+    out.push({ status:'err', label:'Colour', val:'Full colour',
+      note:'This looks like a copy of your artwork. The foil layer should be only the parts you want '
+         + 'foiled, in solid black, on white.' });
+  } else {
+    out.push({ status:'ok', label:'Colour', val:'Black on white',
+      note:'Exactly what the press needs to make the foil plate.' });
+  }
+  if (!r.dark) {
+    out.push({ status:'err', label:'What to foil', val:'Nothing marked',
+      note:'This page is blank. Mark the parts you want foiled in 100% black.' });
+  } else {
+    out.push({ status:'ok', label:'What to foil', val: pct(r.dark)+' of the card',
+      note:'Measured from your file, so nothing here is estimated.' });
+  }
+  if (r.pages > 1) {
+    out.push({ status:'warn', label:'Pages', val: r.pages + ' pages',
+      note:'Only the first page is used as the foil layer.' });
+  }
+  return out;
+}
+
+function foilLayerAccepted(){
+  const c = foilChecks();
+  return !!c.length && !c.some(x => x.status === 'err');
+}
+
+// What step 3 draws inside the Foiling row, once a colour has been chosen.
+function foilBlock(typeName, chosen){
+  if (!/foil/i.test(typeName)) return '';
+  if (!chosen || String(chosen).toLowerCase() === 'none') return '';
+  const spec = sizeSpec(selectedSize);
+  const w = spec ? Math.round((spec.mmW + 2*PRINT_BLEED_MM) * 10) / 10 : null;
+  const h = spec ? Math.round((spec.mmH + 2*PRINT_BLEED_MM) * 10) / 10 : null;
+  let body;
+  if (foilBusy) {
+    body = '<div class="foilDrop"><div class="sm">Checking your foil layer\u2026</div></div>';
+  } else if (!foilLayer) {
+    body = '<div class="foilSpec"><ul>'
+      + '<li>A second PDF, the <b>same size as your artwork</b>'
+      + (w ? ' \u2014 ' + w + ' \u00d7 ' + h + 'mm, bleed included' : '') + '</li>'
+      + '<li>The parts to be foiled in <b>100% black</b>. Everything else white</li>'
+      + '<li>In the <b>same position</b> as on your artwork, so it sits over the top</li>'
+      + '<li>Leave your artwork as it is \u2014 the foil goes over the print, not instead of it</li>'
+      + '</ul></div>'
+      + '<div class="foilDrop"><div class="big">Drop your foil layer here</div>'
+      + '<div class="sm">One PDF. We will check it against your artwork before you pay.</div>'
+      + '<button type="button" class="foilBtn" onclick="pickFoilLayer()">Choose a file</button></div>';
+  } else {
+    body = '<div class="foilFile"><span class="nm">' + esc(foilLayer.file.name) + '</span>'
+      + '<button type="button" class="foilSwap" onclick="pickFoilLayer()">Replace</button></div>'
+      + '<div class="foilChecks">' + foilChecks().map(function(c){
+          const ic = c.status === 'ok' ? '&#10003;' : c.status === 'err' ? '&#10007;' : '!';
+          return '<div class="check-row"><div class="check-icon ' + c.status + '">' + ic + '</div><div>'
+            + '<div class="check-label">' + esc(c.label) + '</div>'
+            + '<div class="check-val">' + c.val + '</div>'
+            + '<div class="check-note">' + esc(c.note) + '</div></div></div>';
+        }).join('') + '</div>';
+  }
+  return '<div class="foilStep"><div class="foilLab">Your foil layer</div>' + body + '</div>';
+}
+
+function pickFoilLayer(){
+  let inp = document.getElementById('foilInput');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.id = 'foilInput'; inp.accept = 'application/pdf,.pdf';
+    inp.style.display = 'none';
+    inp.addEventListener('change', function(){
+      if (this.files && this.files[0]) takeFoilLayer(this.files[0]);
+      this.value = '';
+    });
+    document.body.appendChild(inp);
+  }
+  inp.click();
+}
+
+async function takeFoilLayer(file){
+  foilBusy = true;
+  if (window.Step3 && Step3.redraw) Step3.redraw();
+  const report = await inspectFoilLayer(file);
+  foilLayer = { file: file, report: report };
+  foilBusy = false;
+  if (window.Step3 && Step3.redraw) Step3.redraw();
 }
 
 // ── THE ARTWORK, PREPARED EARLY ───────────────────────────
