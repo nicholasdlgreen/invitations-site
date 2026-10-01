@@ -5104,7 +5104,7 @@ let foilBusy = false;
 async function inspectFoilLayer(file){
   const spec = sizeSpec(selectedSize);
   const want = spec ? { w: spec.mmW + 2*PRINT_BLEED_MM, h: spec.mmH + 2*PRINT_BLEED_MM } : null;
-  const out = { pageMm:null, want:want, dark:0, offColour:0, box:null, ok:false };
+  const out = { pageMm:null, want:want, dark:0, offColour:0, guides:0, box:null, ok:false };
   if ((file.type || '').toLowerCase() !== 'application/pdf'
       && !/\.pdf$/i.test(file.name || '')) { out.notPdf = true; return out; }
   try {
@@ -5125,7 +5125,7 @@ async function inspectFoilLayer(file){
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
     await page.render({ canvasContext: ctx, viewport: vp }).promise;
     const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
-    let dark = 0, off = 0, x0 = cv.width, y0 = cv.height, x1 = -1, y1 = -1;
+    let dark = 0, off = 0, guide = 0, x0 = cv.width, y0 = cv.height, x1 = -1, y1 = -1;
     for (let i = 0, px = 0; i < d.length; i += 4, px++) {
       const r = d[i], g = d[i+1], b = d[i+2];
       const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
@@ -5139,10 +5139,16 @@ async function inspectFoilLayer(file){
       // around the edges of lettering and is expected; a lot means they have
       // sent a copy of their artwork.
       } else if (mn < 225 && (mx - mn) > 26) { off++; }
+      // Our own template, still carrying its guides. Both bands are neutral
+      // and both are ones we drew: 140 for the lines and the labels, 237 for
+      // the bleed tint. See FOIL_GUIDE_GREY and FOIL_TINT_GREY. The tolerance
+      // is for renderers that shift a channel by one on the way through.
+      else if ((mx - mn) <= 2 && ((mx >= 134 && mx <= 146) || (mx >= 233 && mx <= 241))) { guide++; }
     }
     const total = cv.width * cv.height;
     out.dark = dark / total;
     out.offColour = off / total;
+    out.guides = guide / total;
     if (x1 >= 0) out.box = { x0:x0, y0:y0, x1:x1, y1:y1, pxW:cv.width, pxH:cv.height };
     if (x1 >= 0 && out.pageMm) Object.assign(out, measureFoilAreas(d, cv.width, cv.height, out.pageMm));
     out.ok = true;
@@ -5281,6 +5287,14 @@ function foilChecks(){
   } else {
     out.push({ status:'ok', label:'What to foil', val: pct(r.dark)+' of the card',
       note:'Measured from your file, so nothing here is estimated.' });
+  }
+  // The guides are too light for either test above to object to, which is
+  // deliberate — but a file that still has them is not finished, and nobody
+  // downstream would thank us for noticing only after the plate was made.
+  if (r.guides > 0.0025) {
+    out.push({ status:'warn', label:'Template guides', val:'Still in the file',
+      note:'The grey trim, bleed and safe area lines from our template are still in this PDF. '
+         + 'Delete the guides and send it again, so the file holds only the parts you want foiled.' });
   }
   if (r.pages > 1) {
     out.push({ status:'warn', label:'Pages', val: r.pages + ' pages',
@@ -5421,27 +5435,74 @@ function facesForFoil(){
 // Trim plus bleed, matching what the checks expect and what their artwork is —
 // NOT the press page, which is larger because it carries crop marks.
 //
-// The corner ticks are light grey on purpose. Grey is neither dark enough to
-// read as foil nor saturated enough to read as colour, so a template with the
-// guides left in still passes both checks rather than being refused for the
-// marks we put there ourselves.
+// There is no library of template files and there does not need to be one. A
+// template is a function of two numbers: the finished width and height. The
+// product does not come into it, the fold does not change it — the foil layer
+// is a single page at the FINISHED size, which is the front panel, so a folded
+// A5 wants the same page as a flat one — and the printed sides do not change
+// it either. Orientation is already in the two numbers, because sizeSpec swaps
+// them for landscape. So it is drawn on demand from the size the customer has
+// chosen, and a size added in admin tomorrow has a correct template that
+// afternoon with nothing to generate and nothing to go stale.
+//
+// The guides are mid-grey on purpose. 140 is above the 110 the foil test calls
+// dark, and perfectly neutral, so the colour test — which wants a spread
+// between the channels — never sees it either. A template with the guides
+// still in it is not refused for marks we put there ourselves; instead the
+// check notices them and says so.
+const FOIL_GUIDE_GREY = 140 / 255;   // the lines and the labels
+const FOIL_TINT_GREY  = 237 / 255;   // the bleed, which is cut away
+const FOIL_SAFE_MM    = 4;           // how far inside the trim the safe line sits
+const FOIL_GUIDE_MM   = 0.4;         // guide line weight
+
+// Where every guide goes, in millimetres from the bottom-left of the page.
+// Pure geometry, so it can be read and checked with no PDF engine anywhere
+// near it. Each label sits directly above the line it names.
+function foilTemplatePlan(trimW, trimH){
+  const b = PRINT_BLEED_MM, t = FOIL_GUIDE_MM, s = FOIL_SAFE_MM;
+  const pageW = trimW + 2*b, pageH = trimH + 2*b;
+  return {
+    pageW: pageW, pageH: pageH,
+    // The bleed is not drawn as a frame; the whole page is laid down in the
+    // tint and the card is knocked back to white over it, so what is left
+    // tinted is exactly what the knife takes away.
+    tint: FOIL_TINT_GREY,
+    trim: { x:b,     y:b,     w:trimW,         h:trimH,         weight:t, dash:null  },
+    safe: { x:b+s,   y:b+s,   w:trimW - 2*s,   h:trimH - 2*s,   weight:t, dash:[2,2] },
+    // 1.2mm of air under each word. At 0.7 the safe label sat on its own
+    // dashed line and the two read as one smudge.
+    labels: [
+      { text:'BLEED',     x:2,         y:1.2,       size:5 },
+      { text:'TRIM',      x:b+1.5,     y:b+1.2,     size:5 },
+      { text:'SAFE AREA', x:b+s+1.5,   y:b+s+1.2,   size:5 }
+    ]
+  };
+}
+
 async function downloadFoilTemplate(){
   const spec = sizeSpec(selectedSize);
   if (!spec) return;
   try {
     await loadPdfLib();
     const L = window.PDFLib;
-    const MM = 72 / 25.4, b = PRINT_BLEED_MM;
+    const MM = 72 / 25.4;
+    const plan = foilTemplatePlan(spec.mmW, spec.mmH);
     const doc = await L.PDFDocument.create();
-    const wMm = spec.mmW + 2*b, hMm = spec.mmH + 2*b;
-    const page = doc.addPage([wMm * MM, hMm * MM]);
-    page.drawRectangle({ x:0, y:0, width:wMm*MM, height:hMm*MM, color:L.rgb(1,1,1) });
-    const grey = L.rgb(0.80, 0.80, 0.80), t = 0.4, tick = 2.5 * MM;
-    const x0 = b*MM, y0 = b*MM, x1 = (b + spec.mmW)*MM, y1 = (b + spec.mmH)*MM;
-    // Four corners of the trim, drawn in the bleed where they are cut away.
-    [[x0,y0,1,1],[x1,y0,-1,1],[x0,y1,1,-1],[x1,y1,-1,-1]].forEach(function(c){
-      page.drawRectangle({ x:c[0] - (c[2] > 0 ? tick : 0), y:c[1]-t/2, width:tick, height:t, color:grey });
-      page.drawRectangle({ x:c[0]-t/2, y:c[1] - (c[3] > 0 ? tick : 0), width:t, height:tick, color:grey });
+    const font = await doc.embedFont(L.StandardFonts.Helvetica);
+    const page = doc.addPage([plan.pageW * MM, plan.pageH * MM]);
+    const grey = L.rgb(FOIL_GUIDE_GREY, FOIL_GUIDE_GREY, FOIL_GUIDE_GREY);
+    page.drawRectangle({ x:0, y:0, width:plan.pageW*MM, height:plan.pageH*MM,
+                         color:L.rgb(plan.tint, plan.tint, plan.tint) });
+    page.drawRectangle({ x:plan.trim.x*MM, y:plan.trim.y*MM,
+                         width:plan.trim.w*MM, height:plan.trim.h*MM, color:L.rgb(1,1,1) });
+    [plan.trim, plan.safe].forEach(function(r){
+      const o = { x:r.x*MM, y:r.y*MM, width:r.w*MM, height:r.h*MM,
+                  borderColor:grey, borderWidth:r.weight*MM };
+      if (r.dash) o.borderDashArray = r.dash;
+      page.drawRectangle(o);
+    });
+    plan.labels.forEach(function(t){
+      page.drawText(t.text, { x:t.x*MM, y:t.y*MM, size:t.size, font:font, color:grey });
     });
     const bytes = await doc.save();
     const url = URL.createObjectURL(new Blob([bytes], { type:'application/pdf' }));

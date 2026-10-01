@@ -298,17 +298,115 @@ is(/S\.openFin = more \? t : null;/.test(SRC), true,
 is(/S\.finishes\[t\] = o; S\.openFin = null;/.test(SRC), false,
    'never closed unconditionally again');
 
-print('\nTHE TEMPLATE, AND WHAT REACHES THE PRINTER');
+print('\nTHE TEMPLATE IS A FUNCTION OF TWO NUMBERS');
+// There is no library of template files and there does not need to be one. The
+// product does not come into it, the fold does not change the page — the foil
+// layer is one page at the FINISHED size, so a folded A5 wants the same page as
+// a flat one — and neither do the printed sides. Orientation is already in the
+// two numbers, because sizeSpec swaps them for landscape before we get here.
+function num(re, what) {
+  var m = HTML.match(re);
+  if (!m) throw new Error('could not read ' + what + ' out of the shipped file');
+  return parseFloat(m[1]);
+}
+var GUIDE_GREY = num(/const FOIL_GUIDE_GREY = (\d+) \/ 255;/, 'the guide grey');
+var TINT_GREY  = num(/const FOIL_TINT_GREY  = (\d+) \/ 255;/, 'the bleed tint');
+var FOIL_SAFE_MM  = num(/const FOIL_SAFE_MM    = ([\d.]+);/, 'the safe inset');
+var FOIL_GUIDE_MM = num(/const FOIL_GUIDE_MM   = ([\d.]+);/, 'the guide weight');
+// The plan is cut out of the shipped file and run against the shipped numbers,
+// so neither the geometry nor the greys can be right here and wrong there.
+var FOIL_GUIDE_GREY = GUIDE_GREY / 255, FOIL_TINT_GREY = TINT_GREY / 255;
+eval(grabHost('foilTemplatePlan'));
+
+var pA5 = foilTemplatePlan(148, 210), pLand = foilTemplatePlan(210, 148),
+    pCard = foilTemplatePlan(85, 55);
+is([pA5.pageW, pA5.pageH], [154, 216], 'A5 is the card plus 3mm of bleed all round');
+is([pLand.pageW, pLand.pageH], [216, 154], 'landscape is that page turned, and nothing else');
+is([pCard.pageW, pCard.pageH], [91, 61],
+   'the smallest card in the catalogue needs no special case of its own');
+
+is([pA5.trim.x, pA5.trim.y, pA5.trim.w, pA5.trim.h], [3, 3, 148, 210],
+   'the trim line is where the knife falls, inset by the bleed on every edge');
+is([pA5.safe.x, pA5.safe.y, pA5.safe.w, pA5.safe.h], [7, 7, 140, 202],
+   'and the safe line is ' + FOIL_SAFE_MM + 'mm inside the trim on every edge');
+is(pA5.trim.dash, null, 'the trim line is solid');
+is(!!pA5.safe.dash, true, 'and the safe line is dashed, so the two cannot be confused');
+
+print('\nAND IT DOES NOT ARRIVE LOOKING BLANK');
+// It did. The old template was four 0.4pt corner ticks in 0.80 grey: 207
+// non-white pixels out of 1,068,552, which is 0.019% of the page. He
+// downloaded it and asked whether a blank page was correct.
+function inked(p) {    // the share of the page the lines cover
+  return (2 * (p.trim.w + p.trim.h) * p.trim.weight
+       +  2 * (p.safe.w + p.safe.h) * p.safe.weight / 2) / (p.pageW * p.pageH);
+}
+is(inked(pA5) > 0.004, true,
+   'the lines cover enough of the page to be seen — and to be found again by the '
+   + 'check below');
+is(inked(pCard) > 0.004, true, 'on the smallest card too, not just on A5');
+is(FOIL_GUIDE_MM >= 0.3, true, 'at a weight a printer would recognise as a guide');
+is(/borderColor:grey, borderWidth:r\.weight\*MM/.test(HTML), true,
+   'and the weight in the plan is the weight that is drawn');
+// Dropping plan.safe from this one line passed every other assertion in the
+// suite: the plan still described a safe line and a label still named it, but
+// nothing drew it. A plan is not a page.
+is(/\[plan\.trim, plan\.safe\]\.forEach\(function\(r\)\{/.test(HTML), true,
+   'both lines are drawn, not just the trim');
+
+is(pA5.tint === TINT_GREY / 255 && pA5.tint > 0 && pA5.tint < 1, true,
+   'the bleed carries a tint of its own');
+is(TINT_GREY > GUIDE_GREY, true,
+   'lighter than the lines, so it reads as a hint rather than as a mark');
+is(/width:plan\.pageW\*MM, height:plan\.pageH\*MM,\s*\n\s*color:L\.rgb\(plan\.tint/.test(HTML),
+   true, 'the whole page is laid down in it — this is what stopped the template '
+   + 'arriving as a white rectangle');
+is(/width:plan\.trim\.w\*MM, height:plan\.trim\.h\*MM, color:L\.rgb\(1,1,1\) \}\);/.test(HTML),
+   true, 'and the card is knocked back to white over it, leaving only the bleed tinted');
+
+is(pA5.labels.map(function (l) { return l.text; }), ['BLEED', 'TRIM', 'SAFE AREA'],
+   'all three guides are named, in the agreed words and only those');
+// Each word has to sit above its own line and below the next one. Three lines
+// and three words with nothing joining them up is a puzzle, not a template.
+var PT = 25.4 / 72, CAP = 0.717;            // Helvetica cap height, in em
+function top(l) { return l.y + l.size * CAP * PT; }
+is(top(pA5.labels[0]) < pA5.trim.y, true, 'BLEED sits in the strip that is cut away');
+is(pA5.labels[1].y > pA5.trim.y && top(pA5.labels[1]) < pA5.safe.y, true,
+   'TRIM sits in the channel between the trim line and the safe line');
+is(pA5.labels[2].y > pA5.safe.y, true, 'SAFE AREA sits inside the safe line');
+is(/plan\.labels\.forEach\(function\(t\)\{\s*\n\s*page\.drawText\(t\.text,/.test(HTML), true,
+   'and every one of them is actually drawn');
+
+print('\nTHE CHECK FINDS OUR OWN GUIDES AGAIN');
+// The guides are drawn light enough that neither the foil test nor the colour
+// test objects to them, which is deliberate — a template is not refused for
+// marks we put there ourselves. That makes the numbers a pair: move the grey
+// and the check goes blind. Both are read out of the shipped file, so they
+// cannot drift apart quietly.
+var DARK = num(/if \(mx < (\d+)\) \{\s*\n\s*dark\+\+;/, 'the dark threshold');
+var branch = HTML.match(/else if \(\(mx - mn\) <= 2 &&[^\n]*guide\+\+;/);
+is(!!branch, true, 'there is a branch of its own that counts the guides');
+var bands = ((branch ? branch[0] : '').match(/mx >= \d+ && mx <= \d+/g) || [])
+  .map(function (b) { var m = b.match(/(\d+).*?(\d+)/); return [ +m[1], +m[2] ]; });
+is(bands.length, 2, 'and it looks for both the greys we draw with');
+[['lines and labels', GUIDE_GREY], ['bleed tint', TINT_GREY]].forEach(function (pair) {
+  is(bands.some(function (b) { return pair[1] >= b[0] && pair[1] <= b[1]; }), true,
+     'the grey the ' + pair[0] + ' are drawn in falls inside a band the check looks for');
+  is(pair[1] >= DARK, true,
+     'and is light enough that the ' + pair[0] + ' are never counted as foil');
+});
+is(/r\.guides > 0\.0025/.test(HTML), true,
+   'a file still carrying them is flagged well below the 1.3% a template leaves');
+is(/status:'warn', label:'Template guides'/.test(HTML), true,
+   'as a warning — it is an unfinished file, not a wrong one, and foilLayerAccepted '
+   + 'only blocks on an error');
+
+print('\nWHAT REACHES THE PRINTER');
 is(/async function downloadFoilTemplate\(\)\{/.test(HTML), true,
-   'there is a template to start from \u2014 the thing PrintedEasy do not give '
+   'there is a template to start from — the thing PrintedEasy do not give '
    + 'their own customers');
-is(/const wMm = spec\.mmW \+ 2\*b, hMm = spec\.mmH \+ 2\*b;/.test(HTML), true,
-   'at trim plus bleed, which is what the checks expect, not the larger press '
-   + 'page that carries crop marks');
-is(/const grey = L\.rgb\(0\.80, 0\.80, 0\.80\)/.test(HTML), true,
-   'with the corner ticks in grey: neither dark enough to read as foil nor '
-   + 'saturated enough to read as colour, so a template with the guides left '
-   + 'in is not refused for marks we put there ourselves');
+is(/const plan = foilTemplatePlan\(spec\.mmW, spec\.mmH\);/.test(HTML), true,
+   'drawn from the size the customer has actually chosen, at trim plus bleed, '
+   + 'not from a stored file that could be for another card');
 is(/'foil-template-' \+ String\(selectedSize\)\.toLowerCase\(\)/.test(HTML), true,
    'named for the size it is for');
 is(/facesForFoil\(\) > 1/.test(HTML), true,

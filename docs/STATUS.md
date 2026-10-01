@@ -175,6 +175,40 @@ the autovacuum fix from §11 holding.
    Copper, Rose Gold, Red, Blue, Holographic and Green, in `finish_types` with
    a swatch each. We had three.
 
+   **Route A is finished (1 October).** "I have a foil layer" runs end to end:
+   the upload slot, the checks, the measurement, the area on the order, the
+   job ticket, and which face is foiled. The template is the last piece. There
+   is **no library of template files and there does not need to be one** — a
+   template is a function of the finished width and height and nothing else.
+   The product does not come into it; the fold does not change it, because the
+   foil layer is one page at the finished size, which is the front panel, so a
+   folded A5 wants the same page as a flat one; the printed sides do not change
+   it; and orientation is already in the two numbers, because `sizeSpec` swaps
+   them for landscape. So it is drawn on demand by `foilTemplatePlan`, and a
+   size added in admin tomorrow has a correct template that afternoon with
+   nothing to generate and nothing to go stale.
+
+   It arrived blank the first time and he said so. The old one was four 0.4pt
+   corner ticks at 0.80 grey — 207 non-white pixels out of 1,068,552, 0.019% of
+   the page. It now carries a tinted bleed, a solid trim line, a dashed safe
+   area 4mm in, and the three words **TRIM**, **BLEED** and **SAFE AREA**, each
+   above the line it names. Measured on the rendered page: 7.8% non-white, of
+   which 6.0% is the bleed tint and 0.74% the lines.
+
+   The guides are mid-grey (140) on purpose — above the 110 the foil test calls
+   dark, and perfectly neutral, so the colour test never sees them either. A
+   template with the guides still in is not refused for marks we put there
+   ourselves. Instead a new **Template guides** check notices them and warns.
+   Measured: our template reads 6.7%, a foil layer that never touched it reads
+   0.009–0.054% whatever the point size, and the threshold sits at 0.25%
+   between them. It is a warning, not a refusal — an unfinished file, not a
+   wrong one — and the grey never enters the area measurement, which still
+   reports the lettering alone.
+
+   **Still open on foiling:** Route B ("make it from my artwork"), the pricing,
+   and the two questions for PrintedEasy by email — the 7pt minimum and the
+   maximum foiled area.
+
 10. **`delivery.html` publishes delivery prices we do not charge.** Express is
    shown as a flat **£12.00** and Next Day as a flat **£18.00**. Neither is
    real: Express is +20% of the order with a £20 minimum, Express Plus +40%
