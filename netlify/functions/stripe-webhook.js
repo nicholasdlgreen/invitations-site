@@ -370,6 +370,15 @@ function buildJobTicketHtml(o) {
     const printUrl = it.printArtworkUrl || (single ? o.printReadyUrl : null);
     const artUrl   = it.artworkUrl      || (single ? o.artworkUrl    : null);
     const spec     = it.printSpec || null;
+    // The foil, if there is any. Everything the printer's own form asks for is
+    // here — how many areas, how big each one is, whether any runs off the cut
+    // — because it was measured from the customer's foil layer rather than
+    // guessed at. The foil layer itself is a second PDF, and without it the
+    // job cannot be placed at all, so its absence is said loudly.
+    const foil     = it.foilSpec || (spec && spec.foil) || null;
+    const foilUrl  = it.foilLayerUrl || (foil && foil.url) || null;
+    const foilSaid = (it.finishes && it.finishes.Foiling)
+                     || (spec && spec.finishes && spec.finishes.Foiling) || null;
     const title    = single
       ? 'Print Specification'
       : `Item ${i + 1} of ${itemList.length}${it.name ? ' &mdash; ' + it.name : ''}`;
@@ -387,6 +396,20 @@ function buildJobTicketHtml(o) {
                              : 'Trim size plus 3mm bleed and crop marks')}
       ${row('Bleed',       '3mm all sides, crop marks included')}
       ${row('Colour Mode', 'RGB supplied &mdash; your RIP converts (as advised by PrintedEasy)')}
+      ${foil
+        ? row('Foiling',
+            `<strong>${foil.colour}</strong> &mdash; `
+            + `${foil.areas && foil.areas.length === 1 ? 'one area' : (foil.areas || []).length + ' areas'}, `
+            + `${(foil.areas || []).map(a => `${a.wMm} &times; ${a.hMm}mm`).join(' and ')}`
+            + `, ${foil.face || 'front'}`
+            + (foil.bleeds ? ', <strong>runs off the edge</strong>' : ', does not run off the edge')
+            + `<div style="font-size:11px;color:#7A6558;margin-top:4px;">`
+            + `Measured from the supplied foil layer. Covers ${foil.coverage}% of the card. `
+            + `Foil sits over the print &mdash; the artwork is unchanged.</div>`)
+        : (foilSaid && String(foilSaid).toLowerCase() !== 'none'
+            ? row('Foiling', missing(`${foilSaid} &mdash; NO FOIL LAYER RECORDED. Do not print: `
+                 + `the press has nothing to make the plate from. Check the order before proceeding.`))
+            : '')}
     </table>
     <table width="100%" cellpadding="0" cellspacing="0"
            style="background:#FAF7F2;border-radius:6px;border:2px dashed #E8DDD8;margin-top:8px;">
@@ -416,6 +439,15 @@ function buildJobTicketHtml(o) {
           : `<div style="font-size:11px;color:#B0A098;margin-top:10px;font-family:Arial,sans-serif;">
                No original upload stored &mdash; check the admin dashboard.
              </div>`}
+        ${foilUrl
+          ? `<div style="font-size:11px;color:#7A6558;margin:14px 0 4px;font-family:Arial,sans-serif;">
+               Foil layer &mdash; the areas to foil, 100% black, same size and position as the print file:
+             </div>
+             <a href="${foilUrl}" style="color:#B8976A;font-size:12px;word-break:break-all;font-family:Arial,sans-serif;">
+               &#10039; Download FOIL LAYER
+             </a>
+             <div style="font-size:10px;color:#B0A098;margin-top:6px;font-family:Arial,sans-serif;">${fileOf(foilUrl)}</div>`
+          : ''}
       </td></tr>
     </table>
   </td></tr>`;

@@ -298,6 +298,34 @@ is(/S\.openFin = more \? t : null;/.test(SRC), true,
 is(/S\.finishes\[t\] = o; S\.openFin = null;/.test(SRC), false,
    'never closed unconditionally again');
 
+print('\nTHE TEMPLATE, AND WHAT REACHES THE PRINTER');
+is(/async function downloadFoilTemplate\(\)\{/.test(HTML), true,
+   'there is a template to start from \u2014 the thing PrintedEasy do not give '
+   + 'their own customers');
+is(/const wMm = spec\.mmW \+ 2\*b, hMm = spec\.mmH \+ 2\*b;/.test(HTML), true,
+   'at trim plus bleed, which is what the checks expect, not the larger press '
+   + 'page that carries crop marks');
+is(/const grey = L\.rgb\(0\.80, 0\.80, 0\.80\)/.test(HTML), true,
+   'with the corner ticks in grey: neither dark enough to read as foil nor '
+   + 'saturated enough to read as colour, so a template with the guides left '
+   + 'in is not refused for marks we put there ourselves');
+is(/'foil-template-' \+ String\(selectedSize\)\.toLowerCase\(\)/.test(HTML), true,
+   'named for the size it is for');
+is(/facesForFoil\(\) > 1/.test(HTML), true,
+   'a piece with more than one face is told which one is foiled \u2014 the foil '
+   + 'layer is a single page at the finished size, so it can only be the front, '
+   + 'and that was assumed silently');
+
+var WH = readFile('netlify/functions/stripe-webhook.js');
+is(/const foil     = it\.foilSpec \|\| \(spec && spec\.foil\) \|\| null;/.test(WH), true,
+   'the job ticket reads the foil from the line, falling back to the press spec');
+is(/Download FOIL LAYER/.test(WH), true, 'and gives the printer the file itself');
+is(/NO FOIL LAYER RECORDED/.test(WH), true,
+   'and says so loudly when foiling was ordered and no layer was recorded, '
+   + 'rather than leaving the row off and the job looking ordinary');
+is(/Measured from the supplied foil layer/.test(WH), true,
+   'the areas and sizes are presented as measured, not as the customer\u2019s guess');
+
 print('\nWHERE THE BLOCK APPEARS');
 is(/if \(!\/foil\/i\.test\(typeName\)\) return '';/.test(HTML), true,
    'only on the foiling row');

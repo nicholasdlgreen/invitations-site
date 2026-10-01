@@ -97,6 +97,10 @@ body.wide-step .step-bar{display:none;}
       box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);}
     #s3wrap .foilSum .tx{font-size:13.5px;color:var(--text);}
     #s3wrap .foilSum .tx small{display:block;font-size:11.5px;color:var(--soft);margin-top:3px;}
+    #s3wrap .foilTmpl{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-family:inherit;
+      font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);
+      border:1px solid var(--gold);border-radius:60px;padding:10px 20px;background:transparent;cursor:pointer;}
+    #s3wrap .foilTmpl:hover{background:var(--gold);color:#fff;}
     html.wizard-new #s3wrap .rl.now{box-shadow:inset 0 -1px 0 0 var(--tier,var(--gold));}
     @media(max-width:768px){
       html.wizard-new .step-label{display:inline;}
@@ -5307,7 +5311,15 @@ function foilBlock(typeName, chosen){
       + '<li>The parts to be foiled in <b>100% black</b>. Everything else white</li>'
       + '<li>In the <b>same position</b> as on your artwork, so it sits over the top</li>'
       + '<li>Leave your artwork as it is \u2014 the foil goes over the print, not instead of it</li>'
-      + '</ul></div>'
+      // A folded card has four faces and the foil layer is one page at the
+      // finished card size, so it can only be the front. That was assumed
+      // silently and recorded as the front either way; now it is said.
+      + (facesForFoil() > 1
+          ? '<li>Foiling is on the <b>front</b> of the card</li>' : '')
+      + '</ul>'
+      + '<button type="button" class="foilTmpl" onclick="downloadFoilTemplate()">'
+      + 'Download the ' + esc(selectedSize || '') + ' template</button>'
+      + '</div>'
       + '<div class="foilDrop"><div class="big">Drop your foil layer here</div>'
       + '<div class="sm">One PDF. We will check it against your artwork before you pay.</div>'
       + '<button type="button" class="foilBtn" onclick="pickFoilLayer()">Choose a file</button></div>';
@@ -5392,6 +5404,53 @@ function addBlockedReason(){
   if (!foilLayer) return 'Add your foil layer';
   if (!foilLayerAccepted()) return 'Fix your foil layer';
   return null;
+}
+
+// How many faces this piece has. A flat card has one; a folded card has a
+// front, a back and the two inside panels.
+function facesForFoil(){
+  try { return (typeof sidesNeeded === 'function') ? (sidesNeeded() || []).length : 1; }
+  catch(e){ return 1; }
+}
+
+// A correctly sized blank page for them to draw the foil on. This is the
+// difference between "supply a foil layer" being an instruction and being a
+// demand: PrintedEasy ask their own customers for one and give them nothing to
+// start from, not even a size.
+//
+// Trim plus bleed, matching what the checks expect and what their artwork is —
+// NOT the press page, which is larger because it carries crop marks.
+//
+// The corner ticks are light grey on purpose. Grey is neither dark enough to
+// read as foil nor saturated enough to read as colour, so a template with the
+// guides left in still passes both checks rather than being refused for the
+// marks we put there ourselves.
+async function downloadFoilTemplate(){
+  const spec = sizeSpec(selectedSize);
+  if (!spec) return;
+  try {
+    await loadPdfLib();
+    const L = window.PDFLib;
+    const MM = 72 / 25.4, b = PRINT_BLEED_MM;
+    const doc = await L.PDFDocument.create();
+    const wMm = spec.mmW + 2*b, hMm = spec.mmH + 2*b;
+    const page = doc.addPage([wMm * MM, hMm * MM]);
+    page.drawRectangle({ x:0, y:0, width:wMm*MM, height:hMm*MM, color:L.rgb(1,1,1) });
+    const grey = L.rgb(0.80, 0.80, 0.80), t = 0.4, tick = 2.5 * MM;
+    const x0 = b*MM, y0 = b*MM, x1 = (b + spec.mmW)*MM, y1 = (b + spec.mmH)*MM;
+    // Four corners of the trim, drawn in the bleed where they are cut away.
+    [[x0,y0,1,1],[x1,y0,-1,1],[x0,y1,1,-1],[x1,y1,-1,-1]].forEach(function(c){
+      page.drawRectangle({ x:c[0] - (c[2] > 0 ? tick : 0), y:c[1]-t/2, width:tick, height:t, color:grey });
+      page.drawRectangle({ x:c[0]-t/2, y:c[1] - (c[3] > 0 ? tick : 0), width:t, height:tick, color:grey });
+    });
+    const bytes = await doc.save();
+    const url = URL.createObjectURL(new Blob([bytes], { type:'application/pdf' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'foil-template-' + String(selectedSize).toLowerCase() + '.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+  } catch(e){ console.error('[foil] could not build the template:', e.message); }
 }
 
 function pickFoilLayer(){
