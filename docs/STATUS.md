@@ -111,7 +111,50 @@ the autovacuum fix from §11 holding.
    cleanup job exists.** It needs a scheduled function that lists the bucket
    and removes anything older than seven days with no order against it.
 
-9. **`delivery.html` publishes delivery prices we do not charge.** Express is
+9. **Foiling.** Researched 1 October against PrintedEasy's own configurator,
+   driven end to end rather than read off the page source.
+
+   **Done, and already live:** foiling is greyed with "Not available" on the
+   five papers PrintedEasy cannot foil — Tintoretto Gesso, Nettuno Bianco,
+   Acquerello Bianco, Sirio Pearl Polar Dawn and Recycled Uncoated, all bought
+   from their Luxury Flat product, which has no foiling controls at all. It
+   stays available on the four that can take it: Uncoated, Silk and Cartonboard
+   (their Postcards) and Ice White (their Greeting Cards). This needed no work
+   — `paper_stocks.finishes` already excluded it, and the greying built on 30
+   September made the refusal visible instead of silently dropping the row.
+   Verified by walking all nine papers on the order page.
+
+   **Open — the copy says otherwise.** Every one of the 19 products that offers
+   foiling carries it in `features`, and wedding invitations also has it in
+   `tagline` and `intro_long`; menu cards has it in `tagline`. The wedding
+   invitations line reads "…textured and pearlescent stocks made by Fedrigoni
+   in Italy. Add gold, silver or rose gold foil…" — offering the Fedrigoni
+   papers and foil in one sentence when those are the papers that cannot have
+   it. The configurator refuses correctly; the marketing promises it anyway.
+   Nicholas's wording, as always.
+
+   **Open — the price is unverified and cannot be right.** We charge a flat £70
+   from `finish_sells`. There is not one foiling row in `finish_rates`; the
+   scraper has never probed it. PrintedEasy quote per job from the size of the
+   foiled area, sides, number of areas, build height and colour — measured on
+   their site: £90 on Cartonboard and £95 on Ice White for one 50x50mm gold
+   area on 100 A5 greeting cards. So the real cost moves and ours does not, and
+   on that example we are under by £20–£25 before any margin. Spot UV is in the
+   same position at a flat £52.
+
+   **Open — we cannot actually place a foiled order.** They require two PDFs:
+   the artwork, and a mask of the foil areas in 100% black at identical size
+   and position. We collect one file per face and ask none of their six
+   questions. They publish no foiling guide and no template, so a customer
+   could not make the mask unaided either. The answer is for us to generate the
+   mask and measure the area ourselves — their hardest question, the size of
+   the foiled area, is the one we could answer exactly. Staged plan in the
+   1 October review.
+
+   Also recorded: their foil colours are Gold, Silver, Copper, Rose Gold, Red,
+   Blue, Holographic and Green. Our three are all genuinely on that list.
+
+10. **`delivery.html` publishes delivery prices we do not charge.** Express is
    shown as a flat **£12.00** and Next Day as a flat **£18.00**. Neither is
    real: Express is +20% of the order with a £20 minimum, Express Plus +40%
    with a £40 minimum — £21.60 and £43.20 on a £108 order, and more on a bigger
@@ -122,7 +165,7 @@ the autovacuum fix from §11 holding.
    to a customer, and how price is presented is parked until the margins in
    item 1. It cannot ship like this.
 
-10. **`cart.js` asks the wrong question about where it is.** It decides whether
+11. **`cart.js` asks the wrong question about where it is.** It decides whether
    you are on the order page with `pathname.includes('upload-and-print')`,
    which is **false on the clean `/<slug>/order` URL every customer uses**. The
    page's own override masks it today, so nothing is broken; if that override
@@ -131,12 +174,12 @@ the autovacuum fix from §11 holding.
    the product they were configuring. Same family as the flag that was read
    off the query string on 30 September. Found 1 October, not fixed.
 
-11. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
+12. **Three tests do not run at all** — `test-route-gating`, `test-slug-from-url`
    and `test-section-race`. They read fixtures from a scratchpad that no longer
    exists. Small job, but a real failure can hide behind noise that is always
    there.
 
-12. **The migration backups are still in the database.**
+13. **The migration backups are still in the database.**
    `studio_prompt_options_pre_20260929` and `studio_config_pre_20260929` hold
    the old chip vocabulary so `tools/sql/studio_vocab_20260929_rollback.sql`
    can put it back. Drop both once the six-box step 3 has bedded in.
