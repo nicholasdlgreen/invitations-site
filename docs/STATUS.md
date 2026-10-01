@@ -582,10 +582,47 @@ the autovacuum fix from §11 holding.
    revived it will need its own foil layer**, and it is the easier of the two:
    its text is already real SVG elements with ids.
 
-   **Still open:** showing the gold in the studio as a selling layer, which is
-   the Option A he parked. It can be added on top of this without rework, and
-   it carries the decision about whether a foil choice may hide the five
-   premium papers.
+   **Revised the same day to per-line, with the design on screen.** Nicholas
+   looked at the panel and made three calls: the customer cannot tell what can
+   be foiled, the reassurance is answering questions they never asked, and
+   **they cannot see it**. So:
+
+   - **Choose a colour, then choose the lines.** Each line is listed in the
+     customer's own words — "Charlotte & James", not a field called `names` —
+     with **All** and **None**. Foiling opens at None and only becomes
+     something when a colour is chosen, at which point every line is ticked to
+     pare back from.
+   - **Their design is on screen**, with the ticked lines in the chosen foil.
+     Worth knowing: step 3 was already being handed the artwork and storing it
+     in a variable it never read. The design was invisible through paper,
+     finishing and quantity, and now is not.
+   - **Gone:** "Your foil layer is ready", the traffic light, and the size,
+     colour and content rows. All of it reports on work the customer did not
+     do. The checks still RUN and still reach the job ticket; they only appear
+     if one fails.
+
+   **How a line is foiled on its own.** The studio records where each line sits
+   as a **fraction of the page height**, widened to meet its neighbours so the
+   bands tile the page exactly — measured: 0–0.364, 0.364–0.523, 0.523–0.589,
+   0.589–0.646, 0.646–1. The order page keeps only the marks inside ticked
+   bands and rebuilds the layer. **Nothing is redrawn and no text is
+   re-measured**, which is what stops the foil drifting off the card. Measured
+   per line: unticking two takes them to **0** dark pixels while the other
+   three are unchanged to the pixel.
+
+   **Two bugs the build found, both only visible by running it:**
+   - **Every band after the first came out NaN.** The widening read each
+     neighbour's edges after having already overwritten and deleted them.
+     Fixed by reading all the original edges first.
+   - **Two quick ticks stuck the panel on "Checking your foil layer" for
+     good.** Each tick starts a rebuild that rasterises, builds a PDF and runs
+     the checks, so they overlap. Last-wins token; the overtaken runs stand
+     down.
+
+   **Still open:** showing the gold in the studio itself as a selling layer,
+   which is the Option A he parked. It can be added on top of this without
+   rework, and it carries the decision about whether a foil choice may hide the
+   five premium papers.
 
    **Still open on foiling:** the pricing; how Route B is offered on the FIRST
    foiling screen rather than only after a failure (parked by Nicholas until

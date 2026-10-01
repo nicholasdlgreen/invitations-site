@@ -2459,6 +2459,10 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       stack.querySelectorAll('.ln.show').forEach(function(el){
         var cs = window.getComputedStyle(el);
         lines.push({
+          // Which box this line came from, so the order page can offer it by
+          // name and foil it on its own. The preview elements are id'd pv-host,
+          // pv-names and so on, which is the only place that mapping exists.
+          key: (el.id || '').replace(/^pv-/, '') || 'line',
           text: el.textContent,
           px: parseFloat(cs.fontSize) * scaleY * textScale,
           italic: cs.fontStyle === 'italic',
@@ -2498,6 +2502,11 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
 
       ctx.textAlign = 'center';
       var fy = y;                      // the same starting baseline, kept apart
+      // Where each line sits on the page, so a customer can foil some lines and
+      // not others. Recorded as FRACTIONS of the page height, not pixels: the
+      // order page rasterises the layer at whatever scale suits it, and a
+      // fraction survives that where a pixel would not.
+      var bands = [];
       lines.forEach(function(l){
         y += l.mt;
         var fam = l.italic ? "italic " : "";
@@ -2513,7 +2522,26 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
         fctx.font = fam;
         fctx.fillStyle = '#000000';
         fctx.fillText(txt, centreX, fy + l.px);
+        bands.push({ key: l.key, text: txt, top: fy, bottom: fy + l.px*1.32 });
         fy += l.px*1.32 + l.mb;
+      });
+
+      // Widen each band to meet its neighbours, so every pixel of the page
+      // belongs to exactly one line and nothing can fall between two of them.
+      // A glyph can overshoot its own advance \u2014 a descender, an accent \u2014 and
+      // without this such a pixel would survive into a line nobody ticked.
+      // Read every original edge BEFORE widening any of them. Doing it in
+      // place reads a neighbour that has already been rewritten \u2014 and since
+      // the old edges were being deleted as it went, every band after the
+      // first came out NaN. Caught by running it rather than by reading it.
+      var edges = bands.map(function(b){ return { top: b.top, bottom: b.bottom }; });
+      bands.forEach(function(b, i){
+        var prev = edges[i-1], next = edges[i+1];
+        var top    = prev ? (prev.bottom + edges[i].top) / 2 : 0;
+        var bottom = next ? (edges[i].bottom + next.top) / 2 : PH;
+        b.y0 = Math.max(0, top / PH);
+        b.y1 = Math.min(1, bottom / PH);
+        delete b.top; delete b.bottom;
       });
 
       // export as JPEG data URL (high quality)
@@ -2521,7 +2549,8 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
       // PNG for the foil layer, not JPEG: it is solid black on white and JPEG
       // would ring every edge with grey, which is exactly what the colour
       // check on the order page refuses.
-      callback(dataUrl, fcv.toDataURL('image/png'), { pw:PW, ph:PH, trimMmW:trimMmW, trimMmH:trimMmH });
+      callback(dataUrl, fcv.toDataURL('image/png'),
+               { pw:PW, ph:PH, trimMmW:trimMmW, trimMmH:trimMmH, lines:bands });
     };
     img.onerror = function(){ callback(null); };
     img.src = bg.src;
@@ -2680,7 +2709,7 @@ function artworkFileName(prefix, ext){
     btn.textContent = 'Preparing your design…';
     btn.disabled = true;
 
-    flattenToPrintFile(function(printImage, foilImage){
+    flattenToPrintFile(function(printImage, foilImage, foilGeom){
       if(!printImage){ btn.textContent = '↻ Try again'; btn.disabled=false; return; }
 
       // The inside, if they asked for one. Type on the card's own paper, built
@@ -2745,6 +2774,7 @@ function artworkFileName(prefix, ext){
             if (fr.ok) {
               console.log('[studio-foil]', built.pageMm.w + 'x' + built.pageMm.h + 'mm foil layer ready');
               res.foilLayerUrl = SB_URL + '/storage/v1/object/public/artwork/' + foilName;
+            res.foilLines = (foilGeom && foilGeom.lines) || null;
             } else {
               console.warn('[studio-foil] upload failed:', fr.status);
             }
@@ -2783,6 +2813,10 @@ function artworkFileName(prefix, ext){
             // foiling is ever chosen; null if anything went wrong, in which
             // case the order page falls back to asking for an upload.
             foilLayerUrl: res.foilLayerUrl || null,
+            // Which line is where on that layer, as fractions of the page
+            // height, so the order page can foil some lines and not others
+            // without having to redraw any text itself.
+            foilLines: res.foilLines || null,
             thumbnail: thumb,                  // small image for display only
             // Every box this product actually has, keyed by its own key. The
             // five read here before were the wedding invitation's, so a

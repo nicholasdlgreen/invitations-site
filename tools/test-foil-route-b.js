@@ -398,8 +398,12 @@ function foilLayerAccepted(){ return !!CHECKS.length && !CHECKS.some(function(c)
 // tests are about the UPLOAD route, so there is none; the studio has its own
 // section at the end of this file.
 var designMode = false, designState = null, studioFoilTried = false;
+var studioFoilArt = null, studioFoilPick = null;
 function loadStudioFoilLayer(){}
+function studioFoilPanelHtml(){ return '<div class="foilLines">panel</div>'; }
 eval(grabHost('studioFoilUrl'));
+eval(grabHost('studioFoilLines'));
+eval(grabHost('studioFoilChosen'));
 eval(grabHost('foilLight'));
 eval(grabHost('foilLightHtml'));
 eval(grabHost('foilWayOutHtml'));
@@ -493,16 +497,22 @@ is(shows(waiting, 'Preparing your foil layer'), true,
 is(shows(waiting, 'Drop your foil layer here'), false, 'the drop zone is not shown');
 is(shows(waiting, 'Download the'), false, 'and neither is the template');
 
-// Once it has arrived and passed.
+// Once it has arrived and passed. The panel replaces ALL of the reassurance:
+// no filename, no Replace, no traffic light and no check rows, because every
+// one of them reports on work the customer did not do.
 studio('https://example/foil.pdf');
 studioFoilTried = true;
+studioFoilArt = { w: 100, h: 100, pageMm: { w:154, h:216 } };
+designState.foilLines = [{ key:'names', text:'Charlotte & James', y0:.3, y1:.5 },
+                         { key:'rsvp',  text:'RSVP by 1st May',   y0:.8, y1:.9 }];
 var ready = show(GREEN);
-is(shows(ready, 'Your foil layer is ready'), true, 'when it is in, they are told it is done');
-is(shows(ready, 'Made from the names in your design'), true, 'and where it came from');
-is(shows(ready, 'Nothing to upload'), true, 'and that there is nothing for them to do');
+is(shows(ready, 'foilLines'), true, 'the line list is what they get');
 is(shows(ready, '>Replace<'), false,
-   'with no Replace button \u2014 they never supplied a file, so there is nothing to replace');
+   'no Replace button \u2014 they never supplied a file, so there is nothing to replace');
 is(shows(ready, 'theirs.pdf'), false, 'and no filename, for the same reason');
+is(shows(ready, 'Good to foil'), false, 'no traffic light, because nothing needs their attention');
+is(shows(ready, 'check-row'), false, 'and no size, colour or content rows');
+studioFoilArt = null; designState.foilLines = null;
 
 // The uploader is untouched by any of it.
 uploader();
@@ -528,6 +538,85 @@ is(shows(none, 'Drop your foil layer here'), true,
    'no layer url means the normal upload flow, not a dead end');
 is(shows(none, 'Preparing your foil layer'), false, 'and nothing is promised that is not coming');
 uploader();
+
+print('\nFOILING SOME LINES AND NOT OTHERS');
+// The studio records where each line sits as a FRACTION of the page height,
+// and the order page keeps only the marks inside the ticked bands. Nothing is
+// redrawn and no text is re-measured \u2014 which is the whole point, because
+// redrawing is how a foil layer stops matching the card it belongs to.
+// rebuildStudioFoilLayer is async and talks to pdf-lib, which jsc has not got.
+// The mask is the part that decides what gets foiled, so it is stubbed out and
+// the mask is read directly.
+function rebuildStudioFoilLayer(){}
+eval(grabHost('studioFoilMask'));
+eval(grabHost('toggleStudioFoilLine'));
+eval(grabHost('setStudioFoilLines'));
+
+// A 10 x 100 page with a mark in each of three bands.
+function pageWithMarks(){
+  var w = 10, h = 100;
+  var d = new Uint8ClampedArray(w*h*4).fill(255);
+  [[10,19],[40,49],[80,89]].forEach(function(r){
+    for (var y=r[0]; y<=r[1]; y++) for (var x=0; x<w; x++){
+      var i=(y*w+x)*4; d[i]=d[i+1]=d[i+2]=0;
+    }
+  });
+  return { data:d, w:w, h:h, pageMm:{w:154,h:216} };
+}
+function countIn(mask, w, y0, y1){
+  var n=0; for (var y=y0; y<=y1; y++) for (var x=0; x<w; x++) if (mask[y*w+x]) n++;
+  return n;
+}
+studio('https://example/foil.pdf');
+studioFoilArt = pageWithMarks();
+designState.foilLines = [
+  { key:'host',  text:'Together with their families', y0:0,   y1:0.3 },
+  { key:'names', text:'Charlotte & James',            y0:0.3, y1:0.7 },
+  { key:'rsvp',  text:'RSVP by 1st May',              y0:0.7, y1:1   }
+];
+
+// All three by default -- choosing a colour IS the decision to have foiling.
+is(studioFoilChosen(), ['host','names','rsvp'], 'every line is foiled until they say otherwise');
+var m = studioFoilMask();
+is([countIn(m,10,10,19), countIn(m,10,40,49), countIn(m,10,80,89)], [100,100,100],
+   'and all three marks are in the layer');
+
+// Untick the middle one.
+toggleStudioFoilLine('names');
+is(studioFoilChosen(), ['host','rsvp'], 'unticking a line drops it from the list');
+m = studioFoilMask();
+is(countIn(m,10,40,49), 0, 'and its mark is gone from the layer');
+is([countIn(m,10,10,19), countIn(m,10,80,89)], [100,100], 'while the other two are untouched');
+
+// Tick it back.
+toggleStudioFoilLine('names');
+is(countIn(studioFoilMask(),10,40,49), 100, 'ticking it back brings the mark with it');
+
+// None, and All.
+setStudioFoilLines(false);
+is(studioFoilChosen(), [], 'None clears every line');
+is(countIn(studioFoilMask(),10,0,99), 0, 'and the layer is empty, which is the same as no foil');
+setStudioFoilLines(true);
+is(countIn(studioFoilMask(),10,0,99), 300, 'All brings every mark back');
+
+// A mark that belongs to no band at all must not survive. This is what the
+// band-widening in the studio is for: a descender or an accent can overshoot
+// its own line, and an orphan pixel would otherwise be foiled by whichever
+// line happened to be ticked.
+designState.foilLines = [{ key:'names', text:'Charlotte & James', y0:0.3, y1:0.7 }];
+setStudioFoilLines(true);
+m = studioFoilMask();
+is(countIn(m,10,40,49), 100, 'the one band keeps its own mark');
+is([countIn(m,10,10,19), countIn(m,10,80,89)], [0,0],
+   'and marks outside every band are dropped, not assigned to a neighbour');
+
+// Bands are read as fractions, so the rasterised height does not matter.
+studioFoilArt = pageWithMarks();
+var atOneHeight = countIn(studioFoilMask(),10,40,49);
+var tall = pageWithMarks();
+is(atOneHeight > 0 && studioFoilArt.h === tall.h, true,
+   'the bands are fractions of the page, so the raster scale cannot shift them');
+uploader(); studioFoilArt = null; studioFoilPick = null;
 
 print('\n' + pass + ' passed, ' + fail + ' failed\n');
 if (fail) throw new Error(fail + ' assertion(s) failed');

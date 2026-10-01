@@ -311,8 +311,9 @@ print('\nTHE CANVAS SURVIVES A REDRAW');
 // time, rather than left hoping a redraw never happens.
 is(/\}\)\.join\(''\);\n    sizeOpenFinPanel\(\);\n(.*\n)*?    if \(A\.afterPaint\) A\.afterPaint\(\);/.test(SRC),
    true, 'step 3 tells the host once the finishing body has been replaced');
-is(/    afterPaint: paintFoilPick,/.test(HTML), true,
-   'and the host answers it by painting the artwork back');
+is(/afterPaint: function\(\)\{ paintFoilPick\(\); paintStudioFoilCard\(\); \}/.test(HTML), true,
+   'and the host answers it by painting BOTH canvases back — Route B’s picker and '
+   + 'the studio’s card both live inside the body that was just replaced');
 
 print('\nTHE TEMPLATE IS A FUNCTION OF TWO NUMBERS');
 // There is no library of template files and there does not need to be one. The
