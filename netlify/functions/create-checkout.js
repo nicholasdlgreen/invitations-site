@@ -69,20 +69,51 @@ async function supabaseSelect(path) {
   return res.json();
 }
 
-async function loadPricingContext() {
+// The published prices for just the products in this basket.
+//
+// This used to read the whole pricing_config payload and accept it only when
+// `schema_version === 2`. The payload has said 3 since the hierarchical publish
+// went in, so the test failed, ctx.products stayed empty, and EVERY item fell
+// through to the crude `(qty/50) x basePerFifty` fallback below. At 100 cards
+// that floors a GBP 19-91 order at GBP 300, so 741 of 741 configurations were
+// refused and nothing could be bought. Nobody saw it because the site is
+// pre-launch and no check posts a basket.
+//
+// Asking pricing_for per slug fixes that and cannot rot the same way: it is the
+// same function the order page prices from, so the floor and the price the
+// customer was shown come from one source. It also stops this function pulling
+// the whole 13MB payload on every checkout to read one product out of it.
+async function pricingForSlug(slug) {
+  const rows = await supabaseSelect(
+    'rpc/pricing_for?p_slug=' + encodeURIComponent(slug));
+  // PostgREST returns the function's single row; the payload is its one column.
+  const payload = Array.isArray(rows) ? (rows[0]?.payload ?? rows[0]) : rows?.payload;
+  const products = payload?.products;
+  return Array.isArray(products) ? products.find(p => p?.slug === slug) || null : null;
+}
+
+async function loadPricingContext(slugs) {
   const ctx = { products: {}, legacyPrices: [], basePerFifty: 150, envelopes: {}, papers: {} };
   try {
-    const [snapRows, cfgRows, envRows, paperRows] = await Promise.all([
-      supabaseSelect('pricing_config?select=payload&order=published_at.desc&limit=1'),
+    const wanted = [...new Set((slugs || []).filter(Boolean))];
+    const [priced, cfgRows, envRows, paperRows] = await Promise.all([
+      Promise.all(wanted.map(async slug => {
+        try { return [slug, await pricingForSlug(slug)]; }
+        catch (e) {
+          // One product failing must not take the whole check down: the others
+          // are still worth floring, and a null product floors on the fallback
+          // exactly as it did before.
+          console.warn('[price-check] could not load prices for', slug, e.message);
+          return [slug, null];
+        }
+      })),
       supabaseSelect('site_config?id=eq.pricing&select=data'),
       supabaseSelect('envelopes?select=id,name,price_each&active=eq.true'),
       supabaseSelect('paper_stocks?select=name,price_extra&active=eq.true')
     ]);
-    const payload = snapRows?.[0]?.payload;
-    if (payload?.schema_version === 2 && Array.isArray(payload.products)) {
-      payload.products.forEach(p => { ctx.products[p.slug] = p; });
-    } else if (Array.isArray(payload?.prices)) {
-      ctx.legacyPrices = payload.prices;
+    priced.forEach(([slug, p]) => { if (p) ctx.products[slug] = p; });
+    if (!Object.keys(ctx.products).length && wanted.length) {
+      console.warn('[price-check] no published prices for any of:', wanted.join(', '));
     }
     const cfg = cfgRows?.[0]?.data;
     if (cfg?.basePerFifty != null) ctx.basePerFifty = parseFloat(cfg.basePerFifty);
@@ -139,12 +170,27 @@ function floorPriceFor(item, ctx) {
     // legitimate single-sided order claims and reject it at checkout.
     // Rows published before either existed carry neither, and those are flat
     // and single.
+    //
+    // WEIGHT is the one part of the key the basket does not carry, and a paper
+    // is sold in up to five of them. So there is rarely one matching row —
+    // there are several, one per weight — and .find() took whichever came
+    // first. On the live payload that was sometimes the DEAREST: 7,129
+    // configurations across 19 products floored above the cheapest legitimate
+    // order, worst case demanding GBP 124.80 for a GBP 92.80 one, which is an
+    // honest customer being refused at the last click.
+    //
+    // The floor is the LEAST an item could legitimately cost, so where the
+    // basket cannot tell us which weight was chosen, the answer is the cheapest
+    // of them. Any weight is a real order; refusing the cheapest is a bug, and
+    // a floor that is too high protects nothing.
     const wantFold  = b.fold || 'flat';
     const wantSides = b.printedSides || 'single';
-    const hit = product.sheet_sells.find(s =>
+    const matches = product.sheet_sells.filter(s =>
       s.paper === b.paperName && s.size === b.size && parseInt(s.qty, 10) === qty &&
       (s.fold  || 'flat')   === wantFold &&
       (s.sides || 'single') === wantSides);
+    const hit = matches.reduce((lowest, s) =>
+      (lowest == null || (parseFloat(s.sell) || 0) < (parseFloat(lowest.sell) || 0)) ? s : lowest, null);
     if (hit) {
       // The site charges for every finishing type chosen, so the floor has to
       // count every one too — otherwise a card with foil AND rounded corners
@@ -225,7 +271,12 @@ exports.handler = async (event) => {
     }
 
     // ── Verify what the browser says this costs ──────────
-    const ctx = await loadPricingContext();
+    // Only the products actually being bought are priced. The slug is read
+    // from the same place floorPriceFor reads it — item.basis.productSlug — so
+    // the context can never be loaded for one product and looked up for
+    // another. The top-level copy is a fallback for older cart lines.
+    const ctx = await loadPricingContext(
+      cart.map(i => (i && i.basis && i.basis.productSlug) || (i && i.productSlug)));
     if (ctx) {
       for (const item of cart) {
         const claimed = parseFloat(item.total);
