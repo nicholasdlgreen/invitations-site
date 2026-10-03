@@ -1562,8 +1562,13 @@ place, grouped by what it is rather than when it turned up.
 document. The order to do things in is the table immediately below. Gaps in the
 sequence are items that have been cleared; they are not missing.
 
-Five commits were pushed and deployed on 3 October. `worker-src` is live on
-foreverprint.com and `check-live.py` passes 5,277 checks.
+Pushed and deployed on 3 October: the CSP fix, the studio foiling work, the
+shape lock, checkout reading prices again, the fold routes, and the order and
+welcome emails. `check-live.py` passes 5,277 checks.
+
+**One commit is written and NOT pushed:** `f1275eb`, the Supabase Send Email
+Hook — item 54. It is deliberately held back, because it must be tested live
+before the hook is enabled.
 
 ### Next up — the order I would do them
 
@@ -1791,10 +1796,42 @@ it, are what is left.
     plain, and want pictures and some character. Deliberately deferred; the
     sequence and the code were done first. Applies to the welcome, the order
     confirmation and the dispatch email.
-54. **The account confirmation email is Supabase's, not ours.** Unbranded by
-    default, sent by Supabase rather than Resend, and links to a supabase.co
-    URL. Check Authentication → Email Templates, and Authentication → Emails →
-    SMTP Settings, where the default shared sender has a low rate limit.
+54. **The account emails through Resend — BUILT, NOT SWITCHED ON.**
+    `netlify/functions/auth-email.js` is Supabase's Send Email Hook: Supabase
+    POSTs to it instead of sending, and confirmation, password reset and
+    sign-in links go out through Resend from `orders@foreverprint.com`, branded
+    like everything else. Committed `f1275eb` on 3 October, **not pushed**.
+
+    **It must not be enabled until it has been tested live.** With the hook on,
+    Supabase does NOT fall back to its own email — a non-2xx reply fails the
+    auth operation itself, so a mistake means nobody can register, confirm an
+    address or reset a password. Rollback is turning the hook off in Supabase,
+    which needs no deploy.
+
+    The order to switch it on:
+
+    1. Supabase → Authentication → Hooks → Send Email Hook → HTTPS
+       `https://foreverprint.com/.netlify/functions/auth-email`. Copy the
+       `v1,whsec_…` secret. **Leave it disabled.**
+    2. Netlify: add `SEND_EMAIL_HOOK_SECRET` (production, secret).
+    3. Push `f1275eb`.
+    4. Claude signs a real request with openssl and posts it, so a genuine
+       email arrives and the link can be clicked — proving the signature, the
+       link and Resend while Supabase is still sending its own.
+    5. Only then enable the hook.
+
+    **The signature check is the one part no test covers** — it needs node's
+    crypto and there is no node on this machine. Step 4 is how it gets proved.
+
+    Two mistakes would break every account email silently, and both are pinned
+    by `tools/test-auth-email.js` (36 checks, five mutants): the verify endpoint
+    is on the SUPABASE API domain rather than foreverprint.com, and an email
+    change carries two token hashes where `token_hash_new` belongs to the new
+    address.
+
+    Still worth checking while in the dashboard: Authentication → Emails → SMTP
+    Settings. Until the hook is on, confirmations go through Supabase's shared
+    sender, which is rate limited.
 55. **No record of what was emailed.** There is no log table; the only evidence
     an email was sent is Resend's dashboard. If a customer says they never got
     it, there is nothing on our side to check.
