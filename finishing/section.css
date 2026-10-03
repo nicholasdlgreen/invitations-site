@@ -2,18 +2,32 @@
    Loaded by every product landing page alongside papers/section.css.
 
    Sized against the paper section so the two agree. The paper grid is three
-   columns in 920px, 20px gap, 12px radius, so a paper card is 293 wide. A
-   foil swatch is 220 — three across in 700px, the same left edge, the same
-   gap, the same corner radius. Paper is the larger decision and stays the
-   larger thing on the page. */
+   columns in 920px, 20px gap, 12px radius, so a paper card is 293 wide.
+
+   The FOIL row is four across in 540px, so a swatch is 120 — the same left
+   edge, the same gap, the same corner radius, and a quarter of the area it
+   used to be. It was 220 and three across, which was defensible while we drew
+   three colours and became a wall once there were eight of them. Paper is
+   still the larger decision and stays the larger thing on the page.
+
+   Lamination keeps the three-column row: it is words, not swatches, and three
+   of them in a four-column grid would leave a hole. */
 
 .fs-group{max-width:920px;margin:0 auto 26px}
 .fs-group:last-of-type{margin-bottom:0}
 .fs-gname{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);line-height:1.2}
 .fs-gdesc{font-size:13px;color:var(--soft);line-height:1.6;margin-top:3px}
 .fs-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:700px;margin-top:14px}
+.fs-row.is-foil{grid-template-columns:repeat(4,1fr);max-width:540px}
 @media(max-width:880px){.fs-row{gap:14px}}
-@media(max-width:520px){.fs-row{grid-template-columns:1fr;gap:0}}
+/* Four 120px squares need 522px with the tighter gap. Below that they step
+   down rather than shrink, because a sheen stops reading as metal well before
+   it stops fitting. */
+@media(max-width:600px){.fs-row.is-foil{grid-template-columns:repeat(3,1fr);max-width:400px}}
+@media(max-width:420px){.fs-row.is-foil{grid-template-columns:repeat(2,1fr);max-width:260px}}
+@media(max-width:520px){.fs-row{grid-template-columns:1fr;gap:0}
+  /* the one-column rule above is for lamination's words; foil keeps its grid */
+  .fs-row.is-foil{gap:14px}}
 
 /* ---- foiling: the only finish with anything to look at ---- */
 .fs-o{text-align:left}

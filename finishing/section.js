@@ -11,18 +11,25 @@
 (function (global) {
   'use strict';
 
-  // A smooth diagonal sheen: dark at the corners, bright through the middle.
-  // Deliberately not a crumpled-foil texture — that read as tinfoil rather
-  // than as a finish, which is the opposite of what this brand sells.
-  function sheen(dark, mid, bright) {
-    return 'linear-gradient(135deg,' + dark + ' 0%,' + mid + ' 32%,' + bright + ' 50%,'
-         + mid + ' 68%,' + dark + ' 100%)';
+  // THE EIGHT FOILS, AND WHY THIS IS A COPY
+  //
+  // These are character-for-character the colours in step3/step3.js, which is
+  // what the customer sees at the order step. They are duplicated rather than
+  // shared because the two files are loaded by different pages — section.js by
+  // 24 landing pages, step3.js by the order page alone — and a shared file
+  // would mean a script tag on all 25 and regenerating every landing page from
+  // Supabase, which is a great deal of risk for a swatch.
+  //
+  // The copy is held honest by tools/test-foil-swatches.js, which fails if the
+  // two sets ever differ. That matters: this file knew only gold, silver and
+  // rose until 3 October, so Copper, Red, Blue, Green and Holographic all drew
+  // as GOLD on every landing page — five of the eight colours we sell, wrong,
+  // for as long as step3.js had been right.
+  function metal(a, b, c, d) {
+    return 'background:'
+      + 'radial-gradient(circle at 33% 25%,rgba(255,255,255,.96) 0%,rgba(255,255,255,.35) 26%,rgba(255,255,255,0) 52%),'
+      + 'linear-gradient(145deg,' + a + ' 0%,' + b + ' 26%,' + c + ' 48%,' + b + ' 64%,' + d + ' 100%)';
   }
-  var FOIL = {
-    gold:   sheen('#8A6A1C', '#C9A536', '#FBF0C8'),
-    silver: sheen('#767C84', '#BFC5CC', '#FBFCFD'),
-    rose:   sheen('#A66B55', '#D08E74', '#F8DDD0')
-  };
 
   function esc(v) {
     return String(v == null ? '' : v)
@@ -36,9 +43,20 @@
 
   function foilOf(name) {
     var o = String(name).toLowerCase();
-    if (o.indexOf('rose') >= 0)   return FOIL.rose;
-    if (o.indexOf('silver') >= 0) return FOIL.silver;
-    return FOIL.gold;
+    if (/rose/.test(o))   return metal('#8E5745', '#F6D6C6', '#D08E74', '#7E4A39');
+    if (/silver/.test(o)) return metal('#6F757D', '#FBFCFD', '#C3C9D0', '#666C74');
+    if (/copper/.test(o)) return metal('#6F3317', '#F4C9A4', '#C0713F', '#5E2B12');
+    if (/red/.test(o))    return metal('#6E101B', '#F8B9BF', '#C32C3B', '#5C0C16');
+    if (/blue/.test(o))   return metal('#0F2F57', '#BFD9F7', '#2A6CB4', '#0B2446');
+    if (/green/.test(o))  return metal('#114027', '#C2E8CF', '#2B8955', '#0D3320');
+    // Holographic is not one metal. It is a sheen that changes with the angle,
+    // so a single linear ramp reads as a flat colour and lies about what
+    // arrives. The hue sweep is the honest picture of it.
+    if (/holo/.test(o))
+      return 'background:'
+        + 'radial-gradient(circle at 33% 25%,rgba(255,255,255,.92) 0%,rgba(255,255,255,.30) 28%,rgba(255,255,255,0) 54%),'
+        + 'conic-gradient(from 210deg,#8FD9E8,#C7A8E8,#F2A8C4,#F6D79B,#BFE8A8,#8FD9E8)';
+    return metal('#7E6018', '#FBEFC2', '#CBA52B', '#6E5414');
   }
 
   // Foiling leads: it is the one people come for and the only finish with real
@@ -89,10 +107,12 @@
       var bare = !isFoil && opts2.length === 1
         && opts2[0].name.replace(/^Add\s+/i, '').toLowerCase() === t.name.toLowerCase();
 
-      var body = bare ? '' : '<div class="fs-row">' + opts2.map(function (o) {
+      // Only the foil row changes shape. Lamination is words on the same grid,
+      // and three of them in a four-column row would leave a hole.
+      var body = bare ? '' : '<div class="fs-row' + (isFoil ? ' is-foil' : '') + '">' + opts2.map(function (o) {
         if (isFoil) {
           return '<div class="fs-o">'
-            + '<span class="fs-sw" style="background:' + foilOf(o.name) + '"></span>'
+            + '<span class="fs-sw" style="' + foilOf(o.name) + '"></span>'
             + '<span class="fs-n">' + esc(o.name) + ' foil</span></div>';
         }
         return '<div class="fs-t">'
