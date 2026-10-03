@@ -95,36 +95,64 @@
       });
     if (!types.length) { var s = el.closest('section'); if (s) s.style.display = 'none'; return; }
 
-    el.innerHTML = types.map(function (t) {
-      var opts2 = (t.options || []).filter(function (o) {
+    // "Matt, Gloss or Soft Touch" — an Oxford-free list, because these are read
+    // as a set of choices rather than as a sentence.
+    function listOptions(names) {
+      if (!names.length) return '';
+      if (names.length === 1) return '<b>' + esc(names[0]) + '</b>';
+      return names.slice(0, -1).map(function (n) { return '<b>' + esc(n) + '</b>'; }).join(', ')
+        + ' or <b>' + esc(names[names.length - 1]) + '</b>';
+    }
+
+    function realOptions(t) {
+      return (t.options || []).filter(function (o) {
         return o.name && o.name.toLowerCase() !== 'none';
       });
-      var isFoil = /foil/i.test(t.name);
+    }
 
-      // A type with one option whose name only repeats the heading has nothing
-      // to add — a type whose only option repeats its own name read twice.
-      // Its own description says it, so the row is dropped.
-      var bare = !isFoil && opts2.length === 1
-        && opts2[0].name.replace(/^Add\s+/i, '').toLowerCase() === t.name.toLowerCase();
+    // Foiling is the only finish with anything to look at, so it keeps its
+    // swatches. Everything else became a heading, a description and a grid —
+    // three stacked mini-sections for what is really one line of specification
+    // each, and the grid left holes when a finish had two options and the row
+    // had three columns.
+    //
+    // Each of those is now a single row: the finish on the left, what you can
+    // have and what it is on the right. It holds its shape whether a product
+    // offers two of them or five, which the grid did not.
+    var foilTypes  = types.filter(function (t) { return /foil/i.test(t.name); });
+    var plainTypes = types.filter(function (t) { return !/foil/i.test(t.name); });
 
-      // Only the foil row changes shape. Lamination is words on the same grid,
-      // and three of them in a four-column row would leave a hole.
-      var body = bare ? '' : '<div class="fs-row' + (isFoil ? ' is-foil' : '') + '">' + opts2.map(function (o) {
-        if (isFoil) {
-          return '<div class="fs-o">'
-            + '<span class="fs-sw" style="' + foilOf(o.name) + '"></span>'
-            + '<span class="fs-n">' + esc(o.name) + ' foil</span></div>';
-        }
-        return '<div class="fs-t">'
-          + '<span class="fs-tn">' + esc(o.name.replace(/^Add\s+/i, '')) + '</span>'
-          + (o.description ? '<span class="fs-td">' + esc(o.description) + '</span>' : '')
-          + '</div>';
-      }).join('') + '</div>';
-
+    var foilHtml = foilTypes.map(function (t) {
+      var opts2 = realOptions(t);
       return '<div class="fs-group"><div class="fs-gname">' + esc(t.name) + '</div>'
         + '<div class="fs-gdesc">' + esc(t.description || '') + '</div>'
-        + body + '</div>';
-    }).join('')
+        + '<div class="fs-row is-foil">' + opts2.map(function (o) {
+            return '<div class="fs-o">'
+              + '<span class="fs-sw" style="' + foilOf(o.name) + '"></span>'
+              + '<span class="fs-n">' + esc(o.name) + ' foil</span></div>';
+          }).join('') + '</div></div>';
+    }).join('');
+
+    var plainHtml = plainTypes.length
+      ? '<div class="fs-lines">' + plainTypes.map(function (t) {
+          var opts2 = realOptions(t);
+          // A type whose single option only repeats its own name has nothing to
+          // add — "Protective finish: Add Protective finish" read twice. Its
+          // description says it on its own.
+          var bare = opts2.length === 1
+            && opts2[0].name.replace(/^Add\s+/i, '').toLowerCase() === t.name.toLowerCase();
+          var names = bare ? [] : opts2.map(function (o) {
+            return o.name.replace(/^Add\s+/i, '');
+          });
+          var choices = listOptions(names);
+          var what = t.description
+            ? '<span class="fs-what">' + esc(t.description) + '</span>' : '';
+          return '<div class="fs-ln"><div class="fs-lbl">' + esc(t.name) + '</div>'
+            + '<div class="fs-opts">' + choices + (choices && what ? ' ' : '') + what + '</div></div>';
+        }).join('') + '</div>'
+      : '';
+
+    el.innerHTML = foilHtml + plainHtml
     + (opts.papers && opts.papers.length
         ? '<p class="fs-note">Available on ' + esc(listOf(opts.papers))
           + '. Chosen when you personalise your design, and charged once for the order rather '

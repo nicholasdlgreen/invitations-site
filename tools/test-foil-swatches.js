@@ -73,8 +73,20 @@ is('and so is the old sheen()',          /function sheen\(/.test(SEC), false);
 print('\nTHE ROW IS FOUR ACROSS, AND ONLY THE FOIL ROW');
 var CSS = read('finishing/section.css');
 is('the foil row is four columns', /\.fs-row\.is-foil\{grid-template-columns:repeat\(4,1fr\);max-width:540px\}/.test(CSS), true);
-is('the base row is still three',  /\.fs-row\{display:grid;grid-template-columns:repeat\(3,1fr\)/.test(CSS), true);
-is('the class is only put on foil rows', /isFoil \? ' is-foil' : ''/.test(SEC), true);
+is('the base row rule is still there for the grid',
+   /\.fs-row\{display:grid;grid-template-columns:repeat\(3,1fr\)/.test(CSS), true);
+// everything that is not foil is a line now, not a cell in that grid
+is('non-foil finishes are lines, not grid cells', /\.fs-ln\{display:flex/.test(CSS), true);
+is('and the old grid-cell styles are gone',       /\.fs-t\{text-align:left/.test(CSS), false);
+// The grid is now built in the foil branch only, so the class is unconditional
+// there and cannot appear anywhere else. Checked by making sure the markup is
+// written once, inside the foil map, and that nothing else emits fs-row.
+is('the foil grid is written once',
+   (SEC.match(/class="fs-row is-foil"/g) || []).length, 1);
+is('nothing else emits an fs-row',
+   (SEC.match(/class="fs-row/g) || []).length, 1);
+is('non-foil finishes render as lines', /class="fs-ln"/.test(SEC), true);
+is('and the old grid-cell markup is gone', /class="fs-t"/.test(SEC), false);
 is('it steps down rather than shrinking on small screens',
    /max-width:600px\)\{\.fs-row\.is-foil\{grid-template-columns:repeat\(3,1fr\)/.test(CSS), true);
 

@@ -17,6 +17,9 @@
 .fs-group:last-of-type{margin-bottom:0}
 .fs-gname{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);line-height:1.2}
 .fs-gdesc{font-size:13px;color:var(--soft);line-height:1.6;margin-top:3px}
+/* Only foiling uses this grid now — everything else is a line, below. The
+   is-foil class is kept on the element so the two cannot be confused if a
+   second grid is ever added. */
 .fs-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:700px;margin-top:14px}
 .fs-row.is-foil{grid-template-columns:repeat(4,1fr);max-width:540px}
 @media(max-width:880px){.fs-row{gap:14px}}
@@ -25,9 +28,6 @@
    it stops fitting. */
 @media(max-width:600px){.fs-row.is-foil{grid-template-columns:repeat(3,1fr);max-width:400px}}
 @media(max-width:420px){.fs-row.is-foil{grid-template-columns:repeat(2,1fr);max-width:260px}}
-@media(max-width:520px){.fs-row{grid-template-columns:1fr;gap:0}
-  /* the one-column rule above is for lamination's words; foil keeps its grid */
-  .fs-row.is-foil{gap:14px}}
 
 /* ---- foiling: the only finish with anything to look at ---- */
 .fs-o{text-align:left}
@@ -37,13 +37,27 @@
 .fs-o:hover .fs-sw{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(61,46,36,.09),0 12px 22px rgba(61,46,36,.2)}
 .fs-n{display:block;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);margin-top:11px;line-height:1.2}
 
-/* ---- lamination: words, on the same grid ----
+/* ---- everything that is not foil: one line each ----
    No swatch. A laminate is a reflection, so a still picture of one shows
    nothing at all — three identical pale squares that only raise the question
-   of what you are meant to be seeing. A hairline holds the column instead. */
-.fs-t{text-align:left;border-top:1px solid var(--border);padding-top:12px}
-@media(max-width:520px){.fs-t{padding-bottom:12px}}
-.fs-tn{display:block;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);line-height:1.2}
-.fs-td{display:block;font-size:12.5px;color:var(--soft);line-height:1.6;margin-top:3px}
+   of what you are meant to be seeing.
+
+   These used to be a heading, a description and a three-column grid, each.
+   That is three stacked mini-sections for what is one line of specification,
+   and the grid left a hole whenever a finish had two options rather than
+   three. Now: the finish on the left, what you can have and what it is on the
+   right. It holds its shape whether a product offers two of these or five. */
+.fs-lines{max-width:920px;margin:0 auto}
+.fs-ln{display:flex;gap:16px;align-items:baseline;padding:13px 0;border-top:1px solid var(--border)}
+.fs-lbl{flex:0 0 120px;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);line-height:1.3}
+.fs-opts{font-size:13.5px;color:var(--soft);line-height:1.7}
+.fs-opts b{font-weight:400;color:var(--text)}
+.fs-what{color:var(--pale)}
+/* On a narrow screen the label stops being a column and becomes a line of its
+   own, rather than squeezing the choices into a few words per line. */
+@media(max-width:560px){
+  .fs-ln{display:block}
+  .fs-lbl{margin-bottom:3px}
+}
 
 .fs-note{max-width:920px;margin:24px auto 0;font-size:12.5px;color:var(--pale);line-height:1.7}
