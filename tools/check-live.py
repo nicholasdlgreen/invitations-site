@@ -290,6 +290,25 @@ def main():
             say('  %-30s %d papers, %d ranges, %d prices' % line)
 
     if not args.skip_pages:
+        # The security headers, because one of them is load-bearing. pdf.js runs
+        # its worker from a blob: URL; with no worker-src the browser falls back
+        # to script-src, blob: is refused, and pdf.js drops to a main-thread
+        # "fake worker". On 3 October that left an RSVP card designed in the
+        # studio stuck on "Checking your foil layer..." for over 40 seconds,
+        # unable to reach the basket. The header is the only thing holding it.
+        say('Security headers')
+        try:
+            import urllib.request as _u
+            _r = _u.urlopen(_u.Request(SITE + '/upload-and-print.html',
+                                       headers={'User-Agent': 'foreverprint-check'}))
+            _csp = _r.headers.get('Content-Security-Policy') or ''
+            check("worker-src" in _csp, 'CSP sets worker-src (pdf.js needs its worker)',
+                  'without it pdf.js silently runs on the main thread')
+            check("blob:" in (_csp.split('worker-src')[1].split(';')[0] if 'worker-src' in _csp else ''),
+                  'CSP worker-src allows blob:', _csp[:60])
+        except Exception as e:
+            check(False, 'security headers readable', str(e))
+
         say('Live pages')
         for slug in slugs:
             for url in (SITE + '/' + slug, SITE + '/upload-and-print.html?product=' + slug):
