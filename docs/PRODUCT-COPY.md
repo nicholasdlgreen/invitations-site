@@ -30,7 +30,7 @@ Read these before writing a sentence about papers or finishes.
 **Finishes** (`finish_types`) — foil in eight colours;
 rounded corners; matt, gloss or soft-touch lamination; long-edge, short-edge or
 tent folds; a matt or gloss protective finish and drilled hanging holes on
-boards; envelopes in brilliant white or red.
+boards; envelopes in brilliant white.
 
 **Papers** (`paper_stocks`) — Uncoated, Silk, Ice White, Cartonboard, Gloss,
 Recycled Uncoated, Foamex 5mm board, and four Fedrigoni stocks: Tintoretto

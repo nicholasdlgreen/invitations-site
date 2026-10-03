@@ -1427,10 +1427,10 @@ const CONFIG = {
 // five others — none of which PrintedEasy sell and six of which were not even
 // in the table. A fallback that offers stock we cannot buy is worse than no
 // fallback: it only appears when something is already wrong, and it appears
-// looking authoritative. They sell white and red, so that is the fallback.
+// looking authoritative. Red was withdrawn on 2026-10-03, so brilliant white is
+// the only colour we sell and the only one named here.
 let ENVELOPES = [
   { id:'white', name:'Brilliant White', hex:'#FFFFFF', border:'#ddd',    priceEach:0.10 },
-  { id:'red',   name:'Red',             hex:'#B3232B', border:'#8A1A21', priceEach:0.23 },
 ];
 // Sizes come from the print_sizes table (managed in admin). These defaults are
 // only a safety net for the first paint and for the rare case where Supabase is

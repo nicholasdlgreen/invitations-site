@@ -5140,6 +5140,16 @@ async function publishHierarchical() {
         // envelopes_offered flag rather than available_finishes.
         const wantsEnvelopes = p.envelopes_offered !== false;
         const finishPrices = (finishRates || []).filter(r => {
+          // A finishing rate switched off in finish_rates is kept for evidence
+          // but must never reach a customer, the same rule sheet_rates has had
+          // since folded 400gsm. The two tables guard this in DIFFERENT places:
+          // the finish_rates FETCH above filters active=is.true, while
+          // sheet_rates is fetched whole and filtered in the loop below. Reading
+          // only the builder therefore suggests finishing rates are unfiltered —
+          // it cost a wrong conclusion while withdrawing red envelopes on
+          // 2026-10-03. Repeating the check here is redundant today and costs
+          // nothing, and it holds if either fetch is ever relaxed.
+          if (r.active === false) return false;
           if (!finishRouteFamilies.has(r.supplier_family)) return false;
           if (!sizes.includes(r.size)) return false;
           if (/^envelopes$/i.test(r.finish_name)) {

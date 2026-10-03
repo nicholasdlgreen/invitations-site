@@ -63,15 +63,19 @@ function payloadFor(opts) {
                   size: 'A5', qty: q, sell: 22 });
     });
   });
-  // Envelopes: white and red on the two card families at the sizes that have
+  // Envelopes: brilliant white on the two card families at the sizes that have
   // them, and nothing on folded-leaflet or Square-210 — which is what the
   // size and family checks below are about.
+  //
+  // Red was published here until 2026-10-03, when it was withdrawn from sale.
+  // It is deliberately NOT in this fixture any more, so the checks below prove
+  // a withdrawn colour is refused rather than proving it is sold.
   ['flat-card', 'folded-card'].forEach(function (fam) {
-    ['Brilliant White', 'Red'].forEach(function (o) {
+    ['Brilliant White'].forEach(function (o) {
       ['A6', 'A5', 'DL', 'Square'].forEach(function (sz) {
         [25, 100, 250, 500].forEach(function (q) {
           rows.push({ family: fam, finish: 'Envelopes', option: o, sides: 'front',
-                      size: sz, qty: q, sell: o === 'Red' ? 24 : 10 });
+                      size: sz, qty: q, sell: 10 });
         });
       });
     });
@@ -238,16 +242,23 @@ check('familyForPaper follows the fold', function(){
 });
 
 // ── envelopes ────────────────────────────────────────────────────────────
-check('both envelope colours are offered where both are published', function(){
+check('the colour we sell is offered where it is published', function(){
   var api = build(world({ fold:'flat' }));
-  return (api.envelopePricedOn('Brilliant White','flat-card') &&
-          api.envelopePricedOn('Red','flat-card')) ? true : 'one was refused';
+  return api.envelopePricedOn('Brilliant White','flat-card')
+    ? true : 'brilliant white was refused';
 });
 check('no envelope colour survives on a family with none published', function(){
   var api = build(world({ fold:'flat' }));
   var w = api.envelopePricedOn('Brilliant White','folded-leaflet');
-  var r = api.envelopePricedOn('Red','folded-leaflet');
-  return (w === false && r === false) ? true : 'white=' + w + ' red=' + r;
+  return (w === false) ? true : 'white=' + w;
+});
+// Red was withdrawn on 2026-10-03. This fails if it is ever published again
+// without the withdrawal being revisited — the catalogue and the wizard agreed
+// on Spot UV only because a check like this held them to it.
+check('red envelopes are refused, having been withdrawn', function(){
+  var api = build(world({ fold:'flat' }));
+  var r = api.envelopePricedOn('Red','flat-card');
+  return r === false ? true : 'Red was offered on flat-card';
 });
 check('a colour nobody publishes is refused', function(){
   var api = build(world({ fold:'flat' }));

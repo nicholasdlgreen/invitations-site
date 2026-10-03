@@ -5,13 +5,14 @@ generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
 
-**3 commits on 3 October, pushed and published** (902 in the repo). A short
-day with one job in it: **Spot UV was withdrawn entirely** rather than priced —
-§15. Published 10:07 and verified on the live site, not just locally: the
-payload no longer mentions it, Silk now reads Lamination · Foiling · Corners ·
-Fold, and the order page offers Lamination · Foiling · Corners. A latent fault
-found during that sweep was fixed the same day — the landing pages were asking
-for every finish type rather than the live ones.
+**3 October: two withdrawals.** **Spot UV was withdrawn entirely** rather than
+priced — §15. Published 10:07 and verified on the live site, not just locally:
+the payload no longer mentions it, Silk now reads Lamination · Foiling ·
+Corners · Fold, and the order page offers Lamination · Foiling · Corners. A
+latent fault found during that sweep was fixed the same day — the landing pages
+were asking for every finish type rather than the live ones. Then **red
+envelopes were withdrawn** the same way — §16. Brilliant white is now the only
+envelope colour we sell.
 
 Before that, item 9 of this document was rewritten because it still opened by
 saying foiling was unpriced and unsellable, three days after it was settled.
@@ -1913,3 +1914,65 @@ Foiling · Corners · Fold. Checked on foreverprint.com rather than locally: the
 order page offers Lamination · Foiling · Corners, the landing page renders
 Foiling and Lamination only, help and support is clean, and the landing page's
 request carries `active=eq.true`. `check-live.py` 5,275 checks, exit 0.
+
+## 16. Red envelopes withdrawn — 3 October 2026
+
+Nicholas asked for them off the site, handled the way Spot UV had been that
+morning: find every mention, review it, remove it, then prove the site still
+works. Brilliant white is now the only envelope colour we sell.
+
+**Found in four places:**
+
+| | Where |
+|---|---|
+| **The data** | `envelopes.red` (active, £0.23 each) — the real source, because all three customer fetches filter `active=eq.true`. And **168 rates** in `finish_rates` for Envelopes/Red across 2 supplier families at A6, A5, DL and Square, £0.80–£87.20, which published as **2,184 Red price rows across 15 products** |
+| **A code fallback** | the hardcoded `ENVELOPES` array in `upload-and-print.html`, used only when Supabase is unreachable. Its own comment says a fallback offering stock we cannot buy is worse than none, so leaving red in it would have contradicted the comment directly above it |
+| **Tests** | three checks in `tools/test-route-gating.js` built Red into the fixture and asserted it was priced |
+| **Copy** | one line of `docs/PRODUCT-COPY.md` |
+
+**Nothing to remove in the pages.** No landing page lists envelope colours —
+the greeting-cards FAQ only says envelope options appear with the sizes. Nothing
+in `product_types`, `site_config` or `finish_types` mentions a red envelope, and
+no order references one.
+
+**Withdrawn with `active = false`, not deleted.** Unlike Spot UV, which had no
+rates at all, these are 168 real scraped costs and the Monday price watch diffs
+against them. Switching them off keeps the evidence and makes the decision
+reversible with two updates; the customer-facing result is identical, because
+every customer-facing fetch already filters on `active`.
+
+**A wrong conclusion, corrected before it did harm.** Reading the publish
+builder, Claude reported that `finish_rates` was never filtered on `active` and
+that 2,184 withdrawn prices would therefore stay in the payload. **That was
+wrong.** The two rate tables guard it in different places: `finish_rates` is
+filtered at the FETCH (`active=is.true`), while `sheet_rates` is fetched whole
+and filtered in the loop. Reading only the builder shows one and not the other.
+A redundant check was left in the builder with a comment explaining the split,
+so the next reader is not caught the same way.
+
+**What was deliberately NOT touched:** **red FOIL** is a different product and
+is still sold — `tools/test-foil.js` names it among eight foil colours and that
+is correct. The two historical mentions in this document (§918, §952) are a
+dated record and stay as written.
+
+**Verified, on the live site rather than locally.** The envelopes endpoint now
+returns Brilliant White alone. On foreverprint.com the order page holds exactly
+one colour, `envelopePricedOn('Red', ...)` is false, and white's 210 price rows
+are untouched. `check-live.py` 5,275 checks, nothing to report. All test suites
+pass, 0 failures, including a new check that **fails if red is ever published
+again** without the withdrawal being revisited.
+
+**Two things left open, neither blocking:**
+
+- The 168 Red rows are still in the published payload until the next Publish.
+  They are unreachable — the colour cannot be selected — but they should go.
+- A basket saved in `localStorage` before today could still hold a red envelope
+  line. At checkout the floor would find no red row and contribute £0 rather
+  than reject it, so the stored price would stand and we would owe someone red
+  envelopes. Pre-launch the only such baskets are ours. Not fixed; it needs a
+  decision on whether to drop withdrawn options out of saved carts.
+- Unrelated, found while running the suites: **`test-section-race.js` and
+  `test-slug-from-url.js` do not run at all** — one needs a browser `window`,
+  the other reads a fixture from a scratchpad that no longer exists. Both were
+  already broken; neither touches envelopes. Same rot that had killed
+  `test-route-gating.js` until it was revived on 1 October.
