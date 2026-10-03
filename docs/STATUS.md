@@ -160,13 +160,58 @@ the autovacuum fix from §11 holding.
    is a 25% markup; reaching printed.com on Fedrigoni stock is 53%. Both are
    still below the market.
 
-2. **Delivery is free and nobody pays for it.** Standard delivery is
-   `price 0.00, surcharge 0%`, and PrintedEasy's quoted price **excludes**
-   delivery — confirmed by dumping every field their endpoint returns. So at
-   zero margin each standard order sells print at cost and absorbs their
-   delivery charge on top. What that charge actually is has not been
-   established. **This has to be answered before margins are set**, because it
-   is a fixed subtraction from whatever margin is chosen.
+2. ~~**Delivery is free and nobody pays for it.**~~ **ANSWERED 3 October.**
+   There is no unknown charge to absorb, because **PrintedEasy's standard
+   delivery is free too** — so our free standard delivery costs us nothing.
+   This was logged as a fixed subtraction from every margin. It is not one.
+
+   What it is instead is a **floor under the margin**. Their rule, solved from
+   a real order of theirs (GBP 236.00 of goods billed GBP 48 Express, GBP 95
+   Express Plus): **20% / 40% of the ex-VAT goods value, rounded UP to the
+   whole pound**, minimums GBP 20 / GBP 40, Express offered to GBP 3,000 and
+   Express Plus to GBP 1,500. Eight candidate rules were tested and only that
+   one reproduces both figures.
+
+   **What our site quotes is verified and correct.** Ignoring VAT, our quote
+   for print + delivery comes to **exactly 20% below PrintedEasy's quote** for
+   the same job and the same delivery option — confirmed at GBP 150, 236, 400,
+   800, 1,500 and 2,500 of print, all landing on 0.8000. Below about GBP 150
+   the GBP 20 delivery minimum breaks the ratio, because a floor does not
+   scale: 14.3% below theirs at GBP 50 of print, 16.7% at GBP 100. That is the
+   same cost basis as the rest of the site, applied uniformly.
+
+   **OPEN — and it decides whether delivery breaks even or leaks.** Does
+   PrintedEasy's 20% trade discount apply to the **delivery line** on our
+   invoice, or only to the print line? Nicholas confirmed the GBP 236 of goods
+   he saw was their list price, but that says nothing about how a trade invoice
+   treats delivery, and their checkout needs an account, so it cannot be read
+   from the public site. It is answerable only from a real PrintedEasy invoice
+   or the account terms.
+
+   | Print (their list) | We charge | If the 20% covers the whole invoice | If print only |
+   |---|---|---|---|
+   | GBP 100 | 100.00 | **+4.00** | 0.00 |
+   | GBP 236 | 226.80 | **−0.40** | −10.00 |
+   | GBP 500 | 480.00 | **0.00** | −20.00 |
+   | GBP 2,000 | 1,920.00 | **0.00** | −80.00 |
+
+   If the discount covers the invoice, the margin is **0.00 at every size** —
+   exact break-even, which is right for a site selling at cost, and small
+   orders run slightly ahead because the GBP 20 minimum we charge exceeds the
+   GBP 16 we would pay. If it covers print only, we collect 80% of what we pay
+   for delivery and Express needs a **25% markup on cost** to clear.
+
+   Either way it is bounded: both readings are profitable once any sensible
+   margin exists, so this only bites at zero margin, which is today. The
+   −0.40 at GBP 236 is a rounding artefact, not a leak — they round the
+   surcharge up before the discount and we round up after. Pennies per order;
+   leave it.
+
+   **An earlier version of this section stated the loss as fact.** It was an
+   inference from "the GBP 236 was list", presented as a finding, and it is not
+   established. Modelled end to end in `tools/test-delivery-economics.js`,
+   25 checks; note those checks assume the print-only reading and should be
+   revisited once the invoice question is settled.
 
 3. **299 published prices sit below cost.** Never above — 80p to £2.40 under, at
    quantities 20, 25, 30, 50, 60, 125, 250 and 450. That is the curve-flattening
@@ -747,16 +792,33 @@ the autovacuum fix from §11 holding.
    candidate that is arithmetically exact; anything involving redrawing,
    rescaling or guessing intent is not in this category at all.
 
-10. **`delivery.html` publishes delivery prices we do not charge.** Express is
-   shown as a flat **£12.00** and Next Day as a flat **£18.00**. Neither is
-   real: Express is +20% of the order with a £20 minimum, Express Plus +40%
-   with a £40 minimum — £21.60 and £43.20 on a £108 order, and more on a bigger
-   one. A published price a customer could hold us to. Corrected on 1 October:
-   the day counts (Standard 5–7 → 3, Express 2–3 → 2) and the next-day cut-off
-   (12pm → 1pm). **The two prices were deliberately left alone**, because
-   replacing them means deciding how a percentage-with-a-minimum is presented
-   to a customer, and how price is presented is parked until the margins
-   (§15 item A2). It cannot ship like this.
+10. ~~**`delivery.html` publishes delivery prices we do not charge.**~~
+   **FIXED 3 October (c015352).** Express showed a flat **£12.00** and Next Day
+   a flat **£18.00** while the basket charged 20% and 40% with £20/£40
+   minimums — on the £236 order measured at PrintedEasy the real figures are
+   £48 and £95, so the page understated Express by £36 and Next Day by £77, in
+   writing, on a page a customer could hold us to. The day counts and the 1pm
+   cut-off were corrected on 1 October; the two prices were left alone because
+   replacing them meant deciding how a percentage-with-a-minimum is presented.
+
+   Nicholas chose that presentation from three mock-ups: the cards now read
+   **From £20** and **From £40**, with the rule stated beneath them. A
+   percentage in the price slot reads like a trade price list; a from-price
+   keeps a pound figure where every other card has one and cannot be
+   contradicted at the till.
+
+   Two things came out of the build worth keeping. The grid's columns were set
+   in an **inline style**, which beats a media query — so the stacked phone
+   layout would have been written, looked right in the source and silently
+   never applied; the rule moved to a `.ship-grid` class and a test asserts it
+   is not inline. And the basket now **rounds up** to match them, quoting £48
+   where it quoted £47.20. `tools/test-delivery-page-copy.js` (24 checks)
+   replays the basket arithmetic across every order value from £0 to £4,000 and
+   fails if anything is ever cheaper than the from-price we advertise.
+
+   **Still open:** the page calls the third service **Next Day** while the
+   database and the configurator call it **Express Plus**, so a customer meets
+   two names for one thing. Renaming touches live pricing data; left alone.
 
 11. **`cart.js` asks the wrong question about where it is.** It decides whether
    you are on the order page with `pathname.includes('upload-and-print')`,
@@ -1578,10 +1640,9 @@ switched on.
 |---|---|---|---|
 | 1 | **Write the three welcome-email passages** | 52 | Square-bracket placeholders would reach a customer as written. Nothing should send a welcome until they are done, and only Nicholas can write them |
 | 2 | **Agree the customer-facing strings Claude wrote** | 44 | Live now, in Claude's words rather than Nicholas's, and marked unagreed in the source |
-| 3 | **Find out what PrintedEasy charge us for delivery** | 24a | A fixed subtraction from every margin, so it has to be known *before* margins are set |
-| 4 | **Set the margins** | A2 | 22 products at cost. A decision, not a build. §14 is the evidence |
-| 5 | **Decide on place cards and table numbers** | 31 | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
-| 6 | **Switch on the Send Email Hook** | 54 | Built and deployed, deliberately not enabled. Needs a live test first |
+| 3 | **Set the margins** | A2 | 22 products at cost. A decision, not a build. §14 is the evidence. May carry a floor — **if PrintedEasy's 20% discount excludes the delivery line, Express needs a 25% markup to clear** (§2, unresolved) |
+| 4 | **Decide on place cards and table numbers** | 31 | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
+| 5 | **Switch on the Send Email Hook** | 54 | Built and deployed, deliberately not enabled. Needs a live test first |
 | 7 | **Shrink the published payload** | 38 | 13MB, and the reason Publish breaks. Proven at 1.1MB but not built |
 
 ### A. Blocking launch
@@ -1653,9 +1714,16 @@ real customer arrives.
 24. **The 42 `folded-leaflet` envelope rates are unreachable** — order of
     service is the only product on that family and has envelopes switched off.
     Decide whether it should offer them.
-24a. **Delivery is free and unfunded.** Standard is `price 0.00, surcharge 0%`;
-    PrintedEasy's quoted price excludes delivery. Establish what they charge us,
-    then decide whether it is absorbed into the card price or charged.
+24a. ~~**Delivery is free and unfunded.**~~ **CLOSED 3 October.** Standard
+    delivery is free at PrintedEasy too, so our free standard delivery costs us
+    nothing and there was never a subtraction to find. Their upgrade rule is
+    now known exactly and ours already matched it; the page that advertised
+    flat GBP 12.00 and GBP 18.00 is fixed (see item 10). Our quote for print +
+    delivery comes to exactly 20% below theirs, verified at six order sizes.
+    **One question survives, for A2 rather than as a task:** whether their 20%
+    trade discount covers the delivery line or only the print. If it covers the
+    invoice we break even exactly; if not, Express needs a 25% markup to clear.
+    Answerable only from a real invoice. Full working in §2 above.
 24b. **299 published prices sit below cost**, by 80p to GBP 2.40, at eight
     quantities. Curve-flattening doing its job against a supplier staircase that
     goes backwards. Harmless once a margin exists; a real loss at zero.
@@ -1976,8 +2044,10 @@ A long day. In the order it happened:
   for a word nobody types when they want a sign for their wedding. All 22
   rewritten, 45 to 59 characters, and built into the served HTML.
 
-**Still true after all of it:** margins are 0, the payload is 11MB and growing,
-and delivery is free and unfunded.
+**Still true after all of it:** margins are 0 and the payload is 11MB and
+growing. Delivery is no longer unfunded — standard costs us nothing, and our
+quote sits 20% below PrintedEasy's on print and delivery alike. One question
+is open: whether their trade discount covers the delivery line (§2).
 
 ### Cleared 29 September
 
