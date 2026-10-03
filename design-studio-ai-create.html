@@ -2573,6 +2573,33 @@ function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.
     im.src = fullDataUrl;
   }
 
+  // A screen-resolution copy of the finished card, for the "View your design"
+  // link in the customer's account and the reference link in admin.
+  //
+  // Those links only ever get looked at on a screen, and until 3 October we
+  // were uploading the full 300dpi print file to serve them — the very same
+  // JPEG that buildAiPrintPdf then embeds untouched, so the identical pixels
+  // went up twice. Measured on the live site: 0.74MB each, 5.7s and 5.5s, on a
+  // 1Mbps upload. Half the wait after pressing "Love it" was spent sending a
+  // file we already had in flight. 1400px on the long edge is more than enough
+  // to look at and lands under 150KB.
+  //
+  // The PRESS file is untouched by this: still 300dpi, still quality 0.95.
+  function makeReferenceCopy(fullDataUrl, cb){
+    var im = new Image();
+    im.onload = function(){
+      var LONG = 1400;
+      var scale = Math.min(1, LONG / Math.max(im.naturalWidth, im.naturalHeight));
+      var w = Math.max(1, Math.round(im.naturalWidth * scale));
+      var h = Math.max(1, Math.round(im.naturalHeight * scale));
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(im, 0, 0, w, h);
+      cb(c.toDataURL('image/jpeg', 0.85));
+    };
+    im.onerror = function(){ cb(null); };
+    im.src = fullDataUrl;
+  }
+
   // pdf-lib, loaded only when a design is actually ordered
   var PDFLIB_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
   var _pdfLibPromise = null;
@@ -2725,33 +2752,82 @@ function artworkFileName(prefix, ext){
         names = (document.getElementById(REQUIRED_FIELDS[0].id) || {}).value || '';
       }
       var parts = names.split(/\s*&\s*|\s+and\s+/i);
-      var fileName = artworkFileName('ai-design', 'jpg');
+      // One place that knows how to put a file in the bucket, so the order of
+      // the uploads below is readable rather than buried in fetch options.
+      var putArtwork = function(name, body, contentType){
+        return fetch(SB_URL + '/storage/v1/object/artwork/' + name, {
+          method: 'POST',
+          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+                     'Content-Type': contentType, 'x-upsert': 'false' },
+          body: body
+        });
+      };
+      // The print artwork of last resort. Whenever there is no press-ready PDF
+      // the full-resolution JPEG becomes the file that gets printed — print-prep
+      // runs on artworkUrl instead — so in that case, and only in that case, it
+      // has to go up at full size.
+      var uploadFullResFallback = function(){
+        var fullName = artworkFileName('ai-design', 'jpg');
+        return putArtwork(fullName, dataUrlToBlob(printImage), 'image/jpeg')
+          .then(function(r){
+            return { artworkUrl: r.ok ? (SB_URL + '/storage/v1/object/artwork/' + fullName) : null,
+                     printUrl: null };
+          })
+          .catch(function(e){
+            console.warn('[ai-design] fallback upload error:', e.message);
+            return { artworkUrl: null, printUrl: null };
+          });
+      };
 
-      // 1. upload the FULL print-res file to Supabase (the real print artwork)
-      var blob = dataUrlToBlob(printImage);
-      fetch(SB_URL + '/storage/v1/object/artwork/' + fileName, {
-        method: 'POST',
-        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'image/jpeg', 'x-upsert': 'false' },
-        body: blob
-      })
-      .then(function(r){
-        var artworkUrl = r.ok ? (SB_URL + '/storage/v1/object/artwork/' + fileName) : null;
-        // 2. build the press-ready PDF: exact ordered size, 3mm bleed already in
-        //    the artwork, vector crop marks, TrimBox/BleedBox set.
-        return buildAiPrintPdf(pressFacesFor(printImage, insideImage), size).then(function(built){
-          if (!built) return { artworkUrl: artworkUrl, printUrl: null };
-          var pdfName = artworkFileName('print-ai', 'pdf');
-          return fetch(SB_URL + '/storage/v1/object/artwork/' + pdfName, {
-            method: 'POST',
-            headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/pdf', 'x-upsert': 'false' },
-            body: built.blob
-          })
-          .then(function(pr){
-            if (pr.ok) console.log('[ai-print-pdf]', built.pageMm.w + 'x' + built.pageMm.h + 'mm page, trim ' + built.trimMm.w + 'x' + built.trimMm.h + 'mm');
-            else console.warn('[ai-print-pdf] upload failed:', pr.status);
-            return { artworkUrl: artworkUrl, printUrl: pr.ok ? (SB_URL + '/storage/v1/object/public/artwork/' + pdfName) : null };
-          })
-          .catch(function(e){ console.warn('[ai-print-pdf] upload error:', e.message); return { artworkUrl: artworkUrl, printUrl: null }; });
+      // 1. build the press-ready PDF FIRST: exact ordered size, 3mm bleed already
+      //    in the artwork, vector crop marks, TrimBox/BleedBox set.
+      //
+      //    It is built before anything is uploaded because what else needs
+      //    uploading depends on whether this worked. When it works, the PDF is
+      //    the print file and the reference link only needs something to look at
+      //    on screen; when it does not, the full-resolution JPEG has to carry the
+      //    job instead. Uploading the full JPEG first, as this did until
+      //    3 October, meant always paying for both.
+      buildAiPrintPdf(pressFacesFor(printImage, insideImage), size)
+      .then(function(built){
+        if (!built) {
+          console.warn('[ai-print-pdf] build failed — the full-resolution JPEG becomes the print artwork');
+          return uploadFullResFallback();
+        }
+        // 2. upload the press file.
+        var pdfName = artworkFileName('print-ai', 'pdf');
+        return putArtwork(pdfName, built.blob, 'application/pdf')
+        .then(function(pr){
+          if (!pr.ok) {
+            // Built but not stored, so there is still no press file on the order.
+            console.warn('[ai-print-pdf] upload failed:', pr.status, '— falling back to the full-resolution JPEG');
+            return uploadFullResFallback();
+          }
+          console.log('[ai-print-pdf]', built.pageMm.w + 'x' + built.pageMm.h + 'mm page, trim ' + built.trimMm.w + 'x' + built.trimMm.h + 'mm');
+          var printUrl = SB_URL + '/storage/v1/object/public/artwork/' + pdfName;
+          // 3. the reference copy, at screen resolution — see makeReferenceCopy.
+          //    Only safe now that printUrl exists: if this were the only artwork
+          //    on the order, print-prep would send 1400px to the press.
+          return new Promise(function(resolve){
+            makeReferenceCopy(printImage, function(refUrl){
+              if (!refUrl) { resolve({ artworkUrl: null, printUrl: printUrl }); return; }
+              var refName = artworkFileName('ref-ai', 'jpg');
+              putArtwork(refName, dataUrlToBlob(refUrl), 'image/jpeg')
+                .then(function(rr){
+                  if (!rr.ok) console.warn('[ai-reference] upload failed:', rr.status);
+                  resolve({ artworkUrl: rr.ok ? (SB_URL + '/storage/v1/object/artwork/' + refName) : null,
+                            printUrl: printUrl });
+                })
+                .catch(function(e){
+                  console.warn('[ai-reference] upload error:', e.message);
+                  resolve({ artworkUrl: null, printUrl: printUrl });
+                });
+            });
+          });
+        })
+        .catch(function(e){
+          console.warn('[ai-print-pdf] upload error:', e.message, '— falling back to the full-resolution JPEG');
+          return uploadFullResFallback();
         });
       })
       // 2b. the foil layer, built from the same text pass and carried along
