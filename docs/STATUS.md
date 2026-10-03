@@ -5,13 +5,31 @@ generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
 
-**3 October: two withdrawals.** **Spot UV was withdrawn entirely** rather than
-priced — §15. Published 10:07 and verified on the live site, not just locally:
+**3 October. The day's one serious finding is §18: checkout refuses every
+basket**, and has been doing so unnoticed because the site is pre-launch and
+nothing posts a test order. It is written up, **not fixed**, and it sits above
+margins on the list — margins were never the last thing between us and trading.
+
+Then the design studio, after Nicholas hit the same foiling fault twice on live
+work. The cause was not in the page: the Content-Security-Policy set no
+`worker-src`, so pdf.js was refused its worker, fell back to a main-thread
+"fake worker", and reading a foil layer sometimes never finished. Everything the
+site reads with pdf.js has been rasterising on the UI thread. Fixed, along with
+three things the fault exposed — the failure latched with no retry, a hang was
+not treated as a failure, and a foil layer we draw ourselves was being judged
+like a customer's upload and offered a "Fix it" that could not work on it. His
+question is what unpicked it: if we generate the file, how can it need fixing?
+It also turned up something larger — turning the card after designing it did
+not turn the design, and only the foil check noticed. The shape is now settled
+once a design is in hand. **Four commits, none pushed** — see the top of §15.
+
+Earlier, **two withdrawals**. **Spot UV was withdrawn entirely** rather than
+priced — §16. Published 10:07 and verified on the live site, not just locally:
 the payload no longer mentions it, Silk now reads Lamination · Foiling ·
 Corners · Fold, and the order page offers Lamination · Foiling · Corners. A
 latent fault found during that sweep was fixed the same day — the landing pages
 were asking for every finish type rather than the live ones. Then **red
-envelopes were withdrawn** the same way — §16. Brilliant white is now the only
+envelopes were withdrawn** the same way — §17. Brilliant white is now the only
 envelope colour we sell.
 
 Before that, item 9 of this document was rewritten because it still opened by
@@ -238,7 +256,7 @@ the autovacuum fix from §11 holding.
    - **"Fix it" is withheld from two of the five reds**, pending a test (§9c).
    - **The gold preview inside the studio**, the parked Option A (§9h).
    - ~~**Spot UV is still a flat £52.**~~ **Withdrawn entirely on 3 October —
-     see §15.** Nicholas chose to remove it rather than price it.
+     see §16.** Nicholas chose to remove it rather than price it.
 
    > **Everything from here to §9b is the 1 October working.** Three paragraphs
    > of it were written in the morning and overtaken by the afternoon; each is
@@ -285,7 +303,7 @@ the autovacuum fix from §11 holding.
    sell is £80–£95 list, £64–£76 after our 20%.
 
    ~~**Spot UV is still a flat £52 and is still unprobed.**~~ It was **withdrawn
-   on 3 October** rather than priced — see §15.
+   on 3 October** rather than priced — see §16.
 
    **~~Open — we cannot actually place a foiled order.~~ SETTLED the same day —
    see §9c and §9h.** Both routes can place one: an uploader supplies a layer or
@@ -1535,8 +1553,72 @@ one it needs to see.
 
 ## 15. The full to-do list
 
-Everything outstanding, in one place and in the order I would do it. The
-sections above give the reasoning; this is the list.
+Everything outstanding, in one place and in the order I would do it.
+Regenerated **3 October 2026**, end of day. The sections above give the
+reasoning; this is the list.
+
+**Four commits are written, tested and NOT pushed.** Nothing below that says
+"done today" is live until they are:
+
+| Commit | What |
+|---|---|
+| `2e3ec42` | The studio stops uploading the same image twice — 12s of waiting down to 7.7s |
+| `2ffd38a` | **The CSP lets pdf.js start its worker.** The cause of the foiling hang |
+| `b3a9c53` | The foil layer we draw ourselves is measured, never judged, never "Fix it" |
+| `8d5e2bc` | The card's shape is settled once a design is in |
+
+### Next up
+
+| # | What | Why it is first |
+|---|---|---|
+| 1 | **Checkout rejects every basket.** `create-checkout.js` accepts only `schema_version === 2`; the live payload says 3, so it loads no prices and floors every item on `(qty/50) x GBP150`. At 100 cards the real price is GBP 19–91 against a GBP 300 floor: **741 of 741 configurations refused**. Nothing can be sold. | Found 3 October, **not fixed**. It is underneath the margin blocker — margins are not the only thing between us and trading. §18 |
+| 2 | **Push the four commits and re-test the RSVP card.** Push `2ffd38a` first: it is the root cause and the others change behaviour you may want to judge separately. | The foiling fault Nicholas hit twice on live work is fixed but not deployed |
+| 3 | **Agree the three new customer-facing strings** — the two in the "could not prepare your foil layer" panel, and the shape note on the size step. They are Claude's words, marked in the source as not agreed. | They ship with the commits above |
+| 4 | **Find out what PrintedEasy charge us for delivery** | Standard delivery is free to the customer and their quoted price excludes it, so every order absorbs it. A fixed subtraction from any margin, so it has to be known *before* margins are set |
+| 5 | **Set the margins** | 22 products at cost. A decision rather than a build. §14 is the evidence |
+| 6 | **Decide on place cards and table numbers** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live. Item 31 |
+
+### Added 3 October — not started
+
+- **The checkout price floor is weight-blind.** The basket never says which
+  paper weight was ordered, so the floor takes the first matching row. On the
+  live payload that is sometimes a dearer weight: **7,129 configurations across
+  19 products floor ABOVE the cheapest legitimate order**, worst case demanding
+  GBP 124.80 for a GBP 92.80 one. It should take the lowest matching row
+  explicitly. Masked today by item 1, which means no floor runs at all.
+- **The published payload is 13MB and carries every price for every product.**
+  The dedup is **designed, proven and NOT built**: costs stored once, margin
+  applied at read time, measured at **1,136 kB against 14 MB**, and verified
+  identical across 78,431 sheet rows and 37,380 finish rows with zero price
+  differences. The working was dropped from the database afterwards at
+  Nicholas's request, so it has to be rebuilt from `docs/PRICING-STRUCTURE.md`,
+  which is the only surviving artefact. Also needs item 1 fixed first, because
+  checkout would have to read the new shape.
+- **The studio still waits ~7.7s after "Love it".** Halved today by not sending
+  the same pixels twice. The rest is the press PDF going up a 1Mbps connection
+  and cannot be made smaller without touching print quality, which is refused.
+  The only remaining lever is to hand the files to the order page and upload
+  them in the background while the customer picks paper. **Not built**: it puts
+  the artwork-fallback rule in two places, and getting it wrong means an order
+  with no print file. Needs a decision.
+- **Nothing can delete from the `artwork` bucket.** It has INSERT and SELECT
+  policies for `anon` and **no DELETE policy at all**, so abandoned artwork
+  accumulates for ever and only the service role can clear it. This is the real
+  shape of the "abandoned artwork is never deleted" item.
+- **37 files, about 22MB, were added to the bucket on 3 October** between
+  Claude's testing and Nicholas's. Seven are named `_speedprobe-...` and are
+  certainly test files; the rest are `print-ai`, `ref-ai` and `foil-ai` sets
+  from design-studio runs. They need deleting from the Supabase dashboard.
+- **Two test suites do not run at all.** `test-section-race.js` wants a browser
+  `window`; `test-slug-from-url.js` reads a fixture from a scratchpad that no
+  longer exists. Both were already broken and neither is related to anything
+  changed today — but a suite that reports nothing reports success, which is how
+  `test-foil-route-b.js` silently stopped running for part of today.
+- **Check whether changing the size still drops a studio design.** Before the
+  shape lock, going back to the size step and choosing another size reverted the
+  page to "upload your artwork" and the design vanished from the journey — the
+  data survived and a reload brought it back, but a customer would not know
+  that. The lock should make it unreachable; it has not been re-tested since.
 
 ### Cleared 30 September
 
@@ -1639,17 +1721,12 @@ and delivery is free and unfunded.
   no INSERT policy at all, which means the whole discount audit trail depends on
   the `redeem_discount()` function staying exactly as it is.
 
-### Next up
-
-| # | What | Why it is first |
-|---|---|---|
-| 1 | **Find out what PrintedEasy charge us for delivery** | Standard delivery is free to the customer and their quoted price excludes it, so every order absorbs it. It is a fixed subtraction from any margin, so it has to be known *before* margins are set, not after. |
-| 2 | **Set the margins** | 22 products at cost. The last real blocker, and a decision rather than a build. §14 is the evidence. |
-| 3 | **Decide on place cards and table numbers** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live. Item 31. |
-| 4 | **The 11MB payload** | Publish is healthy today only because autovacuum was tuned. The payload grew 10→11MB in one afternoon. This is the thing that will break next. |
-
 ### Blocking launch
 
+1. **Checkout refuses every basket** — the version test in
+   `create-checkout.js`. Top of "Next up" above, and the reason "set the
+   margins" is no longer the last thing between us and trading.
+2. **Margins are 0 on 22 products.** The decision, not the build.
 3. **VAT at checkout.** The grid is clean and driven by
    `site_config.pricing.vatRegistered`, but checkout still shows "VAT (20%)"
    and stores a VAT figure while we are not registered. Move checkout onto the
@@ -1853,7 +1930,7 @@ they can be changed without SQL (§9).
 
 ---
 
-## 15. Spot UV withdrawn — 3 October 2026
+## 16. Spot UV withdrawn — 3 October 2026
 
 Nicholas chose to remove it entirely rather than price it. It sat exactly where
 foiling had on the morning of 1 October — a flat **£52** in `finish_options`,
@@ -1915,7 +1992,7 @@ order page offers Lamination · Foiling · Corners, the landing page renders
 Foiling and Lamination only, help and support is clean, and the landing page's
 request carries `active=eq.true`. `check-live.py` 5,275 checks, exit 0.
 
-## 16. Red envelopes withdrawn — 3 October 2026
+## 17. Red envelopes withdrawn — 3 October 2026
 
 Nicholas asked for them off the site, handled the way Spot UV had been that
 morning: find every mention, review it, remove it, then prove the site still
@@ -1976,3 +2053,57 @@ again** without the withdrawal being revisited.
   the other reads a fixture from a scratchpad that no longer exists. Both were
   already broken; neither touches envelopes. Same rot that had killed
   `test-route-gating.js` until it was revived on 1 October.
+
+## 18. Checkout refuses every basket — found 3 October, NOT FIXED
+
+**Nothing can be sold.** Found while reading the pricing chain for something
+else, confirmed against the live database, and **not fixed** — it wants a
+decision about how checkout should read prices once the payload is restructured.
+
+`netlify/functions/create-checkout.js` rebuilds the price of every basket line
+and refuses anything materially cheaper than that floor. It loads the catalogue
+like this:
+
+```js
+if (payload?.schema_version === 2 && Array.isArray(payload.products)) {
+```
+
+The live payload carries **`schema_version: 3`**, and has done since the
+hierarchical publish went in. So `ctx.products` stays empty, there is no legacy
+`prices` key to fall back on, and every item floors on the crude fallback
+`Math.round((qty / 50) * basePerFifty)` with `basePerFifty = 150`.
+
+Measured against the live payload, flat single-sided rows:
+
+| Quantity | Real price | Floor applied | Configurations refused |
+|---|---|---|---|
+| 25  | GBP 17.60 – 1,119 | GBP 75  | 741 of 750 |
+| 50  | GBP 18.40 – 2,228 | GBP 150 | 741 of 750 |
+| 100 | GBP 19.20 – 91.20 | GBP 300 | **741 of 741** |
+| 200 | GBP 20.80 – 137.60| GBP 600 | **741 of 741** |
+
+The customer gets HTTP 400 and *"Prices have changed since this basket was
+created. Please refresh the page and try again."* Refreshing cannot help.
+
+**Why it was never noticed:** the site is pre-launch, there are no real orders,
+and monitoring does not cover Stripe checkout. `check-live.py` reads pages and
+prices; it never posts a basket.
+
+**It is not a one-character fix.** Changing `=== 2` to `>= 2` works only while
+products carry their prices inline. If the payload is deduplicated — which is
+the other outstanding pricing job — products no longer carry `sheet_sells`, and
+checkout would be back to the fallback formula without saying so. The fix is to
+call the `pricing_for` RPC per basket slug instead of downloading the whole
+payload, which also stops this function pulling 13MB on every checkout.
+
+**A second fault in the same floor**, independent of the first: the basket never
+records which paper WEIGHT was ordered, so `product.sheet_sells.find(...)` keys
+only on paper, size, quantity, fold and sides and takes whichever row comes
+first. On the live payload that is sometimes a dearer weight — **7,129
+configurations across 19 products floor above the cheapest legitimate order**,
+worst case demanding GBP 124.80 for a GBP 92.80 one. It should take the lowest
+matching row explicitly rather than relying on the order rows happen to be in.
+
+**The lesson is one this document already carries, from envelopes:** a price
+floor that is too HIGH is a bug, not a safe default. It rejects honest orders at
+the last click and protects nothing.
