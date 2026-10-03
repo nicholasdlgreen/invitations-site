@@ -2101,7 +2101,7 @@ function _fp_renderFormatToggle() {
   box.style.display = '';
   box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
     + 'background:var(--white);padding:4px;">'
-    + folds.map(f => {
+    + (shapeIsLockedByDesign() ? folds.filter(f => f === selectedFold) : folds).map(f => {
         const on = f === selectedFold;
         const art = (typeof cardIcon === 'function')
           ? cardIcon({ ratio: 0.71, H: 17, folded: f === 'folded', sel: on }) : '';
@@ -2165,7 +2165,7 @@ function _fp_renderSidesToggle() {
   box.style.display = '';
   box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
     + 'background:var(--white);padding:4px;">'
-    + sides.map(x => {
+    + (shapeIsLockedByDesign() ? sides.filter(x => x === selectedSides) : sides).map(x => {
         const on = x === selectedSides;
         return '<button type="button" onclick="selectSides(\'' + x + '\')" '
           + 'style="font:inherit;font-size:var(--text-sm);border:0;cursor:pointer;padding:8px 20px;'
@@ -2195,7 +2195,7 @@ function _fp_renderOrientationToggle() {
   box.style.display = '';
   box.innerHTML = '<div style="display:inline-flex;border:1.5px solid var(--border);border-radius:999px;'
     + 'background:var(--white);padding:4px;align-items:center;">'
-    + ['portrait','landscape'].map(o => {
+    + (shapeIsLockedByDesign() ? [selectedOrientation] : ['portrait','landscape']).map(o => {
         const on = o === selectedOrientation;
         // A tiny upright or lying rectangle, so the words are not doing all
         // the work — the same idea as the size previews above.
@@ -2221,7 +2221,41 @@ function _fp_renderOrientationToggle() {
   }
 }
 
+// ── THE SHAPE IS SETTLED ONCE A DESIGN IS IN ──────────────────────────────
+// A design made in the studio is drawn at one size, one way up, flat or
+// folded, and the press file, the artwork and the foil layer are all built to
+// that shape. Turning the card afterwards does not turn the design: it leaves
+// a portrait A6 design on a landscape A6 order, and until 3 October nothing
+// said so. The foil layer's size check was the only thing that happened to
+// notice, so a customer who did not choose foiling could order a card the
+// design does not fit.
+//
+// So the shape stops being a question once a design is in hand. The way to a
+// different shape is to design it at that shape, which is what the note says.
+function shapeIsLockedByDesign(){
+  return !!(designMode && designState
+            && (designState.source === 'ai-studio'
+                || (designState.artworkUrl && !designState.thumbnailSvg)));
+}
+// WORDING NOT YET AGREED WITH NICHOLAS.
+function designShapeNoteHtml(){
+  if (!shapeIsLockedByDesign()) return '';
+  const z = sizeSpec(selectedSize);
+  const shape = (z && z.shortLabel) || selectedSize || '';
+  const way = (selectedOrientation === 'landscape') ? 'landscape' : 'portrait';
+  const fold = (selectedFold === 'folded') ? 'folded' : 'flat';
+  return '<p class="designShapeNote" style="font-size:var(--text-xs);color:var(--pale);'
+    + 'line-height:1.6;margin:14px 0 0;">Your design was made as a ' + fold + ' '
+    + esc(shape) + ', ' + way + '. Turning or resizing the card now would not turn '
+    + 'or resize the design. <a href="/design-studio" style="color:var(--gold);">'
+    + 'Start a new design</a> to choose a different shape.</p>';
+}
+
 function selectOrientation(o) {
+  // Locked: see shapeIsLockedByDesign. Guarded in the handler and not only in
+  // the markup, so a stale button, a keyboard or an old cached page cannot get
+  // round it.
+  if (shapeIsLockedByDesign()) return;
   if (o === selectedOrientation) return;
   selectedOrientation = o;
   // The card has changed shape, so every judgement made about a file against
@@ -2235,6 +2269,7 @@ function selectOrientation(o) {
 }
 
 function selectSides(x) {
+  if (shapeIsLockedByDesign()) return;
   if (x === selectedSides) return;
   selectedSides = x;
   sideFiles = {};
@@ -2264,6 +2299,7 @@ function selectSides(x) {
 }
 
 function selectFold(f) {
+  if (shapeIsLockedByDesign()) return;
   if (f === selectedFold) return;
   selectedFold = f;
   // A size the other format cannot do must not survive the switch.
@@ -2360,6 +2396,12 @@ function renderSizeCards() {
   if (offered && offered.length) keys = offered;
   else if (available.size) keys = keys.filter(k => available.has(k));
   if (!keys.length) keys = Object.keys(SIZE_SPECS);      // never show an empty step
+  // A studio design was drawn at one size. Offering the others is offering
+  // something we cannot deliver — the press file does not change shape with
+  // the tile that is clicked.
+  if (shapeIsLockedByDesign() && selectedSize && keys.includes(selectedSize)) {
+    keys = [selectedSize];
+  }
 
   // Every tile is drawn to the same long side, so A5 really does look taller
   // than A6. The drawing itself lives in card-icon.js and is shared with the
@@ -2389,6 +2431,15 @@ function renderSizeCards() {
       ${z.badge ? `<div style="font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:5px;font-weight:500;">${z.badge}</div>` : ''}
     </div>`;
   }).join('');
+
+  // Said once, under the tiles, rather than left for the customer to discover
+  // when the foil layer refuses to line up. Any previous one goes first:
+  // renderSizeCards runs on every fold, size and orientation change, and
+  // appending without clearing would stack a note per render.
+  const stale = document.querySelectorAll('.designShapeNote');
+  for (let i = 0; i < stale.length; i++) stale[i].remove();
+  const note = designShapeNoteHtml();
+  if (note) grid.insertAdjacentHTML('afterend', note);
 
   arrangeShapeRow();
   paintSizeArt(keys);
@@ -2524,6 +2575,8 @@ function renderCartDrawer(){
 
 // ── SIZE SELECTION ────────────────────────────────────────
 function selectSize(id){
+  // Locked once a design is in: the press file was built at one size.
+  if (shapeIsLockedByDesign() && id !== selectedSize) return;
   const firstChoice = !selectedSize;
   selectedSize=id;
   try {
