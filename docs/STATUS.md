@@ -1,9 +1,23 @@
-# Where we are — 1 October 2026
+# Where we are — 3 October 2026
 
 *Every figure below was checked against the live site, the live database or a
 generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
+
+**3 commits on 3 October, pushed and published** (902 in the repo). A short
+day with one job in it: **Spot UV was withdrawn entirely** rather than priced —
+§15. Published 10:07 and verified on the live site, not just locally: the
+payload no longer mentions it, Silk now reads Lamination · Foiling · Corners ·
+Fold, and the order page offers Lamination · Foiling · Corners. A latent fault
+found during that sweep was fixed the same day — the landing pages were asking
+for every finish type rather than the live ones.
+
+Before that, item 9 of this document was rewritten because it still opened by
+saying foiling was unpriced and unsellable, three days after it was settled.
+Anyone reading it top-down reached the opposite of the truth.
+
+---
 
 **24 commits on 1 October, all pushed** (898 in the repo). The day was almost
 entirely **foiling**, taken from "we offer it and cannot deliver it" to a thing
@@ -11,9 +25,9 @@ that can be bought on both routes at a price we have actually measured. Two
 faults found along the way had nothing to do with foiling and one of my own
 conclusions had to be withdrawn.
 
-**Where it stopped.** The studio foiling panel is built, tested and committed
-but **not yet tried by Nicholas** — he said he would test it shortly. The last
-commit is `9cfe9b9`. Nothing is waiting on me.
+**Where it stopped.** The studio foiling panel was built, tested and committed
+on 1 October. **Still not tried by Nicholas with a real generation** — carried
+forward to 3 October as the one open check.
 
 **The foiling thread, in order:**
 
@@ -1893,10 +1907,9 @@ The rule outlived the finish, so the subject is now **Protective finish**,
 which genuinely has no card-side ladder. Re-checked that the test still fails
 when the rule is broken.
 
-**Not yet published.** `finish_types` is fetched live, so the finish is already
-gone from the order page and the landing pages. But `paper_stocks.finishes`
-reaches the shop through the published payload, where Silk, Uncoated,
-Cartonboard and Ice White still list Spot UV among their capabilities. It is
-harmless — that list is intersected with `finish_types`, which no longer has it
-— but **a Publish will clear it**, and until then the payload says we can do
-something we have withdrawn.
+**Published 3 October 10:07 and verified on the live site.** The payload no
+longer mentions Spot UV anywhere; Silk's capabilities now read Lamination ·
+Foiling · Corners · Fold. Checked on foreverprint.com rather than locally: the
+order page offers Lamination · Foiling · Corners, the landing page renders
+Foiling and Lamination only, help and support is clean, and the landing page's
+request carries `active=eq.true`. `check-live.py` 5,275 checks, exit 0.
