@@ -1552,6 +1552,21 @@ async function loadSiteData() {
         // New hierarchical schema (Phase 5): payload.products[] keyed by slug
         if (payload.schema_version >= 2 && Array.isArray(payload.products)) {
           currentProduct = payload.products.find(p => p.slug === PRODUCT.slug) || null;
+          // Open on the way this product is normally sold, which is its FIRST
+          // route. Every product that offers the choice lists flat first, so
+          // nothing changes for them; a greeting card, a thank you, engagement
+          // or graduation card lists folded first and opens folded, because
+          // that is what it is — "a folded card, creased by us, with a page
+          // inside for your own message" is its own description.
+          //
+          // Before this, the opening fold was hardcoded 'flat' for everything.
+          // That was invisible while those four had no flat route at all; the
+          // moment they gained one they would have opened flat, contradicting
+          // their own copy and quietly halving the price of the thing shown.
+          if (currentProduct && Array.isArray(currentProduct.routes) && currentProduct.routes[0]
+              && currentProduct.routes[0].fold) {
+            selectedFold = currentProduct.routes[0].fold === 'folded' ? 'folded' : 'flat';
+          }
           // schema 3 carries the paper catalogue alongside the prices, so the
           // thickness picker and the finish list can both come from one fetch.
           if (Array.isArray(payload.papers)) publishedPapers = payload.papers;
@@ -6736,7 +6751,11 @@ async function addToCartUpload(){
   // Flat and folded are different products at the printer and a different
   // thing in the hand, so the line must say which — otherwise a folded order
   // is indistinguishable from a flat one in the basket and on the order.
-  let paperLabel = (selectedFold === 'folded' ? 'Folded · ' : '') + paper.name;
+  // isFoldedPiece(), not selectedFold. A product sold folded-only carries the
+  // fold tag 'flat' because that is how its RATES are keyed, so reading the tag
+  // directly made the basket line drop "Folded ·" from a card the step summary
+  // above had just called folded. Same question, same answer, both places.
+  let paperLabel = (isFoldedPiece() ? 'Folded · ' : '') + paper.name;
   // include the chosen weight (name + gsm) so it's recorded on the order
   if (paper.weights && selectedWeight) {
     var w = paper.weights.find(function(x){ return x.id === selectedWeight; });
