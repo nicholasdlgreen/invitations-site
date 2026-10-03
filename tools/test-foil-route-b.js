@@ -10,6 +10,12 @@
 
 var HTML = readFile('upload-and-print.html');
 
+// jsc has no console, and the page logs through one — loudly now, because a
+// foil layer WE drew failing its own checks is our bug and has to be findable.
+// Without this stub the suite dies at the first console.error rather than
+// reporting a failure, which is a confusing way to learn you forgot a stub.
+var console = { log: function(){}, warn: function(){}, error: function(){} };
+
 function grabHost(name) {
   var needle = '\nfunction ' + name + '(';
   var i = HTML.indexOf(needle);
@@ -398,9 +404,11 @@ function foilLayerAccepted(){ return !!CHECKS.length && !CHECKS.some(function(c)
 // tests are about the UPLOAD route, so there is none; the studio has its own
 // section at the end of this file.
 var designMode = false, designState = null, studioFoilTried = false;
-var studioFoilArt = null, studioFoilPick = null;
+var studioFoilArt = null, studioFoilPick = null, studioFoilFailed = false;
 function loadStudioFoilLayer(){}
 function studioFoilPanelHtml(){ return '<div class="foilLines">panel</div>'; }
+function studioFoilProblemHtml(){ return '<div class="foilOut">our problem, our fix</div>'; }
+eval(grabHost('foilLayerIsOurs'));
 eval(grabHost('studioFoilUrl'));
 eval(grabHost('studioFoilLines'));
 eval(grabHost('studioFoilChosen'));
@@ -408,6 +416,18 @@ eval(grabHost('foilLight'));
 eval(grabHost('foilLightHtml'));
 eval(grabHost('foilWayOutHtml'));
 eval(grabHost('foilBlock'));
+
+// 3 October: the layer the studio draws was going through the same judgement as
+// a customer's upload, so a red offered "Fix it" — a button that reads the
+// artwork they uploaded, which on this route does not exist, so it could only
+// ever answer "We could not read your artwork". Nicholas asked the obvious
+// question: we make that file, so how can it need fixing? It cannot, and it is
+// no longer offered.
+function showOurs(checks){
+  CHECKS = checks;
+  foilLayer = { file: { name:'foil-layer-from-your-design.pdf' }, origin: 'studio' };
+  return foilBlock('Foiling', 'Gold');
+}
 
 function row(status, label){ return { status:status, label:label, val:'v', note:'n' }; }
 function show(checks){
@@ -452,6 +472,28 @@ print('  \u2014 2. Fix it is offered on the three reds we are confident about');
 // Mixed: unreadable wins, because the safe answer has to survive company.
 var bothRed = show([row('err','Colour'), row('err','Foil layer')]);
 is(shows(bothRed, 'Fix it'), false, 'one unreadable check is enough to withhold it');
+
+print('  \u2014 2b. None of it applies to a layer WE drew');
+// The same three reds that earn an offer on an uploaded file must earn nothing
+// on ours. "Fix it" reads the artwork the customer uploaded; a studio design
+// has none, so it could only ever answer "We could not read your artwork" —
+// about a file they never made. The failure is ours to report, not theirs.
+[['Colour', 'a copy of their artwork'], ['What to foil', 'a blank page'], ['Size', 'the wrong page size']]
+  .forEach(function (c) {
+    var theirs = show([row('err', c[0])]);
+    var ours   = showOurs([row('err', c[0])]);
+    is(shows(theirs, '>Fix it<'), true,  'an uploaded file is still offered Fix it for ' + c[1]);
+    is(shows(ours,   'Fix it'),   false, 'ours is NOT, for ' + c[1]);
+    is(shows(ours, 'Would you like us to fix it instead?'), false,
+       'and is not asked the question either, for ' + c[1]);
+  });
+// It is not simply silent: they are told, and given another go.
+var oursRed = showOurs([row('err','Size')]);
+is(shows(oursRed, 'our problem, our fix'), true,
+   'our own failure shows our own panel, not a checklist about their artwork');
+is(shows(oursRed, 'Replace'), false, 'and no Replace, for a file they never supplied');
+// A green on our own layer must still behave exactly as before.
+is(shows(showOurs(GREEN), 'foilOut'), false, 'a passing layer of ours offers nothing at all');
 
 print('  \u2014 3. The description text is gone');
 is(shows(show([row('err','Colour')]), 'You don\u2019t need a second file'), false,

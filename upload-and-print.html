@@ -5491,6 +5491,12 @@ function foilPickHtml(){
 function foilWayOutHtml(){
   const L = foilLight();
   if (!L || L.lamp !== 'red' || foilPick) return '';
+  // Never on our own file. "Fix it" builds a foil layer from the artwork the
+  // CUSTOMER uploaded, and a studio design has none — panelSource('front') is
+  // null, so it can only ever answer "We could not read your artwork". Offering
+  // it there was offering a button that could not work, for a file they did not
+  // make. The studio's own failure path is handled in the panel instead.
+  if (foilLayerIsOurs()) return '';
   const unreadable = foilChecks().some(function(c){
     return c.status === 'err' && (c.label === 'Foil layer' || c.label === 'File type'); });
   if (unreadable)
@@ -5501,6 +5507,20 @@ function foilWayOutHtml(){
     + '<div class="row"><button type="button" class="go" onclick="openFoilPicker()">Fix it</button>'
     + '<span class="alt">or <button type="button" onclick="pickFoilLayer()">upload a different file</button></span>'
     + '</div></div>';
+}
+
+// When the layer we were supposed to make is not there, or will not pass its
+// own checks. The customer did not make it and cannot fix it, so they are not
+// shown a checklist and not offered "Fix it" — they are told plainly and given
+// another go. The detail goes to the console for us.
+//
+// WORDING NOT YET AGREED WITH NICHOLAS — three strings, flagged for his words.
+function studioFoilProblemHtml(){
+  return '<div class="foilOut"><h4>We could not prepare your foil layer</h4>'
+    + '<p>Nothing is wrong with your design \u2014 this one is ours to fix. '
+    + 'Please try again.</p>'
+    + '<div class="row"><button type="button" class="go" onclick="retryStudioFoilLayer()">'
+    + 'Try again</button></div></div>';
 }
 
 // The studio's own panel: choose a colour, then choose the lines, with the
@@ -5579,6 +5599,10 @@ function foilBlock(typeName, chosen){
     body = '<div class="foilDrop"><div class="sm">Checking your foil layer\u2026</div></div>';
   } else if (!foilLayer && studioFoilUrl() && !studioFoilTried) {
     body = '<div class="foilDrop"><div class="sm">Preparing your foil layer\u2026</div></div>';
+  } else if (!foilLayer && studioFoilUrl() && studioFoilFailed) {
+    // We were making this one. Asking them to upload it instead would be asking
+    // for work we promised to do, and it is what the latch used to force.
+    body = studioFoilProblemHtml();
   } else if (!foilLayer && studioFoilArt && studioFoilLines()) {
     // Every line unticked. That is a real answer — no foil — and the list has
     // to stay on screen so they can tick one back.
@@ -5615,10 +5639,24 @@ function foilBlock(typeName, chosen){
     // and which lines are foiled — and the checks stay silent unless one of
     // them actually fails, because every one of them is about work they did
     // not do. The measurements still reach the job ticket either way.
-    const mine = !!studioFoilLines() && !!studioFoilArt;
+    // mine: we drew it AND we still hold the raster, so the line list can be
+    // shown. ours: we drew it, whether or not the raster survived — that alone
+    // decides whether the customer may be shown a judgement of the file.
+    const mine  = !!studioFoilLines() && !!studioFoilArt;
+    const ours  = mine || foilLayerIsOurs();
     const wrong = !foilLayerAccepted();
-    if (mine && !wrong) {
-      body = studioFoilPanelHtml(chosen);
+    if (ours && !wrong) {
+      // Ours and good. The line list if we can draw it, otherwise just the
+      // summary — never the checklist, because there is nothing for them to do.
+      body = mine ? studioFoilPanelHtml(chosen) : foilSummaryHtml(chosen);
+    } else if (ours) {
+      // Ours, and it did not pass. That is a bug in what we drew, not something
+      // the customer did, so it is shouted about here and they are offered
+      // another go rather than a checklist about their own artwork.
+      console.error('[studio-foil] the layer WE generated failed its own checks:',
+                    foilChecks().filter(function(c){ return c.status === 'err'; })
+                      .map(function(c){ return c.label + ': ' + c.note; }));
+      body = studioFoilProblemHtml();
     } else {
       body = (mine
           ? ''
@@ -6194,7 +6232,7 @@ async function useFoilFromArtwork(){
   if (!file){ foilPick.busy = false; foilPick.failed = true;
               if (window.Step3 && Step3.redraw) Step3.redraw(); return; }
   foilPick = null;
-  await takeFoilLayer(file);
+  await takeFoilLayer(file, 'fix');
 }
 
 // ── THE STUDIO'S OWN FOIL LAYER ───────────────────────────────────────────
@@ -6209,10 +6247,38 @@ async function useFoilFromArtwork(){
 // names onto the card, and hands over a URL. Nobody is asked for anything.
 //
 // It comes in through the SAME door an uploaded file does: fetched, turned
-// into a File, and handed to takeFoilLayer, so inspectFoilLayer measures it
-// and the same checks judge it. If the studio ever produces something the
-// press could not use, the checks that catch a bad upload catch it here too.
+// into a File, and handed to takeFoilLayer, so inspectFoilLayer MEASURES it —
+// the areas, the coverage, whether any of it runs off the cut — because the
+// printer's own form asks for all of that and it should be measured, not
+// guessed.
+//
+// What it must NOT do is JUDGE it. We draw this file ourselves, from the
+// design, at the right size, black on white, in the right place. Telling the
+// customer their artwork is wrong and offering to fix it is nonsense when the
+// file is ours and they never supplied one — and "Fix it" cannot work on a
+// studio design anyway, because it reads an uploaded file that does not exist.
+// If our own layer ever fails its own checks, that is OUR bug: it is logged
+// loudly here and the customer is offered another go, not blamed.
 let studioFoilTried = false;
+// Set when we tried and could not, so the panel can offer another go instead of
+// asking for an upload. Without this the first miss was final for the session:
+// loadStudioFoilLayer was deliberately once-only, so there was no way back
+// short of reloading the page, and a customer would not know to.
+let studioFoilFailed = false;
+// A hang is not an error and never reaches a catch. Reading the layer sat
+// forever on 3 October when pdf.js was refused its worker and fell back to the
+// main thread, leaving "Checking your foil layer..." on screen and Add to
+// basket disabled with nothing on fire. A slow read is still a failed read.
+const STUDIO_FOIL_TIMEOUT_MS = 20000;
+function withTimeout(promise, ms, what){
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise(function(_, reject){
+      timer = setTimeout(function(){ reject(new Error(what + ' took longer than ' + (ms/1000) + 's')); }, ms);
+    })
+  ]).finally(function(){ clearTimeout(timer); });
+}
 // The rasterised full-text layer, kept so a tick can be answered without
 // fetching anything again, and which lines the customer wants foiled.
 let studioFoilArt = null;          // { data, w, h, pageMm }
@@ -6331,7 +6397,7 @@ async function rebuildStudioFoilLayer(){
                                        'foil-layer-from-your-design.pdf');
     if (run !== studioFoilRun) return;      // overtaken; the later tick owns it
     foilBusy = false;
-    if (file) await takeFoilLayer(file);
+    if (file) await takeFoilLayer(file, 'studio');
     else if (window.Step3 && Step3.redraw) Step3.redraw();
   } catch(e){
     if (run !== studioFoilRun) return;
@@ -6368,14 +6434,17 @@ async function foilPdfFromMask(mask, art, name){
 
 async function loadStudioFoilLayer(){
   const url = studioFoilUrl();
-  // Once only. A failed fetch falls back to asking for an upload, and asking
-  // twice would just be a slower way of asking once.
+  // One attempt at a time, not one attempt ever. This used to latch on the
+  // first miss and spend the rest of the session asking for an upload instead,
+  // which is how a transient failure became a dead end nobody could get out of.
   if (!url || studioFoilTried || foilLayer || foilBusy) return;
   studioFoilTried = true;
+  studioFoilFailed = false;
   foilBusy = true;
   if (window.Step3 && Step3.redraw) Step3.redraw();
   try {
-    studioFoilArt = await rasteriseStudioFoil(url);
+    studioFoilArt = await withTimeout(rasteriseStudioFoil(url),
+                                      STUDIO_FOIL_TIMEOUT_MS, 'reading the foil layer');
     if (!studioFoilArt) throw new Error('could not read the layer');
     foilBusy = false;
     // Opens with every line foiled. Choosing a foil colour is itself the
@@ -6383,11 +6452,26 @@ async function loadStudioFoilLayer(){
     // list is there to pare back from.
     await rebuildStudioFoilLayer();
   } catch(e){
-    console.warn('[studio-foil] could not load the foil layer:', e.message);
+    // console.error, not warn: this is a file WE made failing to open, so it is
+    // our fault and worth shouting about. The customer is not told their
+    // artwork is wrong, because it is not.
+    console.error('[studio-foil] our own foil layer did not load:', e.message, url);
     studioFoilArt = null;
+    studioFoilFailed = true;
     foilBusy = false;
     if (window.Step3 && Step3.redraw) Step3.redraw();
   }
+}
+
+// Another go. Clears the latch so loadStudioFoilLayer will run again, rather
+// than leaving the customer stuck with an upload request for a file we are
+// supposed to be making for them.
+function retryStudioFoilLayer(){
+  studioFoilTried = false;
+  studioFoilFailed = false;
+  studioFoilArt = null;
+  if (window.Step3 && Step3.redraw) Step3.redraw();
+  loadStudioFoilLayer();
 }
 
 function pickFoilLayer(){
@@ -6397,7 +6481,7 @@ function pickFoilLayer(){
     inp.type = 'file'; inp.id = 'foilInput'; inp.accept = 'application/pdf,.pdf';
     inp.style.display = 'none';
     inp.addEventListener('change', function(){
-      if (this.files && this.files[0]) takeFoilLayer(this.files[0]);
+      if (this.files && this.files[0]) takeFoilLayer(this.files[0], 'upload');
       this.value = '';
     });
     document.body.appendChild(inp);
@@ -6405,13 +6489,23 @@ function pickFoilLayer(){
   inp.click();
 }
 
-async function takeFoilLayer(file){
+// origin says who made this layer: 'upload' is the customer's own file,
+// 'studio' is one we drew from their design, 'fix' is one Route B built from
+// their artwork. It decides whether the checks are allowed to JUDGE the file or
+// only to measure it — see the note above studioFoilTried.
+async function takeFoilLayer(file, origin){
   foilBusy = true;
   if (window.Step3 && Step3.redraw) Step3.redraw();
   const report = await inspectFoilLayer(file);
-  foilLayer = { file: file, report: report };
+  foilLayer = { file: file, report: report, origin: origin || 'upload' };
   foilBusy = false;
   if (window.Step3 && Step3.redraw) Step3.redraw();
+}
+
+// Ours, not theirs. Nothing we drew ourselves may be shown to the customer as
+// their mistake.
+function foilLayerIsOurs(){
+  return !!(foilLayer && foilLayer.origin === 'studio');
 }
 
 // ── THE ARTWORK, PREPARED EARLY ───────────────────────────
