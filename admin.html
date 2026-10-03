@@ -716,7 +716,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
           <!-- PANEL: FINISH OPTIONS -->
           <div class="pz-panel" id="pz-finishes">
             <div class="section-header">
-              <div><div class="section-title">Finish Options</div><div class="section-sub">Manage finishing options (foil, spot UV, embossed, etc.) and their cost modifiers</div></div>
+              <div><div class="section-title">Finish Options</div><div class="section-sub">Manage finishing options (foil, lamination, corners, etc.) and their cost modifiers</div></div>
               <button class="btn btn-gold" onclick="openFinishModal()">＋ Add Finish</button>
             </div>
             <div id="finishOptionList"><div class="empty"><span class="empty-icon">✨</span><div class="empty-text">No finish options yet</div></div></div>
@@ -1241,11 +1241,11 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 <div class="modal-overlay" id="finishModal">
   <div class="pz-modal">
     <div class="modal-title">Add Finish Type</div>
-    <div class="field"><label>Type name</label><input type="text" id="fin_name" placeholder="e.g. Lamination, Foiling, Spot UV"></div>
+    <div class="field"><label>Type name</label><input type="text" id="fin_name" placeholder="e.g. Lamination, Foiling, Corners"></div>
     <div class="field"><label>Description (shown to customer)</label><input type="text" id="fin_desc" placeholder="e.g. A coating that changes the feel."></div>
     <div class="field"><label>The longer explanation</label>
       <textarea id="fin_detail" rows="7" placeholder="Shown beside the card when a customer opens this finish. Blank lines start a new paragraph. Say what it is, what it needs from their artwork, and anything they would be annoyed to find out later."></textarea>
-      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;line-height:1.6;">Foiling and Spot UV both need their own layer in the customer's artwork, and both are charged once rather than per card — that is the sort of thing worth saying here.</p>
+      <p style="font-size:11px;color:rgba(250,247,242,.5);margin:6px 0 0;line-height:1.6;">Foiling needs its own layer in the customer's artwork, and is charged once rather than per card — that is the sort of thing worth saying here.</p>
     </div>
     <label style="font-size:13px;color:rgba(250,247,242,.8);display:flex;align-items:center;gap:6px;margin-bottom:14px;cursor:pointer;"><input type="checkbox" id="fin_luxe"> Show a "LUXE" tag (for premium types like Foiling)</label>
 

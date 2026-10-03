@@ -1631,7 +1631,7 @@ async function loadSiteData() {
         if (sizeTitle) sizeTitle.textContent = `Choose your ${PRODUCT.name} size`;
       }
     }
-    // Load finish types (Lamination, Foiling, Spot UV...) from the database.
+    // Load finish types (Lamination, Foiling, Corners...) from the database.
     if (finishTypesRes && finishTypesRes.ok) {
       const rows = await finishTypesRes.json();
       if (Array.isArray(rows)) {
@@ -1897,8 +1897,11 @@ function lookupFinishSell(name, option) {
   // If the ladder covers this finish, the ladder is the only answer. Corners
   // sits at £0 in finish_sells, so letting the flat figure stand in for a rate
   // that is deliberately absent is how a £22 operation was given away on every
-  // folded order. Finishes the ladder does not cover — foiling, spot UV — still
-  // come from the flat figure below, because that is all we have for them.
+  // folded order. A finish the ladder covers nowhere at all — the protective
+  // finish and the hanging holes — still comes from the flat figure below,
+  // because that is all we have for it. Foiling used to be in that group and
+  // has had real rates since 1 October; Spot UV was the other one and was
+  // withdrawn on 3 October rather than priced.
   if (optionHasLadder(name, option)) {
     console.warn('[finishing] no published rate for', name, option,
                  'on', printingFamily(), selectedSize, '— not offering it');
@@ -4799,7 +4802,7 @@ async function initStep3(){
 
 
 // Render the finishing options card. Only shown if this product has finish
-// Render finish types (Lamination, Foiling, Spot UV...) from the database.
+// Render finish types (Lamination, Foiling, Corners...) from the database.
 // Each type is a block with its options. A product can limit which TYPES it
 // shows via available_finishes (matching the type name); empty = show all.
 function renderFinishGrid() {
@@ -4816,7 +4819,7 @@ function renderFinishGrid() {
     types = types.filter(t => allowed.includes((t.name||'').toLowerCase().trim()));
   }
   // ...then narrow again to what the CHOSEN PAPER can physically take. The
-  // printer's luxury Fedrigoni range cannot be foiled, laminated or spot-UV'd
+  // printer's luxury Fedrigoni range cannot be foiled or laminated
   // at all, so the finishing options have to disappear when one is selected
   // rather than being offered and failing later.
   const chosen = CONFIG.papers.find(p => p.id === selectedPaper);

@@ -103,7 +103,7 @@ admin; nothing can be priced without at least one.
 | Our family | Bought on | Can it finish? |
 |---|---|---|
 | **flat-card** | **Postcards** for Silk, Uncoated, Cartonboard · **Luxury Flat** for the Fedrigoni stocks | Postcards: lamination, foiling, spot UV, corners. Luxury Flat: **corners only**, and free |
-| **folded-card** | **Greeting Cards** | lamination, foiling, spot UV. **No corners** |
+| **folded-card** | **Greeting Cards** | lamination, foiling. **No corners** |
 | **folded-leaflet** | **Luxury Folded** | **nothing at all** |
 | **large-format** | **Posters** | lamination |
 | **display-board** | **Display Boards** | its own lamination field, plus drilled holes |
@@ -269,7 +269,7 @@ and **size** — four dimensions. We hold one number.
 |---|---|---|
 | Lamination | £5 | varies on four dimensions; both sides is **+£11, not 2 × £4** |
 | Foiling | £70 | list ~£88, near-flat with quantity — sound |
-| Spot UV | £52 | verified flat: £63 at 25, £65 at 100, £64 at 500 — sound |
+| ~~Spot UV~~ | — | **Withdrawn 3 October 2026.** Removed from the catalogue rather than priced |
 | Corners | £0 | verified free — sound |
 | Fold | £0 | verified free — sound |
 | Hanging holes | £13.60 | unverified |

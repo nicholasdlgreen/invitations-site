@@ -27,7 +27,7 @@ and the old wax-seal sentence was still on screen.
 
 Read these before writing a sentence about papers or finishes.
 
-**Finishes** (`finish_types`) — foil in gold, silver or rose gold; spot UV;
+**Finishes** (`finish_types`) — foil in eight colours;
 rounded corners; matt, gloss or soft-touch lamination; long-edge, short-edge or
 tent folds; a matt or gloss protective finish and drilled hanging holes on
 boards; envelopes in brilliant white or red.

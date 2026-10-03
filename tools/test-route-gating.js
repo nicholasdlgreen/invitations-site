@@ -96,13 +96,13 @@ function payloadFor(opts) {
       supplier_family: 'flat-card',
       folded_family: 'folded-card',
       finish_prices: rows,
-      finish_sells: [{ name: 'Foiling', sell: 70 }, { name: 'Spot UV', sell: 55 },
+      finish_sells: [{ name: 'Foiling', sell: 70 }, { name: 'Protective finish', sell: 13.60 },
                      { name: 'Corners', sell: 0 }, { name: 'Lamination', sell: 5 }],
       papers: []
     }],
     papers: [
       { name: 'Silk', weights: [{ id: 'silk-300', gsm: 300 }],
-        finishes: ['Lamination', 'Foiling', 'Spot UV', 'Corners'] },
+        finishes: ['Lamination', 'Foiling', 'Protective finish', 'Corners'] },
       { name: 'Tintoretto Gesso', weights: [{ id: 'tg-300', gsm: 300 }], finishes: [] }
     ]
   };
@@ -116,7 +116,9 @@ var results = [];
 var FINISH_TYPES = [
   { name:'Lamination', options:[{name:'None'},{name:'Matt'},{name:'Gloss'},{name:'Soft Touch'}] },
   { name:'Foiling',    options:[{name:'None'},{name:'Gold'},{name:'Silver'},{name:'Rose Gold'}] },
-  { name:'Spot UV',    options:[{name:'None'},{name:'Add Spot UV'}] },
+  // A finish with no ladder anywhere, which is the case this suite exists to
+  // guard. Spot UV held this slot until it was withdrawn on 3 October.
+  { name:'Protective finish', options:[{name:'None'},{name:'Add it'}] },
   { name:'Corners',    options:[{name:'Square'},{name:'Rounded'}] }
 ];
 // Silk can take everything; the Fedrigoni stocks can take nothing.
@@ -190,10 +192,14 @@ check('FLAT keeps Corners available, because flat-card IS priced', function(){
 });
 
 // ── the regression the fixture caught: flat-figure finishes must survive ──
-check('FOLDED still offers Foiling and Spot UV (on no ladder, sold flat)', function(){
+// A finish the ladder does not cover ANYWHERE must still be offered and still
+// be charged. The danger is the opposite of the Corners leak below: there the
+// ladder existed and the route was missing, so refusing was right; here no
+// ladder exists at all, and refusing would silently drop a finish we sell.
+check('FOLDED still offers a finish that has no ladder at all', function(){
   var w = world({ fold:'folded' }); var api = build(w);
   var n = names(api.step3Finishes(w._silk.name));
-  return (/Foiling/.test(n) && /Spot UV/.test(n)) ? true : 'got: ' + n;
+  return (/Foiling/.test(n) && /Protective finish/.test(n)) ? true : 'got: ' + n;
 });
 check('Foiling is still priced at its flat figure, not zero', function(){
   var w = world({ fold:'folded' }); var api = build(w);

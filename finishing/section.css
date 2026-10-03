@@ -23,7 +23,7 @@
 .fs-o:hover .fs-sw{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(61,46,36,.09),0 12px 22px rgba(61,46,36,.2)}
 .fs-n{display:block;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);margin-top:11px;line-height:1.2}
 
-/* ---- lamination and spot UV: words, on the same grid ----
+/* ---- lamination: words, on the same grid ----
    No swatch. A laminate is a reflection, so a still picture of one shows
    nothing at all — three identical pale squares that only raise the question
    of what you are meant to be seeing. A hairline holds the column instead. */

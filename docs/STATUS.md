@@ -222,10 +222,8 @@ the autovacuum fix from §11 holding.
      maximum foiled area. Both remain our inference.
    - **"Fix it" is withheld from two of the five reds**, pending a test (§9c).
    - **The gold preview inside the studio**, the parked Option A (§9h).
-   - **Spot UV is still a flat £52** and has had none of this work. It sits
-     exactly where foiling did on the morning of 1 October: one invented
-     number, no rates, never probed. The method that fixed foiling applies to
-     it unchanged — read `scodixSpotUVPostPrice` from the same reply.
+   - ~~**Spot UV is still a flat £52.**~~ **Withdrawn entirely on 3 October —
+     see §15.** Nicholas chose to remove it rather than price it.
 
    > **Everything from here to §9b is the 1 October working.** Three paragraphs
    > of it were written in the morning and overtaken by the afternoon; each is
@@ -271,8 +269,8 @@ the autovacuum fix from §11 holding.
    configurator left on options we do not sell. The real figure for what we do
    sell is £80–£95 list, £64–£76 after our 20%.
 
-   **Spot UV is still a flat £52 and is still unprobed.** That half of the
-   paragraph has not been overtaken by anything.
+   ~~**Spot UV is still a flat £52 and is still unprobed.**~~ It was **withdrawn
+   on 3 October** rather than priced — see §15.
 
    **~~Open — we cannot actually place a foiled order.~~ SETTLED the same day —
    see §9c and §9h.** Both routes can place one: an uploader supplies a layer or
@@ -1837,3 +1835,57 @@ they can be changed without SQL (§9).
 30. **Range gaps**: details and enclosure cards, evening invitations, belly
     bands, printed envelopes, hen party. Funeral and sympathy still open.
     Samples were declined.
+
+---
+
+## 15. Spot UV withdrawn — 3 October 2026
+
+Nicholas chose to remove it entirely rather than price it. It sat exactly where
+foiling had on the morning of 1 October — a flat **£52** in `finish_options`,
+**zero rows** in `finish_rates`, never probed — except that nobody wanted to
+sell it. Removing it was a shorter job than measuring it.
+
+**Found in three places, as he asked it be looked at:**
+
+| | Where |
+|---|---|
+| **Content** | 19 products' `features`; wedding invitations' `tagline` and `intro_long`; `help-support.html`; the hardcoded hero fallbacks in `product.html` and `wedding-invitations.html`; two bullets in `wedding-albums.html` |
+| **The wizard** | **Nothing to remove.** `step3/step3.js` has zero mentions and `finishing/section.js` fetches `finish_types` from the database, so both render whatever the catalogue holds. The four mentions in `upload-and-print.html` were all comments |
+| **Pricing and data** | `finish_types` (1 row), `finish_options` (1 row, £52), `paper_stocks.finishes` (4 papers), `product_types.available_finishes` (19 products + the retired `Invitations`) |
+
+**What was deliberately NOT removed.** `printedeasy_finishes.py`,
+`printedeasy_refresh.py`, `printedeasy_foil_probe.py` and
+`printedeasy-price-watch.js` all name `scodix_spotUV` and `spot-uv-price`.
+Those are **PrintedEasy's own form fields, which we strip from every probe** so
+that spot UV is never accidentally added to a foiling or lamination quote.
+Deleting them would corrupt the scrapes. They stay.
+
+**Two things the sweep turned up:**
+
+- **`finishing/section.js` does not filter `finish_types` by `active`.** The
+  order page does (`active=eq.true`); the landing pages do not. So setting a
+  finish inactive would hide it from the order step and leave it advertised on
+  every landing page. Deleting the row sidestepped it this time. **Still a
+  latent fault** — the next finish to be retired will hit it.
+- **A false positive worth knowing about.** Welcome Signs appeared to mention
+  Spot UV in its FAQs. It says *"a sheltered **spot**"*. The first sweep used
+  `ilike '%spot%'` and counted 20 products; the real number was 19.
+
+**Tested.** All 16 suites identical to the baseline taken before the first
+edit. `tools/check-live.py` **5,275 checks passed, exit 0**. Verified in the
+browser on the order page (finishes now Lamination · Foiling · Corners), a
+landing page, help and support, and the albums page — no "spot uv" anywhere.
+
+`test-route-gating` guarded a real rule — *a finish with no ladder anywhere
+must still be offered and still be charged* — and used Spot UV as its subject.
+The rule outlived the finish, so the subject is now **Protective finish**,
+which genuinely has no card-side ladder. Re-checked that the test still fails
+when the rule is broken.
+
+**Not yet published.** `finish_types` is fetched live, so the finish is already
+gone from the order page and the landing pages. But `paper_stocks.finishes`
+reaches the shop through the published payload, where Silk, Uncoated,
+Cartonboard and Ice White still list Spot UV among their capabilities. It is
+harmless — that list is intersected with `finish_types`, which no longer has it
+— but **a Publish will clear it**, and until then the payload says we can do
+something we have withdrawn.

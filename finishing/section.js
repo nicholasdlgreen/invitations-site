@@ -44,7 +44,7 @@
   // Foiling leads: it is the one people come for and the only finish with real
   // colour. The database orders lamination first for the order step; sorting
   // here leaves that data alone.
-  var FIRST = ['foiling', 'lamination', 'spot uv'];
+  var FIRST = ['foiling', 'lamination'];
 
   // opts: { url, key, allowed:[type names this product offers],
   //         papers:[stocks that can take finishing] }
@@ -78,7 +78,7 @@
       var isFoil = /foil/i.test(t.name);
 
       // A type with one option whose name only repeats the heading has nothing
-      // to add — Spot UV's single "Add Spot UV" read as "Spot UV / Spot UV".
+      // to add — a type whose only option repeats its own name read twice.
       // Its own description says it, so the row is dropped.
       var bare = !isFoil && opts2.length === 1
         && opts2[0].name.replace(/^Add\s+/i, '').toLowerCase() === t.name.toLowerCase();
