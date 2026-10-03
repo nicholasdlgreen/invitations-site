@@ -51,7 +51,8 @@ const finCost=t=>{const f=FINS.find(x=>x.name===t);return f?parseFloat(f.sell):0
     get('product_types?select=*&slug=eq.'+SLUG),
     get('pricing_config?select=payload&order=published_at.desc&limit=1')
   ]);
-  TYPES=await get('finish_types?select=name,description,options&order=display_order');
+  // Same filter the shop uses, or the preview shows finishes the shop will not.
+  TYPES=await get('finish_types?select=name,description,options&active=eq.true&order=display_order');
   ENVS=(await get('envelopes?select=id,name,hex_color,price_each&active=eq.true&order=display_order'))
         .map(e=>({id:e.id,name:e.name,hex:e.hex_color,priceEach:parseFloat(e.price_each)}));
   const payload=(pc[0]&&pc[0].payload)||{};

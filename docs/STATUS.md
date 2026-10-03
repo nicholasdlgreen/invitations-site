@@ -1862,11 +1862,22 @@ Deleting them would corrupt the scrapes. They stay.
 
 **Two things the sweep turned up:**
 
-- **`finishing/section.js` does not filter `finish_types` by `active`.** The
-  order page does (`active=eq.true`); the landing pages do not. So setting a
-  finish inactive would hide it from the order step and leave it advertised on
-  every landing page. Deleting the row sidestepped it this time. **Still a
-  latent fault** — the next finish to be retired will hit it.
+- ~~**`finishing/section.js` does not filter `finish_types` by `active`.**~~
+  **Fixed the same day.** The order page had `active=eq.true` and the landing
+  pages did not, so marking a finish inactive would have withdrawn it from the
+  order step and left it advertised on all 23 landing pages — the shop refusing
+  to sell a thing the page beside it still offers. Deleting the Spot UV row
+  outright meant this was never exposed; the next finish retired the ordinary
+  way would have hit it.
+
+  `step3/preview.html` had the same gap and is fixed too, so the preview cannot
+  show a finish the shop will not sell. **`admin.html` deliberately still asks
+  for all of them**, because it has to edit inactive rows, and that exception is
+  now named in a test rather than left as a silent omission.
+
+  Four readers of `finish_types` are pinned in `test-route-gating`, three that
+  must filter and one that must not. Checked both ways: removing the filter from
+  the landing pages fails, and adding it to admin fails.
 - **A false positive worth knowing about.** Welcome Signs appeared to mention
   Spot UV in its FAQs. It says *"a sheltered **spot**"*. The first sweep used
   `ilike '%spot%'` and counted 20 products; the real number was 19.

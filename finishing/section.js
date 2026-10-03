@@ -52,8 +52,14 @@
     if (!el) return;
     var all = [];
     try {
+      // active=eq.true, which the order page has always had and this did not.
+      // Retiring a finish by marking it inactive would therefore have taken it
+      // out of the order step and left it advertised on every landing page —
+      // the shop refusing to sell a thing the page beside it still offers.
+      // Found on 3 October while withdrawing Spot UV, which was deleted
+      // outright and so never exposed it.
       var r = await fetch(opts.url + '/rest/v1/finish_types'
-        + '?select=name,description,options&order=display_order',
+        + '?select=name,description,options&active=eq.true&order=display_order',
         { headers: { apikey: opts.key, Authorization: 'Bearer ' + opts.key } });
       if (r.ok) all = await r.json();
     } catch (e) { /* the section hides itself below if nothing arrives */ }

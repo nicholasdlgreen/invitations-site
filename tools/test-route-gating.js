@@ -369,4 +369,34 @@ check('and nothing is reported when every choice has a price', function(){
   return a.unpricedFinish() === null ? true : 'got ' + a.unpricedFinish();
 });
 
+// ── every customer-facing reader of finish_types asks for the live ones ──
+//
+// The order page has always had active=eq.true. finishing/section.js, which
+// draws the finishing section on all 23 landing pages, did not — so marking a
+// finish inactive would have withdrawn it from the order step and left it
+// advertised on every landing page, which is the shop refusing to sell a thing
+// the page beside it still offers. Found 3 October while withdrawing Spot UV,
+// which was deleted outright and so never exposed it.
+//
+// admin is the deliberate exception: it edits inactive rows, so it must see
+// them. It is named here rather than left as a silent omission.
+var READERS = [
+  ['finishing/section.js', true,  'the landing pages'],
+  ['upload-and-print.html', true, 'the order page'],
+  ['step3/preview.html',   true,  'the step 3 preview'],
+  ['admin.html',           false, 'admin, which must see inactive rows to manage them']
+];
+READERS.forEach(function (r) {
+  check(r[0] + ' — ' + (r[1] ? 'asks only for ACTIVE finish types (' + r[2] + ')'
+                                : 'deliberately asks for ALL of them (' + r[2] + ')'), function () {
+    var src = readFile(r[0]);
+    var i = src.indexOf('finish_types');
+    if (i < 0) return 'no finish_types fetch found at all';
+    var near = src.slice(Math.max(0, i - 240), i + 240);
+    var filtered = /active=eq\.true/.test(near);
+    return filtered === r[1] ? true
+      : (filtered ? 'it filters, and should not' : 'it does NOT filter, and must');
+  });
+});
+
 print(results.join("\n"));
