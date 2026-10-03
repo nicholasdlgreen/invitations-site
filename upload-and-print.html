@@ -5130,9 +5130,16 @@ function formatArrival(d){
 }
 // What this service costs on the current basket. PrintedEasy charge us a
 // percentage with a minimum, so a flat fee would lose money on a large order.
+//
+// Rounded UP to the whole pound, which is what they do. Measured 3 October
+// 2026 against a real order of theirs: GBP 236.00 of goods billed as GBP 48
+// Express and GBP 95 Express Plus, where the raw percentages are 47.20 and
+// 94.40. Of eight candidate rules only ex-VAT-base-rounded-up reproduces both
+// figures. The pennies hardly matter; matching their rule and showing a
+// delivery line in whole pounds both do.
 function deliveryPriceFor(opt, orderValue){
   const pct = parseFloat(opt.surcharge_pct) || 0;
-  if (pct > 0) return Math.max(orderValue * (pct / 100), parseFloat(opt.surcharge_min) || 0);
+  if (pct > 0) return Math.max(Math.ceil(orderValue * (pct / 100)), parseFloat(opt.surcharge_min) || 0);
   return parseFloat(opt.price) || 0;
 }
 
