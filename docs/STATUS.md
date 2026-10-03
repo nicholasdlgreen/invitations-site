@@ -200,8 +200,38 @@ the autovacuum fix from §11 holding.
    cleanup job exists.** It needs a scheduled function that lists the bucket
    and removes anything older than seven days with no order against it.
 
-9. **Foiling.** Researched 1 October against PrintedEasy's own configurator,
-   driven end to end rather than read off the page source.
+9. **Foiling — SELLABLE. Read this header before the detail below it.**
+   Researched 1 October against PrintedEasy's own configurator, driven end to
+   end rather than read off the page source, then built out across that day.
+
+   **Settled on 1 October and live:**
+
+   | | |
+   |---|---|
+   | The price | **1,680 measured rates** in `finish_rates`, £67.20–£72.00, list less 20%, zero margin. Published (§9c) |
+   | Placing a foiled order | Possible on both routes. Upload one, or we make it (§9c, §9h) |
+   | The template | Visible and correct, generated per size (§9c) |
+   | The design studio | Per-line foiling with the design on screen (§9h) |
+   | The papers | Greyed on the five that cannot take it, as below |
+
+   **Still open, and none of it blocks trading:**
+
+   - **The marketing copy still promises foil on papers that cannot take it**
+     — the one item below that is unchanged and still needs your wording.
+   - **Two questions for PrintedEasy by email** — the 7pt minimum and the
+     maximum foiled area. Both remain our inference.
+   - **"Fix it" is withheld from two of the five reds**, pending a test (§9c).
+   - **The gold preview inside the studio**, the parked Option A (§9h).
+   - **Spot UV is still a flat £52** and has had none of this work. It sits
+     exactly where foiling did on the morning of 1 October: one invented
+     number, no rates, never probed. The method that fixed foiling applies to
+     it unchanged — read `scodixSpotUVPostPrice` from the same reply.
+
+   > **Everything from here to §9b is the 1 October working.** Three paragraphs
+   > of it were written in the morning and overtaken by the afternoon; each is
+   > struck and points at what replaced it. Kept rather than deleted because the
+   > reasoning is worth following, and because two of the day's mistakes are
+   > only legible beside what was believed at the time.
 
    **Done, and already live:** foiling is greyed with "Not available" on the
    five papers PrintedEasy cannot foil — Tintoretto Gesso, Nettuno Bianco,
@@ -222,23 +252,42 @@ the autovacuum fix from §11 holding.
    it. The configurator refuses correctly; the marketing promises it anyway.
    Nicholas's wording, as always.
 
-   **Open — the price is unverified and cannot be right.** We charge a flat £70
+   **~~Open — the price is unverified and cannot be right.~~ SETTLED the same
+   day — see §9c.** 1,680 measured rates are in `finish_rates` and published.
+   The figures below are what was believed before the endpoint was probed
+   properly; the £90/£95 they quote turned out to include options we do not
+   sell. ~~We charge a flat £70
    from `finish_sells`. There is not one foiling row in `finish_rates`; the
    scraper has never probed it. PrintedEasy quote per job from the size of the
    foiled area, sides, number of areas, build height and colour — measured on
    their site: £90 on Cartonboard and £95 on Ice White for one 50x50mm gold
    area on 100 A5 greeting cards. So the real cost moves and ours does not, and
-   on that example we are under by £20–£25 before any margin. Spot UV is in the
-   same position at a flat £52.
+   on that example we are under by £20–£25 before any margin.~~
 
-   **Open — we cannot actually place a foiled order.** They require two PDFs:
+   **What was actually wrong with that paragraph**, now that the endpoint has
+   been driven properly (§9c): the price does **not** move with the size of the
+   foiled area, the build height or the colour. It moves with sides, with three
+   or more areas, and with quantity. The £90 and £95 were read off a
+   configurator left on options we do not sell. The real figure for what we do
+   sell is £80–£95 list, £64–£76 after our 20%.
+
+   **Spot UV is still a flat £52 and is still unprobed.** That half of the
+   paragraph has not been overtaken by anything.
+
+   **~~Open — we cannot actually place a foiled order.~~ SETTLED the same day —
+   see §9c and §9h.** Both routes can place one: an uploader supplies a layer or
+   lets us build it from their artwork, and a studio customer never meets a file
+   at all. The paragraph below is what was true that morning. ~~They require two PDFs:
    the artwork, and a mask of the foil areas in 100% black at identical size
    and position. We collect one file per face and ask none of their six
    questions. They publish no foiling guide and no template, so a customer
    could not make the mask unaided either. The answer is for us to generate the
    mask and measure the area ourselves — their hardest question, the size of
    the foiled area, is the one we could answer exactly. Staged plan in the
-   1 October review.
+   1 October review.~~ **Footnote worth keeping: the size of the foiled area
+   turned out not to be one of their questions at all.** Their price does not
+   move with coverage — every value from 1% to 50% quotes identically (§9c). We
+   measure it well and it buys us nothing at the till.
 
    **Two rules to confirm with PrintedEasy by email.** Their site answers one
    of the three questions a foil step has to answer and not the other two:
@@ -637,10 +686,11 @@ the autovacuum fix from §11 holding.
    rework, and it carries the decision about whether a foil choice may hide the
    five premium papers.
 
-   **Still open on foiling:** the pricing; how Route B is offered on the FIRST
-   foiling screen rather than only after a failure (parked by Nicholas until
-   this is live and tested); and the two questions for PrintedEasy by email —
-   the 7pt minimum and the maximum foiled area.
+   **Still open on foiling** (the pricing came off this list on 1 October):
+   how Route B is offered on the FIRST foiling screen rather than only after a
+   failure, parked by Nicholas until the studio panel is live and tested; and
+   the two questions for PrintedEasy by email — the 7pt minimum and the maximum
+   foiled area.
 
 9b. **"We can fix that for you" — parked deliberately, not forgotten.** Some of
    the ways a foil layer fails are ones we could repair without the customer
