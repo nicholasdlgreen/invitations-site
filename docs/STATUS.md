@@ -1562,24 +1562,27 @@ place, grouped by what it is rather than when it turned up.
 document. The order to do things in is the table immediately below. Gaps in the
 sequence are items that have been cleared; they are not missing.
 
-Pushed and deployed on 3 October: the CSP fix, the studio foiling work, the
-shape lock, checkout reading prices again, the fold routes, and the order and
-welcome emails. `check-live.py` passes 5,277 checks.
+**Everything from 3 October is pushed, deployed and verified on the live site.**
+Twenty commits: the CSP fix, the studio foiling work, the shape lock, checkout
+reading prices again, the fold routes, the order and welcome emails, the Send
+Email Hook, and the finishing section. `check-live.py` passes 5,277 checks.
 
-**One commit is written and NOT pushed:** `f1275eb`, the Supabase Send Email
-Hook — item 54. It is deliberately held back, because it must be tested live
-before the hook is enabled.
+**One thing is deployed but deliberately inert:** the Send Email Hook, item 54.
+It is live as a locked endpoint — no hook configured, no secret set, Supabase
+still sending its own account emails — and must be tested live before it is
+switched on.
 
 ### Next up — the order I would do them
 
 | | What | Item | Why it is here |
 |---|---|---|---|
-| 1 | **Make checkout able to read prices again** | 36 | Nothing can be sold. Every basket is refused, and has been for as long as the payload has said schema 3 |
-| 2 | **Agree the three new customer-facing strings** | 44 | They are live now, in Claude's words rather than Nicholas's, and marked unagreed in the source |
+| 1 | **Write the three welcome-email passages** | 52 | Square-bracket placeholders would reach a customer as written. Nothing should send a welcome until they are done, and only Nicholas can write them |
+| 2 | **Agree the customer-facing strings Claude wrote** | 44 | Live now, in Claude's words rather than Nicholas's, and marked unagreed in the source |
 | 3 | **Find out what PrintedEasy charge us for delivery** | 24a | A fixed subtraction from every margin, so it has to be known *before* margins are set |
 | 4 | **Set the margins** | A2 | 22 products at cost. A decision, not a build. §14 is the evidence |
 | 5 | **Decide on place cards and table numbers** | 31 | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
-| 6 | **Shrink the published payload** | 38 | 13MB, and the reason Publish breaks. Proven at 1.1MB but not built, and it has to come after item 36 |
+| 6 | **Switch on the Send Email Hook** | 54 | Built and deployed, deliberately not enabled. Needs a live test first |
+| 7 | **Shrink the published payload** | 38 | 13MB, and the reason Publish breaks. Proven at 1.1MB but not built |
 
 ### A. Blocking launch
 
@@ -1606,18 +1609,24 @@ real customer arrives.
 
 ### B. Checkout and orders
 
-36. **Checkout refuses every basket.** `create-checkout.js` accepts only
-    `schema_version === 2`; the live payload says 3, so it loads no prices and
-    floors every item on `(qty/50) x GBP150`. At 100 cards the real price is
-    GBP 19–91 against a GBP 300 floor: **741 of 741 configurations refused**.
-    Not a one-character fix — see §18. **Nothing can be sold until this is
-    done.**
-37. **The checkout price floor is weight-blind.** The basket never records which
-    paper weight was ordered, so the floor takes the first matching row —
-    sometimes a dearer weight. **7,129 configurations across 19 products floor
-    ABOVE the cheapest legitimate order**, worst case demanding GBP 124.80 for a
-    GBP 92.80 one. It should take the lowest matching row explicitly. Masked
-    today by item 36, because no floor runs at all.
+36. ~~**Checkout refuses every basket.**~~ **DONE 3 October**, `aa1ba6d`.
+    It accepted the payload only at `schema_version === 2` while the live one
+    says 3, so it loaded no prices and floored every item on the
+    `(qty/50) x GBP150` fallback — 741 of 741 configurations refused at 100
+    cards. It now asks `pricing_for` per basket slug, the same function the
+    order page prices from, which also stops it pulling 13MB on every checkout.
+    Proved over 12,722 real published rows: the floor never exceeds what the
+    site would charge. §18 has the full account.
+37. ~~**The checkout price floor is weight-blind.**~~ **DONE 3 October**, same
+    commit. The basket records no paper weight, so several rows matched and
+    `.find()` took whichever came first — sometimes the dearest, which floored
+    7,129 configurations ABOVE the cheapest legitimate order. It now takes the
+    lowest matching row, because the floor is the LEAST an order could cost.
+
+51a. **Nothing posts a basket end to end.** The floor is now covered by 12,722
+    row-level checks, but no test actually submits a cart to the function. That
+    gap is exactly why 36 survived unnoticed. Belongs with item 15's
+    price-correctness stage.
 
 ### C. Pricing
 
@@ -1654,9 +1663,15 @@ real customer arrives.
     sampled points at A5 where every other paper has 21. Prices interpolate
     correctly; the curve is just sampled more coarsely. Re-scrape when
     convenient.
-24d. **Flat thank you, engagement and graduation cards.** Sold folded-only and
-    priced as folded, so a thank you card costs the same as a folded invitation.
-    Papier and Vistaprint both sell a flat one. Needs a scrape, then a route.
+24d. ~~**Flat thank you, engagement and graduation cards.**~~ **DONE
+    3 October**, `1215cd0` — and greeting cards with them. All four were sold
+    folded-only and priced as folded, so a thank you card cost the same as a
+    folded wedding invitation. They now carry a flat-card route as well; the
+    rates already existed, so it was configuration rather than a scrape. The
+    from-price for all four fell from GBP 34.40 to GBP 17.60. A card now opens
+    the way it is actually sold, taken from its first route, because the
+    opening fold was hardcoded flat and would have opened these four flat the
+    moment they gained the option.
 24e. **Vellum.** Scores 96 against foil's 100 in UK search and we do not stock
     it. printed.com do. Removed from our copy as a false claim; worth pricing as
     a real product.
@@ -1796,17 +1811,18 @@ it, are what is left.
     plain, and want pictures and some character. Deliberately deferred; the
     sequence and the code were done first. Applies to the welcome, the order
     confirmation and the dispatch email.
-54. **The account emails through Resend — BUILT, NOT SWITCHED ON.**
-    `netlify/functions/auth-email.js` is Supabase's Send Email Hook: Supabase
-    POSTs to it instead of sending, and confirmation, password reset and
-    sign-in links go out through Resend from `orders@foreverprint.com`, branded
-    like everything else. Committed `f1275eb` on 3 October, **not pushed**.
+54. **The account emails through Resend — DEPLOYED, NOT SWITCHED ON.**
+    `netlify/functions/auth-email.js` is Supabase's Send Email Hook. Pushed and
+    live on 3 October (`f1275eb`), but **inert**: no hook is configured in
+    Supabase and `SEND_EMAIL_HOOK_SECRET` is not set, so it answers 401 to
+    everything and Supabase is still sending its own account emails. Verified
+    by creating a test account against the live auth API — signup returned 200
+    with `confirmation_sent_at` set, so nothing is broken in the meantime.
 
-    **It must not be enabled until it has been tested live.** With the hook on,
-    Supabase does NOT fall back to its own email — a non-2xx reply fails the
-    auth operation itself, so a mistake means nobody can register, confirm an
-    address or reset a password. Rollback is turning the hook off in Supabase,
-    which needs no deploy.
+    **Do not enable it before testing it live.** With the hook on, Supabase does
+    NOT fall back — a non-2xx reply fails the auth operation itself, so a
+    mistake means nobody can register, confirm an address or reset a password.
+    Rollback is turning the hook off in Supabase; no deploy needed.
 
     The order to switch it on:
 
@@ -1814,24 +1830,22 @@ it, are what is left.
        `https://foreverprint.com/.netlify/functions/auth-email`. Copy the
        `v1,whsec_…` secret. **Leave it disabled.**
     2. Netlify: add `SEND_EMAIL_HOOK_SECRET` (production, secret).
-    3. Push `f1275eb`.
-    4. Claude signs a real request with openssl and posts it, so a genuine
+    3. Claude signs a real request with openssl and posts it, so a genuine
        email arrives and the link can be clicked — proving the signature, the
        link and Resend while Supabase is still sending its own.
-    5. Only then enable the hook.
+    4. Only then enable the hook.
 
     **The signature check is the one part no test covers** — it needs node's
-    crypto and there is no node on this machine. Step 4 is how it gets proved.
+    crypto and there is no node on this machine. Step 3 is how it gets proved.
+    Two mistakes would break every account email silently and both are pinned by
+    `tools/test-auth-email.js` (36 checks, five mutants): the verify endpoint is
+    on the SUPABASE API domain rather than foreverprint.com, and an email change
+    carries two token hashes where `token_hash_new` belongs to the new address.
 
-    Two mistakes would break every account email silently, and both are pinned
-    by `tools/test-auth-email.js` (36 checks, five mutants): the verify endpoint
-    is on the SUPABASE API domain rather than foreverprint.com, and an email
-    change carries two token hashes where `token_hash_new` belongs to the new
-    address.
-
-    Still worth checking while in the dashboard: Authentication → Emails → SMTP
+    Worth checking while in the dashboard: Authentication → Emails → SMTP
     Settings. Until the hook is on, confirmations go through Supabase's shared
     sender, which is rate limited.
+
 55. **No record of what was emailed.** There is no log table; the only evidence
     an email was sent is Resend's dashboard. If a customer says they never got
     it, there is nothing on our side to check.
@@ -1852,6 +1866,31 @@ it, are what is left.
     Samples were declined.
 
 ### Cleared or resolved since this list was written
+
+**3 October, afternoon — found and fixed the same day, none of it was on this
+list because none of it was known:**
+
+- **Five of the eight foil colours drew as GOLD on every product landing page.**
+  `finishing/section.js` knew rose, silver and gold; Copper, Red, Blue, Green
+  and Holographic all fell through to the gold ramp, on 19 products. The correct
+  eight had been in `step3/step3.js` since 1 October and the landing pages were
+  never brought with them. Fixed, and `tools/test-foil-swatches.js` now compares
+  the two sets so they cannot drift apart again — that check is what was
+  missing. Verified across all 22 landing pages: 8 of 8 correct everywhere.
+- **The foil swatches were 220px, three across** — a wall of colour once there
+  were eight of them. Now 120px, four across, stepping down to three and two on
+  narrow screens rather than shrinking.
+- **Lamination and Corners were a heading, a description and a grid each.**
+  Three stacked mini-sections for one line of specification, and the grid left a
+  hole whenever a finish had two options rather than three. Each is now one row.
+  It holds its shape at two finishes or five, which matters for the boards:
+  signage, table plans and welcome signs show Protective finish and Hanging
+  holes instead, and no foil section at all.
+- **"Showing Celebrations products only"** — the word "only" removed. One banner
+  serves all three categories, so weddings and announcements said it too.
+- **Corners read "Square or Rounded. Square, or softened at the corners."** The
+  description repeated the option names, which the old layout hid and the inline
+  one exposed. Nicholas's wording: "Softened at the corners, or left as cut."
 
 - **Lamination's flat GBP 5** — resolved. It has 2,184 rates across 4 options.
 - **Product names stored inconsistently in lowercase** — resolved; none are.
