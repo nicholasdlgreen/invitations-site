@@ -49,6 +49,32 @@
     });
   }
 
+  // The welcome email, asked for once the address is known to be real.
+  //
+  // Registering proves nothing — 115 of the first 134 accounts never confirmed,
+  // which is what a bot signup looks like — so this waits for a sign-in, by
+  // which point the address has been confirmed and belongs to them. The server
+  // checks confirmation again and refuses anything unconfirmed.
+  //
+  // Safe to call on every sign-in: claim_welcome_email marks the contact
+  // welcomed in the same statement that hands it back, so only the first call
+  // ever sends. The sessionStorage flag is just politeness, to save a request.
+  //
+  // Fire and forget. A welcome email must never delay or break signing in.
+  function maybeSendWelcome(session) {
+    try {
+      if (!session || !session.access_token) return;
+      if (sessionStorage.getItem('fp_welcome_checked') === '1') return;
+      sessionStorage.setItem('fp_welcome_checked', '1');
+    } catch (e) { /* private browsing: just carry on and let the server decide */ }
+    try {
+      fetch('/.netlify/functions/send-welcome', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + session.access_token }
+      }).catch(function (e) { console.warn('[invAuth] welcome check failed:', e.message); });
+    } catch (e) { console.warn('[invAuth] welcome check failed:', e.message); }
+  }
+
   function init() {
     if (initPromise) return initPromise;
 
@@ -75,11 +101,14 @@
       currentUser = session ? session.user : null;
 
       // Listen for future auth state changes
-      sb.auth.onAuthStateChange((_event, session) => {
+      sb.auth.onAuthStateChange((event, session) => {
         currentUser = session ? session.user : null;
         notifyListeners();
         if (currentUser) {
           flushPendingSave().catch((e) => console.warn('[invAuth] pending save flush failed:', e));
+          // Only on a real sign-in — not INITIAL_SESSION or TOKEN_REFRESHED,
+          // which fire on every page load for anyone already signed in.
+          if (event === 'SIGNED_IN') maybeSendWelcome(session);
         }
       });
 

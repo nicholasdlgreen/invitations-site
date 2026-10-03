@@ -185,7 +185,7 @@ function buildWelcomeHtml(contact, unsubscribeUrl) {
 
       <div style="background:#FAF7F2;padding:18px 28px;text-align:center;font-size:11px;color:#8C7B6E;line-height:1.7;">
         Foreverprint &middot; Printed with care in the UK<br>
-        You are receiving this because you asked us to keep in touch when you ordered.<br>
+        You are receiving this because you asked us to keep in touch.<br>
         <a href="${unsubscribeUrl}" style="color:#8C7B6E;text-decoration:underline;">Unsubscribe</a>
       </div>
     </div>
@@ -238,19 +238,93 @@ async function sendWelcomeIfDue(email) {
 //
 // No VAT line: the business is not VAT registered, so the total is simply the
 // total. Add the breakdown back when registration comes through.
+// Everything the customer chose, in the words they chose it in.
+//
+// This used to print the product name, the size, the paper label and the
+// quantity. Someone who paid GBP 22 for gold foil, chose a folded card over a
+// flat one, or added envelopes was told none of it — on the one document that
+// is their record of what they bought. Everything on the order now appears.
+//
+// Read from `basis`, which is what the price was calculated from, so the email
+// cannot drift from what was charged. The paper label is a fallback for orders
+// placed before basis carried the weight and the envelope colour.
+function esc(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function orderLineDetails(i) {
+  const b = (i && i.basis) || {};
+  const bits = [];
+
+  // How the card is made
+  const size = b.size || i.size;
+  const orient = b.orientation;
+  if (size) bits.push(['Size', esc(size) + (orient === 'landscape' ? ' landscape' : orient === 'portrait' ? ' portrait' : '')]);
+  const fold = b.fold || i.fold;
+  if (fold) bits.push(['Format', fold === 'folded' ? 'Folded card' : 'Flat card']);
+  const sides = b.printedSides;
+  if (sides) bits.push(['Printed', sides === 'double'
+    ? (fold === 'folded' ? 'Outside and inside' : 'Both sides')
+    : (fold === 'folded' ? 'Outside only' : 'One side')]);
+
+  // What it is printed on
+  const paperName = b.paperName;
+  const w = b.weight;
+  if (paperName) {
+    const weight = w ? [w.name, w.gsm ? w.gsm + (w.unit || 'gsm') : null].filter(Boolean).join(' ') : '';
+    bits.push(['Paper', esc(paperName) + (weight ? ' &middot; ' + esc(weight) : '')]);
+  } else if (i.paper) {
+    bits.push(['Paper', esc(i.paper)]);          // older orders: the display label
+  }
+
+  // Every finish, not just the first. A card can carry foil AND rounded
+  // corners AND a fold, and each one was charged for.
+  const fin = b.finishes && typeof b.finishes === 'object' ? b.finishes : null;
+  if (fin) {
+    Object.keys(fin).forEach(type => {
+      const choice = fin[type];
+      if (!choice || String(choice).toLowerCase() === 'none') return;
+      bits.push([esc(type), esc(choice)]);
+    });
+  } else if (b.finish && String(b.finish).toLowerCase() !== 'none') {
+    bits.push(['Finish', esc(b.finish)]);
+  }
+
+  // Envelopes, by colour rather than by id
+  const env = b.envelopeName || (b.envelopeId ? String(b.envelopeId) : null);
+  if (env) bits.push(['Envelopes', esc(env)]);
+
+  return bits;
+}
+
 function buildCustomerConfirmationHtml(o) {
   const items = Array.isArray(o.items) ? o.items : [];
   const firstName = String(o.customerName || '').trim().split(' ')[0] || 'there';
+  const money = n => (typeof n === 'number' && isFinite(n)) ? '&pound;' + n.toFixed(2) : '';
   const itemRows = items.length
-    ? items.map(i => `
+    ? items.map(i => {
+        const details = orderLineDetails(i);
+        const detailHtml = details.length
+          ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;">`
+            + details.map(([k, v]) => `
+              <tr>
+                <td style="padding:2px 14px 2px 0;font-family:Arial,sans-serif;font-size:12px;color:#9A8778;white-space:nowrap;vertical-align:top;">${k}</td>
+                <td style="padding:2px 0;font-family:Arial,sans-serif;font-size:12px;color:#5C4A3D;">${v}</td>
+              </tr>`).join('')
+            + `</table>`
+          : '';
+        return `
         <tr>
-          <td style="padding:10px 0;border-bottom:1px solid #EFE9E1;font-family:Arial,sans-serif;font-size:13px;color:#3D2E24;">
-            ${i.name || 'Your design'}${i.size ? ` &middot; ${i.size}` : ''}${i.paper ? `<br><span style="color:#7A6558;font-size:12px;">${i.paper}</span>` : ''}
+          <td style="padding:12px 0;border-bottom:1px solid #EFE9E1;font-family:Arial,sans-serif;font-size:13px;color:#3D2E24;">
+            <strong style="font-weight:normal;font-size:14px;">${esc(i.name || 'Your design')}</strong>
+            ${detailHtml}
           </td>
-          <td style="padding:10px 0;border-bottom:1px solid #EFE9E1;text-align:right;font-family:Arial,sans-serif;font-size:13px;color:#3D2E24;white-space:nowrap;">
-            ${i.qty ? i.qty + ' cards' : ''}
+          <td style="padding:12px 0;border-bottom:1px solid #EFE9E1;text-align:right;font-family:Arial,sans-serif;font-size:13px;color:#3D2E24;white-space:nowrap;vertical-align:top;">
+            ${i.qty ? esc(i.qty) + ' cards' : ''}
+            ${typeof i.total === 'number' ? `<br><span style="color:#7A6558;font-size:12px;">${money(i.total)}</span>` : ''}
           </td>
-        </tr>`).join('')
+        </tr>`;
+      }).join('')
     : `<tr><td style="padding:10px 0;font-family:Arial,sans-serif;font-size:13px;color:#3D2E24;">Your order</td><td></td></tr>`;
 
   return `
@@ -735,3 +809,9 @@ exports.handler = async (event) => {
   // Always return 200 — Stripe retries on anything else
   return { statusCode: 200, body: JSON.stringify({ received: true }) };
 };
+
+// Shared with send-welcome.js, which sends the same email to someone who
+// registered rather than ordered. Exported rather than copied: there is one
+// welcome email, and the parts of it Nicholas still has to write must not need
+// writing twice.
+exports.buildWelcomeHtml = buildWelcomeHtml;

@@ -6821,6 +6821,20 @@ async function addToCartUpload(){
     orientation: selectedOrientation || 'portrait',
     printedSides: selectedSides || 'single',
     envelopeId: envelopesEnabled ? selectedEnvColour : null,
+    // The two things the order record could only find inside a display string.
+    // The confirmation email has to tell a customer everything they bought, and
+    // "Silk" with no weight, or an envelope id instead of a colour, is not
+    // everything. Read from here first; the paper label is only a fallback, for
+    // orders placed before this existed.
+    weight: (function(){
+      if (!paper || !paper.weights || !selectedWeight) return null;
+      var w = paper.weights.find(function(x){ return x.id === selectedWeight; });
+      if (!w) return null;
+      return { name: w.name || null, gsm: w.gsm || null, unit: w.unit || 'gsm' };
+    })(),
+    envelopeName: (envelopesEnabled && selectedEnvColour)
+      ? ((ENVELOPES.find(function(e){ return e.id === selectedEnvColour; }) || {}).name || null)
+      : null,
     // What the foil actually is. The cost of foiling moves with the size of
     // the area, which is why it is recorded rather than left to the flat fee.
     foil: foil || null,

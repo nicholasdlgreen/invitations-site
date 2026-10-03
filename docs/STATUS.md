@@ -1776,7 +1776,39 @@ real customer arrives.
     panel, and the shape note on the size step. Marked in the source as not
     agreed.
 
-### H. Needs a decision, not a developer
+### H. Email and customer communication
+
+Reviewed end to end on 3 October. What a customer receives when they sign up
+and when they order now works; what it looks like, and the two providers behind
+it, are what is left.
+
+52. **The welcome email has three unfilled placeholders in it**, in square
+    brackets, and they would be sent to a customer as written: how Foreverprint
+    started, where it prints and what it is proud of, and who is on the team.
+    Only Nicholas can write them. **Nothing should send a welcome until they are
+    done.**
+53. **Email design — imagery and personality.** Agreed 3 October: the emails are
+    plain, and want pictures and some character. Deliberately deferred; the
+    sequence and the code were done first. Applies to the welcome, the order
+    confirmation and the dispatch email.
+54. **The account confirmation email is Supabase's, not ours.** Unbranded by
+    default, sent by Supabase rather than Resend, and links to a supabase.co
+    URL. Check Authentication → Email Templates, and Authentication → Emails →
+    SMTP Settings, where the default shared sender has a low rate limit.
+55. **No record of what was emailed.** There is no log table; the only evidence
+    an email was sent is Resend's dashboard. If a customer says they never got
+    it, there is nothing on our side to check.
+56. **`TRUSTPILOT_BCC` is not set**, so no review invitation is sent at all —
+    neither ours (deliberately unscheduled) nor Trustpilot's (needs the BCC).
+57. **`ANTHROPIC_API_KEY` is not in the Netlify environment**, which the Amy
+    help widget needs.
+58. **Stripe may send its own payment receipt** as well as ours, which would be
+    two emails about one payment. A setting in the Stripe dashboard.
+59. **DMARC is `p=none`** and its reports go to a personal Gmail address. Worth
+    moving to `p=quarantine` once sending volume justifies it. SPF and DKIM are
+    both correct and verified — checked 3 October.
+
+### I. Needs a decision, not a developer
 
 30. **Range gaps**: details and enclosure cards, evening invitations, belly
     bands, printed envelopes, hen party. Funeral and sympathy still open.
