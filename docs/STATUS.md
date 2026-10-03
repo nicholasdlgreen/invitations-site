@@ -21,7 +21,8 @@ like a customer's upload and offered a "Fix it" that could not work on it. His
 question is what unpicked it: if we generate the file, how can it need fixing?
 It also turned up something larger — turning the card after designing it did
 not turn the design, and only the foil check noticed. The shape is now settled
-once a design is in hand. **Four commits, none pushed** — see the top of §15.
+once a design is in hand. **Five commits, pushed and deployed the same day:**
+`worker-src` is live and `check-live.py` passes 5,277 checks.
 
 Earlier, **two withdrawals**. **Spot UV was withdrawn entirely** rather than
 priced — §16. Published 10:07 and verified on the live site, not just locally:
@@ -194,7 +195,7 @@ the autovacuum fix from §11 holding.
 
    - **Prices at the quantity step.** The tiles still carry a per-card figure
      (`10 · £1.84 each`). Deliberately left: how price is presented is its own
-     piece of work and waits on the margins in item 1.
+     piece of work and waits on the margins (§15 item A2).
    - **Rules.** A finish the paper cannot take is greyed and says "Not
      available"; it does not say *why*. The availability data itself is thin —
      the corner and lamination allowlists come from probing one product form at
@@ -754,8 +755,8 @@ the autovacuum fix from §11 holding.
    the day counts (Standard 5–7 → 3, Express 2–3 → 2) and the next-day cut-off
    (12pm → 1pm). **The two prices were deliberately left alone**, because
    replacing them means deciding how a percentage-with-a-minimum is presented
-   to a customer, and how price is presented is parked until the margins in
-   item 1. It cannot ship like this.
+   to a customer, and how price is presented is parked until the margins
+   (§15 item A2). It cannot ship like this.
 
 11. **`cart.js` asks the wrong question about where it is.** It decides whether
    you are on the order page with `pathname.includes('upload-and-print')`,
@@ -1553,72 +1554,258 @@ one it needs to see.
 
 ## 15. The full to-do list
 
-Everything outstanding, in one place and in the order I would do it.
-Regenerated **3 October 2026**, end of day. The sections above give the
-reasoning; this is the list.
+**Regenerated 3 October 2026, end of day.** Everything outstanding, in one
+place, grouped by what it is rather than when it turned up.
 
-**Four commits are written, tested and NOT pushed.** Nothing below that says
-"done today" is live until they are:
+**The numbers are stable labels, not an order of work** — item 31 has been item
+31 since 27 September and is referred to by that number elsewhere in this
+document. The order to do things in is the table immediately below. Gaps in the
+sequence are items that have been cleared; they are not missing.
 
-| Commit | What |
-|---|---|
-| `2e3ec42` | The studio stops uploading the same image twice — 12s of waiting down to 7.7s |
-| `2ffd38a` | **The CSP lets pdf.js start its worker.** The cause of the foiling hang |
-| `b3a9c53` | The foil layer we draw ourselves is measured, never judged, never "Fix it" |
-| `8d5e2bc` | The card's shape is settled once a design is in |
+Five commits were pushed and deployed on 3 October. `worker-src` is live on
+foreverprint.com and `check-live.py` passes 5,277 checks.
 
-### Next up
+### Next up — the order I would do them
 
-| # | What | Why it is first |
-|---|---|---|
-| 1 | **Checkout rejects every basket.** `create-checkout.js` accepts only `schema_version === 2`; the live payload says 3, so it loads no prices and floors every item on `(qty/50) x GBP150`. At 100 cards the real price is GBP 19–91 against a GBP 300 floor: **741 of 741 configurations refused**. Nothing can be sold. | Found 3 October, **not fixed**. It is underneath the margin blocker — margins are not the only thing between us and trading. §18 |
-| 2 | **Push the four commits and re-test the RSVP card.** Push `2ffd38a` first: it is the root cause and the others change behaviour you may want to judge separately. | The foiling fault Nicholas hit twice on live work is fixed but not deployed |
-| 3 | **Agree the three new customer-facing strings** — the two in the "could not prepare your foil layer" panel, and the shape note on the size step. They are Claude's words, marked in the source as not agreed. | They ship with the commits above |
-| 4 | **Find out what PrintedEasy charge us for delivery** | Standard delivery is free to the customer and their quoted price excludes it, so every order absorbs it. A fixed subtraction from any margin, so it has to be known *before* margins are set |
-| 5 | **Set the margins** | 22 products at cost. A decision rather than a build. §14 is the evidence |
-| 6 | **Decide on place cards and table numbers** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live. Item 31 |
+| | What | Item | Why it is here |
+|---|---|---|---|
+| 1 | **Make checkout able to read prices again** | 36 | Nothing can be sold. Every basket is refused, and has been for as long as the payload has said schema 3 |
+| 2 | **Agree the three new customer-facing strings** | 44 | They are live now, in Claude's words rather than Nicholas's, and marked unagreed in the source |
+| 3 | **Find out what PrintedEasy charge us for delivery** | 24a | A fixed subtraction from every margin, so it has to be known *before* margins are set |
+| 4 | **Set the margins** | A2 | 22 products at cost. A decision, not a build. §14 is the evidence |
+| 5 | **Decide on place cards and table numbers** | 31 | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
+| 6 | **Shrink the published payload** | 38 | 13MB, and the reason Publish breaks. Proven at 1.1MB but not built, and it has to come after item 36 |
 
-### Added 3 October — not started
+### A. Blocking launch
 
-- **The checkout price floor is weight-blind.** The basket never says which
-  paper weight was ordered, so the floor takes the first matching row. On the
-  live payload that is sometimes a dearer weight: **7,129 configurations across
-  19 products floor ABOVE the cheapest legitimate order**, worst case demanding
-  GBP 124.80 for a GBP 92.80 one. It should take the lowest matching row
-  explicitly. Masked today by item 1, which means no floor runs at all.
-- **The published payload is 13MB and carries every price for every product.**
-  The dedup is **designed, proven and NOT built**: costs stored once, margin
-  applied at read time, measured at **1,136 kB against 14 MB**, and verified
-  identical across 78,431 sheet rows and 37,380 finish rows with zero price
-  differences. The working was dropped from the database afterwards at
-  Nicholas's request, so it has to be rebuilt from `docs/PRICING-STRUCTURE.md`,
-  which is the only surviving artefact. Also needs item 1 fixed first, because
-  checkout would have to read the new shape.
-- **The studio still waits ~7.7s after "Love it".** Halved today by not sending
-  the same pixels twice. The rest is the press PDF going up a 1Mbps connection
-  and cannot be made smaller without touching print quality, which is refused.
-  The only remaining lever is to hand the files to the order page and upload
-  them in the background while the customer picks paper. **Not built**: it puts
-  the artwork-fallback rule in two places, and getting it wrong means an order
-  with no print file. Needs a decision.
-- **Nothing can delete from the `artwork` bucket.** It has INSERT and SELECT
-  policies for `anon` and **no DELETE policy at all**, so abandoned artwork
-  accumulates for ever and only the service role can clear it. This is the real
-  shape of the "abandoned artwork is never deleted" item.
-- **37 files, about 22MB, were added to the bucket on 3 October** between
-  Claude's testing and Nicholas's. Seven are named `_speedprobe-...` and are
-  certainly test files; the rest are `print-ai`, `ref-ai` and `foil-ai` sets
-  from design-studio runs. They need deleting from the Supabase dashboard.
-- **Two test suites do not run at all.** `test-section-race.js` wants a browser
-  `window`; `test-slug-from-url.js` reads a fixture from a scratchpad that no
-  longer exists. Both were already broken and neither is related to anything
-  changed today — but a suite that reports nothing reports success, which is how
-  `test-foil-route-b.js` silently stopped running for part of today.
-- **Check whether changing the size still drops a studio design.** Before the
-  shape lock, going back to the size step and choosing another size reverted the
-  page to "upload your artwork" and the design vanished from the journey — the
-  data survived and a reload brought it back, but a customer would not know
-  that. The lock should make it unreachable; it has not been re-tested since.
+Nothing can be sold until A1 and A2 are done. The rest must be true before a
+real customer arrives.
+
+- **A1. Checkout refuses every basket** — item 36 below, §18.
+- **A2. Margins are 0 on 22 products.** The decision, not the build.
+- **A3. VAT at checkout.** The grid is clean and driven by
+  `site_config.pricing.vatRegistered`, but checkout still shows "VAT (20%)" and
+  stores a VAT figure while we are not registered. Move checkout onto the same
+  flag so the two cannot disagree.
+- **A4. Stripe live keys, and a live-mode webhook with its own
+  `STRIPE_WEBHOOK_SECRET`.** Without the webhook, payments succeed and orders
+  stay pending.
+- **A5. Print one real sample** through PrintedEasy. The file maths is verified;
+  the handover to their press is not.
+- **A6. Send `ARTWORK-SPEC.md`** and get the six questions answered. The one
+  that matters: **head to head or head to foot** for a double-sided back. We
+  send both faces the same way up — if their press expects otherwise, every
+  double-sided job comes back upside down.
+- **A7. `ALERT_EMAIL` in Netlify** for the Monday supplier price watch.
+- **A8. Remove the homepage holding overlay** when the decision is made to open.
+
+### B. Checkout and orders
+
+36. **Checkout refuses every basket.** `create-checkout.js` accepts only
+    `schema_version === 2`; the live payload says 3, so it loads no prices and
+    floors every item on `(qty/50) x GBP150`. At 100 cards the real price is
+    GBP 19–91 against a GBP 300 floor: **741 of 741 configurations refused**.
+    Not a one-character fix — see §18. **Nothing can be sold until this is
+    done.**
+37. **The checkout price floor is weight-blind.** The basket never records which
+    paper weight was ordered, so the floor takes the first matching row —
+    sometimes a dearer weight. **7,129 configurations across 19 products floor
+    ABOVE the cheapest legitimate order**, worst case demanding GBP 124.80 for a
+    GBP 92.80 one. It should take the lowest matching row explicitly. Masked
+    today by item 36, because no floor runs at all.
+
+### C. Pricing
+
+16. **Confirm the 20% supplier discount** against a real invoice.
+17. **The VAT question on their side** — they quote Luxury Flat without VAT, and
+    that is what we sell as a wedding invitation.
+18. **Their full stock × weight matrix**, found with the sentinel test, so any
+    weight they sell becomes an admin tick rather than a scrape.
+19. **Lightweight stocks have no rates, so they never appear** — confirmed
+    3 October: **Uncoated 120 and Tintoretto Gesso 140** are the two.
+20. **Folded 400gsm** is switched off in the data but still listed as a weight.
+    Either re-scrape it or drop it from the folded products, so the decision is
+    visible in admin rather than implicit.
+21. **880 `large-format` rates unreachable.** Routes make it a one-line change,
+    but nobody has decided whether table plans sell on paper as well as board.
+22. **A minimum quantity on finishing.** It is a setup charge: rounded corners
+    are 176p a card at 10 and 3.5p at 500, so finishing doubles the price of a
+    small order and is trivial on a large one.
+23. **Retire `finish_options.cost_modifier`** now the rate table drives pricing.
+    Still carrying Lamination=5, Foiling=70, Protective finish=13.60, Hanging
+    holes=13.60. Lamination and Foiling now have real ladders and no longer read
+    it; the protective finish and hanging holes still do, so it cannot simply be
+    deleted.
+24. **The 42 `folded-leaflet` envelope rates are unreachable** — order of
+    service is the only product on that family and has envelopes switched off.
+    Decide whether it should offer them.
+24a. **Delivery is free and unfunded.** Standard is `price 0.00, surcharge 0%`;
+    PrintedEasy's quoted price excludes delivery. Establish what they charge us,
+    then decide whether it is absorbed into the card price or charged.
+24b. **299 published prices sit below cost**, by 80p to GBP 2.40, at eight
+    quantities. Curve-flattening doing its job against a supplier staircase that
+    goes backwards. Harmless once a margin exists; a real loss at zero.
+24c. **Cartonboard's single-sided ladder is thinner than the others** — 16
+    sampled points at A5 where every other paper has 21. Prices interpolate
+    correctly; the curve is just sampled more coarsely. Re-scrape when
+    convenient.
+24d. **Flat thank you, engagement and graduation cards.** Sold folded-only and
+    priced as folded, so a thank you card costs the same as a folded invitation.
+    Papier and Vistaprint both sell a flat one. Needs a scrape, then a route.
+24e. **Vellum.** Scores 96 against foil's 100 in UK search and we do not stock
+    it. printed.com do. Removed from our copy as a false claim; worth pricing as
+    a real product.
+38. **The published payload is 13MB** and carries every price for every product.
+    The dedup is **designed, proven and NOT built**: costs stored once, margin
+    applied on read, measured at **1,136 kB against 14 MB** and verified
+    identical across 78,431 sheet rows and 37,380 finish rows with zero price
+    differences. The working was dropped from the database afterwards, so it has
+    to be rebuilt from `docs/PRICING-STRUCTURE.md`, the only surviving artefact.
+    Must come after item 36, because checkout would have to read the new shape.
+45. **Two questions for PrintedEasy by email**: the 7pt minimum type size, and
+    the maximum foiled area. Both affect what we are allowed to accept.
+46. **Order of service reads "From GBP 37 for 50"** while every other card
+    product reads GBP 18. It is `folded-leaflet`, not `folded-card`, so it is
+    not the same cause as the folded cards. Never investigated.
+47. **Christmas cards are folded only.** Offering them flat as well would give a
+    true GBP 18 entry beside the GBP 34 folded one, and a flat Christmas card is
+    a real product. **Not agreed** — suggested and left.
+
+### D. The design studio
+
+31. **Place cards and table numbers cannot do what we tell customers they do.**
+    There is no variable-data support anywhere: the uploader builds ONE artwork
+    and prints N copies. So fifty place cards are fifty copies of one guest's
+    name, and the table-number box says *"each card in your set will differ"*,
+    which nothing makes true. Either build it — paste a guest list, get N
+    artworks — or change what we sell and what we say. **The false line is live
+    now.**
+32. **Table plans have no tables.** Heading, names and date, and nowhere to type
+    who sits where, which is the whole content of the product.
+33. **Sell the set.** Papier offer "Complete the set" inside the editor;
+    Vistaprint sell invitation suites as a category. Closest thing we have is
+    the design-suite idea.
+34. **Saving a design loses almost everyone.** 44 sessions generated, 24 pressed
+    "Love it", 5 tried to save, **2 designs exist**. Saving is gated behind
+    creating an account and that is where people stop.
+35. **`studio-nano.js` is misnamed** — it calls Flux Pro 1.1 Ultra, not Nano.
+    The filename says the opposite of the decision on record.
+39. **"Love it" still waits about 7.7 seconds.** Halved on 3 October by not
+    uploading the same pixels twice. The rest is the press PDF going up a 1Mbps
+    connection and cannot be made smaller without touching print quality, which
+    is refused. The only remaining lever is to hand the files to the order page
+    and upload in the background while the customer picks paper. **Not built**:
+    it puts the artwork-fallback rule in two places, and getting it wrong means
+    an order with no print file.
+43. **Re-test changing the size after designing.** Before the shape lock, going
+    back to the size step and choosing another size reverted the page to "upload
+    your artwork" and the design vanished from the journey — the data survived
+    and a reload brought it back, but a customer would not know. The lock should
+    make it unreachable; not re-tested since.
+48. **The gold preview inside the studio** — the parked Option A from the
+    foiling design conversation.
+49. **Marketing copy promises foil on papers that cannot take it**, on 19
+    products. Needs Nicholas's wording, not Claude's.
+
+### E. Artwork, print and the press
+
+40. **Nothing can delete from the `artwork` bucket.** It has INSERT and SELECT
+    policies for `anon` and **no DELETE policy at all**, so abandoned artwork
+    accumulates for ever and only the service role can clear it. This is the
+    real shape of "abandoned artwork is never deleted"; the agreed retention was
+    one week and nothing enforces it.
+41. **37 files, about 22MB, were added to the bucket on 3 October** between
+    Claude's testing and Nicholas's. Seven named `_speedprobe-...` are certainly
+    test files; the rest are `print-ai`, `ref-ai` and `foil-ai` sets from studio
+    runs. They need deleting from the Supabase dashboard.
+50. **"Fix it" is still withheld from two of the five red states** — a foil
+    layer we cannot open, and a file that was never a PDF. Held back on purpose
+    until the fixing has been tested properly.
+
+### F. Site testing
+
+15. **Build the test suite.** Five stages, agreed in outline and paused, in the
+    order worth doing them:
+    - **Broken images** — inventory from four DB columns, 81 `<img>` tags across
+      56 pages, CSS backgrounds and runtime-built URLs; then fetch every one and
+      check status, type and size.
+    - **Price correctness** — compute every price twice, once with the site's
+      own functions and once from the rules in `PRICING.md`, and compare. Also
+      proves the checkout floor never exceeds the price shown, that more cards
+      never cost less, and that grid, landing page and configurator agree.
+    - **Eight ordering journeys**, each exercising a different code path rather
+      than a different product name. Stops at Add to Basket.
+    - **The artwork uploader** — diagnostic images per rule and per DPI band,
+      then press-file forensics: page count, page size, crop marks, bleed proved
+      mirrored rather than cropped, each face keeping its own position.
+    - **Make it repeatable** — scripts in `tools/`, and a report separating
+      failed from passed from could-not-be-tested.
+
+    **What it cannot prove:** whether an image is the *right* image, whether the
+    press file suits *their* press, the payment flow, or colour on paper.
+42. **Two test suites do not run at all.** `test-section-race.js` wants a
+    browser `window`; `test-slug-from-url.js` reads a fixture from a scratchpad
+    that no longer exists. Both were already broken. A suite that reports
+    nothing reports success, which is how `test-foil-route-b.js` silently
+    stopped running for part of 3 October.
+51. **Nothing tests checkout.** `check-live.py` reads pages and prices and never
+    posts a basket, which is exactly why item 36 survived. The price-correctness
+    stage of item 15 is where this belongs.
+
+### G. Housekeeping
+
+25. **~112 junk bot signups** remain. The orders table is empty.
+26. **`from_price_text` is empty on all 23 products and nothing reads it** —
+    confirmed 3 October. Either delete the column and its admin field or wire it
+    up as an override; a writable field that renders nowhere is a trap.
+27. **`display_quantity` has no admin screen** — changing which pack the grid
+    quotes means SQL.
+28. **A JavaScript error fires on load of `upload-and-print.html`.** Harmless so
+    far, never chased, and proven not to come from this week's changes.
+29. **Boards are single-sided only** (signage, table plans, welcome signs),
+    deliberately deferred when double-sided went in.
+29a. **Hide a section heading until it has content.** "Our paper stocks" printed
+    with nothing under it for months. The race is fixed, but the failure mode
+    remains: any future fault shows as a heading over a gap, which reads as
+    "they have no papers". Cheap insurance on 23 pages.
+29c. **`description` is empty on six products** — confirmed 3 October. It is
+    only the fallback for meta_description and every product has one of those,
+    so nothing is broken; the column is half-filled.
+44. **Three customer-facing strings are Claude's words, not Nicholas's**, and
+    are live: the heading and body of the "could not prepare your foil layer"
+    panel, and the shape note on the size step. Marked in the source as not
+    agreed.
+
+### H. Needs a decision, not a developer
+
+30. **Range gaps**: details and enclosure cards, evening invitations, belly
+    bands, printed envelopes, hen party. Funeral and sympathy still open.
+    Samples were declined.
+
+### Cleared or resolved since this list was written
+
+- **Lamination's flat GBP 5** — resolved. It has 2,184 rates across 4 options.
+- **Product names stored inconsistently in lowercase** — resolved; none are.
+- **54 test orders** — cleared; the orders table is empty.
+- **Supabase Pro** — done 27 September. It did not change
+  `statement_timeout = 8s`, which is what §11 is about.
+- **Spot UV** — withdrawn entirely, §16.
+- **Red envelopes** — withdrawn, §17.
+- **The foiling hang in the design studio** — the CSP had no `worker-src`, so
+  pdf.js silently ran on the main thread. Fixed and live, §16 of the memory
+  notes; the three faults it exposed are fixed too.
+
+### Notes worth keeping, not tasks
+
+- **Anything hand-written between `<!--CHROME:header-->` and its closing marker
+  is deleted by `build_pages.py`.** That region is regenerated from header.html
+  on every run. It caused a scare on 27 September — 27 lines of CSS vanished
+  from upload-and-print.html — which turned out to be a duplicate that also
+  existed safely at line 287, so the build was right and the panic was not.
+- **`getAvailablePapers()` now filters by published price.** It always was safe,
+  because `step3Papers()` filtered afterwards. The guard was moved so it no
+  longer depends on a caller remembering. Noted because the commit message says
+  it closed a latent weakness, not a live bug.
 
 ### Cleared 30 September
 
@@ -1721,31 +1908,6 @@ and delivery is free and unfunded.
   no INSERT policy at all, which means the whole discount audit trail depends on
   the `redeem_discount()` function staying exactly as it is.
 
-### Blocking launch
-
-1. **Checkout refuses every basket** — the version test in
-   `create-checkout.js`. Top of "Next up" above, and the reason "set the
-   margins" is no longer the last thing between us and trading.
-2. **Margins are 0 on 22 products.** The decision, not the build.
-3. **VAT at checkout.** The grid is clean and driven by
-   `site_config.pricing.vatRegistered`, but checkout still shows "VAT (20%)"
-   and stores a VAT figure while we are not registered. Move checkout onto the
-   same flag so the two cannot disagree.
-4. **Stripe live keys, and a live-mode webhook with its own
-   `STRIPE_WEBHOOK_SECRET`.** Without the webhook, payments succeed and orders
-   stay pending.
-5. **Print one real sample** through PrintedEasy. The file maths is verified;
-   the handover to their press is not.
-6. **Send `ARTWORK-SPEC.md`** and get the six questions answered. The one that
-   matters: **head to head or head to foot** for a double-sided back. We send
-   both faces the same way up — if their press expects otherwise, every
-   double-sided job comes back upside down.
-7. ~~**Supabase Pro**~~ — **done 27 September.** Daily backups now covered.
-   Note it did **not** change `statement_timeout = 8s`, which is what §11 is
-   about.
-8. **`ALERT_EMAIL` in Netlify** for the Monday supplier price watch.
-9. **Remove the homepage holding overlay** when the decision is made to open.
-
 ### Live mis-sells — cleared 27 September
 
 All three done, and two closed as not-bugs.
@@ -1794,139 +1956,6 @@ Two things still open from that work:
 12. **`renderSizesStrip()` has never had an element to write into** on any of
     the 23 pages. Dead code, and it was before this work. Either add the markup
     or delete the function.
-
-### Site testing — scoped 27 September, not started
-
-15. **Build the test suite.** Five stages, agreed in outline and paused. In the
-    order worth doing them:
-    - **Broken images** — inventory from four DB columns, 81 `<img>` tags across
-      56 pages, CSS backgrounds and the runtime-built URLs; then fetch every one
-      and check status, type and size. Not a bug: storage URLs missing
-      `/public/`.
-    - **Price correctness** — compute every price twice, once with the site's
-      own functions and once from the rules in `PRICING.md`, and compare. Also
-      proves the checkout floor never exceeds the price shown, that more cards
-      never cost less, and that the grid, landing page and configurator agree.
-      No browser, tens of thousands of combinations.
-    - **Eight ordering journeys**, chosen so each exercises a different code
-      path rather than a different product name — flat, folded, double-sided,
-      folded-card-only, folded leaflet, large format, business-card size, and
-      envelopes with finishing. Stops at Add to Basket; never touches payment.
-    - **The artwork uploader** — diagnostic test images per rule and per DPI
-      band, then press-file forensics: page count, page size, crop marks, bleed
-      proved to be mirrored rather than cropped, and each face keeping its own
-      position.
-    - **Make it repeatable** — scripts in `tools/`, and a report that separates
-      failed from passed from could-not-be-tested.
-
-    **What it cannot prove:** whether an image is the *right* image, whether the
-    press file suits *their* press, the payment flow, or colour on paper.
-
-### Pricing accuracy, once trading
-
-16. **Confirm the 20% supplier discount** against a real invoice.
-17. **The VAT question on their side** — they quote Luxury Flat without VAT, and
-    that is what we sell as a wedding invitation.
-18. **Their full stock × weight matrix**, found with the sentinel test, so any
-    weight they sell becomes an admin tick rather than a scrape.
-19. **Lightweight stocks** (Uncoated 120, Tintoretto 140) exist but have no
-    rates, so they never appear.
-20. **Folded 400gsm** is switched off in the data but still listed as a weight.
-    Either re-scrape it or drop it from the folded products, so the decision is
-    visible in admin rather than implicit.
-21. **880 `large-format` rates unreachable.** Routes make it a one-line change,
-    but nobody has decided whether table plans sell on paper as well as board.
-22. **A minimum quantity on finishing.** It is a setup charge: rounded corners
-    are 176p a card at 10 and 3.5p at 500, so finishing doubles the price of a
-    small order and is trivial on a large one.
-23. **Retire `finish_options.cost_modifier`** now the rate table drives pricing.
-24. **The 42 `folded-leaflet` envelope rates are unreachable** — order of
-    service is the only product on that family and has envelopes switched off.
-    Decide whether it should offer them.
-24a. **Delivery is free and unfunded.** Standard is `price 0.00, surcharge 0%`;
-    PrintedEasy's quoted price excludes delivery, confirmed by dumping every
-    field their endpoint returns. Establish what they charge us, then decide
-    whether delivery is absorbed into the card price or charged.
-24b. **299 published prices sit below cost**, by 80p to £2.40, at eight
-    quantities. The curve-flattening doing its job against a supplier staircase
-    that goes backwards. Harmless once a margin exists; a real loss at zero.
-24c. **Cartonboard's single-sided ladder is thinner than the others** — 16
-    sampled points at A5 where every other paper has 21, left over from dropping
-    280gsm. Prices interpolate correctly, but that curve is sampled more
-    coarsely. Re-scrape when convenient.
-24d. **Flat thank you, engagement and graduation cards.** Sold folded-only, and
-    priced as folded — a thank you card costs the same as a folded invitation.
-    A flat thank-you card is what most people send and both Papier and
-    Vistaprint sell one. Needs a scrape, then a route.
-24e. **Vellum.** Scores 96 against foil's 100 in UK search and we do not stock
-    it. printed.com do. Removed from our copy as a false claim; worth pricing as
-    a real product.
-
-### Housekeeping
-
-25. ~~**54 test orders**~~ — cleared; the orders table is empty. ~112 junk bot
-    signups remain.
-26. **`from_price_text` is empty on all 23 products and nothing reads it.**
-    Either delete the column and its admin field or wire it up as an override;
-    a writable field that renders nowhere is a trap.
-27. **`display_quantity` has no admin screen** — changing which pack the grid
-    quotes means SQL.
-28. **A JavaScript error fires on load of `upload-and-print.html`.** Harmless so
-    far, never chased, and proven not to come from any of this week's changes.
-29. **Boards are single-sided only** (signage, table plans, welcome signs),
-    deliberately deferred when double-sided went in.
-29a. **Hide a section heading until it has content.** "Our paper stocks" printed
-    with nothing under it for months because the code renders the heading first
-    and fills it after. The race is fixed, but the failure mode remains: any
-    future fault shows as a heading over a gap, which reads as "they have no
-    papers". Cheap insurance on 23 pages.
-29c. **`description` is empty on six products** — menu cards, place cards, RSVP,
-    table plans, thank you and Christmas. It is only the fallback for
-    meta_description and every product now has one of those, so nothing is
-    broken; the column is just half-filled.
-29d. **Anything hand-written between `<!--CHROME:header-->` and its closing
-    marker is deleted by `build_pages.py`.** That region is regenerated from
-    header.html on every run. It caused a scare on 27 September — 27 lines of
-    CSS vanished from upload-and-print.html — which turned out to be a
-    duplicate that also existed safely at line 287, so the build was right and
-    the panic was not. Worth knowing before the next person reverts in a hurry.
-
-29b. **`getAvailablePapers()` now filters by published price.** It always was
-    safe, because `step3Papers()` filtered afterwards — tested by adding two
-    unpriced papers and sweeping all four formats, and neither ever appeared.
-    The guard was moved so it no longer depends on a caller remembering. Noted
-    because the commit message says it closed a latent weakness, not a live bug.
-
-### The design studio — opened 27 September
-
-Done that day: the wording boxes fixed on five products, and an admin screen so
-they can be changed without SQL (§9).
-
-31. **Place cards and table numbers cannot do what we tell customers they do.**
-    There is no variable-data support anywhere: the uploader builds ONE artwork
-    and prints N copies. So fifty place cards are fifty copies of one guest's
-    name, and the table-number box says *"each card in your set will differ"*,
-    which nothing in the system makes true. Either build it — paste a guest
-    list, get N artworks — or change what we sell and what we say. **The false
-    line in that label is live now.**
-32. **Table plans have no tables.** Heading, names and date, and nowhere to type
-    who sits where, which is the whole content of the product. Parked with 31
-    because it is the same kind of gap.
-33. **Sell the set.** Papier offer "Complete the set — info card, RSVP card,
-    RSVP envelope" inside the editor; Vistaprint sell invitation suites as a
-    category. Both competitors do it and we do not. Closest thing we have is
-    the design-suite idea.
-34. **Saving a design loses almost everyone.** 44 sessions generated, 24 pressed
-    "Love it", 5 tried to save, **2 designs exist**. Saving is gated behind
-    creating an account and that is where people stop.
-35. **`studio-nano.js` is misnamed** — it calls Flux Pro 1.1 Ultra, not Nano.
-    The filename says the opposite of the decision on record.
-
-### Needs a decision, not a developer
-
-30. **Range gaps**: details and enclosure cards, evening invitations, belly
-    bands, printed envelopes, hen party. Funeral and sympathy still open.
-    Samples were declined.
 
 ---
 
