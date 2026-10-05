@@ -1,0 +1,552 @@
+{
+ "sizes": [
+  {
+   "name": "A6",
+   "width_mm": 105,
+   "height_mm": 148
+  },
+  {
+   "name": "A5",
+   "width_mm": 148,
+   "height_mm": 210
+  },
+  {
+   "name": "DL",
+   "width_mm": 99,
+   "height_mm": 210
+  },
+  {
+   "name": "Square",
+   "width_mm": 148,
+   "height_mm": 148
+  },
+  {
+   "name": "Square 210",
+   "width_mm": 210,
+   "height_mm": 210
+  },
+  {
+   "name": "A4",
+   "width_mm": 210,
+   "height_mm": 297
+  },
+  {
+   "name": "A3",
+   "width_mm": 297,
+   "height_mm": 420
+  },
+  {
+   "name": "Place card",
+   "width_mm": 85,
+   "height_mm": 55
+  },
+  {
+   "name": "A4 landscape",
+   "width_mm": 297,
+   "height_mm": 210
+  },
+  {
+   "name": "A3 landscape",
+   "width_mm": 420,
+   "height_mm": 297
+  },
+  {
+   "name": "A2",
+   "width_mm": 420,
+   "height_mm": 594
+  },
+  {
+   "name": "A2 landscape",
+   "width_mm": 594,
+   "height_mm": 420
+  },
+  {
+   "name": "A1",
+   "width_mm": 594,
+   "height_mm": 841
+  },
+  {
+   "name": "A1 landscape",
+   "width_mm": 841,
+   "height_mm": 594
+  },
+  {
+   "name": "A0",
+   "width_mm": 841,
+   "height_mm": 1189
+  }
+ ],
+ "papers": [
+  {
+   "name": "Uncoated",
+   "description": "No coating at all, so the surface is matt, soft to the touch and faintly toothy. Ink sinks in very slightly, which mutes colour a little and gives printing a quiet, considered look. The easiest of our papers to write on, if guests will be adding a note.",
+   "weights": [
+    {
+     "id": "uncoated-250",
+     "gsm": 250,
+     "feel": "Slim and neat \u2014 suits inserts and reply cards",
+     "name": "Light",
+     "popular": false
+    },
+    {
+     "id": "uncoated-300",
+     "gsm": 300,
+     "feel": "Substantial without being stiff",
+     "name": "Classic",
+     "popular": true
+    },
+    {
+     "id": "uncoated-350",
+     "gsm": 350,
+     "feel": "Noticeably thicker in the hand",
+     "name": "Substantial",
+     "popular": false
+    },
+    {
+     "id": "uncoated-400",
+     "gsm": 400,
+     "feel": "Thick, rigid and unmistakably expensive",
+     "name": "Heavyweight",
+     "popular": false
+    },
+    {
+     "id": "uncoated-120",
+     "gsm": 120,
+     "feel": "Light and fine \u2014 for inserts and details cards",
+     "name": "Featherweight",
+     "popular": false
+    }
+   ]
+  },
+  {
+   "name": "Silk",
+   "description": "Smooth and lightly coated, with a soft sheen rather than a shine. Ink sits crisply on the surface, so fine type stays sharp and colours keep their depth. The most popular of our papers, and the safest choice if your design carries photographs or fine detail.",
+   "weights": [
+    {
+     "id": "silk-250",
+     "gsm": 250,
+     "feel": "Slim and neat \u2014 suits inserts and reply cards",
+     "name": "Light",
+     "popular": false
+    },
+    {
+     "id": "silk-300",
+     "gsm": 300,
+     "feel": "Substantial without being stiff",
+     "name": "Classic",
+     "popular": true
+    },
+    {
+     "id": "silk-350",
+     "gsm": 350,
+     "feel": "Noticeably thicker in the hand",
+     "name": "Substantial",
+     "popular": false
+    },
+    {
+     "id": "silk-400",
+     "gsm": 400,
+     "feel": "Thick, rigid and unmistakably expensive",
+     "name": "Heavyweight",
+     "popular": false
+    }
+   ]
+  },
+  {
+   "name": "Tintoretto Gesso",
+   "description": "Made by Fedrigoni in Italy. A finely hammered surface that catches the light as the card turns, in a white that is warm rather than bright. You feel the texture before you read a word, which is most of the reason people choose it.",
+   "weights": [
+    {
+     "id": "tintoretto-300",
+     "gsm": 300,
+     "feel": "Fine plaster grain that catches the light",
+     "name": "Classic",
+     "popular": true
+    },
+    {
+     "id": "tintoretto-140",
+     "gsm": 140,
+     "feel": "The same plaster grain, light enough to tuck inside",
+     "name": "Featherweight",
+     "popular": false
+    }
+   ]
+  },
+  {
+   "name": "Nettuno Bianco",
+   "description": "A Fedrigoni paper with a deep felt marking pressed into both sides in fine parallel lines. Cool white, and clearly textured under the thumb. Type and line work sit beautifully on it; very fine detail and large areas of solid colour rather less so.",
+   "weights": [
+    {
+     "id": "nettuno-280",
+     "gsm": 280,
+     "feel": "Pronounced texture you can feel through the card",
+     "name": "Classic",
+     "popular": true
+    }
+   ]
+  },
+  {
+   "name": "Acquerello Bianco",
+   "description": "The tooth of watercolour paper, pressed on both sides, in a soft cream white. It holds ink a little more gently than a smooth sheet, which suits calligraphy and hand-drawn work. Warm, and old-fashioned in the best sense.",
+   "weights": [
+    {
+     "id": "acquerello-280",
+     "gsm": 280,
+     "feel": "Soft watercolour tooth, lovely under calligraphy",
+     "name": "Classic",
+     "popular": true
+    }
+   ]
+  },
+  {
+   "name": "Sirio Pearl Polar Dawn",
+   "description": "A pearlescent Fedrigoni paper with the shimmer worked through the sheet rather than coated on top, so it shifts gently as the light moves. Never metallic \u2014 closer to the inside of a shell. At its best with simple type, which it flatters.",
+   "weights": [
+    {
+     "id": "sirio-300",
+     "gsm": 300,
+     "feel": "Shifts gently in the light without looking metallic",
+     "name": "Classic",
+     "popular": true
+    }
+   ]
+  },
+  {
+   "name": "Recycled Uncoated",
+   "description": "Wholly recycled and thick with it, with flecks of natural fibre still visible in the surface. Matt, soft and easy to write on. The flecks vary from sheet to sheet, which is the point of it rather than a fault.",
+   "weights": [
+    {
+     "id": "recycled-350",
+     "gsm": 350,
+     "feel": "Thick and tactile, with visible natural fibre",
+     "name": "Substantial",
+     "popular": true
+    }
+   ]
+  },
+  {
+   "name": "Cartonboard",
+   "description": "A rigid board with a bright white printing face and a firm, boardy feel. It holds its shape well and prints cleanly. More upright and businesslike than the softer stocks.",
+   "weights": [
+    {
+     "id": "cartonboard-255",
+     "gsm": 255,
+     "feel": "Rigid, with a bright printing surface",
+     "name": "Classic",
+     "popular": true
+    }
+   ]
+  },
+  {
+   "name": "Ice White",
+   "description": "A cool, bright white with a silk face. Whites in your design read as genuinely white rather than cream, and colours stay clean and true. The one to choose when the design depends on contrast.",
+   "weights": [
+    {
+     "id": "icewhite-300",
+     "gsm": 300,
+     "feel": "Bright and cool-toned",
+     "name": "Classic",
+     "popular": true
+    }
+   ]
+  },
+  {
+   "name": "Foamex 5mm",
+   "description": "A PVC foam board, 5mm thick, with a smooth matt face that keeps colour flat and even under venue lighting. It stands on an easel without bowing and does not care about a damp marquee, which is most of the reason signs are made of it rather than paper.",
+   "weights": [
+    {
+     "id": "foamex-5",
+     "gsm": 5,
+     "feel": "Rigid and waterproof \u2014 it will not bow on an easel",
+     "name": "Standard",
+     "unit": "mm",
+     "popular": true
+    }
+   ]
+  }
+ ],
+ "finishes": [
+  {
+   "name": "Lamination",
+   "description": "A coating that changes the feel.",
+   "options": [
+    {
+     "name": "None",
+     "spec": "",
+     "popular": true,
+     "description": ""
+    },
+    {
+     "name": "Matt",
+     "spec": "matt lamination, both sides",
+     "popular": false,
+     "description": "Smooth, non-reflective, sophisticated"
+    },
+    {
+     "name": "Gloss",
+     "spec": "gloss lamination, both sides",
+     "popular": false,
+     "description": "High-shine, colours pop"
+    },
+    {
+     "name": "Soft Touch",
+     "spec": "soft touch lamination, both sides",
+     "popular": false,
+     "description": "Velvety, premium feel"
+    }
+   ]
+  },
+  {
+   "name": "Foiling",
+   "description": "A shimmering metallic finish on your design details.",
+   "options": [
+    {
+     "name": "None",
+     "spec": "",
+     "popular": true,
+     "description": ""
+    },
+    {
+     "name": "Gold",
+     "spec": "flat gold foil, front, to design foil-layer",
+     "swatch": "gold",
+     "popular": false,
+     "description": ""
+    },
+    {
+     "name": "Silver",
+     "spec": "flat silver foil, front, to design foil-layer",
+     "swatch": "silver",
+     "popular": false,
+     "description": ""
+    },
+    {
+     "name": "Copper",
+     "spec": "flat copper foil, front, to design foil-layer",
+     "swatch": "copper",
+     "popular": false,
+     "description": ""
+    },
+    {
+     "name": "Rose Gold",
+     "spec": "flat rose gold foil, front, to design foil-layer",
+     "swatch": "rosegold",
+     "popular": false,
+     "description": ""
+    },
+    {
+     "name": "Red",
+     "spec": "flat red foil, front, to design foil-layer",
+     "swatch": "red",
+     "popular": false,
+     "description": ""
+    },
+    {
+     "name": "Blue",
+     "spec": "flat blue foil, front, to design foil-layer",
+     "swatch": "blue",
+     "popular": false,
+     "description": ""
+    },
+    {
+     "name": "Holographic",
+     "spec": "flat holographic foil, front, to design foil-layer",
+     "swatch": "holographic",
+     "popular": false,
+     "description": ""
+    },
+    {
+     "name": "Green",
+     "spec": "flat green foil, front, to design foil-layer",
+     "swatch": "green",
+     "popular": false,
+     "description": ""
+    }
+   ]
+  },
+  {
+   "name": "Corners",
+   "description": "Softened at the corners, or left as cut.",
+   "options": [
+    {
+     "name": "Square",
+     "spec": "",
+     "popular": true,
+     "description": ""
+    },
+    {
+     "name": "Rounded",
+     "spec": "rounded corners, all four",
+     "popular": false,
+     "description": "Softer in the hand, and less prone to bumping"
+    }
+   ]
+  },
+  {
+   "name": "Fold",
+   "description": "Which way the card opens.",
+   "options": [
+    {
+     "name": "Long edge",
+     "spec": "folded on the long edge",
+     "popular": true,
+     "description": "Opens like a book \u2014 the usual choice"
+    },
+    {
+     "name": "Short edge",
+     "spec": "folded on the short edge",
+     "popular": false,
+     "description": "Opens upwards, portrait to landscape"
+    },
+    {
+     "name": "Tent",
+     "spec": "tent fold",
+     "popular": false,
+     "description": "Stands up on a table by itself"
+    }
+   ]
+  },
+  {
+   "name": "Protective finish",
+   "description": "An extra film over the print.",
+   "options": [
+    {
+     "name": "None",
+     "spec": "",
+     "popular": true,
+     "description": ""
+    },
+    {
+     "name": "Matt",
+     "spec": "matt lamination, printed face",
+     "popular": false,
+     "description": "Non-reflective, photographs well"
+    },
+    {
+     "name": "Gloss",
+     "spec": "gloss lamination, printed face",
+     "popular": false,
+     "description": "High-shine, colours pop"
+    }
+   ]
+  },
+  {
+   "name": "Hanging holes",
+   "description": "Drilled so the sign can hang.",
+   "options": [
+    {
+     "name": "None",
+     "spec": "",
+     "popular": true,
+     "description": ""
+    },
+    {
+     "name": "Two holes",
+     "spec": "drilled holes, top corners",
+     "popular": false,
+     "description": "Top corners, for hanging flat"
+    },
+    {
+     "name": "Four holes",
+     "spec": "drilled holes, all corners",
+     "popular": false,
+     "description": "All four corners, for a fixed mount"
+    }
+   ]
+  }
+ ],
+ "delivery": [
+  {
+   "name": "Standard",
+   "price": 0.0,
+   "surcharge_pct": 0.0,
+   "surcharge_min": 0.0,
+   "production_days": 3,
+   "delivery_days": 1
+  },
+  {
+   "name": "Express",
+   "price": 0.0,
+   "surcharge_pct": 20.0,
+   "surcharge_min": 20.0,
+   "production_days": 2,
+   "delivery_days": 1
+  },
+  {
+   "name": "Express Plus",
+   "price": 0.0,
+   "surcharge_pct": 40.0,
+   "surcharge_min": 40.0,
+   "production_days": 1,
+   "delivery_days": 1
+  }
+ ],
+ "products": [
+  {
+   "name": "Baby Shower Invitations"
+  },
+  {
+   "name": "Birthday Invitations"
+  },
+  {
+   "name": "Christening Invitations"
+  },
+  {
+   "name": "Christmas Cards"
+  },
+  {
+   "name": "Engagement Cards"
+  },
+  {
+   "name": "Engagement Party Invitations"
+  },
+  {
+   "name": "Graduation Cards"
+  },
+  {
+   "name": "Greeting Cards"
+  },
+  {
+   "name": "Menu Cards"
+  },
+  {
+   "name": "Moving Cards"
+  },
+  {
+   "name": "New Arrival Cards"
+  },
+  {
+   "name": "Order of Service"
+  },
+  {
+   "name": "Party Invitations"
+  },
+  {
+   "name": "Place Cards"
+  },
+  {
+   "name": "RSVP Cards"
+  },
+  {
+   "name": "Save the Date"
+  },
+  {
+   "name": "Signage"
+  },
+  {
+   "name": "Table Numbers"
+  },
+  {
+   "name": "Table Plan"
+  },
+  {
+   "name": "Thank You Cards"
+  },
+  {
+   "name": "Wedding Invitations"
+  },
+  {
+   "name": "Welcome Signs"
+  }
+ ]
+}

@@ -1,9 +1,7 @@
-const https = require('https');
-
-// Pinned deliberately: a snapshot cannot change answers underneath us.
-const MODEL = 'claude-haiku-4-5-20251001';
-
-const SYSTEM_PROMPT = `You are Amy, the assistant on the Foreverprint website — a UK company making luxury personalised stationery for weddings, new arrivals and celebrations.
+// ── WHO AMY IS ────────────────────────────────────────────
+// Her identity, manner and limits. Fixed text: this is the agreed voice and
+// does not change with the catalogue.
+const PROMPT_HEAD = `You are Amy, the assistant on the Foreverprint website — a UK company making luxury personalised stationery for weddings, new arrivals and celebrations.
 
 Amy is named after a real member of the team, and she sets the tone: warm, genuinely kind, unhurried, and straightforward. Someone who is pleased you came in, takes your question seriously, and would rather be honest than impressive.
 
@@ -19,8 +17,22 @@ HOW AMY TALKS:
 BEING HONEST ABOUT WHAT YOU ARE:
 - If anyone asks whether you are a real person, an AI, or a bot: tell them plainly and warmly that you are Foreverprint's assistant, here to help, and that a real person is an email away at hello@foreverprint.com. Never claim to be human.
 - Do not pretend to remember a customer or a past order.
+`;
 
-WHAT YOU KNOW:
+// ── WHAT SHE IS CAREFUL ABOUT ─────────────────────────────
+const PROMPT_TAIL = `WHERE TO BE CAREFUL:
+- Never invent prices, delivery dates, tracking numbers or order details. If you do not know, say so and point them to the team.
+- Never promise a printed proof. They see their design on screen before ordering; we do not post a proof.
+- If something has gone wrong — damaged, late, wrong item, disappointed — lead with sympathy, do not get defensive, and move them to the Contact button so a person picks it up.
+- For "where is my order", ask for the order number and the email used, and point them to the order tracking page.
+- If a question is really about taste or judgement ("will navy look right?"), be encouraging and honest rather than authoritative.`;
+
+// ── WHAT SHE KNOWS, IF THE DATABASE CANNOT BE REACHED ─────
+// The catalogue as it stood on 5 October 2026. This is a FALLBACK ONLY — the
+// live version is built from the database below. It is kept because an outage
+// at Supabase must make Amy slightly out of date, never silent, and because a
+// prompt with no catalogue at all would have her improvising.
+const KNOWLEDGE_FALLBACK = `WHAT YOU KNOW:
 (Everything in this section was taken from the live catalogue on 5 October 2026.
 If a customer tells you the product page says something different, the product
 page is right and you are out of date — say so and go with the page.)
@@ -62,14 +74,164 @@ page is right and you are out of date — say so and go with the page.)
 - Artwork is checked automatically when uploaded: size, resolution, colour and bleed, with warnings before they order.
 
 - Contact: hello@foreverprint.com
+`;
 
-WHERE TO BE CAREFUL:
-- Never invent prices, delivery dates, tracking numbers or order details. If you do not know, say so and point them to the team.
-- Never promise a printed proof. They see their design on screen before ordering; we do not post a proof.
-- If something has gone wrong — damaged, late, wrong item, disappointed — lead with sympathy, do not get defensive, and move them to the Contact button so a person picks it up.
-- For "where is my order", ask for the order number and the email used, and point them to the order tracking page.
-- If a question is really about taste or judgement ("will navy look right?"), be encouraging and honest rather than authoritative.`;
 
+
+// ── WHAT SHE KNOWS, READ FROM THE CATALOGUE ───────────────
+// Amy used to carry a snapshot of the catalogue written into this file. It
+// drifted for about four months without anyone noticing: she knew four of the
+// fifteen sizes we sell, said "up to A1" when we sell A0, could not name a
+// single paper, and said nothing at all about what delivery costs — which was
+// the question that finally exposed it.
+//
+// The fix is not a better snapshot, it is not having one. These five tables
+// ARE the shop: the order page, the landing pages and the price list all read
+// them, so anything Amy says from here is what a customer sees on the page.
+//
+// Read with the ANON key, not the service key. Every one of these tables is
+// already public to the browser — the widget itself reads print_sizes with the
+// anon key — so there is nothing to elevate for, and a prompt-injection in a
+// customer message can never reach more than the shop window.
+const SB_URL  = process.env.SUPABASE_URL || 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const SB_ANON = process.env.SUPABASE_ANON_KEY;
+
+// Held between invocations. Netlify reuses a warm container, so a busy widget
+// reads the catalogue once every few minutes rather than once per message.
+// Five minutes is short enough that a price or paper change reaches Amy while
+// Nicholas is still looking at the site, and long enough that a conversation
+// costs one read at most.
+const CATALOGUE_TTL_MS = 5 * 60 * 1000;
+let catalogueText = null, catalogueAt = 0;
+
+async function sbRows(path) {
+  const res = await fetch(SB_URL + '/rest/v1/' + path, {
+    headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON }
+  });
+  if (!res.ok) throw new Error(path.split('?')[0] + ' returned ' + res.status);
+  return res.json();
+}
+
+// "Silk, Uncoated and Ice White" — not "Silk and Uncoated and Ice White".
+function sentenceList(a) {
+  if (!a.length) return '';
+  if (a.length === 1) return a[0];
+  return a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+}
+
+function describeSizes(sizes) {
+  const card  = sizes.filter(s => Math.max(+s.width_mm, +s.height_mm) <= 300);
+  const large = sizes.filter(s => Math.max(+s.width_mm, +s.height_mm) > 300);
+  const fmt = s => `${s.name} (${s.width_mm}×${s.height_mm}mm)`;
+  let out = '- SIZES: ' + card.map(fmt).join(', ') + '.';
+  if (large.length) out += ' Large formats for signs and plans: ' + large.map(fmt).join(', ') + '.';
+  return out + ' Portrait and landscape cost the same. Not every product offers every size — the options on the product page are the truth.';
+}
+
+function describePapers(papers) {
+  const lines = papers.map(p => {
+    const w = Array.isArray(p.weights) ? p.weights : [];
+    // Foamex is measured in mm, everything else in gsm; the row says which.
+    const unit = w.length && w[0].unit ? w[0].unit : 'gsm';
+    // Sorted: the table's own order put Uncoated's 120gsm after its 400, so
+    // the paper read as "250/300/350/400/120gsm". Ascending is how a weight
+    // list is read, and the row order is display order, not weight order.
+    const nums = w.map(x => x.gsm).filter(n => n != null).sort((a, b) => a - b);
+    const spec = nums.length ? ' ' + nums.join('/') + unit + '.' : '';
+    // First sentence of the stock's own description — the rest is detail for
+    // the paper page, and Amy is meant to be brief.
+    const first = String(p.description || '').split(/(?<=\.)\s/)[0] || '';
+    return `  ${p.name} — ${first}${spec}`;
+  });
+  return '- PAPERS (' + papers.length + ' stocks, not all on every product):\n'
+       + lines.join('\n')
+       + '\n  Weight does not change the price. Heavier is not more expensive — it is a different feel, not an upgrade.';
+}
+
+function describeFinishes(finishes) {
+  const real = o => o && o.name && o.name.toLowerCase() !== 'none';
+  const lines = finishes.map(f => {
+    const opts = (f.options || []).filter(real).map(o => o.name);
+    return `  ${f.name} — ${sentenceList(opts)}.`;
+  });
+  return '- FINISHES (where a product offers them, charged once for the order rather than per card):\n'
+       + lines.join('\n')
+       + '\n  We do NOT offer wax seals, ribbon, vellum wraps, envelope printing or spot UV. If someone asks for any of these, say plainly that we do not do them.';
+}
+
+function describeDelivery(options) {
+  const money = n => '£' + Number(n).toFixed(0);
+  const lines = options.map(o => {
+    const days = Math.max(0, (o.production_days || 1) - 1) + (o.delivery_days || 1);
+    const pct = parseFloat(o.surcharge_pct) || 0;
+    const cost = pct > 0
+      ? `${pct}% of the order value with a ${money(o.surcharge_min)} minimum`
+      : (parseFloat(o.price) > 0 ? money(o.price) : 'FREE');
+    return `  ${o.name} — ${days} working day${days === 1 ? '' : 's'}, ${cost}.`;
+  });
+  return '- DELIVERY:\n' + lines.join('\n')
+       + '\n  Everything goes by tracked courier. The exact delivery cost is shown before they pay. We deliver within the UK only.';
+}
+
+// Deliberately no prices. The landing pages carry a from-price, but margins
+// are not set yet, so every published figure is currently at or near cost, and
+// what Amy quotes is a pricing decision rather than a catalogue fact. She is
+// still told never to invent one. Switching it on later is one more table read.
+async function buildKnowledge() {
+  const [sizes, papers, finishes, delivery, products] = await Promise.all([
+    sbRows('print_sizes?select=name,width_mm,height_mm&active=is.true&order=display_order'),
+    sbRows('paper_stocks?select=name,description,weights&active=is.true&order=display_order'),
+    sbRows('finish_types?select=name,description,options&active=is.true&order=display_order'),
+    sbRows('delivery_options?select=name,price,surcharge_pct,surcharge_min,production_days,delivery_days&active=is.true&order=display_order'),
+    sbRows('product_types?select=name&active=is.true&order=name')
+  ]);
+  if (!sizes.length || !papers.length || !delivery.length) {
+    throw new Error('catalogue came back empty');
+  }
+  return [
+    'WHAT YOU KNOW:',
+    '(Read from the live catalogue on every reply, so it cannot go stale. If a',
+    'customer tells you the product page says something different, the product',
+    'page is right — say so and go with the page.)',
+    '',
+    '- Two ways to order: Upload & Print (they supply artwork) and the Design Studio (describe the look and we design it with them on screen).',
+    '',
+    '- WHAT WE SELL (' + products.length + ' products): ' + products.map(p => p.name).join(', ') + '.',
+    '',
+    describeSizes(sizes),
+    '',
+    describePapers(papers),
+    '',
+    describeFinishes(finishes),
+    '',
+    describeDelivery(delivery),
+    '',
+    '- No minimum order — as few as they need.',
+    '- Every order is printed with a 3mm bleed and crop marks, so designs reach the edge cleanly.',
+    '- Artwork is checked automatically when uploaded: size, resolution, colour and bleed, with warnings before they order.',
+    '- Contact: hello@foreverprint.com'
+  ].join('\n');
+}
+
+// Never throws. A catalogue we cannot reach must leave Amy slightly out of
+// date, never silent — the whole point of this change was that a customer
+// asking a question got an apology.
+async function knowledge() {
+  if (catalogueText && Date.now() - catalogueAt < CATALOGUE_TTL_MS) return catalogueText;
+  if (!SB_ANON) return KNOWLEDGE_FALLBACK;
+  try {
+    catalogueText = await buildKnowledge();
+    catalogueAt = Date.now();
+    return catalogueText;
+  } catch (e) {
+    console.warn('[help-chat] catalogue read failed, using the snapshot:', e.message);
+    return catalogueText || KNOWLEDGE_FALLBACK;   // a stale read beats no catalogue
+  }
+}
+
+async function systemPrompt() {
+  return PROMPT_HEAD + '\n' + (await knowledge()) + '\n' + PROMPT_TAIL;
+}
 
 // ── ABUSE GUARD ───────────────────────────────────────────
 // These endpoints spend real money on every call (image generation, AI
@@ -203,7 +365,7 @@ exports.handler = async (event) => {
     const requestBody = JSON.stringify({
       model: MODEL,
       max_tokens: 400,
-      system: SYSTEM_PROMPT,
+      system: await systemPrompt(),
       messages: messages
     });
 

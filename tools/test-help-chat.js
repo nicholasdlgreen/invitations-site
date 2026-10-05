@@ -25,16 +25,22 @@ function is(label, got, want){
   print((ok ? '  ok   ' : '  FAIL ') + label + (ok ? '' : '   got ' + got + ', want ' + want));
 }
 
-// Cut the system prompt out, so "does Amy know X" is asked of Amy's knowledge
-// and not of a comment elsewhere in the file that happens to mention X.
+// Cut the knowledge block out, so "does Amy know X" is asked of Amy's
+// knowledge and not of a comment elsewhere in the file that mentions X.
+//
+// This now points at KNOWLEDGE_FALLBACK rather than a single SYSTEM_PROMPT,
+// because since item 62 the live prompt is assembled from the database on
+// every reply (covered by tools/test-help-catalogue.js against real rows).
+// The fallback is what ships when Supabase cannot be reached, so it still has
+// to be right — a fallback nobody checks is how the first drift happened.
 var PROMPT = (function(){
-  var a = SRC.indexOf('const SYSTEM_PROMPT = `');
+  var a = SRC.indexOf('const KNOWLEDGE_FALLBACK = `');
   var b = SRC.indexOf('`;', a);
   return SRC.slice(a, b);
 })();
 
 print('\nSHE KNOWS WHAT WE ACTUALLY SELL');
-is('the system prompt was found', PROMPT.length > 1500, true);
+is('the fallback knowledge block was found', PROMPT.length > 1500, true);
 // Every size live in print_sizes on 5 October.
 ['A6','A5','DL','Square','Square 210','A4','A3','Place card','A2','A1','A0']
   .forEach(function(s){ is('knows the size ' + s, PROMPT.indexOf(s) >= 0, true); });

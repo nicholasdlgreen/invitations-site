@@ -1972,35 +1972,49 @@ it, are what is left.
 
     Message content is personal data, so the Privacy Policy now says we keep
     these messages, why, and asks people not to type sensitive details into it.
-    **Those words are Claude's and need Nicholas's approval** — see item 44.
+    Those words were Claude's; **Nicholas approved them unchanged on 5 October**.
 
     `tools/test-help-chat.js`, 62 checks. Still a snapshot, so it will drift
     again: item 62 is the fix for that.
 
-62. **Amy should read the catalogue rather than remember it.** Option C of the
-    5 October review, agreed as the direction but not built. The function
-    already holds Supabase credentials, so it can read sizes, papers, finishes,
-    delivery rules and from-prices on each call and assemble the prompt from
-    them. Nothing to keep in sync, so nothing to drift — the drift in item 61
-    took about four months and will happen again every time the catalogue
-    moves. Also enables the questions she cannot answer today, such as "what is
-    the cheapest option for 50 invitations". Cost is not the constraint:
-    Haiku 4.5 is about **1p per conversation**, or half that with prompt
-    caching, which is not yet switched on.
-58. **Stripe may send its own payment receipt** as well as ours, which would be
-    two emails about one payment. A setting in the Stripe dashboard.
-59. **DMARC is `p=none`** and its reports go to a personal Gmail address. Worth
-    moving to `p=quarantine` once sending volume justifies it. SPF and DKIM are
-    both correct and verified — checked 3 October.
-60. ~~**The website does not carry the company disclosure.**~~ **DONE 5
-    October**, same day it was raised. The footer on all **57** pages now reads
-    "Foreverprint is a trading name of Natch Limited, registered in England and
-    Wales, company number 09493377. Registered office: Regina House, 124
-    Finchley Road, London NW3 5JS." — the four things the Companies (Trading
-    Disclosures) Regulations require, on the website rather than only in the
-    terms. It sits on its own line below the copyright row rather than inside
-    it, because that row is a flex pair and a third item would have been
-    squeezed against "Made with love in the UK".
+62. ~~**Amy should read the catalogue rather than remember it.**~~ **DONE
+    5 October.** She now assembles her knowledge from the five tables that ARE
+    the shop — `print_sizes`, `paper_stocks`, `finish_types`,
+    `delivery_options`, `product_types` — the same rows the order page and the
+    landing pages read, on every reply. There is no snapshot to drift, which
+    was the point: rewriting the snapshot earlier the same day fixed the
+    symptom and left the cause.
+
+    Read with the **anon** key, not the service key. All five tables are
+    already public to the browser, so there is nothing to elevate for and a
+    prompt injection in a customer message can never reach past the shop
+    window. Cached five minutes in the warm container, so a conversation costs
+    one read at most, and all five are fetched in parallel.
+
+    **A Supabase outage makes her stale, never silent.** A failed or empty read
+    falls back to the last good copy, and failing that to the snapshot kept in
+    the file for exactly this. `knowledge()` cannot throw. That matters because
+    the complaint that started all of this was a customer getting an apology
+    instead of an answer, and a catalogue reader that could fail closed would
+    reintroduce it.
+
+    **No prices, deliberately.** The landing pages carry a from-price, but
+    margins are not set, so every published figure is at or near cost and what
+    Amy quotes is a pricing decision rather than a catalogue fact. She is still
+    told never to invent one. One more table read whenever that is wanted.
+
+    One real bug found by rendering the output rather than trusting it:
+    Uncoated's weights came out `250/300/350/400/120gsm`, because the rows are
+    in display order and 120gsm was added last. Sorted ascending.
+
+    `tools/test-help-catalogue.js`, 76 checks, run against
+    `tools/fixtures/catalogue.json` — a real capture of the five tables — and
+    cutting the generators out of the shipped file so it tests the code that
+    deploys. Refresh the fixture when the catalogue moves.
+
+    **Still open:** Amy now calls the third delivery service **Express Plus**,
+    because that is its name in `delivery_options`, while `delivery.html` calls
+    it **Next Day**. Same service, two names, now in three places. See item 10.
 
     57, not the 55 first counted: a `grep --include` miss. All 57 blocks were
     byte-identical before the change, which is what made a mechanical edit safe.
