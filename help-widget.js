@@ -9,6 +9,10 @@
 // because the injected markup calls them from inline onclick attributes.
 
 var hwHistory=[],hwOpen=false;
+// Groups one conversation's turns together in the log. Random per page
+// load, never stored, and tied to nothing — it tells us that six questions
+// were one chat rather than six people, and nothing about who asked them.
+var hwSession=(Math.random().toString(36).slice(2)+Date.now().toString(36));
 function hwToggle(){hwOpen=!hwOpen;document.getElementById('hw-panel').classList.toggle('open',hwOpen);if(hwOpen)setTimeout(()=>document.getElementById('hw-input').focus(),300);}
 function hwPrompt(t){
   // "Where is my order?" is a job, not a question — Amy can actually look it
@@ -277,7 +281,7 @@ function hwHandleFlow(text){
 async function hwSend(){var input=document.getElementById('hw-input'),text=input.value.trim();if(!text)return;input.value='';hwAddMsg('user',text);
 // A flow in progress answers for itself — Amy must not also improvise a reply.
 if(hwHandleFlow(text)){return;}
-input.disabled=true;document.getElementById('hw-send').disabled=true;hwHistory.push({role:'user',content:text});hwShowTyping();try{var res=await fetch('/.netlify/functions/help-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hwHistory})}),data=await res.json();hwRemoveTyping();var reply=data.text||'Sorry — I could not get through just then. Please email hello@foreverprint.com and a real person will pick it up.';hwHistory.push({role:'assistant',content:reply});hwAddMsg('bot',reply,/contact|problem|issue|wrong|damaged|missing|refund/i.test(text+reply));}catch(e){hwRemoveTyping();hwAddMsg('bot','Sorry, I\'m having trouble connecting. Please email hello@foreverprint.com',false);}input.disabled=false;document.getElementById('hw-send').disabled=false;input.focus();}
+input.disabled=true;document.getElementById('hw-send').disabled=true;hwHistory.push({role:'user',content:text});hwShowTyping();try{var res=await fetch('/.netlify/functions/help-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hwHistory,sessionId:hwSession})}),data=await res.json();hwRemoveTyping();var reply=data.text||'Sorry — I could not get through just then. Please email hello@foreverprint.com and a real person will pick it up.';hwHistory.push({role:'assistant',content:reply});hwAddMsg('bot',reply,/contact|problem|issue|wrong|damaged|missing|refund/i.test(text+reply));}catch(e){hwRemoveTyping();hwAddMsg('bot','Sorry, I\'m having trouble connecting. Please email hello@foreverprint.com',false);}input.disabled=false;document.getElementById('hw-send').disabled=false;input.focus();}
 function hwShowContact(){document.getElementById('hw-contact-form').style.display='block';document.getElementById('hw-input-area').style.display='none';}
 function hwHideContact(){document.getElementById('hw-contact-form').style.display='none';document.getElementById('hw-input-area').style.display='flex';}
 function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.trim(),email=document.getElementById('hw-cf-email').value.trim(),order=document.getElementById('hw-cf-order').value.trim(),msg=document.getElementById('hw-cf-msg').value.trim();if(!name||!email||!msg){alert('Please fill in your name, email and message.');return;}window.location.href='mailto:hello@foreverprint.com?subject='+encodeURIComponent('Customer Enquiry'+(order?' — Order '+order:''))+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+(order?'\nOrder: '+order:'')+'\n\n'+msg);hwHideContact();hwAddMsg('bot','Your email client should have opened — we\'ll get back to you within one working day.',false);}

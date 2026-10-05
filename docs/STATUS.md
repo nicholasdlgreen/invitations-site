@@ -1919,8 +1919,62 @@ it, are what is left.
     it, there is nothing on our side to check.
 56. **`TRUSTPILOT_BCC` is not set**, so no review invitation is sent at all —
     neither ours (deliberately unscheduled) nor Trustpilot's (needs the BCC).
-57. **`ANTHROPIC_API_KEY` is not in the Netlify environment**, which the Amy
-    help widget needs.
+57. **`ANTHROPIC_API_KEY` is not in the Netlify environment** — and this is
+    not a loose end, it is **the help assistant being dead**. Reclassified
+    5 October after Nicholas reported Amy answering "sorry I could not get
+    through" to a plain question. Reproduced against the live site: a POST to
+    `/.netlify/functions/help-chat` asking "how does delivery work?" returns
+    **HTTP 500** with no text, so the widget falls back to that apology. Ten
+    environment variables are set; this is not one of them, so every call to
+    Anthropic is rejected. **Every free-text question has failed since the
+    widget was built.** The scripted flows — order tracking, the artwork
+    wizard, the contact form — were never affected and work.
+
+    **Only Nicholas can clear this**: Claude does not handle API keys. Netlify
+    → Site configuration → Environment variables → add `ANTHROPIC_API_KEY`.
+    Nothing else in item 61 works until it is set.
+
+61. **Amy's knowledge was four months stale, and nothing was recorded.** Fixed
+    5 October (option B of the review). Two separate failures sat behind one
+    symptom, and the second would have survived the key being set:
+
+    Her facts were a snapshot written into the function. She knew **four of the
+    fifteen** sizes we sell, said "larger formats up to A1" when we sell A0,
+    named **none** of the ten paper stocks, and said **nothing at all about
+    what delivery costs** — which is precisely the question that prompted the
+    complaint. She now carries the live catalogue as of 5 October: 22 products,
+    all 15 sizes with dimensions, all 10 papers with weights and what each is
+    for, all 8 foils, free standard delivery and the 20%/40% upgrades, and an
+    explicit list of what we do **not** sell (wax seals, ribbon, vellum,
+    envelope printing, spot UV) so she stops being asked to improvise. She is
+    also told that if a customer quotes the product page against her, the page
+    wins and she is out of date.
+
+    And nothing was logged, which is the reason a total outage could last from
+    the day it was built until a customer-facing complaint. `help_chat_log` now
+    records every turn — question, answer, model, tokens, how long the customer
+    waited — **including the failures**. That last word is the point: a logger
+    wired only into the success path would have stayed silent through the exact
+    outage it exists to catch, and a test asserts the log call sits inside the
+    catch block.
+
+    Message content is personal data, so the Privacy Policy now says we keep
+    these messages, why, and asks people not to type sensitive details into it.
+    **Those words are Claude's and need Nicholas's approval** — see item 44.
+
+    `tools/test-help-chat.js`, 62 checks. Still a snapshot, so it will drift
+    again: item 62 is the fix for that.
+
+62. **Amy should read the catalogue rather than remember it.** Option C of the
+    5 October review, agreed as the direction but not built. The function
+    already holds Supabase credentials, so it can read sizes, papers, finishes,
+    delivery rules and from-prices on each call and assemble the prompt from
+    them. Nothing to keep in sync, so nothing to drift — the drift in item 61
+    took about four months and will happen again every time the catalogue
+    moves. Also enables the questions she cannot answer today, such as "what is
+    the cheapest option for 50 invitations". Cost is not the constraint:
+    Haiku 4.5 is about **1p per conversation**, or half that with prompt
+    caching, which is not yet switched on.
 58. **Stripe may send its own payment receipt** as well as ours, which would be
     two emails about one payment. A setting in the Stripe dashboard.
 59. **DMARC is `p=none`** and its reports go to a personal Gmail address. Worth

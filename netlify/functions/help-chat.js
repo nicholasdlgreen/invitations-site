@@ -1,5 +1,8 @@
 const https = require('https');
 
+// Pinned deliberately: a snapshot cannot change answers underneath us.
+const MODEL = 'claude-haiku-4-5-20251001';
+
 const SYSTEM_PROMPT = `You are Amy, the assistant on the Foreverprint website — a UK company making luxury personalised stationery for weddings, new arrivals and celebrations.
 
 Amy is named after a real member of the team, and she sets the tone: warm, genuinely kind, unhurried, and straightforward. Someone who is pleased you came in, takes your question seriously, and would rather be honest than impressive.
@@ -18,12 +21,46 @@ BEING HONEST ABOUT WHAT YOU ARE:
 - Do not pretend to remember a customer or a past order.
 
 WHAT YOU KNOW:
+(Everything in this section was taken from the live catalogue on 5 October 2026.
+If a customer tells you the product page says something different, the product
+page is right and you are out of date — say so and go with the page.)
+
 - Two ways to order: Upload & Print (they supply artwork) and the Design Studio (describe the look and we design it with them on screen).
-- Card sizes: A5 (148×210mm), A6 (105×148mm), DL (99×210mm) and Square (148×148mm). Larger formats up to A1 for signs and table plans. Not every product offers every size — the size options on the product page are the truth.
-- Paper from 300gsm upwards, with textured, uncoated and premium options; finishes such as foiling and lamination on some products.
+
+- WHAT WE SELL (22 products): wedding invitations, save the dates, RSVP cards, menu cards, order of service, place cards, table numbers, table plans, welcome signs, signage, thank you cards, greeting cards, Christmas cards, engagement cards, engagement party invitations, birthday invitations, party invitations, baby shower invitations, christening invitations, new arrival cards, moving cards, graduation cards.
+
+- SIZES: A6 (105×148mm), A5 (148×210mm), DL (99×210mm), Square (148×148mm), Square 210 (210×210mm), A4 (210×297mm), A3 (297×420mm), Place card (85×55mm), and large formats for signs and plans: A2 (420×594mm), A1 (594×841mm), A0 (841×1189mm). A4, A3, A2 and A1 also come in landscape. Portrait and landscape cost the same. Not every product offers every size — the options on the product page are the truth.
+
+- PAPERS (ten stocks, not all on every product):
+  Silk — smooth, lightly coated, a soft sheen. The most popular, and the safest choice for photographs or fine detail. 250/300/350/400gsm.
+  Uncoated — matt, soft, faintly toothy, and the easiest to write on. 120/250/300/350/400gsm.
+  Tintoretto Gesso (Fedrigoni, Italy) — a finely hammered surface in a warm white. 140/300gsm.
+  Nettuno Bianco (Fedrigoni) — deep felt marking in fine parallel lines, cool white. 280gsm.
+  Acquerello Bianco — watercolour tooth in a soft cream white, lovely under calligraphy. 280gsm.
+  Sirio Pearl Polar Dawn (Fedrigoni) — pearlescent through the sheet, shifts in the light, never metallic. 300gsm.
+  Recycled Uncoated — wholly recycled, thick, with natural fibre flecks visible. 350gsm.
+  Cartonboard — rigid board, bright white face. 255gsm.
+  Ice White — cool bright white with a silk face, for designs that depend on contrast. 300gsm.
+  Foamex 5mm — rigid waterproof PVC board for signs; it will not bow on an easel.
+  Weight does not change the price. Heavier is not more expensive — it is a different feel, not an upgrade.
+
+- FINISHES (where a product offers them, charged once for the order rather than per card):
+  Foiling in eight colours — gold, silver, copper, rose gold, red, blue, green and holographic.
+  Lamination — matt, gloss or soft touch.
+  Corners — square, or rounded.
+  Protective finish — matt or gloss film over the printed face.
+  Hanging holes on signs — two or four.
+  Folding, where the product is a folded card.
+  We do NOT offer wax seals, ribbon, vellum wraps, envelope printing or spot UV. Spot UV was withdrawn. If someone asks for any of these, say plainly that we do not do them.
+
+- DELIVERY: Standard is FREE and printed in 3 working days. Express is 2 working days and costs 20% of the order value with a £20 minimum. Next day (order by 1pm) costs 40% with a £40 minimum. Everything goes by tracked courier. The exact delivery cost is shown before they pay. We deliver within the UK only.
+
+- No minimum order — as few as they need.
+
 - Every order is printed with a 3mm bleed and crop marks, so designs reach the edge cleanly.
-- No minimum order — as few as they need. Standard is printed in 3 working days, Express in 2 (order by 4pm), Express Plus next working day (order by 1pm), each then sent by tracked delivery. Next day delivery available.
+
 - Artwork is checked automatically when uploaded: size, resolution, colour and bleed, with warnings before they order.
+
 - Contact: hello@foreverprint.com
 
 WHERE TO BE CAREFUL:
@@ -87,6 +124,49 @@ async function abuseGuard(event, name, perHour) {
   return null;
 }
 
+// ── WHAT WAS ASKED, AND WHAT WE SAID ──────────────────────
+// Nothing was recorded until 5 October 2026, which is exactly why this
+// function could return HTTP 500 to every customer who typed a question,
+// from the day it was built, without anyone finding out. The missing
+// ANTHROPIC_API_KEY was on the to-do list as a loose end rather than as
+// "the help assistant is dead", because there was no evidence either way.
+//
+// It logs FAILURES as well as successes. A logger that only runs on the happy
+// path would have stayed silent through the entire outage it is here to catch.
+// It never throws and never delays the reply: a logging problem must not
+// become a customer problem.
+async function logTurn(row) {
+  const key = process.env.SUPABASE_SERVICE_KEY;
+  if (!key) return;                        // nothing to write with; stay quiet
+  try {
+    const url = (process.env.SUPABASE_URL || 'https://jvcpzmumkyjdyibmwlsd.supabase.co')
+              + '/rest/v1/help_chat_log';
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify(row)
+    });
+  } catch (e) {
+    console.warn('[help-chat] could not write the log:', e.message);
+  }
+}
+
+// The customer's last message, which is what they actually asked.
+function lastQuestion(messages) {
+  if (!Array.isArray(messages)) return null;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i] && messages[i].role === 'user') {
+      return String(messages[i].content || '').slice(0, 4000);
+    }
+  }
+  return null;
+}
+
 exports.handler = async (event) => {
   const blocked = await abuseGuard(event, 'help-chat', 60);
   if (blocked) return blocked;
@@ -107,11 +187,21 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method not allowed' };
   }
 
+  // Declared outside the try so the catch can log them too. Parsed defensively:
+  // a malformed body must still produce a log row saying so.
+  const started = Date.now();
+  let sessionId = null, turn = null, question = null;
+
   try {
-    const { messages } = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
+    const messages = body.messages;
+    sessionId = body.sessionId ? String(body.sessionId).slice(0, 64) : null;
+    question = lastQuestion(messages);
+    turn = Array.isArray(messages)
+      ? messages.filter(m => m && m.role === 'user').length : null;
 
     const requestBody = JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
+      model: MODEL,
       max_tokens: 400,
       system: SYSTEM_PROMPT,
       messages: messages
@@ -143,17 +233,33 @@ exports.handler = async (event) => {
 
     if (response.error) throw new Error(response.error.message);
 
+    const text = response.content[0].text;
+    await logTurn({
+      session_id: sessionId, turn, question, answer: text.slice(0, 8000),
+      ok: true, model: MODEL,
+      input_tokens:  response.usage ? response.usage.input_tokens  : null,
+      output_tokens: response.usage ? response.usage.output_tokens : null,
+      ms: Date.now() - started
+    });
+
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({ text: response.content[0].text })
+      body: JSON.stringify({ text: text })
     };
 
   } catch (err) {
     console.error('Help chat error:', err);
+    // The branch that matters. Without this the outage that prompted all of
+    // this would have left no trace in the one place we would think to look.
+    await logTurn({
+      session_id: sessionId, turn, question, answer: null,
+      ok: false, error: String(err && err.message || err).slice(0, 1000),
+      model: MODEL, ms: Date.now() - started
+    });
     return {
       statusCode: 500,
       headers: { 'Access-Control-Allow-Origin': '*' },
