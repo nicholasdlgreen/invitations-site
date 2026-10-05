@@ -394,7 +394,9 @@ Basket <span class="cart-count" id="cartCount">0</span>
 <div class="cart-row"><span>Subtotal (excl. VAT)</span><span id="cartNet">£0.00</span></div>
 <div class="cart-row vat"><span>VAT (20%)</span><span id="cartVat">£0.00</span></div>
 <div class="cart-row total serif"><span>Total</span><span id="cartTotal">£0.00</span></div>
-<button class="btn" onclick="goToCheckout()" style="width:100%;justify-content:center;">Continue to Checkout</button>
+<!-- id: paintDrawerButton() needs it. Must live HERE, not on a page — the
+     drawer is injected from this file on every build. See test-drawer-checkout. -->
+<button class="btn" id="drawerGoBtn" onclick="goToCheckout()" style="width:100%;justify-content:center;">Continue to Checkout</button>
 </div>
 </div>
 <div class="toast" id="toast"></div>

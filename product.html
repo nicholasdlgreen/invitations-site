@@ -542,7 +542,9 @@ Basket <span class="cart-count" id="cartCount">0</span>
 <div class="cart-row"><span>Subtotal (excl. VAT)</span><span id="cartNet">£0.00</span></div>
 <div class="cart-row vat"><span>VAT (20%)</span><span id="cartVat">£0.00</span></div>
 <div class="cart-row total serif"><span>Total</span><span id="cartTotal">£0.00</span></div>
-<button class="btn" onclick="goToCheckout()" style="width:100%;justify-content:center;">Continue to Checkout</button>
+<!-- id: paintDrawerButton() needs it. Must live HERE, not on a page — the
+     drawer is injected from this file on every build. See test-drawer-checkout. -->
+<button class="btn" id="drawerGoBtn" onclick="goToCheckout()" style="width:100%;justify-content:center;">Continue to Checkout</button>
 </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -737,7 +739,7 @@ was fetched and injected via innerHTML — that was the bug behind the
       <!--LP_FAQ_START-->
       <details class="lp-faq-item">
         <summary class="lp-faq-q"><span class="lp-faq-q-text">What's your turnaround time?</span><span class="lp-faq-toggle">+</span></summary>
-        <div class="lp-faq-a">Standard orders are printed within 3 working days and sent by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout.</div>
+        <div class="lp-faq-a">Standard orders are printed within 3 working days and sent free by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout.</div>
       </details>
       <details class="lp-faq-item">
         <summary class="lp-faq-q"><span class="lp-faq-q-text">What file formats do you accept?</span><span class="lp-faq-toggle">+</span></summary>
@@ -1027,7 +1029,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type":"Question","name":"What's your turnaround time?","acceptedAnswer":{"@type":"Answer","text":"Standard orders are printed within 3 working days and sent by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout."}},
+    {"@type":"Question","name":"What's your turnaround time?","acceptedAnswer":{"@type":"Answer","text":"Standard orders are printed within 3 working days and sent free by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout."}},
     {"@type":"Question","name":"What file formats do you accept?","acceptedAnswer":{"@type":"Answer","text":"PDF, AI, InDesign, and high-resolution PNG or JPG (300dpi minimum)."}},
     {"@type":"Question","name":"What if my artwork has issues?","acceptedAnswer":{"@type":"Answer","text":"Every file is checked the moment you upload it — page size against the size you ordered, resolution at that size, and bleed. Anything that would print poorly is flagged on screen before you pay, and our studio looks again before it goes to press. Nothing blocks your order: we tell you what we have found and let you decide."}},
     {"@type":"Question","name":"Do you offer design services?","acceptedAnswer":{"@type":"Answer","text":"Yes. Our Design Studio walks you through creating an invitation from scratch."}},
