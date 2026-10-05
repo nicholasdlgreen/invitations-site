@@ -29,6 +29,23 @@ https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:sp
 /how-it-works   /how-it-works.html     200
 /track-order    /track-order.html      200
 
+# ─── WITHDRAWN: THE TEMPLATE PAGES ──────────────────────────
+# Design templates were withdrawn on 5 October 2026 and both pages deleted:
+# the gallery (design-studio-templates.html) and the template editor
+# (design-studio-customise.html). Neither was in the sitemap, but both
+# answered HTTP 200 on the live site and the editor was reachable from the
+# gallery's breadcrumbs, so anyone holding a link could still browse designs
+# for a service we no longer sell.
+#
+# 301 rather than 404: the pages existed and were linked, so a permanent
+# redirect tells Google the address has moved rather than leaving it to
+# rediscover a dead end, and anyone with an old link lands somewhere useful.
+# Both the clean and the .html forms, because both answered before.
+/design-studio-templates       /design-studio.html  301
+/design-studio-templates.html  /design-studio.html  301
+/design-studio-customise       /design-studio.html  301
+/design-studio-customise.html  /design-studio.html  301
+
 # ─── PRODUCT LANDING CATCH-ALL ──────────────────────────────
 # Any URL not matched above and with no real file → product landing page
 # (NEW behaviour — was the configurator before). The landing page reads the

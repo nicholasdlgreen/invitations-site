@@ -2583,9 +2583,11 @@ let deliveryCost=0, envelopesEnabled=false, selectedEnvColour=null;
 // Goods before delivery. Delivery is a percentage of this with a floor, so
 // it has to be known before the delivery cards can show a price.
 let lastGoodsTotal = 0;
-// Design-studio mode: set in the IIFE near the bottom of this script if
-// the user came from /design-studio-customise. When true, steps 1 & 2 are
-// hidden and currentFile is a synthetic SVG built from the saved design.
+// Design-studio mode: set in the IIFE near the bottom of this script if the
+// user came from the design studio. When true, steps 1 & 2 are hidden and
+// currentFile is a synthetic SVG built from the saved design. (This said
+// /design-studio-customise, the template editor, until that page was
+// deleted with the rest of the template work on 5 October 2026.)
 let designMode = false, designState = null;
 
 // ── CART ──────────────────────────────────────────────────
@@ -8652,26 +8654,18 @@ function googleCustomerReviewsOptIn(order){
 
   // 8. The "Change" button in the summary bar: remove it for AI designs
   //    (an approved AI design can't be meaningfully re-edited — they'd start over).
+  // Templates were withdrawn on 5 October 2026, and 'ai-studio' is now the only
+  // source any design carries — so the else branch that sent people to the
+  // template editor is gone with the page it pointed at. An approved AI design
+  // cannot be meaningfully re-edited; they would start over.
   const changeBtn = document.querySelector('#step3 button[onclick="goStep(1)"]');
-  if (changeBtn) {
-    if (isAiDesign) {
-      changeBtn.style.display = 'none';
-    } else {
-      changeBtn.setAttribute('onclick', `window.location.href = '/design-studio-customise.html?template=${designState.templateId}'`);
-      changeBtn.textContent = 'Edit design';
-    }
-  }
+  if (changeBtn) changeBtn.style.display = 'none';
 
   // 9. Repoint the "Back" button in step 3 too
   const backBtn = document.querySelector('#step3 button[onclick="goStep(2)"]');
   if (backBtn) {
-    if (isAiDesign) {
-      backBtn.setAttribute('onclick', "window.location.href = '/design-studio-ai-create.html'");
-      backBtn.textContent = 'Start a new design';
-    } else {
-      backBtn.setAttribute('onclick', `window.location.href = '/design-studio-customise.html?template=${designState.templateId}'`);
-      backBtn.textContent = 'Back to design';
-    }
+    backBtn.setAttribute('onclick', "window.location.href = '/design-studio-ai-create.html'");
+    backBtn.textContent = 'Start a new design';
   }
 
   // 10. Step 4's "Upload Another" button: back into the studio chooser.
