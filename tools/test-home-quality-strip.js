@@ -74,4 +74,33 @@ is('a pod with no line is caught',
 is('and the line it should have is gone',
    OLD.indexOf('starting at one card') >= 0, false);
 
+print('\nTHE STRIP WORKS ON A PHONE');
+// The columns MUST NOT be inline. An inline style beats a media query, so a
+// stacked layout written inline looks right in the source and silently never
+// applies — the trap this page shared with delivery.html.
+is('the grid carries a class', /<div class="quality-grid">/.test(STRIP), true);
+is('its columns are NOT set inline',
+   /<div class="quality-grid"[^>]*style="[^"]*grid-template-columns/.test(STRIP), false);
+is('four columns are declared in CSS',
+   /\.quality-grid\{display:grid;grid-template-columns:repeat\(4,1fr\)/.test(SRC), true);
+is('two columns on a tablet',
+   /@media\(max-width:768px\)\{\.quality-grid\{grid-template-columns:1fr 1fr;\}\}/.test(SRC), true);
+is('one column on a phone',
+   /@media\(max-width:480px\)\{\.quality-grid\{grid-template-columns:1fr;\}/.test(SRC), true);
+is('and the padding comes in with it, so four stacked pods are not needlessly tall',
+   /\.quality-grid > div\{padding:26px 24px;\}/.test(SRC), true);
+// Breakpoints match .occasions-grid, so the page keeps one set of them.
+is('the breakpoints match the grid above it',
+   /@media\(max-width:768px\)\{\.occasions-grid/.test(SRC)
+   && /@media\(max-width:480px\)\{\.occasions-grid/.test(SRC), true);
+
+print('\nMUTATION: AN INLINE GRID MUST FAIL');
+var INLINE = STRIP.replace('<div class="quality-grid">',
+  '<div class="quality-grid" style="grid-template-columns:repeat(4,1fr)">');
+is('columns put back inline are caught',
+   /<div class="quality-grid"[^>]*style="[^"]*grid-template-columns/.test(INLINE), true);
+var NOSTACK = SRC.replace('@media(max-width:480px){.quality-grid{grid-template-columns:1fr;}', '@media(min-width:99999px){.quality-grid{grid-template-columns:1fr;}');
+is('a strip that never stacks is caught',
+   /@media\(max-width:480px\)\{\.quality-grid\{grid-template-columns:1fr;\}/.test(NOSTACK), false);
+
 print('\n' + pass + ' passed, ' + fail + ' failed\n');

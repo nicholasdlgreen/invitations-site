@@ -92,6 +92,20 @@
 .occasion-sub{font-size:var(--text-sm);color:rgba(255,255,255,.85);line-height:1.6;}
 @media(max-width:768px){.occasions-grid{grid-template-columns:1fr 1fr;}.occasion-card.flagship{grid-row:auto;grid-column:1 / span 2;min-height:240px;}}
 @media(max-width:480px){.occasions-grid{grid-template-columns:1fr;}.occasion-card.flagship{grid-column:auto;}}
+/* The four quality pods. The columns live here rather than inline because
+   an inline style beats a media query — written inline, a stacked phone
+   layout looks right in the source and silently never applies. Same trap
+   found on the delivery page on 3 October.
+   Four columns in a 375px viewport left each line about 90 to 116px wide,
+   wrapping to five lines, with 64px of pod padding eating most of the
+   column. Breakpoints copied from .occasions-grid above so the page keeps
+   one set of them. */
+.quality-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+@media(max-width:768px){.quality-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.quality-grid{grid-template-columns:1fr;}
+  /* Full width now, so the generous desktop padding is no longer paying
+     for itself — it just makes four stacked pods taller than they need. */
+  .quality-grid > div{padding:26px 24px;}}
 </style>
 </head>
 <body>
@@ -667,7 +681,7 @@ was fetched and injected via innerHTML — that was the bug behind the
 <!-- QUALITY STRIP -->
 <section style="background:var(--text);padding:64px 0;">
 <div class="container">
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+<div class="quality-grid">
 <div style="padding:36px 32px;background:rgba(255,255,255,.05);border-radius:20px;text-align:center;">
 <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:var(--gold-lt);margin-bottom:8px;">Premium Papers</div>
 <div style="font-size:var(--text-sm);color:rgba(255,255,255,.4);line-height:1.7;">Smooth silk, soft uncoated, and textured Fedrigoni papers</div>
