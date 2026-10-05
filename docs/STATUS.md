@@ -2012,9 +2012,14 @@ it, are what is left.
     cutting the generators out of the shipped file so it tests the code that
     deploys. Refresh the fixture when the catalogue moves.
 
-    **Still open:** Amy now calls the third delivery service **Express Plus**,
-    because that is its name in `delivery_options`, while `delivery.html` calls
-    it **Next Day**. Same service, two names, now in three places. See item 10.
+    **Closed the same day:** Amy calling the third service **Express Plus**
+    exposed that `delivery.html` alone called it **Next Day** — a customer met
+    two names for one service. Nicholas chose Express Plus everywhere, so the
+    page now matches `delivery_options`, the configurator and Amy. The line
+    "Order before 1pm for next day delivery" stays, because that describes when
+    it ARRIVES, which the name does not tell you; the meta descriptions keep
+    "next day delivery" too, because that is what people type into Google and
+    nobody searches for Express Plus.
 
     57, not the 55 first counted: a `grep --include` miss. All 57 blocks were
     byte-identical before the change, which is what made a mechanical edit safe.

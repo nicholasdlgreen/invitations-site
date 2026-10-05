@@ -32,7 +32,7 @@ is('no flat GBP 18.00 anywhere on the page', /£18\.00/.test(PAGE), false);
 print('\nTHE CARDS SHOW A FROM-PRICE, AND IT IS THE MINIMUM WE CHARGE');
 is('Express card reads "From £' + RULE.express.min + '"',
    new RegExp('>From £' + RULE.express.min + '<').test(PAGE), true);
-is('Next Day card reads "From £' + RULE.nextDay.min + '"',
+is('Express Plus card reads "From £' + RULE.nextDay.min + '"',
    new RegExp('>From £' + RULE.nextDay.min + '<').test(PAGE), true);
 is('Standard is still free', />Free</.test(PAGE), true);
 
@@ -40,7 +40,10 @@ print('\nTHE RULE IS STATED, NOT HIDDEN');
 var NOTE = (PAGE.match(/Express is 20% of your order value[^<]*/) || [''])[0];
 is('the explanatory line is present', NOTE.length > 0, true);
 is('it gives the Express percentage',  /20% of your order value/.test(NOTE), true);
-is('it gives the Next Day percentage', /Next Day is 40%/.test(NOTE), true);
+is('it gives the Express Plus percentage', /Express Plus is 40%/.test(NOTE), true);
+// One service, one name. It read "Next Day" on this page while the database,
+// the configurator and Amy all said "Express Plus"; a customer met both.
+is('the page does not still call it Next Day', /&gt;Next Day&lt;|>Next Day</.test(PAGE), false);
 is('it gives both minimums',           /minimums of £20 and £40/.test(NOTE), true);
 is('it promises the exact cost before paying',
    /exact delivery cost is shown before you pay/.test(NOTE), true);
@@ -68,7 +71,7 @@ for (var v = 0; v <= 4000; v += 5){
   cheapestNextDay = Math.min(cheapestNextDay, deliveryPriceFor(NEXTDAY, v));
 }
 is('nothing is ever cheaper than the Express from-price', cheapestExpress, RULE.express.min);
-is('nothing is ever cheaper than the Next Day from-price', cheapestNextDay, RULE.nextDay.min);
+is('nothing is ever cheaper than the Express Plus from-price', cheapestNextDay, RULE.nextDay.min);
 is('the from-price is reachable, not theoretical', deliveryPriceFor(EXPRESS, 50), RULE.express.min);
 is('and above it the percentage takes over', deliveryPriceFor(EXPRESS, 236), 48);
 

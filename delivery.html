@@ -814,18 +814,26 @@ was fetched and injected via innerHTML — that was the bug behind the
           <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">2 working days<br>from order</div>
         </div>
         <div style="padding:24px;background:var(--cream);border-radius:14px;text-align:center;">
-          <div class="serif" style="font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:8px;">Next Day</div>
+          <div class="serif" style="font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:8px;">Express Plus</div>
           <div style="font-size:var(--text-sm);color:var(--gold);font-weight:500;margin-bottom:8px;">From £40</div>
           <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">Order before 1pm<br>for next day delivery</div>
         </div>
       </div>
-      <!-- Express and Next Day are a percentage of the order, not a flat fee, so a
+      <!-- The service is called Express Plus here, in delivery_options and in the
+           order configurator. It read "Next Day" on this page alone until
+           5 October, so a customer met two names for one service — found when
+           Amy started reading the service names out of the database.
+
+           The line below still says "next day delivery", deliberately: that
+           describes when it ARRIVES, which is what the name does not tell you.
+
+           Express and Express Plus are a percentage of the order, not a flat fee, so a
            single figure here cannot be true. GBP 12.00 and GBP 18.00 were, and on a
            GBP 236 order the real charges are GBP 48 and GBP 95 — a published price a
            customer could have held us to. A "from" price keeps a pound figure in the
            slot where every other card has one, and the rule is stated in full below
            rather than hidden. Confirmed against PrintedEasy 3 October 2026. -->
-      <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">Express is 20% of your order value and Next Day is 40%, with minimums of £20 and £40. Your exact delivery cost is shown before you pay.</div>
+      <div style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">Express is 20% of your order value and Express Plus is 40%, with minimums of £20 and £40. Your exact delivery cost is shown before you pay.</div>
     </div>
 
     <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px;margin-bottom:20px;">
