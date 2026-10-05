@@ -1926,16 +1926,27 @@ it, are what is left.
 59. **DMARC is `p=none`** and its reports go to a personal Gmail address. Worth
     moving to `p=quarantine` once sending volume justifies it. SPF and DKIM are
     both correct and verified — checked 3 October.
-60. **The website does not carry the company disclosure.** A UK limited company
-    must display its registered name, company number, place of registration and
-    registered office address **on its website** — the Companies (Trading
-    Disclosures) Regulations, not a nicety. Since 5 October the Terms, Privacy
-    Policy and Returns all carry it, but the footer, which is the conventional
-    home for it, still reads only "(c) 2026 Foreverprint. All rights reserved."
-    Fixing it means 55 inline `footer-bottom` blocks plus `footer.html`, because
-    every page hardcodes a footer and then injects `footer.html` over it. Left
-    alone on 5 October because the instruction was scoped to the trading
-    conditions, and a 56-file edit is not that. One line of text, repeated.
+60. ~~**The website does not carry the company disclosure.**~~ **DONE 5
+    October**, same day it was raised. The footer on all **57** pages now reads
+    "Foreverprint is a trading name of Natch Limited, registered in England and
+    Wales, company number 09493377. Registered office: Regina House, 124
+    Finchley Road, London NW3 5JS." — the four things the Companies (Trading
+    Disclosures) Regulations require, on the website rather than only in the
+    terms. It sits on its own line below the copyright row rather than inside
+    it, because that row is a flex pair and a third item would have been
+    squeezed against "Made with love in the UK".
+
+    57, not the 55 first counted: a `grep --include` miss. All 57 blocks were
+    byte-identical before the change, which is what made a mechanical edit safe.
+    Contrast measured at **5.73:1** against the footer background, passing AA
+    for small text, by inheriting the footer's own colour rather than inventing
+    a dimmer grey. Four lines on a phone, no overflow.
+
+    `tools/test-footer-disclosure.py`, 13 checks. It walks the tree rather than
+    reading one file, because the footer is hardcoded into every page AND
+    injected from `footer.html` over the top — so a page added later would
+    simply not have it. Verified by breaking a real page and confirming the test
+    names it.
 
 ### I. Needs a decision, not a developer
 
@@ -1972,12 +1983,10 @@ because nobody had read the Terms since they were drafted:**
   a guard that fails if any bracketed template token ever returns to these
   three pages.
 
-  **Still open, and deliberately not done:** a UK limited company must disclose
-  its registered name, number, place of registration and registered office **on
-  its website**, not only in its terms — the usual home for that is the footer.
-  Ours shows "(c) 2026 Foreverprint. All rights reserved." and nothing else.
-  That is a change to 55 inline footers plus `footer.html`, well outside
-  "trading conditions", so it is flagged rather than made. See §15 item 55.
+- **The footer carried no company disclosure either**, on all 57 pages. Raised
+  as item 60 and done the same day at Nicholas's direction: the registered name,
+  number, place of registration and registered office now sit below the
+  copyright line sitewide. See item 60 for the detail.
 
 **3 October, afternoon — found and fixed the same day, none of it was on this
 list because none of it was known:**

@@ -53,8 +53,13 @@ PAGES.forEach(function(f){
 });
 
 print('\nTHE TERMS SAY FOREVERPRINT IS A TRADING NAME, NOT A SEPARATE COMPANY');
-is('the trading relationship is stated',
-   /Foreverprint is a trading name of Natch Limited/.test(SRC['terms.html']), true);
+// Pinned to the SECTION 1 wording. The looser phrase "Foreverprint is a
+// trading name of Natch Limited" now also appears in the sitewide footer
+// disclosure, so matching that alone would pass even if section 1 went back to
+// being a template.
+is('the trading relationship is stated in section 1',
+   /Foreverprint is a trading name of Natch Limited, a company registered in England and Wales under company number/
+     .test(SRC['terms.html']), true);
 is('"we", "us" and "our" are defined as the company',
    /refer to Natch Limited trading as Foreverprint/.test(SRC['terms.html']), true);
 
@@ -71,8 +76,11 @@ is('returns still ask customers to make contact first',
    /before returning anything/.test(SRC['returns.html']), true);
 
 print('\nMUTATION: THE OLD PAGES MUST FAIL THIS TEST');
-var OLDTERMS = SRC['terms.html'].replace(
-  'Foreverprint is a trading name of Natch Limited', '[LEGAL ENTITY NAME] blah');
+// Global again: the footer disclosure added on 5 October put a second copy of
+// this sentence on the page, so a first-match replace left it behind and the
+// mutation proved nothing. The same trap as the address, eight lines down.
+var OLDTERMS = SRC['terms.html'].replace(/Foreverprint is a trading name of Natch Limited/g,
+                                         '[LEGAL ENTITY NAME] blah');
 is('a page with the template back is caught',
    /Foreverprint is a trading name of Natch Limited/.test(OLDTERMS), false);
 // Global, not first-match: the address appears twice in the Terms — once in
