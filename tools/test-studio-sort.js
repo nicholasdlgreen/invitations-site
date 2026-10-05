@@ -50,8 +50,8 @@ is('aria-pressed is rewritten from the mode on every click',
 is('the bar still hides itself with only one product', /list\.length > 1/.test(SRC), true);
 
 print('\nWHY, RECORDED WHERE THE NEXT PERSON WILL LOOK');
-is('the comment says Featured is not curated', /not currently a curated order/.test(SRC), true);
-is('and that the flagships are pushed to the end', /pushed to the END/.test(SRC), true);
+is('the comment records why A-Z leads', /came last of 22/.test(SRC), true);
+is('and that Featured is now ranked', /All 22 now carry a distinct rank/.test(SRC), true);
 
 print('\nMUTATION: THE OLD DEFAULT MUST FAIL');
 var OLD = SRC.replace("var sortMode = 'az';", "var sortMode = 'featured';");

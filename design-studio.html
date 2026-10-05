@@ -588,18 +588,18 @@ was fetched and injected via innerHTML — that was the bug behind the
       <p>Pick what you're making — our studio designs it with you.</p>
     </div>
 
-    <!-- A-Z leads, and is the order the page opens in; Featured is kept and is
-         one tap away.
-         Featured is not currently a curated order. The fetch above sorts by
-         display_order with no tiebreak, and 20 of the 22 products share
-         display_order 0, so those 20 come back in whatever order the database
-         yields — arbitrary, and not guaranteed stable between requests. Worse,
-         the sort is ascending and the only two products with a deliberate
-         order are Wedding Invitations (1) and Save the Date (2), so the two
-         that were meant to lead are pushed to the END of the list. Opening on
-         A-Z gives a visitor an order that is at least predictable. Fixing
-         Featured means setting real display_order values in admin, which is a
-         decision about the range rather than a change to this page. -->
+    <!-- A-Z leads, and is the order the page opens in; Featured is one tap away.
+         Featured was not a curated order until 5 October 2026: 20 of the 22
+         products shared display_order 0, which the fetch above sorts by with no
+         tiebreak, so those 20 arrived in whatever order the database yielded.
+         And because the sort is ascending, the only two products that HAD been
+         ranked — Wedding Invitations at 1 and Save the Date at 2 — sorted after
+         all the zeros and came last of 22. The intent was right; the default
+         beat it.
+         All 22 now carry a distinct rank: the wedding range first, in the order
+         a couple buys it, then celebrations and announcements. So Featured now
+         means something, and is also stable between requests. Set in Supabase,
+         not here — admin is where it changes. -->
     <div class="studio-sort" id="studio-sort" hidden>
       <button type="button" id="sort-az" aria-pressed="true">A&ndash;Z</button>
       <button type="button" id="sort-featured" aria-pressed="false">Featured</button>
