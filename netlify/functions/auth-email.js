@@ -74,7 +74,7 @@ const KINDS = {
   signup: {
     subject: 'Confirm your email address',
     heading: 'Confirm your email address',
-    body: 'Thank you for creating a Foreverprint account. Confirm your address and you are ready to go.',
+    body: 'Thank you for creating a foreverprint account. Confirm your address and you are ready to go.',
     button: 'Confirm my email'
   },
   magiclink: {
@@ -96,7 +96,7 @@ const KINDS = {
     button: 'Confirm this address'
   },
   invite: {
-    subject: 'You have been invited to Foreverprint',
+    subject: 'You have been invited to foreverprint',
     heading: 'You have been invited',
     body: 'Accept the invitation below to set up your account.',
     button: 'Accept the invitation'
@@ -140,7 +140,7 @@ function buildAuthEmailHtml(kind, actionUrl, code) {
         </p>
       </div>
       <div style="background:#FAF7F2;padding:16px 28px;border-top:1px solid #EFE9E1;">
-        <div style="font-size:11px;color:#9A8778;">Foreverprint &middot; Printed with care in the UK</div>
+        <div style="font-size:11px;color:#9A8778;">foreverprint &middot; Printed with care in the UK</div>
       </div>
     </div>
   </div>`;
@@ -173,7 +173,7 @@ async function sendEmail({ to, subject, html }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_API_KEY}` },
-    body: JSON.stringify({ from: `Foreverprint <${FROM_EMAIL}>`, to, subject, html })
+    body: JSON.stringify({ from: `foreverprint <${FROM_EMAIL}>`, to, subject, html })
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
   return res.json();

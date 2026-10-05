@@ -61,7 +61,7 @@ async function sendEmail({ to, subject, html }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: `Foreverprint <${FROM_EMAIL}>`, to, subject, html })
+    body: JSON.stringify({ from: `foreverprint <${FROM_EMAIL}>`, to, subject, html })
   });
   if (!res.ok) throw new Error('Resend ' + res.status + ': ' + (await res.text()).slice(0, 200));
   return res.json();
@@ -119,7 +119,7 @@ function buildReviewHtml(o, reviewUrl) {
       </div>
 
       <div style="background:#FAF7F2;padding:16px 28px;text-align:center;font-size:11px;color:#8C7B6E;">
-        Foreverprint &middot; Printed with care in the UK
+        foreverprint &middot; Printed with care in the UK
       </div>
     </div>
   </div>`;
@@ -175,7 +175,7 @@ exports.handler = async (event) => {
 
     await sendEmail({
       to: order.customer_email,
-      subject: `How did we do? Your Foreverprint order ${order.order_number}`,
+      subject: `How did we do? Your foreverprint order ${order.order_number}`,
       html: buildReviewHtml(order, REVIEW_URL)
     });
 

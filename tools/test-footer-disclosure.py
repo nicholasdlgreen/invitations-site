@@ -5,7 +5,7 @@ Run:  python3 tools/test-footer-disclosure.py
 The Companies (Trading Disclosures) Regulations 2008 require a UK limited
 company to show its registered name, company number, place of registration and
 registered office address ON ITS WEBSITE — not only in its terms. Until
-5 October 2026 the footer read "(c) 2026 Foreverprint. All rights reserved."
+5 October 2026 the footer read "(c) 2026 foreverprint. All rights reserved."
 and nothing else, on all 57 pages.
 
 This is a file-sweeping check rather than a jsc one because it has to walk the
@@ -17,7 +17,7 @@ later will simply not have it unless something fails.
 import io, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DISCLOSURE = ('Foreverprint is a trading name of Natch Limited, registered in '
+DISCLOSURE = ('foreverprint is a trading name of Natch Limited, registered in '
               'England and Wales, company number 09493377. Registered office: '
               'Regina House, 124 Finchley Road, London NW3 5JS.')
 NUMBER = '09493377'
@@ -33,7 +33,11 @@ def is_(label, got, want=True):
 
 pages = []
 for dirpath, dirnames, filenames in os.walk(ROOT):
-    dirnames[:] = [d for d in dirnames if d not in ('.git', 'node_modules')]
+    # scratch/ is gitignored and never deployed — it 404s on the live site —
+    # so its pages are working notes, not pages a customer can reach. Scanning
+    # them made this fail on the 5 October brand lowercasing, which only
+    # touched files that ship.
+    dirnames[:] = [d for d in dirnames if d not in ('.git', 'node_modules', 'scratch')]
     for fn in sorted(filenames):
         if fn.endswith('.html'):
             p = os.path.join(dirpath, fn)
@@ -67,8 +71,8 @@ is_('no page nests it inside the copyright row', inside, [])
 
 print('\nNOTHING ELSE CLAIMS TO BE THE COMPANY')
 # A stray old entity name would contradict the disclosure.
-stray = [n for n, t in footered if re.search(r'Foreverprint (Ltd|Limited)\b', t)]
-is_('no page calls Foreverprint itself a limited company', stray, [])
+stray = [n for n, t in footered if re.search(r'foreverprint (Ltd|Limited)\b', t)]
+is_('no page calls foreverprint itself a limited company', stray, [])
 
 print('\nMUTATION: A PAGE WITHOUT IT MUST FAIL')
 fake = [('fake.html', '<div class="footer-bottom"><span>(c) 2026</span></div>')]

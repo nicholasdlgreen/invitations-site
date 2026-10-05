@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/img/brand/favicon-180.png"/>
 <!--/FAVICON-->
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Admin — Foreverprint</title>
+<title>Admin — foreverprint</title>
 <meta name="robots" content="noindex, nofollow"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -1269,7 +1269,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 <div class="modal-overlay" id="docModal">
   <div class="pz-modal">
     <div class="modal-title">Add Document</div>
-    <div class="field"><label>Title</label><input type="text" id="doc_title" placeholder="e.g. How Foreverprint pricing works"></div>
+    <div class="field"><label>Title</label><input type="text" id="doc_title" placeholder="e.g. How foreverprint pricing works"></div>
     <div class="field"><label>What it is for</label><input type="text" id="doc_desc" placeholder="One line — enough to know whether this is the one you want."></div>
     <div class="field"><label>Category</label><input type="text" id="doc_category" placeholder="e.g. Pricing, Brand, Suppliers, Legal" list="doc_categories">
       <datalist id="doc_categories"></datalist></div>
@@ -3364,7 +3364,7 @@ function exportPLCsv(){
   if (!mKey) return;
   const f = plFigures(mKey);
   const catName = id => (expenseCats.find(c => c.id === id) || {}).name || id;
-  const rows = [['Foreverprint — ' + monthLabel(mKey)], [],
+  const rows = [['foreverprint — ' + monthLabel(mKey)], [],
     ['Orders', f.orders], ['Revenue', f.revenueGross.toFixed(2)],
     ['Revenue excl VAT', f.revenueNet.toFixed(2)], [],
     ['COST OF SALES','']];
@@ -3468,7 +3468,7 @@ function downloadJobTicket() {
   const fontLink = document.querySelector('link[href*="fonts.googleapis.com"]');
 
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
-    '<title>Job ticket ' + ref.trim() + ' — Foreverprint</title>' +
+    '<title>Job ticket ' + ref.trim() + ' — foreverprint</title>' +
     (fontLink ? fontLink.outerHTML : '') +
     '<style>' + css + '\n' +
     'body{background:#fff;margin:0;padding:18px;}' +

@@ -9,16 +9,16 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/img/brand/favicon-180.png"/>
 <!--/FAVICON-->
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Upload &amp; Print Your Own Invitations | Foreverprint</title>
+<title>Upload &amp; Print Your Own Invitations | foreverprint</title>
 <meta name="description" content="Upload your own invitation design and we&#x27;ll print it on premium UK papers. PDF, AI, InDesign, PNG or JPG, all checked before printing."/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://foreverprint.com/upload-and-print.html"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://foreverprint.com/upload-and-print.html"/>
-<meta property="og:title" content="Upload &amp; Print Your Own Invitations | Foreverprint"/>
+<meta property="og:title" content="Upload &amp; Print Your Own Invitations | foreverprint"/>
 <meta property="og:description" content="Upload your own invitation design and we&#x27;ll print it on premium UK papers. PDF, AI, InDesign, PNG or JPG, all checked before printing."/>
 <meta property="og:image" content="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80"/>
-<meta property="og:site_name" content="Foreverprint"/>
+<meta property="og:site_name" content="foreverprint"/>
 <style>
 /* ── UPLOAD FLOW ── */
 .upload-wrap{max-width:760px;margin:0 auto;padding:28px 32px 100px;}
@@ -1275,7 +1275,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Foreverprint. All rights reserved.</span>
+      <span>© 2026 foreverprint. All rights reserved.</span>
       <span>Made with love in the UK 🇬🇧</span>
     </div>
     <!-- Companies (Trading Disclosures) Regulations 2008: a UK limited company
@@ -1283,7 +1283,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
          registered office on its website, not only in its terms. Added
          5 October 2026. Colour is inherited from <footer> so it stays legible
          rather than becoming grey-on-grey fine print. -->
-    <div class="footer-legal">Foreverprint is a trading name of Natch Limited, registered in England and Wales, company number 09493377. Registered office: Regina House, 124 Finchley Road, London NW3 5JS.</div>
+    <div class="footer-legal">foreverprint is a trading name of Natch Limited, registered in England and Wales, company number 09493377. Registered office: Regina House, 124 Finchley Road, London NW3 5JS.</div>
   </div>
 </footer>
 
@@ -1292,7 +1292,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   <div id="hw-head">
     <div class="hw-head-left">
       <div class="hw-avatar">A</div>
-      <div><div class="hw-head-name">Amy</div><div class="hw-head-status">● Foreverprint's assistant, here to help</div></div>
+      <div><div class="hw-head-name">Amy</div><div class="hw-head-status">● foreverprint's assistant, here to help</div></div>
     </div>
     <button class="hw-close-btn" onclick="hwToggle()">✕</button>
   </div>
@@ -1332,7 +1332,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   <div id="hw-head">
     <div class="hw-head-left">
       <div class="hw-avatar">A</div>
-      <div><div class="hw-head-name">Amy</div><div class="hw-head-status">● Foreverprint's assistant, here to help</div></div>
+      <div><div class="hw-head-name">Amy</div><div class="hw-head-status">● foreverprint's assistant, here to help</div></div>
     </div>
     <button class="hw-close-btn" onclick="hwToggle()">✕</button>
   </div>
@@ -1406,14 +1406,14 @@ const PRODUCT = (function() {
 // This runs early so search engine crawlers see product-specific content.
 (function updatePageMeta() {
   const productName = PRODUCT.name;
-  document.title = `Upload & Print ${productName} | Your Design, Beautifully Printed | Foreverprint`;
+  document.title = `Upload & Print ${productName} | Your Design, Beautifully Printed | foreverprint`;
 
   function setMeta(selector, content) {
     const el = document.querySelector(selector);
     if (el) el.setAttribute('content', content);
   }
   setMeta('meta[name="description"]',     `Upload your ${productName.toLowerCase()} design and we'll print it on premium UK paper stocks. PDF, AI, InDesign, PNG or JPG accepted. Quality checked before printing, free tracked delivery, no minimum quantities.`);
-  setMeta('meta[property="og:title"]',    `Upload & Print ${productName} | Foreverprint`);
+  setMeta('meta[property="og:title"]',    `Upload & Print ${productName} | foreverprint`);
   setMeta('meta[property="og:description"]', `Upload your ${productName.toLowerCase()} design and we'll print it on premium UK paper stocks. Quality checked before we print.`);
   setMeta('meta[property="og:url"]',      `https://foreverprint.com/${PRODUCT.slug}`);
 
@@ -1652,7 +1652,7 @@ async function loadSiteData() {
           if (typeof renderSizeCards === 'function') renderSizeCards();
         }
         // Override page title and meta tags if admin has set them
-        const titleText = pt.meta_title || `Upload & Print ${PRODUCT.name} | Foreverprint`;
+        const titleText = pt.meta_title || `Upload & Print ${PRODUCT.name} | foreverprint`;
         document.title = titleText;
         // The page's only h1 is visually hidden, so nobody sighted ever caught
         // that it said "wedding invitations" on all 21 products. Screen readers
@@ -1662,7 +1662,7 @@ async function loadSiteData() {
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc && pt.meta_description) metaDesc.setAttribute('content', pt.meta_description);
         const ogTitle = document.querySelector('meta[property="og:title"]');
-        if (ogTitle) ogTitle.setAttribute('content', pt.meta_title || `Upload & Print ${PRODUCT.name} | Foreverprint`);
+        if (ogTitle) ogTitle.setAttribute('content', pt.meta_title || `Upload & Print ${PRODUCT.name} | foreverprint`);
         const ogDesc = document.querySelector('meta[property="og:description"]');
         if (ogDesc && pt.meta_description) ogDesc.setAttribute('content', pt.meta_description);
         // Refresh visible heading to use curated name

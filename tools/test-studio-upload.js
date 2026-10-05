@@ -52,7 +52,7 @@ is('and that place is the fallback',
    && HANDLER.slice(fbStart, fbEnd).indexOf('dataUrlToBlob(printImage)') > -1, true);
 
 print('\nTHE PRINT FILE KEEPS ITS QUALITY');
-// Foreverprint is a printing company; the press file is never softened to save
+// foreverprint is a printing company; the press file is never softened to save
 // seconds. Counted rather than matched: the first version of this check sliced
 // from flattenToPrintFile to flattenInsideToPrintFile, but the INSIDE one is
 // defined first, so the slice ran backwards, tested an empty string and could

@@ -9,8 +9,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/img/brand/favicon-180.png"/>
 <!--/FAVICON-->
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Sign in — forever·print</title>
-<meta name="description" content="Sign in to your forever·print account to view your orders and saved designs.">
+<title>Sign in | foreverprint</title>
+<meta name="description" content="Sign in to your foreverprint account to view your orders and saved designs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -511,7 +511,7 @@ was fetched and injected via innerHTML — that was the bug behind the
 
 <main>
   <div class="auth-card">
-    <div class="auth-eyebrow">forever·print</div>
+    <div class="auth-eyebrow">foreverprint</div>
     <h1 class="auth-title">Welcome back</h1>
     <p class="auth-sub">Sign in to view your orders and saved designs.</p>
 
@@ -540,7 +540,7 @@ was fetched and injected via innerHTML — that was the bug behind the
     <div class="auth-divider">or</div>
 
     <div class="auth-foot">
-      New to forever·print? <a href="/register.html">Create an account</a>
+      New to foreverprint? <a href="/register.html">Create an account</a>
     </div>
     <div class="auth-foot" style="margin-top:16px;font-size:var(--text-xs);color:var(--pale);">
       You don't need an account to place an order — <a href="/upload-and-print.html" style="color:var(--pale);text-decoration:underline;">order as a guest</a>.
@@ -681,7 +681,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Foreverprint. All rights reserved.</span>
+      <span>© 2026 foreverprint. All rights reserved.</span>
       <span>Made with love in the UK 🇬🇧</span>
     </div>
     <!-- Companies (Trading Disclosures) Regulations 2008: a UK limited company
@@ -689,7 +689,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
          registered office on its website, not only in its terms. Added
          5 October 2026. Colour is inherited from <footer> so it stays legible
          rather than becoming grey-on-grey fine print. -->
-    <div class="footer-legal">Foreverprint is a trading name of Natch Limited, registered in England and Wales, company number 09493377. Registered office: Regina House, 124 Finchley Road, London NW3 5JS.</div>
+    <div class="footer-legal">foreverprint is a trading name of Natch Limited, registered in England and Wales, company number 09493377. Registered office: Regina House, 124 Finchley Road, London NW3 5JS.</div>
   </div>
 </footer>
 
@@ -698,7 +698,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   <div id="hw-head">
     <div class="hw-head-left">
       <div class="hw-avatar">A</div>
-      <div><div class="hw-head-name">Amy</div><div class="hw-head-status">● Foreverprint's assistant, here to help</div></div>
+      <div><div class="hw-head-name">Amy</div><div class="hw-head-status">● foreverprint's assistant, here to help</div></div>
     </div>
     <button class="hw-close-btn" onclick="hwToggle()">✕</button>
   </div>
@@ -738,7 +738,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   <div id="hw-head">
     <div class="hw-head-left">
       <div class="hw-avatar">A</div>
-      <div><div class="hw-head-name">Amy</div><div class="hw-head-status">● Foreverprint's assistant, here to help</div></div>
+      <div><div class="hw-head-name">Amy</div><div class="hw-head-status">● foreverprint's assistant, here to help</div></div>
     </div>
     <button class="hw-close-btn" onclick="hwToggle()">✕</button>
   </div>
@@ -865,7 +865,7 @@ form.addEventListener('submit', async (e) => {
     // one thing they created an account for appeared to have vanished.
     const next = params.get('next') || '';
     const backToDesign = /design-studio/.test(next);
-    if (titleEl) titleEl.textContent = 'Welcome to forever·print';
+    if (titleEl) titleEl.textContent = 'Welcome to foreverprint';
     if (subEl) {
       subEl.textContent = backToDesign
         ? 'Your account is verified and your design is saved to it.'

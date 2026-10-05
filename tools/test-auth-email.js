@@ -93,7 +93,7 @@ is('it offers the link as text too, for clients that strip buttons',
 is('it shows the code when there is one', html.indexOf('123456') > -1, true);
 is('and omits that line when there is not',
    buildAuthEmailHtml({heading:'h',body:'b',button:'x'}, signup, null).indexOf('Or enter this code') === -1, true);
-is('it is Foreverprint, not Supabase', html.indexOf('foreverprint') > -1, true);
+is('it is foreverprint, not Supabase', html.indexOf('foreverprint') > -1, true);
 
 print('\nTHE DANGEROUS BITS ARE GUARDED');
 // Existence FIRST. Comparing indexOf positions alone passes when the call is

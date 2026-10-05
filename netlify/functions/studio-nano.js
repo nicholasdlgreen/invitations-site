@@ -1,6 +1,6 @@
 // netlify/functions/studio-nano.js
 //
-// Foreverprint AI Design Studio — image generation via fal.ai (Flux Pro 1.1).
+// foreverprint AI Design Studio — image generation via fal.ai (Flux Pro 1.1).
 // Reliable, fast, print-quality. Uses the synchronous fal.run endpoint.
 //
 // Requires env var: FAL_KEY  (or FAL_API_KEY) — set in Netlify site settings.

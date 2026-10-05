@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a product hero photograph in the Foreverprint house style.
+"""Generate a product hero photograph in the foreverprint house style.
 
 Flux Pro 1.1 Ultra via fal.ai, the same model the Design Studio uses, but
 called directly: netlify/functions/studio-nano.js hardwires "decorative design

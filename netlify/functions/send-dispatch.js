@@ -58,7 +58,7 @@ async function callerIsAdmin(event) {
 const TRUSTPILOT_BCC = process.env.TRUSTPILOT_BCC || '';
 
 async function sendEmail({ to, subject, html }) {
-  const payload = { from: `Foreverprint <${FROM_EMAIL}>`, to, subject, html };
+  const payload = { from: `foreverprint <${FROM_EMAIL}>`, to, subject, html };
   if (TRUSTPILOT_BCC) payload.bcc = TRUSTPILOT_BCC;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -111,7 +111,7 @@ function buildDispatchHtml(o, tracking, carrier) {
       </div>
 
       <div style="background:#FAF7F2;padding:16px 28px;text-align:center;font-size:11px;color:#8C7B6E;">
-        Foreverprint &middot; Printed with care in the UK
+        foreverprint &middot; Printed with care in the UK
       </div>
     </div>
   </div>`;
@@ -156,7 +156,7 @@ exports.handler = async (event) => {
 
     await sendEmail({
       to: order.customer_email,
-      subject: `Your Foreverprint order ${order.order_number} is on its way`,
+      subject: `Your foreverprint order ${order.order_number} is on its way`,
       html: buildDispatchHtml(order, tracking, carrier)
     });
 

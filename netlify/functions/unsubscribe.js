@@ -16,7 +16,7 @@ function page(title, message, tone) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>${title} | Foreverprint</title>
+  <title>${title} | foreverprint</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     body{margin:0;background:#FAF7F2;font-family:'Jost',system-ui,sans-serif;color:#3D2E24;
@@ -30,7 +30,7 @@ function page(title, message, tone) {
     .note{font-size:.82rem;color:#8C7B6E;margin-top:20px;}
   </style></head><body>
     <div class="card">
-      <div class="brand">Foreverprint</div>
+      <div class="brand">foreverprint</div>
       <h1>${title}</h1>
       <p>${message}</p>
       <p class="note">${tone === 'ok'

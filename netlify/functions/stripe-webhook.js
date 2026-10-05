@@ -124,7 +124,7 @@ function buildWelcomeHtml(contact, unsubscribeUrl) {
       <div style="padding:26px 28px 0;">
         <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#B8976A;margin-bottom:10px;">Who we are</div>
         <p style="font-size:14px;line-height:1.8;color:#5C4A3D;margin:0 0 12px;">
-          Foreverprint is a British printer making personalised stationery for the days people keep.
+          foreverprint is a British printer making personalised stationery for the days people keep.
           [ONE OR TWO LINES ON HOW IT STARTED &mdash; the year, the reason, who began it.]
         </p>
         <p style="font-size:14px;line-height:1.8;color:#5C4A3D;margin:0;">
@@ -184,7 +184,7 @@ function buildWelcomeHtml(contact, unsubscribeUrl) {
       </div>
 
       <div style="background:#FAF7F2;padding:18px 28px;text-align:center;font-size:11px;color:#8C7B6E;line-height:1.7;">
-        Foreverprint &middot; Printed with care in the UK<br>
+        foreverprint &middot; Printed with care in the UK<br>
         You are receiving this because you asked us to keep in touch.<br>
         <a href="${unsubscribeUrl}" style="color:#8C7B6E;text-decoration:underline;">Unsubscribe</a>
       </div>
@@ -210,7 +210,7 @@ async function sendWelcomeIfDue(email) {
     try {
       await sendEmail({
         to: contact.email,
-        subject: 'Welcome to Foreverprint',
+        subject: 'Welcome to foreverprint',
         html: buildWelcomeHtml(contact, unsubscribeUrl)
       });
       console.log(`Welcome email sent to ${contact.email}`);
@@ -384,7 +384,7 @@ function buildCustomerConfirmationHtml(o) {
       </div>
 
       <div style="background:#FAF7F2;padding:16px 28px;text-align:center;font-size:11px;color:#8C7B6E;">
-        Foreverprint &middot; Printed with care in the UK
+        foreverprint &middot; Printed with care in the UK
       </div>
     </div>
   </div>`;
@@ -766,7 +766,7 @@ exports.handler = async (event) => {
       if (order.customerEmail && order.customerEmail !== 'Unknown') {
         await sendEmail({
           to:      order.customerEmail,
-          subject: `Your Foreverprint order ${order.orderNumber} is confirmed`,
+          subject: `Your foreverprint order ${order.orderNumber} is confirmed`,
           html:    buildCustomerConfirmationHtml(order),
         });
         console.log(`Confirmation sent to customer for ${order.orderNumber}`);

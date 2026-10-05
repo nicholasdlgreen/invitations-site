@@ -67,7 +67,7 @@ async function sendEmail({ to, subject, html }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_API_KEY}` },
-    body: JSON.stringify({ from: `Foreverprint <${FROM_EMAIL}>`, to, subject, html })
+    body: JSON.stringify({ from: `foreverprint <${FROM_EMAIL}>`, to, subject, html })
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
   return res.json();
@@ -130,7 +130,7 @@ exports.handler = async (event) => {
     try {
       await sendEmail({
         to: contact.email,
-        subject: 'Welcome to Foreverprint',
+        subject: 'Welcome to foreverprint',
         html: buildWelcomeHtml(contact, unsubscribeUrl)
       });
     } catch (sendErr) {

@@ -289,7 +289,7 @@ async function sendEmail(subject, html) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: `Foreverprint <${FROM_EMAIL}>`, to: ALERT_EMAIL, subject, html })
+    body: JSON.stringify({ from: `foreverprint <${FROM_EMAIL}>`, to: ALERT_EMAIL, subject, html })
   });
   if (!res.ok) throw new Error('Resend ' + res.status + ': ' + (await res.text()).slice(0, 200));
 }

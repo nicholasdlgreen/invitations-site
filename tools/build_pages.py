@@ -173,7 +173,7 @@ def link_products(text, products, self_slug):
 def build_page(template, product, pricing, all_products=()):
     slug = product["slug"]
     name = product.get("name") or slug.replace("-", " ").title()
-    title = product.get("meta_title") or f"{name} | Foreverprint"
+    title = product.get("meta_title") or f"{name} | foreverprint"
     desc = product.get("meta_description") or product.get("description") or ""
     desc = re.sub(r"\s+", " ", desc).strip()[:300]
     tagline = product.get("tagline") or ""
@@ -192,7 +192,7 @@ def build_page(template, product, pricing, all_products=()):
 
     # 1. Title
     html = html.replace(
-        "<title>Wedding Stationery | Foreverprint</title>",
+        "<title>Wedding Stationery | foreverprint</title>",
         f"<title>{esc(title)}</title>",
     )
 
@@ -233,7 +233,7 @@ def build_page(template, product, pricing, all_products=()):
         "@type": "Product",
         "name": name,
         "url": url,
-        "brand": {"@type": "Brand", "name": "Foreverprint"},
+        "brand": {"@type": "Brand", "name": "foreverprint"},
     }
     if desc:
         ld["description"] = desc
@@ -380,7 +380,7 @@ def build_guide(template, guide, products):
     pages that actually sell.
     """
     slug = guide["slug"]
-    title = (guide.get("meta_title") or "").strip() or f'{guide["title"]} | Foreverprint'
+    title = (guide.get("meta_title") or "").strip() or f'{guide["title"]} | foreverprint'
     desc = re.sub(r"\s+", " ", (guide.get("meta_description") or "").strip())[:300]
     url = f"{SITE}/guides/{slug}"
     by_slug = {p.get("slug"): p for p in products if p.get("slug")}
@@ -524,7 +524,7 @@ def build_guide(template, guide, products):
     ld = {"@context": "https://schema.org", "@type": "Article",
           "headline": guide["title"], "description": desc,
           "mainEntityOfPage": {"@type": "WebPage", "@id": url},
-          "publisher": {"@type": "Organization", "name": "Foreverprint",
+          "publisher": {"@type": "Organization", "name": "foreverprint",
                         "url": SITE}}
     html = html.replace('<script type="application/ld+json" id="ld-article">{}</script>',
                         '<script type="application/ld+json" id="ld-article">'
@@ -558,7 +558,7 @@ def write_guides_index(guides, slugs):
         )
 
     html = tpl
-    html = html.replace("{{TITLE}}", "Wedding Stationery Guides | Foreverprint")
+    html = html.replace("{{TITLE}}", "Wedding Stationery Guides | foreverprint")
     html = html.replace("{{DESC}}", esc(
         "Practical guides to wedding stationery: when to send save the dates and "
         "invitations, how many you need, what to write and what to order."))

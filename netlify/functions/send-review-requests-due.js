@@ -89,7 +89,7 @@ exports.handler = async () => {
     try {
       await sendEmail({
         to: order.customer_email,
-        subject: `How did we do? Your Foreverprint order ${order.order_number}`,
+        subject: `How did we do? Your foreverprint order ${order.order_number}`,
         html: buildReviewHtml(order, REVIEW_URL)
       });
 

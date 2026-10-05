@@ -1,5 +1,5 @@
 /*!
- * Foreverprint prefetch.js
+ * foreverprint prefetch.js
  * ------------------------------------------------------------
  * Speeds up perceived navigation by prefetching pages before
  * the user clicks. Two strategies running together:

@@ -1,6 +1,6 @@
 // Who we legally are, on the pages where it has to be said.
 //
-// Foreverprint is a trading name of Natch Limited. Until 5 October 2026 the
+// foreverprint is a trading name of Natch Limited. Until 5 October 2026 the
 // Terms carried an unfilled template — "operated by [LEGAL ENTITY NAME], a
 // [SOLE TRADER / LIMITED COMPANY] [registered in England and Wales under
 // company number [COMPANY NUMBER]]" — five bracketed blanks, live, on the page
@@ -53,15 +53,15 @@ PAGES.forEach(function(f){
 });
 
 print('\nTHE TERMS SAY FOREVERPRINT IS A TRADING NAME, NOT A SEPARATE COMPANY');
-// Pinned to the SECTION 1 wording. The looser phrase "Foreverprint is a
+// Pinned to the SECTION 1 wording. The looser phrase "foreverprint is a
 // trading name of Natch Limited" now also appears in the sitewide footer
 // disclosure, so matching that alone would pass even if section 1 went back to
 // being a template.
 is('the trading relationship is stated in section 1',
-   /Foreverprint is a trading name of Natch Limited, a company registered in England and Wales under company number/
+   /foreverprint is a trading name of Natch Limited, a company registered in England and Wales under company number/
      .test(SRC['terms.html']), true);
 is('"we", "us" and "our" are defined as the company',
-   /refer to Natch Limited trading as Foreverprint/.test(SRC['terms.html']), true);
+   /refer to Natch Limited trading as foreverprint/.test(SRC['terms.html']), true);
 
 print('\nTHE DATA CONTROLLER IS A LEGAL PERSON, NOT A BRAND');
 is('the controller is named as the company',
@@ -79,10 +79,10 @@ print('\nMUTATION: THE OLD PAGES MUST FAIL THIS TEST');
 // Global again: the footer disclosure added on 5 October put a second copy of
 // this sentence on the page, so a first-match replace left it behind and the
 // mutation proved nothing. The same trap as the address, eight lines down.
-var OLDTERMS = SRC['terms.html'].replace(/Foreverprint is a trading name of Natch Limited/g,
+var OLDTERMS = SRC['terms.html'].replace(/foreverprint is a trading name of Natch Limited/g,
                                          '[LEGAL ENTITY NAME] blah');
 is('a page with the template back is caught',
-   /Foreverprint is a trading name of Natch Limited/.test(OLDTERMS), false);
+   /foreverprint is a trading name of Natch Limited/.test(OLDTERMS), false);
 // Global, not first-match: the address appears twice in the Terms — once in
 // section 1 and once in the postal-contact sentence — so a single string
 // replace left the second copy correct and the mutation proved nothing.
