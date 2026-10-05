@@ -1919,8 +1919,20 @@ it, are what is left.
     it, there is nothing on our side to check.
 56. **`TRUSTPILOT_BCC` is not set**, so no review invitation is sent at all —
     neither ours (deliberately unscheduled) nor Trustpilot's (needs the BCC).
-57. **`ANTHROPIC_API_KEY` is not in the Netlify environment** — and this is
-    not a loose end, it is **the help assistant being dead**. Reclassified
+57. ~~**`ANTHROPIC_API_KEY` is not in the Netlify environment**~~ — **SET AND
+    VERIFIED 5 October.** Nicholas added the key and deployed; Amy answers.
+    Verified live, not assumed: "how does delivery work?" now returns free
+    standard, Express at 20% with the GBP 20 minimum and next day at 40% with
+    the GBP 40 minimum, in 1.8 seconds. Three more questions confirmed the
+    knowledge rewrite landed — largest size answered as **A0** (it used to say
+    A1), wax seals answered as a plain no with foiling offered instead, and all
+    ten papers named correctly. A deliberately malformed request confirmed the
+    **failure** path logs too, recording the parse error. Measured cost:
+    1,559 input and 110 output tokens, about **0.17p** per question, below the
+    1p estimate. Test rows deleted afterwards so the first real conversation is
+    the first row. What follows is the record of what was wrong.
+
+    It was not a loose end, it was **the help assistant being dead**. Reclassified
     5 October after Nicholas reported Amy answering "sorry I could not get
     through" to a plain question. Reproduced against the live site: a POST to
     `/.netlify/functions/help-chat` asking "how does delivery work?" returns
