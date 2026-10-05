@@ -635,13 +635,25 @@ was fetched and injected via innerHTML — that was the bug behind the
 </section>
 
 <!-- OCCASIONS -->
+<!-- Each card goes to its category on the products page, not to the design
+     studio. All four pointed at /design-studio.html until 5 October 2026,
+     which meant four cards describing four different things all did the same
+     thing: someone clicking "Milestone Birthdays" expecting birthday cards
+     landed on a blank design tool asking them to describe a look.
+
+     Milestone Birthdays and Celebrations & Parties share ?cat=celebrations
+     DELIBERATELY. There are three categories in product_types and four cards;
+     Birthday Invitations sits in celebrations alongside Party and Engagement
+     Party Invitations. Nicholas chose to keep the three rather than add a
+     fourth category for one product. ?cat= is the site-wide convention — the
+     mega-menu on every page uses the same three. -->
 <section class="section" style="background:var(--white);">
 <div class="container">
 <span class="tag centered">Every Occasion Worth Announcing</span>
 <h2 class="section-title centered">For Every Announcement Worth Making</h2>
 <div class="divider" style="margin:22px auto;"></div>
 <div class="occasions-grid">
-<a class="occasion-card flagship" href="/design-studio.html">
+<a class="occasion-card flagship" href="/products.html?cat=weddings">
 <img class="occasion-img" src="/occasion-weddings.jpg" alt="Wedding stationery"/>
 <div class="occasion-overlay"></div>
 <div class="occasion-text">
@@ -650,7 +662,7 @@ was fetched and injected via innerHTML — that was the bug behind the
 <div class="occasion-sub">Invitations, save the dates, RSVPs and the whole coordinated suite.</div>
 </div>
 </a>
-<a class="occasion-card" href="/design-studio.html">
+<a class="occasion-card" href="/products.html?cat=announcements">
 <img class="occasion-img" src="/occasion-new-arrivals.jpg" alt="New arrival cards"/>
 <div class="occasion-overlay"></div>
 <div class="occasion-text">
@@ -658,7 +670,7 @@ was fetched and injected via innerHTML — that was the bug behind the
 <div class="occasion-sub">Birth announcements &amp; christening invitations.</div>
 </div>
 </a>
-<a class="occasion-card" href="/design-studio.html">
+<a class="occasion-card" href="/products.html?cat=celebrations">
 <img class="occasion-img" src="/occasion-birthdays.jpg" alt="Birthday invitations"/>
 <div class="occasion-overlay"></div>
 <div class="occasion-text">
@@ -666,7 +678,7 @@ was fetched and injected via innerHTML — that was the bug behind the
 <div class="occasion-sub">From an 18th to an 80th, and every year that matters.</div>
 </div>
 </a>
-<a class="occasion-card" href="/design-studio.html">
+<a class="occasion-card" href="/products.html?cat=celebrations">
 <img class="occasion-img" src="/occasion-celebrations.jpg" alt="Celebration invitations"/>
 <div class="occasion-overlay"></div>
 <div class="occasion-text">
