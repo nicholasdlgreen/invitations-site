@@ -4362,6 +4362,9 @@ function togglePassedChecks(){
 // Has goStep run yet? The very first call is the page setting itself up, and
 // scrolling then would yank the customer away from the top of the page.
 let _steppedOnce = false;
+// Set once the first step has written its history entry, so the next step
+// pushes rather than replaces.
+let _historyStarted = false;
 
 // The bar and the rail are never on screen together: the bar hides itself on
 // step 3, where the rail takes over. They used to be two different maps — the
@@ -4417,7 +4420,10 @@ function drawPageBar(n){
   return true;
 }
 
-function goStep(n){
+// fromHistory is set only when the browser's Back or Forward button brought
+// us here. Every other caller — fifteen of them — passes nothing and is
+// unchanged.
+function goStep(n, fromHistory){
   const _changing = _steppedOnce && n !== currentStep;
   _steppedOnce = true;
   [1,2,3,4,5].forEach(i=>{
@@ -4466,6 +4472,30 @@ function goStep(n){
         catch(e){ el.scrollIntoView(); }
       }
     }
+  }
+  // ── THE BACK BUTTON ────────────────────────────────────────────────
+  // The whole order happens on one page, and until 5 October 2026 moving
+  // between steps recorded nothing: no history entry, no change of URL.
+  // Measured — walking four steps created ZERO entries. So Back did not go
+  // back a step, it left the order entirely and lost the lot. From step 4 it
+  // landed on the product page.
+  //
+  // One entry per step fixes that, and two things fall out of it for free:
+  // a refresh keeps your place, and a step can be linked or shared.
+  //
+  // replaceState for the first step, pushState after. Pushing on the first
+  // would leave a dead entry pointing at the step we just left, so the first
+  // Back would appear to do nothing.
+  if (!fromHistory) {
+    try {
+      const url = location.pathname + '?' + (function () {
+        const q = new URLSearchParams(location.search);
+        q.set('step', n);
+        return q.toString();
+      })();
+      if (_steppedOnce && _historyStarted) history.pushState({ fpStep: n }, '', url);
+      else { history.replaceState({ fpStep: n }, '', url); _historyStarted = true; }
+    } catch (e) { /* a history failure must never block the step itself */ }
   }
   if(n===3)initStep3();
   if(n===4) renderBasketStep();
@@ -8670,6 +8700,54 @@ function googleCustomerReviewsOptIn(order){
   if (params.get('source')) keep.set('source', params.get('source'));
   const newUrl = window.location.pathname + (keep.toString() ? '?' + keep.toString() : '');
   history.replaceState(null, '', newUrl);
+})();
+
+// ── BACK AND FORWARD BETWEEN THE STEPS ────────────────────
+// goStep() writes an entry per step; this is what reads them back. Passing
+// fromHistory stops it pushing a fresh entry for a move the browser has
+// already recorded, which would otherwise make Forward unreachable and trap
+// someone between two steps.
+window.addEventListener('popstate', function (e) {
+  const n = e.state && e.state.fpStep;
+  if (!n || n === currentStep) return;
+  goStep(n, true);
+});
+
+// A step in the address bar is honoured on load, so a refresh keeps your place
+// and a step can be linked. Guarded, because the steps are not independent:
+// the basket lives in this page, so arriving straight at checkout with nothing
+// in it would show an empty form and a total of zero.
+(function restoreStepFromUrl(){
+  const want = parseInt(new URLSearchParams(location.search).get('step'), 10);
+  if (!(want >= 1 && want <= 5)) {
+    // No step in the address bar, so this is an ordinary arrival at step 1.
+    // Seed its entry now. Without this the FIRST goStep() would replace the
+    // page's only entry instead of pushing, step 1 would never be in the
+    // history, and Back from step 2 would leave the order rather than return
+    // to Size — which is most of the bug this is meant to fix.
+    try {
+      const q = new URLSearchParams(location.search);
+      q.set('step', 1);
+      history.replaceState({ fpStep: 1 }, '', location.pathname + '?' + q.toString());
+      _historyStarted = true;
+    } catch (e) {}
+    return;
+  }
+  setTimeout(function () {
+    let n = want;
+    // Basket and checkout need something to show. Anything earlier is safe:
+    // the steps before the basket are where you build the thing.
+    if (n >= 4 && (!Array.isArray(cart) || !cart.length)) n = 1;
+    // Step 3 reads a chosen size, so it cannot be entered cold either.
+    if (n === 3 && !selectedSize) n = 1;
+    if (n !== currentStep) goStep(n, true);
+    _historyStarted = true;
+    // The entry has to describe where we ACTUALLY are, or Back from a
+    // redirected step would return to the step we refused to show.
+    try { history.replaceState({ fpStep: n }, '',
+      location.pathname + '?' + (function(){ const q = new URLSearchParams(location.search);
+        q.set('step', n); return q.toString(); })()); } catch (e) {}
+  }, 200);
 })();
 
 // ── LOAD HEADER/FOOTER ────────────────────────────────────
