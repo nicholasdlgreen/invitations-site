@@ -455,25 +455,18 @@
   function open(id, on) {
     var e = el(id); if (e) e.className = 'stage ' + (on ? 'open' : 'locked');
   }
+  // Was renumber(): it wrote a running number into each step's heading,
+  // continuing from the host page's own steps so the paper section was headed
+  // 3 rather than 1. Those numbers were removed on 5 October 2026 — the rails
+  // above had already lost theirs when the wizard went to words-only, and
+  // these were missed, so the headings carried a number the line above them
+  // did not. The journey is sequential and you are moved along it, so nothing
+  // had to be counted.
+  //
+  // The function stays because it is the hinge the whole step turns on:
+  // fifteen call sites reach drawRail() through it, and that is what repaints
+  // the top line as you move. Renaming it would touch all fifteen for no gain.
   function renumber() {
-    // Start after the host's own steps, so a page that owns size and artwork
-    // numbers its first stage 3 rather than 1 and the journey reads as one.
-    var n = ((A.leadingSteps && A.leadingSteps()) || []).length;
-    ['s1', 'stocks', 's2', 's3', 's4'].forEach(function (id) {
-      var sec = el(id); if (!sec) return;
-      // A step hidden because it had nothing to decide must not take a number
-      // with it, or the first thing on screen is headed 2.
-      if (sec.style.display === 'none') return;
-      var b = sec.querySelector('.num b'); if (!b) return;
-      // Off the top line means off the numbering too, or the heading beside
-      // the range would claim a number the line above does not have.
-      if (offRail(id)) { b.textContent = ''; return; }
-      // A locked step used to be left alone, which meant it kept whatever
-      // number step3.html was written with until it opened. Beside a top line
-      // that had already moved on, it read as a mistake — "2 Your paper" under
-      // a line calling paper step 3. It is numbered whether it is open or not.
-      n += 1; b.textContent = n;
-    });
     drawRail();
   }
   // The whole journey from the first moment. It does not grow as you go — the

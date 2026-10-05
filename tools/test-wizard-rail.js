@@ -190,12 +190,14 @@ is(/function stockList/.test(SRC3), false,
 is(/function drawFeels/.test(SRC3), true, 'and the range pods are still drawn');
 is(/var mine = papersIn\(S\.feel\);/.test(SRC3), true,
    'the paper step still shows the papers in the range that was chosen');
-is(/if \(offRail\(id\)\) \{ b\.textContent = ''; return; \}/.test(SRC3), true,
-   'a section off the line carries no number, so its heading cannot claim one '
-   + 'the line above does not have');
-is(/\/\/ number step3\.html was written with until it opened/.test(SRC3)
-   || /kept whatever/.test(SRC3), true,
-   'and a locked section is numbered too, rather than keeping a stale one');
+// Two assertions stood here and were removed on 5 October 2026, not repaired.
+// They pinned how renumber() wrote numbers into the step headings — blanking
+// the figure on a section off the top line, and numbering a locked section
+// rather than letting it keep a stale one. Both described careful handling of
+// a number that no longer exists: the headings lost their figures entirely,
+// so there is nothing left to get right. The replacement assertions are under
+// "AND NO NUMBERS ON THE STEP HEADINGS EITHER" below, and they check the
+// numbers are gone rather than correctly placed.
 is(/for \(var b = from; b < all\.length; b\+\+\) \{/.test(SRC3), true,
    'standing on a section that is off the line lights the step it leads into, '
    + 'not the first step of all');
@@ -256,6 +258,41 @@ is(/html\.wizard-new #s3wrap \.rl b\{display:none;\}/.test(HTML), true,
 is(/\.step-label\.active\{color:var\(--text\);box-shadow:inset 0 -1px 0 0 var\(--gold\);\}/.test(HTML),
    true, 'the word you are on is picked out by a rule as well as by colour \u2014 '
    + 'a warm grey and a warm brown are too close to carry it alone');
+
+print('\nAND NO NUMBERS ON THE STEP HEADINGS EITHER');
+// The half this test missed. When the rails went to words-only, .rl b was
+// hidden and .num b was not — so the top line said PAPER while the heading
+// under it said "3 Your paper". renumber() counted on from the host page's
+// own steps, which is why Nicholas saw 1,2 on the first screen and 3,4,5,6 on
+// the second. Found 5 October 2026, after a long hunt in the wrong element.
+var S3HTML = readFile('step3/step3.html');
+var S3CSS  = readFile('step3/step3.css');
+var S3JS   = readFile('step3/step3.js');
+var ARTE   = readFile('docs/ORDER-PAGE.html');
+
+is(/<div class="num"><b>/.test(S3HTML), false,
+   'no step heading carries a number');
+is((S3HTML.match(/<div class="num">/g) || []).length, 5,
+   'all five headings are still there, just without the figure');
+is(/\.num b\{/.test(S3CSS), false,
+   'and the style that drew the figure is gone, not left orphaned');
+is(/<div class="num"><b>/.test(ARTE), false,
+   'the signed-off artefact matches the site \u2014 Nicholas asked for both');
+is((ARTE.match(/<div class="num">/g) || []).length, 7,
+   'with all seven of its headings intact');
+
+// renumber() must keep working: it is how fifteen call sites reach drawRail(),
+// which repaints the top line as you move through the step.
+is(/function renumber\(\) \{\s*drawRail\(\);\s*\}/.test(S3JS), true,
+   'renumber() still calls drawRail(), which is the thing that actually matters');
+is(/b\.textContent = n;/.test(S3JS), false,
+   'and no longer writes a number into anything');
+
+print('\nMUTATION: PUTTING A NUMBER BACK MUST FAIL');
+is(/<div class="num"><b>/.test('<div class="num"><b>3</b><h2>Your paper</h2></div>'), true,
+   'a renumbered heading is caught');
+is(/\.num b\{/.test('#s3wrap .num b{font-size:14px;}'), true,
+   'and so is the style coming back');
 is(/#s3wrap \.rl\.now\{box-shadow:inset 0 -1px 0 0 var\(--tier,var\(--gold\)\);\}/.test(HTML),
    true, 'and the rail says it the same way');
 is(/html\.wizard-new \.step-label\{white-space:nowrap;letter-spacing:\.14em;color:var\(--pale\);padding-bottom:5px;\}/.test(HTML),
