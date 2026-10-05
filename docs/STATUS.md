@@ -1,14 +1,23 @@
-# Where we are — 3 October 2026
+# Where we are — 5 October 2026
 
 *Every figure below was checked against the live site, the live database or a
 generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
 
-**3 October. The day's one serious finding is §18: checkout refuses every
-basket**, and has been doing so unnoticed because the site is pre-launch and
-nothing posts a test order. It is written up, **not fixed**, and it sits above
-margins on the list — margins were never the last thing between us and trading.
+**5 October. Nothing on the list was the day's work.** Twenty-one changes, and
+every one came from reading a page rather than from this document: the Terms
+still carried their drafting placeholders, Amy had never answered a single
+question, three invented reviews sat on the home page, the browser Back button
+left the order and lost the basket, and the brand was written four ways against
+a logo that has only ever been one. Two were found by running the build and the
+tests rather than by looking — a deploy that stripped an id from the basket
+drawer on every push, and two "corrections" of mine that were wrong and are
+undone. The full account is in the cleared section below.
+
+**What still blocks a launch is unchanged**, and none of it is a build: the
+welcome email's three placeholders, margins, and the copy Claude has written
+that Nicholas has not read back. Item 2 grew considerably on 5 October.
 
 Then the design studio, after Nicholas hit the same foiling fault twice on live
 work. The cause was not in the page: the Content-Security-Policy set no
@@ -1639,11 +1648,12 @@ switched on.
 | | What | Item | Why it is here |
 |---|---|---|---|
 | 1 | **Write the three welcome-email passages** | 52 | Square-bracket placeholders would reach a customer as written. Nothing should send a welcome until they are done, and only Nicholas can write them |
-| 2 | **Agree the customer-facing strings Claude wrote** | 44 | Live now, in Claude's words rather than Nicholas's, and marked unagreed in the source |
+| 2 | **Read back the copy Claude wrote** | 44 | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, and all of Amy's knowledge. Live, and none of it in Nicholas's words |
 | 3 | **Set the margins** | A2 | 22 products at cost. A decision, not a build. §14 is the evidence. May carry a floor — **if PrintedEasy's 20% discount excludes the delivery line, Express needs a 25% markup to clear** (§2, unresolved) |
 | 4 | **Decide on place cards and table numbers** | 31 | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
 | 5 | **Switch on the Send Email Hook** | 54 | Built and deployed, deliberately not enabled. Needs a live test first |
-| 7 | **Shrink the published payload** | 38 | 13MB, and the reason Publish breaks. Proven at 1.1MB but not built |
+| 6 | **Shrink the published payload** | 38 | 13MB, and the reason Publish breaks. Proven at 1.1MB but not built |
+| 7 | **Decide what to do about consent and Google** | 63 | The Privacy Policy promises nothing is sent to Google when a visitor declines. Something is. Parked 5 October at Nicholas's direction |
 
 ### A. Blocking launch
 
@@ -1859,10 +1869,26 @@ real customer arrives.
 29c. **`description` is empty on six products** — confirmed 3 October. It is
     only the fallback for meta_description and every product has one of those,
     so nothing is broken; the column is half-filled.
-44. **Three customer-facing strings are Claude's words, not Nicholas's**, and
-    are live: the heading and body of the "could not prepare your foil layer"
-    panel, and the shape note on the size step. Marked in the source as not
-    agreed.
+44. **Customer-facing copy in Claude's words, not Nicholas's.** Three strings
+    were listed here: the heading and body of the "could not prepare your foil
+    layer" panel, and the shape note on the size step, all marked in the source
+    as not agreed.
+
+    **5 October added a good deal more**, all of it visible now. Nicholas chose
+    between options for most of it, so this is a reading-back rather than an
+    approval from scratch — but none of it is in his words:
+
+    - the delivery page's rule line, and the **From £20 / From £40** labels
+    - two of the four home-page pods — **No Minimums** and **Tracked Delivery**
+    - the How It Works Design Studio sentence, rewritten when templates went
+    - **twelve new FAQs**, six each for Place Cards and Christmas Cards
+    - the corrected FAQ answers on Wedding Invitations, and the wording guide
+    - every checkout placeholder and label
+    - Amy's entire knowledge section, which she reads out to customers
+    - the Acquerello paper description
+
+    Approved and no longer pending: the Privacy Policy sentence on keeping
+    help-assistant messages, which Nicholas accepted unchanged.
 
 ### H. Email and customer communication
 
@@ -2101,6 +2127,35 @@ it, are what is left.
     under UK PECR is contested and not Claude's call; what is not in doubt is
     that the published promise and the shipped behaviour differ.
 
+64. **Two paper weights are listed but cannot be bought.** Uncoated 120gsm and
+    Tintoretto 140gsm sit in `paper_stocks.weights` with no row in
+    `sheet_rates`, so nothing can price them. No customer can reach them —
+    `availableWeightsFor()` narrows the picker to weights that have a published
+    rate — so nothing is broken. But they are catalogue entries for stock we do
+    not sell, and they are what made a review on 5 October report the site's
+    "250gsm to 400gsm" as understating the range. It does not. Either price
+    them or take them out.
+
+65. **`product_types.features` renders nowhere.** Nineteen products carry a
+    feature list — sizes, paper counts, weights — and nothing reads it: not the
+    landing page template, not `build_pages.py`, and `curl` finds none of it on
+    the live site. The only thing that touches the column is the admin form,
+    whose label promises "shown as bullet points". Either wire it up or delete
+    it; an admin field that says it publishes and does not is its own trap. The
+    text in it is correct, so nothing is wrong today.
+
+66. **Five hand-styled pill links remain**, on `index.html`, `404.html`,
+    `upload-and-print.html` and `design-studio-ai-create.html`. Each duplicates
+    `.btn` inline with small variations, which is how the two on the home page
+    ended up with no hover state at all. `.btn-light` and `.btn-out-light` were
+    added to `header.html` on 5 October as the pattern for replacing them.
+
+67. **Acquerello's description was the only luxury stock not naming
+    Fedrigoni**, which nearly had the site's "four Fedrigoni papers" corrected
+    to three. Fixed on 5 October. Worth knowing the shape of the error: the
+    claim was right and the supporting data was incomplete, so the data was
+    what needed changing.
+
 ### I. Needs a decision, not a developer
 
 30. **Range gaps**: details and enclosure cards, evening invitations, belly
@@ -2108,6 +2163,81 @@ it, are what is left.
     Samples were declined.
 
 ### Cleared or resolved since this list was written
+
+**5 October — twenty-one changes. None of it was on this list, because none of
+it was known until the pages were read:**
+
+- **The Terms carried five unfilled template blanks.** "operated by [LEGAL
+  ENTITY NAME], a [SOLE TRADER / LIMITED COMPANY]…" — live, under a "Last
+  updated: April 2026" date. Now names **Natch Limited, 09493377, Regina House,
+  124 Finchley Road, London NW3 5JS**, checked against Companies House, which
+  caught "Finchely" in the address we were given. The Privacy Policy named no
+  data controller and Returns gave no postal address; both fixed. See §16.
+
+- **The company disclosure was on no page at all**, which UK law requires on a
+  website rather than only in the terms. Now in the footer of all 57 pages.
+
+- **Amy answered nothing.** `ANTHROPIC_API_KEY` had never been set, so every
+  free-text question returned HTTP 500 from the day the widget shipped.
+  Nicholas set the key. Her knowledge was also four months stale — four of
+  fifteen sizes, no paper named, nothing about delivery cost — and she now
+  reads the catalogue from the database on every reply instead of remembering
+  it. Every turn is logged, failures included. Items 57, 61, 62.
+
+- **Three invented customer reviews on the home page**, for a shop that has
+  never taken an order. Removed entirely; fabricated reviews are a banned
+  practice under the DMCC Act 2024.
+
+- **Design templates were still being offered** — a sentence on How It Works
+  and two whole pages, live and answering HTTP 200, for a service we withdrew.
+  Deleted and 301'd, ~2,500 lines of unused code with them.
+
+- **The browser Back button left the order entirely.** Walking four steps
+  created zero history entries, so Back from the basket landed on the product
+  page and lost the lot. One entry per step now; Back moves one stage and the
+  breadcrumb follows. A refresh also keeps your place.
+
+- **The checkout form looked pre-filled.** No `::placeholder` rule existed at
+  all, so Chrome's default put hint text at 4.61:1 — above the threshold for
+  readable body text — holding "Charlotte Thornton" and "12 Rose Lane". Now
+  2.52:1 with format hints, labels in sentence case, and all eight labels bound
+  to their field, which they were not.
+
+- **The brand was written four ways at once.** `Foreverprint` 516 times,
+  `forever·print` 11, `FOREVERPRINT` once, against a logo that has always been
+  lowercase. All lowercase now, across 73 files, the page generator and 25
+  database rows. Six pages did not name the brand in their title at all —
+  saved-designs and the album pages ended "| Invitations".
+
+- **Numbers were still on the step headings** — "3 Your paper" under a top line
+  that said PAPER. The rails lost theirs when the wizard went to words-only;
+  these were missed.
+
+- **The home page's four pods had two with no text**, and its occasion cards
+  all pointed at the design studio regardless of what they said. Both fixed,
+  and the pods now stack on a phone.
+
+- **The FAQs recommended a product we do not make** (a details card) and a
+  paper we do not stock (cotton). Christmas Cards and Place Cards had no FAQs
+  at all and showed an identical generic five. Six each now.
+
+- **The common questions were wrong in six ways** — three foil colours where we
+  sell eight, DPD named as the carrier, two pages contradicting each other on
+  price, CMYK advice against our own RGB decision. Corrected; the paper range
+  and Fedrigoni count turned out to be right and two "corrections" were undone.
+
+- **Featured buried the flagship products.** Twenty of 22 shared display_order
+  0, so Wedding Invitations and Save the Date — the only two ranked — sorted
+  last of 22. All 22 ranked now, and the Design Studio opens in A-Z.
+
+- **A live bug found by running the build**: `id="drawerGoBtn"` was stripped
+  from the basket drawer on every deploy, because the drawer lives in
+  header.html and the id had been added to a page instead. The live drawer read
+  "Continue to Checkout" from step 1, where it goes to the basket.
+
+- **The "Ready to begin" buttons had no hover at all** — inline styles, no
+  class, so none of the site's hover rules reached them. Now `.btn-light` and
+  `.btn-out-light` in header.html, available to every page.
 
 **5 October — three invented customer reviews removed from the home page:**
 
