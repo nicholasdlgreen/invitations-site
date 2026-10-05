@@ -341,8 +341,22 @@ body.wide-step .step-bar{display:none;}
 .co-summary-item{display:flex;justify-content:space-between;font-size:var(--text-sm);padding:8px 0;border-bottom:1px solid var(--border);color:var(--soft);}
 .co-summary-item.total{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);font-weight:400;padding-top:12px;margin-top:4px;border-top:2px solid var(--border);border-bottom:none;}
 .co-field{margin-bottom:16px;}
-.co-label{font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:6px;font-weight:400;}
+/* Sentence case, not uppercase-with-tracking. That is the heaviest way to
+   set small type, and stacked down a nine-field form it shouts; on a phone
+   "FULL NAME *" wrapped onto two lines, so the label was physically bigger
+   than the field it described. */
+.co-label{font-size:var(--text-xs);color:var(--soft);display:block;margin-bottom:6px;font-weight:400;}
 .co-input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);background:var(--white);outline:none;transition:border-color .2s;}
+/* The page had no ::placeholder rule at all, so Chrome's default applied:
+   #757575, which is 4.61:1 on white — ABOVE the 4.5:1 threshold for readable
+   body text — in the same 15px and the same weight as text you type. A real
+   name over a real address at reading weight is indistinguishable from a saved
+   address being offered back, which is exactly how it read.
+
+   --pale is 2.52:1: plainly a hint, and warm rather than the cold grey that
+   was there. Safe to make this faint because every field has its own visible
+   label, so the placeholder carries nothing the customer needs. */
+.co-input::placeholder{color:var(--pale);opacity:1;}
 .co-input:focus{border-color:var(--gold-lt);}
 .co-input.error{border-color:var(--err);}
 .co-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
@@ -1069,17 +1083,17 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div class="check-card">
     <div class="co-body">
       <span class="co-section-title">Your Details</span>
-      <div class="co-field"><label class="co-label">Full Name *</label><input class="co-input" id="coName" placeholder="Charlotte Thornton" type="text"></div>
-      <div class="co-field"><label class="co-label">Email Address *</label><input class="co-input" id="coEmail" placeholder="charlotte@example.com" type="email"></div>
-      <div class="co-field"><label class="co-label">Phone Number</label><input class="co-input" id="coPhone" placeholder="+44 7700 000000" type="tel"></div>
+      <div class="co-field"><label class="co-label" for="coName">Full name</label><input class="co-input" id="coName" placeholder="First and last name" type="text"></div>
+      <div class="co-field"><label class="co-label" for="coEmail">Email address</label><input class="co-input" id="coEmail" placeholder="For your order confirmation" type="email"></div>
+      <div class="co-field"><label class="co-label" for="coPhone">Phone number <span style="color:var(--pale);font-size:var(--text-xs);">(optional)</span></label><input class="co-input" id="coPhone" placeholder="For delivery updates" type="tel"></div>
       <span class="co-section-title">Delivery Address</span>
-      <div class="co-field"><label class="co-label">Address Line 1 *</label><input class="co-input" id="coAddr1" placeholder="12 Rose Lane" type="text"></div>
-      <div class="co-field"><label class="co-label">Address Line 2</label><input class="co-input" id="coAddr2" placeholder="Apartment, suite, etc." type="text"></div>
+      <div class="co-field"><label class="co-label" for="coAddr1">Address line 1</label><input class="co-input" id="coAddr1" placeholder="House number and street" type="text"></div>
+      <div class="co-field"><label class="co-label" for="coAddr2">Address line 2 <span style="color:var(--pale);font-size:var(--text-xs);">(optional)</span></label><input class="co-input" id="coAddr2" placeholder="Flat, building or company" type="text"></div>
       <div class="co-row">
-        <div class="co-field"><label class="co-label">Town / City *</label><input class="co-input" id="coCity" placeholder="London" type="text"></div>
-        <div class="co-field"><label class="co-label">Postcode *</label><input class="co-input" id="coPostcode" placeholder="SW1A 1AA" type="text"></div>
+        <div class="co-field"><label class="co-label" for="coCity">Town or city</label><input class="co-input" id="coCity" type="text"></div>
+        <div class="co-field"><label class="co-label" for="coPostcode">Postcode</label><input class="co-input" id="coPostcode" placeholder="UK postcode" type="text"></div>
       </div>
-      <div class="co-field"><label class="co-label">Order Notes <span style="color:var(--pale);font-size:var(--text-xs);">(optional)</span></label><textarea class="co-input" id="coNotes" rows="3" placeholder="Any special instructions…" style="resize:vertical;line-height:1.7;"></textarea></div>
+      <div class="co-field"><label class="co-label" for="coNotes">Order notes <span style="color:var(--pale);font-size:var(--text-xs);">(optional)</span></label><textarea class="co-input" id="coNotes" rows="3" placeholder="Any special instructions…" style="resize:vertical;line-height:1.7;"></textarea></div>
       <label class="co-field" for="coMarketing" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--cream);">
         <input type="checkbox" id="coMarketing" style="margin-top:3px;width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;">
         <span style="font-size:var(--text-sm);color:var(--soft);line-height:1.7;">
