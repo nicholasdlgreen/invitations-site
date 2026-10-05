@@ -1946,6 +1946,35 @@ it, are what is left.
     → Site configuration → Environment variables → add `ANTHROPIC_API_KEY`.
     Nothing else in item 61 works until it is set.
 
+58. **Stripe may send its own payment receipt** as well as ours, which would be
+    two emails about one payment. A setting in the Stripe dashboard.
+
+59. **DMARC is `p=none`** and its reports go to a personal Gmail address. Worth
+    moving to `p=quarantine` once sending volume justifies it. SPF and DKIM are
+    both correct and verified — checked 3 October.
+
+60. ~~**The website does not carry the company disclosure.**~~ **DONE 5
+    October**, same day it was raised. The footer on all **57** pages now reads
+    "Foreverprint is a trading name of Natch Limited, registered in England and
+    Wales, company number 09493377. Registered office: Regina House, 124
+    Finchley Road, London NW3 5JS." — the four things the Companies (Trading
+    Disclosures) Regulations require, on the website rather than only in the
+    terms. It sits on its own line below the copyright row rather than inside
+    it, because that row is a flex pair and a third item would have been
+    squeezed against "Made with love in the UK".
+
+    57, not the 55 first counted: a `grep --include` miss. All 57 blocks were
+    byte-identical before the change, which is what made a mechanical edit safe.
+    Contrast measured at **5.73:1** against the footer background, passing AA
+    for small text, by inheriting the footer's own colour rather than inventing
+    a dimmer grey. Four lines on a phone, no overflow.
+
+    `tools/test-footer-disclosure.py`, 13 checks. It walks the tree rather than
+    reading one file, because the footer is hardcoded into every page AND
+    injected from `footer.html` over the top — so a page added later would
+    simply not have it. Verified by breaking a real page and confirming the test
+    names it.
+
 61. **Amy's knowledge was four months stale, and nothing was recorded.** Fixed
     5 October (option B of the review). Two separate failures sat behind one
     symptom, and the second would have survived the key being set:
@@ -2033,6 +2062,45 @@ it, are what is left.
     simply not have it. Verified by breaking a real page and confirming the test
     names it.
 
+63. **The cookie banner says no, and Google still hears from us.** Found
+    5 October by Nicholas's own testing, reproduced and measured, **parked at
+    his direction — no work done.**
+
+    The Privacy Policy promises: *"If you say no, none of that happens. No
+    analytics or advertising cookies are set, no click identifier is stored,
+    and nothing about your visit is sent to Google."*
+
+    **Half of that is true.** Declining sets no Google cookies — the only one
+    written is our own `fp_consent=denied`, with no `_ga`, no `_gcl`, nothing
+    in localStorage. The consent signal reaches Google correctly as `gcs=G100`,
+    both denied.
+
+    **The last clause is not.** A returning visitor who already declined, with
+    no banner shown, still sends on **every page view**: two `gtag/js` loads,
+    a `page_view` to `region1.google-analytics.com/g/collect`, and a
+    `page_view` to `pagead2.googlesyndication.com/ccm/collect`. The page URL
+    goes with them.
+
+    This is **deliberate**: `analytics.js` line 327 calls `loadTag()`
+    unconditionally, and the comment above it explains why — Advanced Consent
+    Mode, so Google can model the conversions of the ~20% who decline. The code
+    does what it was built to do; **the policy was written describing a
+    different design.** The live file is byte-identical to the one tested
+    (same SHA1), so this is what customers get.
+
+    **A second leak the tag fix would not close:** Google Fonts loads on **60
+    pages** regardless of consent, sending the visitor's IP to Google before
+    they click anything. Every third-party host our pages contact is
+    Google-owned — five of them. Fixing the tag alone still leaves that
+    sentence false.
+
+    Three ways out: make the code match the policy (Basic Consent Mode — costs
+    the conversion modelling); make the policy match the code (accurate, reads
+    worse); or both plus self-hosting the fonts, the only option that makes the
+    published sentence literally true. Whether cookieless pings require consent
+    under UK PECR is contested and not Claude's call; what is not in doubt is
+    that the published promise and the shipped behaviour differ.
+
 ### I. Needs a decision, not a developer
 
 30. **Range gaps**: details and enclosure cards, evening invitations, belly
@@ -2040,6 +2108,29 @@ it, are what is left.
     Samples were declined.
 
 ### Cleared or resolved since this list was written
+
+**5 October — three invented customer reviews removed from the home page:**
+
+- **The home page carried three five-star testimonials for a shop that has
+  never taken an order.** "Charlotte & James", "Amelia & Oliver" and
+  "Isabella & William", under the heading *"Words from Our Customers"* —
+  placeholder copy written during the build and never removed. Fabricated
+  consumer reviews are a banned practice under Schedule 20 of the Digital
+  Markets, Competition and Consumers Act 2024, and the site is about to start
+  paying for traffic. Removed entirely at Nicholas's direction — the whole
+  section, heading included, not just the quotes. Nothing replaces it; real
+  ones go there when there are real ones (item 29).
+
+  **No review structured data existed**, which is the good news: `aggregateRating`
+  and `Review` markup are what put stars in Google's results, and faking those
+  misleads people who never reach the site. Checked across all 91 pages.
+
+  `tools/test-no-fake-reviews.py`, 20 checks, sweeps every page for the
+  invented names, star rows and review schema. Its first run failed correctly
+  and for the wrong reason — it flagged "Charlotte & James" in a code comment
+  about foil area and in a design-studio placeholder, both legitimate. What
+  makes a testimonial is rendered content, so it now strips comments and
+  `<script>` blocks before looking.
 
 **5 October — the trading conditions did not say who we are. Not on this list
 because nobody had read the Terms since they were drafted:**
