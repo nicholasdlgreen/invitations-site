@@ -1926,6 +1926,16 @@ it, are what is left.
 59. **DMARC is `p=none`** and its reports go to a personal Gmail address. Worth
     moving to `p=quarantine` once sending volume justifies it. SPF and DKIM are
     both correct and verified — checked 3 October.
+60. **The website does not carry the company disclosure.** A UK limited company
+    must display its registered name, company number, place of registration and
+    registered office address **on its website** — the Companies (Trading
+    Disclosures) Regulations, not a nicety. Since 5 October the Terms, Privacy
+    Policy and Returns all carry it, but the footer, which is the conventional
+    home for it, still reads only "(c) 2026 Foreverprint. All rights reserved."
+    Fixing it means 55 inline `footer-bottom` blocks plus `footer.html`, because
+    every page hardcodes a footer and then injects `footer.html` over it. Left
+    alone on 5 October because the instruction was scoped to the trading
+    conditions, and a 56-file edit is not that. One line of text, repeated.
 
 ### I. Needs a decision, not a developer
 
@@ -1934,6 +1944,40 @@ it, are what is left.
     Samples were declined.
 
 ### Cleared or resolved since this list was written
+
+**5 October — the trading conditions did not say who we are. Not on this list
+because nobody had read the Terms since they were drafted:**
+
+- **The Terms of Service carried five unfilled template blanks, live.** Section
+  1 read "This website (foreverprint.com) is operated by [LEGAL ENTITY NAME], a
+  [SOLE TRADER / LIMITED COMPANY] [registered in England and Wales under company
+  number [COMPANY NUMBER]] with its [registered office / principal place of
+  business] at [BUSINESS ADDRESS]" — on the page a customer is bound by, with a
+  "Last updated: April 2026" date above it. Now states that Foreverprint is a
+  trading name of **Natch Limited**, company number **09493377**, registered
+  office **Regina House, 124 Finchley Road, London NW3 5JS**.
+
+- **The Privacy Policy named no data controller.** It said "We are the data
+  controller" where "we" resolved to the brand, not a legal person. UK GDPR
+  requires the controller to be identified; a trading name is not one. Natch
+  Limited is now named, with a postal route alongside the email.
+
+- **Returns gave an email and no geographical address**, which the Consumer
+  Contracts Regulations expect for a cancellation notice. Added, with a line
+  asking customers to make contact before sending anything back.
+
+  Checked against Companies House rather than taken on trust, which caught a
+  misspelling: the address was given to us as "Finchely Road". The correct
+  spelling is pinned by `tools/test-company-details.js`, 29 checks, along with
+  a guard that fails if any bracketed template token ever returns to these
+  three pages.
+
+  **Still open, and deliberately not done:** a UK limited company must disclose
+  its registered name, number, place of registration and registered office **on
+  its website**, not only in its terms — the usual home for that is the footer.
+  Ours shows "(c) 2026 Foreverprint. All rights reserved." and nothing else.
+  That is a change to 55 inline footers plus `footer.html`, well outside
+  "trading conditions", so it is flagged rather than made. See §15 item 55.
 
 **3 October, afternoon — found and fixed the same day, none of it was on this
 list because none of it was known:**
