@@ -22,7 +22,7 @@ rendered page disagree, this file records what renders, and says so.
 | Type scale steps | **8**, all fluid `clamp()` |
 | Typefaces in use | **2** (a third is loaded and unused — §3) |
 | Pages whose own `:root` disagrees | **9**, all silently overridden (§7) |
-| Literal hex where a token exists | **91 uses** across 9 files (§7) |
+| Literal hex where a token exists | **91 uses** across 58 files (§7) |
 | Components that drift | inputs, cards — by 1–2px (§7e) |
 
 ---
@@ -193,15 +193,15 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 **These are for new work. Existing spacing is deliberately left alone**, and
 that is the whole decision, so it is worth setting out why.
 
-The site has **12,401 spacing declarations using 47 distinct values**. Measured
+The site has **12,404 spacing declarations using 47 distinct values**. Measured
 against the obvious candidates:
 
 | Scale | Fits as-is | Would have to move |
 |---|---|---|
-| Strict 4px grid | 35% | 8,000 declarations |
-| Strict 8px grid | 28% | 8,933 |
-| These ten steps | 46% | 6,739 |
-| These ten plus a 6/10/14 tier | 68% | 3,956 |
+| Strict 4px grid | 35% | 8,003 declarations |
+| Strict 8px grid | 28% | 8,936 |
+| These ten steps | 46% | 6,742 |
+| These ten plus a 6/10/14 tier | 68% | 3,957 |
 
 Even the best fit means rewriting several thousand values across 58 files, each
 a small visual shift, with no practical way to check the result page by page.

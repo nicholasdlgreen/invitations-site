@@ -41,6 +41,11 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
   and pale gold 1.89:1, both under the 3:1 an interface element needs.
 - **Page titles use `var(--text-h1)` at weight 400.** Heroes are a separate role
   and keep their own larger scale.
+- **Mobile changes go inside a media query and touch no markup.** Nicholas
+  approves anything that alters desktop, so a mobile fix that edits shared
+  markup needs asking first; one written as CSS inside `@media(max-width:768px)`
+  cannot reach desktop and does not. Verify desktop at 1280px before and after
+  regardless — measure it, do not assume it.
 - **The primary button is below WCAG AA (2.74:1) and that is a known, accepted
   decision** — Nicholas chose on 6 Oct to leave the gold alone. See
   `docs/BRAND.md` §8. Do not "fix" it on your own initiative.
@@ -103,6 +108,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-brand-doc.py` | `docs/BRAND.md` still matches `header.html`; contrast figures recomputed |
 | `tools/test-path-icon-colour.py` | Pod icons state a colour and use the gold token |
 | `tools/test-focus-and-headings.py` | Focus rings clear 3:1; page titles share one size |
+| `tools/test-mobile-header.py` | The header fits a phone; the mobile rules stay inside the media query |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |

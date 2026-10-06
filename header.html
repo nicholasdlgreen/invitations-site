@@ -118,6 +118,30 @@ nav a:hover,nav a.active{color:var(--gold);}
 .nav-toggle{display:none;background:none;border:none;cursor:pointer;color:var(--text);padding:6px;}
 .nav-toggle svg{width:26px;height:26px;}
 @media(max-width:768px){
+/* THE HEADER DID NOT FIT A PHONE. It tried to show burger + full logo +
+   "Account ▾" + "Basket 0" — 506px of content in a 375px bar — so the basket
+   button and its count badge sat off the right edge at EVERY phone width
+   measured, 320 through 480, and that is what made every page scroll
+   sideways. 6 October 2026.
+
+   Labels become icons below 768px, which is where the burger already replaces
+   the navigation, so the header is already in its mobile form here. Done
+   entirely in CSS: no markup changes, so desktop cannot be affected. 48px
+   targets, per Google's minimum of 48x48. */
+.acct-label{display:none;}
+.acct-trigger{padding:10px;min-width:48px;min-height:48px;justify-content:center;gap:0;}
+.cart-btn{width:48px;height:48px;padding:0;gap:0;border-radius:50%;justify-content:center;
+  font-size:0;position:relative;flex-shrink:0;}
+.cart-btn::before{content:"";width:19px;height:19px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M16 10a4 4 0 0 1-8 0'/%3E%3C/svg%3E");
+  background-size:contain;background-repeat:no-repeat;}
+/* The count moves out of the flow and becomes a badge, so it no longer widens
+   the button. font-size is restored here because the button sets it to 0. */
+.cart-btn .cart-count{position:absolute;top:-1px;right:-3px;min-width:19px;height:19px;
+  padding:0 5px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;line-height:1;font-weight:500;letter-spacing:0;
+  background:var(--text);color:#fff;border:2px solid var(--white);border-radius:20px;}
+.right-zone{gap:6px;}
+
 .nav-toggle{display:block;order:-1;}
 .hinner{position:relative;}
 .hinner nav{display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);flex-direction:column;align-items:stretch;gap:0;padding:8px 0;border-bottom:1px solid var(--border);box-shadow:0 16px 32px -18px rgba(61,46,36,.25);}
@@ -135,6 +159,11 @@ nav a:hover,nav a.active{color:var(--gold);}
 .mega-chev{display:none;}
 }
 @media(max-width:480px){.footer-top{grid-template-columns:1fr;}}
+/* 320px — iPhone SE first generation and older Androids. Even with the
+   labels gone, burger + logo + two 48px targets came to 330px in a 320px
+   bar. The logo gives up the difference; nothing else can without taking
+   a tap target below the 48px minimum. */
+@media(max-width:359px){.logo{font-size:1.45rem;}.hinner{padding-left:12px;padding-right:12px;}}
 </style>
 <header>
 <div class="hinner">
