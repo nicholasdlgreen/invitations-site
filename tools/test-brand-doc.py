@@ -81,7 +81,7 @@ checks = [
     ('body text on cream',   '--text',    '--cream',  12.17),
     ('white on gold button', '--white',   '--gold',    2.74),
     ('gold text on cream',   '--gold',    '--cream',   2.56),
-    ('focus ring on white',  '--gold-lt', '--white',   1.89),
+    ('focus ring on white',  '--focus',   '--white',   5.48),
     ('secondary on cream',   '--soft',    '--cream',   5.13),
 ]
 for label, fg, bg, claimed in checks:
@@ -91,11 +91,11 @@ for label, fg, bg, claimed in checks:
 print('\nAND THE DOCUMENT STILL CALLS THE FAILURES FAILURES')
 is_('the button is named as failing AA',
     'the primary button' in doc and 'fails AA' in doc)
-is_('the focus ring is named as failing the interface threshold',
-    'fails the 3:1 for interface' in doc)
+is_('the focus ring is recorded as fixed, with its new ratio',
+    '5.48' in doc and '--focus' in doc)
 is_('the button text size is stated as measured', '13.2px' in doc)
-is_('and no colour was changed without asking',
-    'Nothing here has been changed' in doc)
+is_('and the gold is recorded as a decision, not an oversight',
+    'leave the gold as it is for now' in doc)
 
 print('\nMUTATION: A TOKEN CHANGED IN ONE PLACE ONLY MUST FAIL')
 fake_tokens = dict(tokens); fake_tokens['--gold'] = '#FF0000'

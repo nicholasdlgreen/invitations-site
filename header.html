@@ -4,7 +4,7 @@
 --cream:#FAF7F2; --blush:#F0DDD8; --lav:#DDD5E8; --sage:#D1DDD0;
 --mist:#E8EBF0; --gold:#B8976A; --gold-lt:#D4B896; --brown:#6B4F3A;
 --text:#3D2E24; --soft:#7A6558; --pale:#B0A098; --white:#FFFFFF;
---border:#E8DDD8; --hairline:#EFE6E0; --ok:#5A9E6F; --warn:#C97B3A; --err:#C94A3A;
+--border:#E8DDD8; --hairline:#EFE6E0; --ok:#5A9E6F; --warn:#C97B3A; --err:#C94A3A;/* A role, not a colour: the ring that shows a keyboard user where they are. It was --gold-lt (1.89:1) on most pages and --gold (2.74:1) on the sign-in pages; both are under the 3:1 an interface element needs. This is --soft, 5.48:1, a colour already in the palette. Decided 6 Oct 2026; the brand gold itself was deliberately left alone. */--focus:#7A6558;
 /* Fluid type scale — scales smoothly from laptop to large screens.
    clamp(min, preferred, max): min is the floor (never smaller),
    max is the ceiling (never larger), preferred grows with the viewport. */
@@ -14,7 +14,7 @@
 --text-lg:   clamp(19px, 0.8vw + 15px, 22px);    /* lead paragraphs */
 --text-h3:   clamp(21px, 1.3vw + 16px, 27px);
 --text-h2:   clamp(30px, 2.4vw + 19px, 42px);
---text-h1:   clamp(40px, 3.8vw + 21px, 58px);
+/* Was clamp(40px, 3.8vw + 21px, 58px) and used by precisely nothing, while 24 product pages set their own clamp(2rem, 3.6vw, 3rem) through .lp-h1. The token now carries the size the site actually uses, so adopting it changes no page that was already right. 6 Oct 2026. */--text-h1:   clamp(2rem, 3.6vw, 3rem);
 --nav-size:  clamp(16px, 0.5vw + 14px, 18px);    /* nav links */
 }
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }

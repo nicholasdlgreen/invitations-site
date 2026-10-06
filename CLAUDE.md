@@ -33,14 +33,24 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 - **`novalidate` on any form you validate yourself**, or the browser's own
   validation swallows the submit and your styled errors never run.
 - **The brand is `foreverprint`** — lowercase f, outside body prose.
-- **Contrast is a known open question.** See `docs/BRAND.md` §8: the primary
-  button and the focus ring are below WCAG AA. Do not "fix" this by changing a
-  colour on your own initiative — it is a brand decision.
+- **Focus rings use `var(--focus, var(--soft))`** — never gold. Gold was 2.74:1
+  and pale gold 1.89:1, both under the 3:1 an interface element needs.
+- **Page titles use `var(--text-h1)` at weight 400.** Heroes are a separate role
+  and keep their own larger scale.
+- **The primary button is below WCAG AA (2.74:1) and that is a known, accepted
+  decision** — Nicholas chose on 6 Oct to leave the gold alone. See
+  `docs/BRAND.md` §8. Do not "fix" it on your own initiative.
 
 ## How the pages are built
 
-- `header.html` and `footer.html` are injected into all 53 pages by
-  `tools/build_pages.py` at build time, **after** each page's own `<style>`.
+- `header.html` and `footer.html` are fetched by each page **at runtime** and
+  dropped into the body. (`tools/build_pages.py` does something different — it
+  pre-renders the product pages.) Because they land in the body and each page's
+  own `:root` is in the head, the shared tokens win the cascade.
+- **A token used in page CSS needs a fallback**: write
+  `var(--token, var(--local))`, not `var(--token)`. Browsers cache
+  `header.html`, so after a deploy a visitor can run old tokens against new CSS,
+  and a bare `var()` that misses resolves to `currentColor`.
 - **Anything you add to a single page's header or footer area is overwritten on
   the next deploy.** A one-line change there lands on 53 pages. Check the diff
   before committing; this has gone wrong twice.
@@ -79,3 +89,4 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 |---|---|
 | `tools/test-brand-doc.py` | `docs/BRAND.md` still matches `header.html`; contrast figures recomputed |
 | `tools/test-path-icon-colour.py` | Pod icons state a colour and use the gold token |
+| `tools/test-focus-and-headings.py` | Focus rings clear 3:1; page titles share one size |

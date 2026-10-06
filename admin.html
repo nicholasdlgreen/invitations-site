@@ -15,7 +15,7 @@
 <style>
 
 /* ═══ ROOT ═══════════════════════════════════════════ */
-:root {
+:root{
   --cream:#FAF7F2; --gold:#B8976A; --gold-lt:#D4B896; --gold-dk:#8B6E4A;
   --brown:#6B4F3A; --text:#3D2E24; --soft:#7A6558; --pale:#B0A098; --white:#FFFFFF;
   --border:#E8DDD8;
@@ -38,7 +38,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 .login-sub { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--pale); margin-bottom:40px; }
 .login-label { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--soft); display:block; margin-bottom:8px; text-align:left; }
 .login-input { width:100%; padding:13px 16px; border:1px solid var(--border); border-radius:10px; font-family:'Jost',sans-serif; font-size:13px; color:var(--text); outline:none; transition:border-color .2s; margin-bottom:20px; }
-.login-input:focus { border-color:var(--gold-lt); }
+.login-input:focus { border-color:var(--focus,var(--soft)); }
 .login-btn { width:100%; padding:14px; background:var(--gold); color:#fff; border:none; border-radius:60px; font-family:'Jost',sans-serif; font-size:11px; letter-spacing:.16em; text-transform:uppercase; font-weight:500; cursor:pointer; transition:background .25s; }
 .login-btn:hover { background:var(--brown); }
 .login-err { font-size:12px; color:var(--err); margin-top:14px; display:none; }
@@ -86,7 +86,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 .filter-btn:hover { border-color:var(--gold); color:var(--gold); }
 .filter-btn.active { background:var(--gold); border-color:var(--gold); color:#fff; }
 .search-input { padding:8px 16px; border:1px solid var(--border); border-radius:20px; font-family:'Jost',sans-serif; font-size:12px; color:var(--text); outline:none; background:var(--white); width:220px; margin-left:auto; }
-.search-input:focus { border-color:var(--gold-lt); }
+.search-input:focus { border-color:var(--focus,var(--soft)); }
 
 /* ═══ ORDERS — TABLE ══════════════════════════════════ */
 .table-wrap { background:var(--white); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
@@ -101,7 +101,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 .order-items { font-size:11px; color:var(--soft); line-height:1.6; }
 .order-total { font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--text); }
 .status-select { padding:5px 10px; border:1px solid var(--border); border-radius:8px; font-family:'Jost',sans-serif; font-size:11px; color:var(--text); background:var(--white); cursor:pointer; outline:none; transition:border-color .2s; }
-.status-select:focus { border-color:var(--gold-lt); }
+.status-select:focus { border-color:var(--focus,var(--soft)); }
 .action-btns { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
 .action-btn { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border:1px solid var(--border); border-radius:8px; background:var(--white); font-family:'Jost',sans-serif; font-size:10px; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .2s; color:var(--soft); white-space:nowrap; text-decoration:none; }
 .action-btn:hover { border-color:var(--gold); color:var(--gold); }
@@ -272,7 +272,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 .pricing-zone .field select,
 .pricing-zone .field textarea { width:100%; background:var(--navy-mid); border:1px solid rgba(184,151,106,.25); border-radius:5px; padding:9px 12px; color:var(--cream); font-family:'Jost',sans-serif; font-size:13px; transition:border .2s; outline:none; }
 .pricing-zone .field input:focus,
-.pricing-zone .field select:focus { border-color:var(--gold); box-shadow:0 0 0 2px rgba(184,151,106,.15); }
+.pricing-zone .field select:focus { border-color:var(--focus,var(--soft)); box-shadow:0 0 0 2px rgba(184,151,106,.15); }
 .pricing-zone .field select option { background:var(--navy-mid); }
 .pricing-zone .dyn-wrap { display:flex; gap:6px; align-items:center; }
 .pricing-zone .dyn-wrap select { flex:1; }
@@ -281,7 +281,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 .pricing-zone .qty-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(70px,1fr)); gap:8px; margin-top:8px; }
 .pricing-zone .qty-cell label { font-size:10px; color:var(--gold-lt); opacity:.7; text-align:center; display:block; margin-bottom:4px; letter-spacing:.05em; }
 .pricing-zone .qty-cell input { width:100%; background:var(--navy-mid); border:1px solid rgba(184,151,106,.25); border-radius:4px; padding:7px 4px; color:var(--cream); font-family:'Jost',sans-serif; font-size:12px; text-align:center; outline:none; transition:border .2s; }
-.pricing-zone .qty-cell input:focus { border-color:var(--gold); }
+.pricing-zone .qty-cell input:focus { border-color:var(--focus,var(--soft)); }
 .pricing-zone .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:5px; font-family:'Jost',sans-serif; font-size:12px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; border:none; transition:all .2s; }
 .pricing-zone .btn-gold { background:var(--gold); color:var(--navy); }
 .pricing-zone .btn-gold:hover { background:var(--gold-lt); }
@@ -315,7 +315,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 .pricing-zone .list-chip button:hover { color:var(--danger); }
 .pricing-zone .list-add-row { display:flex; gap:6px; }
 .pricing-zone .list-add-row input { flex:1; background:var(--navy-lt); border:1px solid rgba(184,151,106,.25); border-radius:5px; padding:6px 10px; color:var(--cream); font-family:'Jost',sans-serif; font-size:12px; outline:none; }
-.pricing-zone .list-add-row input:focus { border-color:var(--gold); }
+.pricing-zone .list-add-row input:focus { border-color:var(--focus,var(--soft)); }
 .pricing-zone .supplier-card { background:var(--navy-mid); border:1px solid var(--border-lt); border-radius:6px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
 .pricing-zone .margin-display { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:500; color:var(--gold); text-align:center; margin:8px 0; }
 .pricing-zone input[type="range"] { -webkit-appearance:none; width:100%; height:4px; border-radius:2px; background:var(--navy-mid); outline:none; cursor:pointer; }
@@ -357,7 +357,7 @@ body { font-family:'Jost',sans-serif; font-weight:300; background:#F0EDE8; color
 .modal-overlay .field label { display:flex; align-items:center; gap:6px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold-lt); opacity:.8; margin-bottom:6px; font-weight:500; }
 .modal-overlay .field input,
 .modal-overlay .field select { width:100%; background:#2E3650; border:1px solid rgba(184,151,106,.25); border-radius:5px; padding:9px 12px; color:var(--cream); font-family:'Jost',sans-serif; font-size:13px; outline:none; transition:border .2s; }
-.modal-overlay .field input:focus { border-color:var(--gold); }
+.modal-overlay .field input:focus { border-color:var(--focus,var(--soft)); }
 .modal-overlay .field select option { background:#2E3650; }
 .modal-actions { display:flex; gap:8px; margin-top:16px; justify-content:flex-end; }
 /* Inline btn styles for modal (since .btn is scoped to .pricing-zone) */

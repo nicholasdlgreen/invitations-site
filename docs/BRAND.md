@@ -29,18 +29,32 @@ rendered page disagree, this file records what renders, and says so.
 
 ## 1. How this file works
 
-`header.html` holds the single `:root` block, and `tools/build_pages.py`
-injects it into all 53 pages at build time. It is injected **after** each
-page's own `<style>`, so it wins. That has two consequences worth knowing
-before changing anything:
+`header.html` holds the single `:root` block. **Each page fetches it at runtime**
+with JavaScript and drops it into the body — `tools/build_pages.py` does
+something else entirely (it pre-renders the product pages). An earlier draft of
+this file said build time; that was wrong, and it matters, because a runtime
+fetch can be cached or can fail.
+
+Because it lands in the `<body>` and each page's own `:root` sits in the
+`<head>`, the header's values come later in the cascade and win. Three
+consequences worth knowing before changing anything:
 
 - **The tokens have one home.** Change a colour in `header.html` and it changes
   everywhere, in one edit.
 - **A page's own `:root` is decoration.** Nine pages declare tokens that never
   take effect. Reading those files tells you the wrong thing (§7).
 
+- **A stale header is a real failure mode.** Browsers cache `header.html`. After
+  a deploy a returning visitor can run yesterday's tokens against today's page
+  CSS. This is not hypothetical — it happened repeatedly while verifying this
+  work locally, and it is why `--focus` carries a fallback (§5). **A token used
+  by page CSS should be written `var(--token, var(--local-fallback))`** where a
+  sensible local fallback exists.
+
 Anything added directly to a page is overwritten on the next deploy. This has
-caught us out before: a comment added to one page appeared on all 53.
+caught us out before: a comment added to one page appeared on all 53. The
+header and footer are also each injected **twice** on some pages — harmless,
+but it means two copies of the same `:root` in the DOM.
 
 ---
 
@@ -59,6 +73,7 @@ caught us out before: a comment added to one page appeared on all 53.
 | `--pale` | `#B0A098` | Tertiary text, placeholders, "(optional)" |
 | `--border` | `#E8DDD8` | Card and input borders |
 | `--hairline` | `#EFE6E0` | Lighter rules and separators |
+| `--focus` | `#7A6558` | **A role, not a colour**: the ring showing a keyboard user where they are |
 | `--brown` | `#6B4F3A` | Dark ground, used sparingly |
 
 ### Status colours
@@ -115,7 +130,7 @@ set in fixed pixels.
 | `--text-lg` | `clamp(19px, 0.8vw + 15px, 22px)` | Lead paragraphs |
 | `--text-h3` | `clamp(21px, 1.3vw + 16px, 27px)` | Sub-headings |
 | `--text-h2` | `clamp(30px, 2.4vw + 19px, 42px)` | Section titles |
-| `--text-h1` | `clamp(40px, 3.8vw + 21px, 58px)` | Page titles |
+| `--text-h1` | `clamp(2rem, 3.6vw, 3rem)` | Page titles |
 | `--nav-size` | `clamp(16px, 0.5vw + 14px, 18px)` | Navigation |
 
 ### Weights
@@ -176,7 +191,7 @@ brown does not have the contrast.
 | Border width | `1px solid` | **Yes** |
 | Radius | `10px` | **No** — `track-order.html` uses `8px` (§7e) |
 | Padding | `12px 16px` | **No** — the five auth pages use `13px 16px` (§7e) |
-| Focus | border becomes `var(--gold-lt)` | |
+| Focus | border becomes `var(--focus, var(--soft))` — `#7A6558`, 5.48:1 | **Yes**, all 24 rules |
 | Error | border becomes `var(--err)`, message beneath in `--text-xs` | |
 | Label | sentence case, `--text-sm`, `var(--soft)` | |
 
@@ -224,7 +239,7 @@ Wording is Nicholas's to write; this section says only what has been settled.
 Everything here was checked in a browser. Items marked **cosmetic only** do not
 change a single rendered pixel today.
 
-### a. Nine pages declare tokens that never apply — *cosmetic only*
+### a. Nine pages declared tokens that never applied — **aligned 6 October**
 
 `account.html`, `login.html`, `register.html`, `forgot-password.html`,
 `reset-password.html` carry a whole alternative palette: `--border #E5DDD0`,
@@ -233,11 +248,16 @@ change a single rendered pixel today.
 fixed-px type. `admin.html` differs on `--gold-dk`. `docs/ORDER-PAGE.html` and
 `step3/preview.html` differ on `--line` and `--white`.
 
-**None of it renders.** The injected header overrides every one — verified on
-`login.html`, where the page declares `#E5DDD0` and the browser reports
-`#E8DDD8`. The risk is not appearance, it is belief: anyone reading those files
-learns the wrong palette, and if the injection order ever changed, five pages
-would shift at once.
+**None of it rendered.** The injected header overrode every one — verified on
+`login.html`, which declared `#E5DDD0` while the browser reported `#E8DDD8`.
+
+**They were aligned to the house values rather than deleted**, and the
+distinction matters. Those blocks sit in each page's `<head>`, so they are the
+palette the page paints with *before* the runtime header fetch lands. Deleting
+them would leave a page with no tokens at all for that window — a flash of
+unstyled colour on a slow connection. Aligning the 39 differing values stops
+the source lying without taking that risk. Verified afterwards: `login.html`
+renders pixel-identical.
 
 ### b. 91 literal hex values where a token exists — *cosmetic only*
 
@@ -250,14 +270,26 @@ palette change.
 
 53 pages, two `<link>` tags each, zero elements using it.
 
-### d. Page headings are not on the scale — **this one is visible**
+### d. Page headings — **fixed 6 October**
 
-Measured at 1200px, `<h1>` across eight pages: 48px, 48px, 43.2px, 43.2px,
-40.8px, 39.9px, 38.4px, 38px — and weight varies between 300 and 400 with no
-pattern. The `--text-h1` token exists and almost nothing uses it.
+Was: eight different sizes across eight pages — 48, 48, 43.2, 43.2, 40.8, 39.9,
+38.4, 38px — with weight drifting between 300 and 400 for no reason.
 
-**Deliberate exception:** `index.html`'s `<h1>` is `hero-h1-seo` — 15px, gold,
-Jost. It is an SEO heading styled as a kicker, on purpose. Not a fault.
+All page titles now use `var(--text-h1)` at weight 400. **The token itself was
+repointed**: it held `clamp(40px, 3.8vw + 21px, 58px)` and was used by nothing,
+while 24 product pages set `clamp(2rem, 3.6vw, 3rem)` through `.lp-h1`. Adopting
+the old token value would have enlarged those 24 pages by about a fifth, so the
+token was moved to the size the site already used. The pages that were right
+did not move; the outliers came to them.
+
+**Deliberate exceptions, both roles rather than faults:**
+
+- **Heroes keep their own, larger scale.** A hero is not a page title. The
+  homepage (`.hero-h1`), `wedding-albums` (`.hero h1`, up to 84px), the album
+  builder (`.builder-hero h1`) and `saved-designs` (`.page-hero h1`) all have
+  one. Anything whose selector contains `hero` is outside the page-title rule.
+- **`index.html`'s `<h1>` is `hero-h1-seo`** — 15px, gold, Jost. An SEO heading
+  styled as a kicker, on purpose.
 
 ### e. Inputs and cards drift by a pixel or two — **visible, just barely**
 
@@ -302,7 +334,7 @@ elements** such as borders and focus rings.
 | **Gold text on white** | **2.74** | **fails AA** |
 | **Gold text on cream** | **2.56** | **fails AA** |
 | **`--pale` placeholder on white** | **2.52** | **fails AA** |
-| **`--gold-lt` focus border on white** | **1.89** | **fails the 3:1 for interface** |
+| ~~`--gold-lt` focus border~~ → `--focus` `#7A6558` | **5.48** | **fixed 6 Oct** — was 1.89 |
 
 ### What this means, plainly
 
@@ -310,22 +342,25 @@ elements** such as borders and focus rings.
 500 — measured, not assumed — so the large-text exemption does not apply. Gold
 is the brand, and white-on-gold is the most-used component on the site.
 
-**The focus ring is the one I would fix first.** `--gold-lt` against white is
-1.89:1, well under the 3:1 required for interface elements. Someone navigating
-by keyboard may not be able to see where they are. It is also the smallest
-change: a focus ring can be darkened without touching the brand colour, because
-it is furniture, not identity.
+**The focus ring is fixed.** It was `--gold-lt` (1.89:1) on most pages and
+`--gold` (2.74:1) on the five sign-in pages — both under the 3:1 an interface
+element needs, and the sign-in pages are exactly where a keyboard user most
+needs to see where they are. All 24 rules now use a new `--focus` role token
+set to `#7A6558`, **5.48:1**. That colour was already in the palette, so
+nothing new was introduced, and the brand gold was not touched.
 
-**This is a decision for Nicholas, not a bug to fix quietly.** Darkening gold
-to pass AA changes the brand. The alternatives, in increasing order of
-disruption:
+**Nicholas decided on 6 October to leave the gold as it is for now.** That is a
+deliberate, informed choice, recorded here so it is not re-opened by accident.
+The alternatives remain available, in increasing order of disruption:
 
 1. Darken only the focus ring — no brand impact at all.
 2. Keep gold for large display type and backgrounds, introduce a darker
    `--gold-ink` for small gold text — brand intact, the eye barely notices.
 3. Darken `--gold` itself — passes everywhere, changes the whole site.
 
-Nothing here has been changed. It is recorded so the choice is informed.
+Nothing about the gold has been changed. It is recorded so the choice stays
+informed — and so that anyone who later wonders why the button is 2.74:1 finds
+the answer rather than "fixing" it unasked.
 
 ---
 

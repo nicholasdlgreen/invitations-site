@@ -22,8 +22,8 @@
 <style>
   :root{
     --cream:#FAF7F2;--white:#FFFFFF;--gold:#B8976A;--gold-lt:#D4B896;
-    --brown:#6B4F3A;--text:#3D2E24;--soft:#7A6A5C;--pale:#A89788;
-    --border:#E5DDD0;--err:#B85C5C;--ok:#5C8A6A;
+    --brown:#6B4F3A;--text:#3D2E24;--soft:#7A6558;--pale:#B0A098;
+    --border:#E8DDD8;--err:#C94A3A;--ok:#5A9E6F;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html,body{background:var(--cream);color:var(--text);font-family:'Jost',sans-serif;font-weight:300;-webkit-font-smoothing:antialiased;}
@@ -40,7 +40,7 @@
   .form-label-link{font-size:var(--text-xs);color:var(--gold);text-decoration:none;font-weight:500;}
   .form-label-link:hover{color:var(--brown);}
   .form-input{width:100%;padding:13px 16px;border:1px solid var(--border);border-radius:10px;background:var(--cream);font-family:inherit;font-size:var(--text-body);color:var(--text);font-weight:400;transition:border-color .2s,background .2s;}
-  .form-input:focus{outline:none;border-color:var(--gold);background:var(--white);}
+  .form-input:focus{outline:none;border-color:var(--focus,var(--soft));background:var(--white);}
   .btn-submit{width:100%;background:var(--gold);color:var(--white);border:none;padding:15px 24px;border-radius:10px;font-family:inherit;font-size:var(--text-body);font-weight:500;letter-spacing:.04em;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;}
   .btn-submit:hover:not(:disabled){background:var(--brown);}
   .btn-submit:disabled{background:var(--pale);cursor:not-allowed;}

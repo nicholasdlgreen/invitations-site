@@ -74,7 +74,7 @@ nav a:hover, nav a.active { color: var(--gold); }
 /* ── FORMS ── */
 .form-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); display: block; margin-bottom: 8px; font-weight: 400; }
 .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border); background: var(--white); font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 300; color: var(--text); outline: none; transition: border-color .2s; appearance: none; border-radius: 8px; }
-.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--gold-lt); }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--focus,var(--soft)); }
 .form-textarea { resize: vertical; min-height: 90px; line-height: 1.7; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .hint { font-size: 11px; color: var(--pale); margin-top: 7px; line-height: 1.6; }
@@ -196,7 +196,7 @@ footer { background: var(--text); color: rgba(255,255,255,.6); padding: 60px 0 3
 .co-field { margin-bottom:16px; }
 .co-label { font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:6px;font-weight:400; }
 .co-input { width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);background:var(--white);outline:none;transition:border-color .2s; }
-.co-input:focus { border-color:var(--gold-lt); }
+.co-input:focus { border-color:var(--focus,var(--soft)); }
 .co-input.error { border-color:var(--err); }
 .co-row { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
 .co-stripe-note { display:flex;align-items:center;gap:10px;background:var(--cream);border-radius:12px;padding:14px 16px;margin-top:8px;margin-bottom:20px; }
@@ -241,7 +241,7 @@ footer { background: var(--text); color: rgba(255,255,255,.6); padding: 60px 0 3
 .st-pw.on .st-pc { border-color: var(--text); transform: scale(1.15); }
 .st-pn { font-size: 10px; color: var(--soft); text-align: center; max-width: 48px; line-height: 1.3; }
 .st-fi { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--cream); font-family: 'Jost',sans-serif; font-size: 12px; font-weight: 300; color: var(--text); outline: none; transition: border-color .2s; margin-bottom: 8px; }
-.st-fi:focus { border-color: var(--gold-lt); background: var(--white); }
+.st-fi:focus { border-color:var(--focus,var(--soft)); background: var(--white); }
 .st-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .st-ai-btn { width: 100%; padding: 9px 14px; background: transparent; border: 1px solid var(--border); border-radius: 60px; font-family: 'Jost',sans-serif; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); cursor: pointer; transition: all .2s; text-align: left; display: flex; align-items: center; justify-content: space-between; }
 .st-ai-btn:hover, .st-ai-btn.open { border-color: var(--gold); color: var(--gold); }
@@ -287,7 +287,7 @@ footer { background: var(--text); color: rgba(255,255,255,.6); padding: 60px 0 3
 .st-topt:hover:not(.on) { border-color:var(--gold-lt); }
 .st-vcl { font-size: 8px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); text-align: center; margin-top: 3px; }
 .field-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Jost',sans-serif; font-size: 13px; color: var(--text); background: var(--white); outline: none; transition: border-color .2s; margin-bottom: 12px; }
-.field-input:focus { border-color: var(--gold-lt); }
+.field-input:focus { border-color:var(--focus,var(--soft)); }
 
 /* ── SUCCESS SCREEN ── */
 .success-wrap { max-width: 560px; margin: 0 auto; padding: 100px 32px; text-align: center; }
@@ -810,7 +810,7 @@ was fetched and injected via innerHTML — that was the bug behind the
 <div style="background:var(--cream);min-height:calc(100vh - 64px);padding:80px 0 100px;">
   <div style="max-width:760px;margin:0 auto;padding:0 32px;">
     <span class="tag">Delivery Information</span>
-    <h1 class="serif" style="font-size:clamp(2rem,4vw,3rem);font-weight:300;line-height:1.15;margin-bottom:16px;">Delivery &amp; Shipping</h1>
+    <h1 class="serif" style="font-size:var(--text-h1);font-weight:400;line-height:1.15;margin-bottom:16px;">Delivery &amp; Shipping</h1>
     <div style="width:48px;height:1px;background:var(--gold-lt);margin-bottom:40px;"></div>
 
     <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px;margin-bottom:20px;">

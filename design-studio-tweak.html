@@ -13,7 +13,7 @@
 <meta name="robots" content="noindex"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
-:root{--cream:#FBF8F4;--white:#fff;--border:#E4D8C8;--gold:#B8976A;--gold-lt:#C4B49B;--brown:#5C4A2E;--text:#3D3833;--soft:#8A7A68;--pale:#B0A098;--text-xs:13px;--text-sm:15px;--text-body:17px;--text-h3:20px;}
+:root{--cream:#FAF7F2;--white:#FFFFFF;--border:#E8DDD8;--gold:#B8976A;--gold-lt:#D4B896;--brown:#6B4F3A;--text:#3D2E24;--soft:#7A6558;--pale:#B0A098;--text-xs:clamp(13px, 0.55vw + 11px, 15px);--text-sm:clamp(15px, 0.6vw + 12px, 17px);--text-body:clamp(17px, 0.7vw + 14px, 19px);--text-h3:clamp(21px, 1.3vw + 16px, 27px);}
 body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text);}
 .tw-wrap{max-width:1000px;margin:0 auto;padding:40px 24px 80px;}
 .tw-eyebrow{text-align:center;font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
@@ -48,7 +48,7 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 .tw-chip:hover{border-color:var(--gold-lt);}
 .tw-chip.on{border-color:var(--gold);background:#F4EDE6;color:var(--brown);}
 .tw-text{width:100%;box-sizing:border-box;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);outline:none;line-height:1.6;resize:vertical;min-height:70px;margin-top:8px;}
-.tw-text:focus{border-color:var(--gold-lt);}
+.tw-text:focus{border-color:var(--focus,var(--soft));}
 .tw-go{display:block;width:100%;margin-top:20px;background:var(--gold);color:#fff;border:none;font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;font-weight:500;padding:15px;border-radius:60px;cursor:pointer;}
 .tw-go:hover{background:var(--brown);}
 .tw-go:disabled{opacity:.6;cursor:default;}
