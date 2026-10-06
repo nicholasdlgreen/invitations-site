@@ -165,10 +165,16 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
     cv.classList.toggle('is-square', !!state.cardSquare);
   })();
 
+  // Re-measure the note with the card, not just once on the way in. It was
+  // decided from the first measurement, taken before the card had settled at
+  // its final size, and never revisited: on an A5 with long wording the block
+  // came out at 62.0% of the card -- 0.97px INSIDE the limit -- and the page
+  // still told the customer their wording was too long for the card.
+  function resync(){ sizeTextToCard(); overflowNote(); }
   sizeTextToCard();
-  window.addEventListener('resize', sizeTextToCard);
+  window.addEventListener('resize', resync);
   if (window.ResizeObserver) {
-    try { new ResizeObserver(sizeTextToCard).observe(document.getElementById('tw-canvas')); } catch(e){}
+    try { new ResizeObserver(resync).observe(document.getElementById('tw-canvas')); } catch(e){}
   }
 
   var currentImage = state.image;

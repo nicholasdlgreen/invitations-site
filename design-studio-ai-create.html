@@ -182,7 +182,6 @@ padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
 .ds-preview-stick{position:sticky;
   top:max(calc(var(--ds-head, 75px) + 16px), calc((100vh - var(--ds-pvh, 642px)) / 2));}
 .ds-preview{background:#F1EFE9;border:1px solid var(--border);border-radius:16px;padding:18px;}
-.ds-preview-label{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-align:center;margin-bottom:12px;}
 /* A ceiling, not a target: with room the card stays exactly the size it was,
    and only shrinks when it would otherwise fall off the bottom.
    --ds-chrome is everything in the preview that is NOT the card, measured
@@ -203,7 +202,53 @@ padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
    The default matches the desktop card so nothing jumps before it runs. */
 .ds-canvas{--ds-cardh:536px;aspect-ratio:3/4;background:#FBF8F2;border-radius:8px;position:relative;overflow:hidden;box-shadow:0 8px 26px rgba(61,46,36,.12);
   max-height:max(300px, calc(100vh - var(--ds-head, 75px) - var(--ds-chrome, 110px) - 32px));
+  max-width:var(--ds-maxw, 380px);
   width:auto;margin-left:auto;margin-right:auto;}
+
+/* ── THE CARD AND ITS CONTROLS, SIDE BY SIDE ──────────────────────────
+   Desktop only, and only once a design exists. The card is capped by the
+   height left in the window after everything else in this panel, so while the
+   hint, the resize buttons and four full-width buttons were stacked UNDER it
+   they were spending the card's own room: 386px of them, leaving the card
+   289x407 on a 1440x900 screen - a fifth of the screen's width and a twelfth
+   of its area - with the order button pushed below the fold.
+   Beside the card that stack costs nothing, and the card takes the width
+   instead. The primary action stays full width underneath, where its wording
+   fits; in the rail it wrapped to four lines. */
+.ds-rail{}
+@media (min-width:769px){
+  /* Grid, not flex. The card is width:auto with an aspect-ratio and no
+     in-flow children, so as a FLEX item it sized itself from its content and
+     collapsed to 0x0. A grid item fills its track the way a block fills its
+     parent, which is the behaviour the card's sizing has always relied on. */
+  /* 140px, not 180. Every pixel the rail gives up, the card takes: the card
+     fills the first track, so the rail's width IS the card's width. The two
+     secondary actions were full-width pills at the card's own scale, each
+     wrapping onto two lines, and between them they carried more weight than
+     the card they belong to.
+     align-items:center puts the rail on the card's centre line instead of
+     against its top edge. */
+  .ds-preview.is-generated .ds-stage{display:grid;grid-template-columns:minmax(0,1fr) 140px;
+    gap:14px;align-items:center;}
+  .ds-preview.is-generated .ds-cardwrap{min-width:0;}
+  .ds-preview.is-generated .ds-canvas{max-width:none;}
+  .ds-preview.is-generated .ds-drag-hint{text-align:left;margin:0 0 14px;}
+  .ds-preview.is-generated .ds-resize{justify-content:flex-start;margin:0 0 16px;gap:8px;}
+  /* flex-start, so the button is the width of its own words rather than the
+     width of the rail */
+  .ds-preview.is-generated .ds-actions{margin:0;gap:2px;align-items:flex-start;}
+  .ds-preview.is-generated #ds-tweak{font-size:12px;letter-spacing:.02em;text-transform:none;
+    padding:8px 13px;border-color:var(--gold-lt);color:var(--gold);}
+  /* Saving and starting again are lesser things than tweaking, and now look
+     it: the weight "Start again" always had. */
+  .ds-preview.is-generated #ds-save,
+  .ds-preview.is-generated #ds-restart{background:none;border:none;padding:7px 0;color:var(--soft);
+    font-size:12.5px;letter-spacing:0;text-transform:none;text-decoration:underline;
+    text-underline-offset:3px;text-align:left;}
+  .ds-preview.is-generated #ds-save:hover,
+  .ds-preview.is-generated #ds-restart:hover{color:var(--gold);background:none;}
+}
+#ds-love{width:100%;margin-top:14px;}
 .ds-safe{position:absolute;top:11%;left:10%;right:10%;bottom:11%;display:flex;align-items:center;justify-content:center;z-index:1;}
 /* draggable text mode (after generation) */
 .ds-canvas.is-generated .ds-safe{cursor:move;top:0;left:0;right:0;bottom:0;padding:0;align-items:flex-start;}
@@ -1044,7 +1089,6 @@ was fetched and injected via innerHTML — that was the bug behind the
            to be window-tall, which is a different design. -->
       <div class="ds-preview-stick">
       <div class="ds-preview">
-        <div class="ds-preview-label">Your invitation</div>
         <!-- Appears only once there IS an inside to look at. Two panels used to
              sit here before a word had been typed, describing a choice nobody
              had been asked to make, and they could not be clicked. -->
@@ -1052,6 +1096,19 @@ was fetched and injected via innerHTML — that was the bug behind the
           <button type="button" id="ds-tab-front" class="on">Front</button>
           <button type="button" id="ds-tab-inside">Inside</button>
         </div>
+        <!-- Card and controls sit SIDE BY SIDE on desktop once a design
+             exists. They used to be stacked, and the 386px of hint, resize
+             and buttons under the card was what made the card small: it is
+             capped by the height left in the window after everything else in
+             this panel, so the stack below was spending the card's own room.
+             Measured 6 October 2026 on a 1440x900 screen: 289x407. -->
+        <div class="ds-stage" id="ds-stage">
+        <!-- A plain block around the card. The card is width:auto with an
+             aspect-ratio and no in-flow children, so it only sizes correctly
+             when it can fill an ordinary block: as a grid or flex item it
+             measured its (empty) content and collapsed to 0x0. The wrapper
+             takes the grid track, the card fills the wrapper. -->
+        <div class="ds-cardwrap">
         <div class="ds-canvas" id="ds-canvas">
           <div class="ds-art" id="art-a"></div>
           <div class="ds-art" id="art-b"></div>
@@ -1078,18 +1135,24 @@ was fetched and injected via innerHTML — that was the bug behind the
             <div class="ds-gen-sub">This usually takes under a minute</div>
           </div>
         </div>
-        <div class="ds-drag-hint" id="ds-drag-hint" style="display:none;">Drag your wording to position it in the clear space · use − / + to resize</div>
-        <div class="ds-resize" id="ds-resize" style="display:none;">
-          <button type="button" id="ds-smaller" aria-label="Smaller text">−</button>
-          <span>Text size</span>
-          <button type="button" id="ds-bigger" aria-label="Bigger text">+</button>
+        </div><!-- /.ds-cardwrap -->
+        <div class="ds-rail" id="ds-rail">
+          <div class="ds-drag-hint" id="ds-drag-hint" style="display:none;">Drag your wording to position it in the clear space · use − / + to resize</div>
+          <div class="ds-resize" id="ds-resize" style="display:none;">
+            <button type="button" id="ds-smaller" aria-label="Smaller text">−</button>
+            <span>Text size</span>
+            <button type="button" id="ds-bigger" aria-label="Bigger text">+</button>
+          </div>
+          <div class="ds-actions" id="ds-actions" style="display:none;">
+            <button class="ds-act-secondary" id="ds-tweak">Make some tweaks</button>
+            <button class="ds-act-secondary" id="ds-save">♡ Save this design</button>
+            <button class="ds-act-tertiary" id="ds-restart">Start again</button>
+          </div>
         </div>
-        <div class="ds-actions" id="ds-actions" style="display:none;">
-          <button class="ds-act-primary" id="ds-love">Love it — choose paper &amp; order →</button>
-          <button class="ds-act-secondary" id="ds-tweak">Make some tweaks</button>
-          <button class="ds-act-secondary" id="ds-save">♡ Save this design</button>
-          <button class="ds-act-tertiary" id="ds-restart">Start again</button>
-        </div>
+        </div><!-- /.ds-stage -->
+        <!-- The one action worth the full width of the panel. In the rail its
+             wording would wrap to four lines. -->
+        <button class="ds-act-primary" id="ds-love" style="display:none;">Love it — choose paper &amp; order →</button>
         <div class="ds-preview-hint" id="ds-prehint">Add your wording, describe the look, then generate your design.</div>
       </div>
       <!-- Outside .ds-preview on purpose. --ds-chrome is measured as the
@@ -1469,8 +1532,10 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
     canvas.style.transition = 'aspect-ratio .3s ease, max-width .3s ease';
     canvas.style.aspectRatio = S.ratio;
     // square needs a smaller max-width so it doesn't tower; portraits taller
-    canvas.style.maxWidth = (size==='Square') ? '340px'
-                          : (orientation === 'landscape') ? '460px' : '380px';
+    // A property, not an inline max-width: an inline style beats every rule in
+    // the stylesheet, so the wider generated card could never take effect.
+    canvas.style.setProperty('--ds-maxw', (size==='Square') ? '340px'
+                          : (orientation === 'landscape') ? '460px' : '380px');
     canvas.style.margin = '0 auto';
     canvas.classList.toggle('is-square', size==='Square');
     setTimeout(function(){ if(typeof autofit==='function') autofit(); }, 320);
@@ -1929,8 +1994,6 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   function applyProductWording(){
     var noun = CONFIG_PRODUCT_NOUN || 'design';
     var pretty = noun.charAt(0).toUpperCase() + noun.slice(1);
-    var lbl = document.querySelector('.ds-preview-label');
-    if (lbl) lbl.textContent = 'Your ' + noun;
     var empty = document.getElementById('ds-empty');
     if (empty) empty.textContent = 'Your ' + noun + ' will appear here as you add your wording.';
     document.title = 'Design Your Own · ' + pretty + ' | foreverprint';
@@ -2348,6 +2411,9 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
     document.getElementById('ds-drag-hint').style.display='block';
     document.getElementById('ds-resize').style.display='flex';
     document.getElementById('ds-actions').style.display='flex';
+    document.getElementById('ds-love').style.display='block';
+    // puts the card and its controls side by side (desktop CSS only)
+    document.querySelector('.ds-preview').classList.add('is-generated');
     document.getElementById('ds-prehint').style.display='none';
     document.getElementById('ds-generate').textContent='↻ Generate again';
     enableDrag();
@@ -3152,6 +3218,8 @@ function artworkFileName(prefix, ext){
     canvas.classList.remove('is-generated');
     // hide the post-gen controls, restore the generate button
     document.getElementById('ds-actions').style.display = 'none';
+    document.getElementById('ds-love').style.display = 'none';
+    document.querySelector('.ds-preview').classList.remove('is-generated');
     document.getElementById('ds-drag-hint').style.display = 'none';
     document.getElementById('ds-resize').style.display = 'none';
     document.getElementById('ds-prehint').style.display = 'block';

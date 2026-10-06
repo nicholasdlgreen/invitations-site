@@ -180,9 +180,9 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 | Token | Value | Already used |
 |---|---|---|
 | `--space-1` | `4px` | 644 times |
-| `--space-2` | `8px` | 1,362 — the most used value on the site |
+| `--space-2` | `8px` | 1,364 — the most used value on the site |
 | `--space-3` | `12px` | 315 |
-| `--space-4` | `16px` | 573 |
+| `--space-4` | `16px` | 574 |
 | `--space-5` | `20px` | 1,040 |
 | `--space-6` | `24px` | 298 |
 | `--space-7` | `32px` | 879 |
@@ -193,15 +193,15 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 **These are for new work. Existing spacing is deliberately left alone**, and
 that is the whole decision, so it is worth setting out why.
 
-The site has **12,762 spacing declarations using 47 distinct values**. Measured
+The site has **12,770 spacing declarations using 47 distinct values**. Measured
 against the obvious candidates:
 
 | Scale | Fits as-is | Would have to move |
 |---|---|---|
-| Strict 4px grid | 35% | 8,321 declarations |
-| Strict 8px grid | 27% | 9,265 |
-| These ten steps | 45% | 7,050 |
-| These ten plus a 6/10/14 tier | 68% | 4,095 |
+| Strict 4px grid | 35% | 8,326 declarations |
+| Strict 8px grid | 27% | 9,270 |
+| These ten steps | 45% | 7,055 |
+| These ten plus a 6/10/14 tier | 68% | 4,098 |
 
 Even the best fit means rewriting several thousand values across 58 files, each
 a small visual shift, with no practical way to check the result page by page.
@@ -218,6 +218,76 @@ surrounding page already sits. Nothing has been retrofitted.
 related things, `-5`/`-6` between a label and its field or between cards,
 `-7`/`-8` section padding, `-9`/`-10` between major sections. If none fits, the
 honest answer is usually that the layout wants one of them and not a new value.
+
+---
+
+## 4a. Layout and composition
+
+Added 6 October 2026, after a studio redesign went asymmetric and nobody could
+say what rule it had broken — because none was written down. Like §4, this is
+derived from what the site already does, not imposed on it.
+
+### The centred axis
+
+| `text-align` | Uses |
+|---|---|
+| `center` | **673** |
+| `left` | 252 |
+| `right` | 99 |
+
+Centred wins by nearly three to one, and that is the house composition: an
+eyebrow, a heading, a line of supporting copy and the thing itself, all on one
+vertical axis. Heroes, section headings, the step rail, the preview panel and
+every confirmation page are built this way.
+
+**So symmetry is the default, and going off-axis is a decision that needs a
+reason.** A product grid or a form beside a preview is a reason. Moving one
+element off the axis while its neighbours stay on it is not.
+
+**The test, when something looks wrong and you cannot say why:** find the
+centre line of each stacked element and check they agree. In the design studio
+the card was moved into a column beside its controls while the order button
+below kept the full panel width — card centre at x=874, button centre at x=971,
+97px apart. Both elements were individually fine. The composition was not.
+
+### Containers and breakpoints
+
+| | Value | Uses |
+|---|---|---|
+| Page container | `1180px` | **280** — two and a half times the next value |
+| Primary breakpoint | `768px` | 173 |
+| Secondary breakpoint | `480px` | 143 |
+| Narrow phones | `359px` | 46 |
+
+New work uses `1180px` and those three breakpoints. A fourth breakpoint is
+almost always a sign that something inside wants to be fluid instead.
+
+Two-column layouts are `1fr 1fr` (318 uses) far more often than anything
+weighted; `1.5fr 1fr 1fr 1fr` (91) is the product-page sidebar.
+
+### Controls and the thing they control
+
+- **A control belongs on the same axis as what it changes.** The text-size
+  buttons sit under the card they resize; the order button spans the panel it
+  completes.
+- **Weight follows importance, and nothing else.** One solid button to a view.
+  The real alternative to it is outlined. Everything after that is a link. Two
+  outlined pills at full width read as two more primary actions, which is how
+  "Make some tweaks" and "Save this design" came to outweigh the card.
+- **A side rail sits on the centre line of what it serves**, not against its
+  top edge. Top alignment is for columns of comparable height; a 240px rail
+  beside a 644px card looks dropped.
+- **Give the subject the room.** Anything stacked under a preview is competing
+  with it for height, because the preview is capped by what the window has left.
+  386px of controls under the studio card held it to a twelfth of the screen;
+  moving them beside it, and narrowing that rail from 180px to 140px, took the
+  card to 457x644 — two and a half times the area, with nothing else changed.
+
+### Vertical rhythm
+
+Use the §4 steps. Between a thing and its caption `--space-2`/`-3`; between a
+control group and the next `--space-4`/`-5`; between a panel's edge and its
+contents `--space-5`/`-6`; between sections `--space-7` upward.
 
 ---
 
