@@ -505,7 +505,7 @@ was fetched and injected via innerHTML — that was the bug behind the
   <div style="max-width:480px;width:100%;text-align:center;">
     <span class="tag">Track Your Order</span>
     <h1 class="serif" style="font-size:2rem;font-weight:400;margin:6px 0 10px;">Where is my order?</h1>
-    <p style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin:0 auto 24px;max-width:400px;">Enter your order number and email address to see the current status of your invitations.</p>
+    <p style="font-size:var(--text-sm);color:var(--soft);line-height:1.8;margin:0 auto 24px;max-width:400px;">Enter your order number and email address to see the current status of your order.</p>
     <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px;">
       <div style="margin-bottom:16px;text-align:left;">
         <label class="form-label">Order Number</label>
@@ -808,7 +808,7 @@ async function lookupLiveOrder(orderNum, email) {
       stages: [
         { name:'Order Received', desc:'Your order was received and payment confirmed.', date: dt, done: true },
         { name:'File Checked', desc:'Your artwork passed our pre-press checks.', date:'—', done: curIdx >= 2 },
-        { name:'Printing', desc:'Your invitations are being printed.', date:'—', done: curIdx >= 3 },
+        { name:'Printing', desc:'Your order is being printed.', date:'—', done: curIdx >= 3 },
         { name:'Dispatched', desc: o.tracking ? 'Dispatched via courier. Tracking: ' + o.tracking : 'Dispatched via courier.', date:'—', done: curIdx >= 4 },
         { name:'Delivered', desc:'Your order has arrived.', date:'—', done: curIdx >= 5 }
       ]
@@ -827,7 +827,7 @@ function renderTrackResult(result, order) {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
         <div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:4px;">${order.name}</div>
-          <div style="font-size:var(--text-sm);color:var(--soft);">${order.suite} · ${order.qty} invitations · ${order.total}</div>
+          <div style="font-size:var(--text-sm);color:var(--soft);">${order.suite} · ${order.qty} items · ${order.total}</div>
           <div style="font-size:var(--text-xs);color:var(--pale);margin-top:4px;">Ordered ${order.date}</div>
         </div>
         <div style="background:${sc[0]};color:${sc[1]};padding:6px 14px;border-radius:20px;font-size:var(--text-xs);letter-spacing:.08em;text-transform:uppercase;font-weight:500;">${statusLabels[order.status]||order.status}</div>
