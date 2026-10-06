@@ -17,12 +17,17 @@
   The fix is one line, `await domReady()`, because deferred scripts are
   guaranteed to run before DOMContentLoaded and not before it.
 
+  section-race-module.js is the stand-in for /papers/section.js: one line,
+  loaded with defer, exactly as the real module is. It is a FIXTURE, not a
+  test -- it was called test-section-race.js, so every suite run tried to
+  execute it on its own and reported it as broken.
+
   To run: serve this directory and open the page. Both lines must say "rendered".
   The OLD line reproduces the bug and is expected to fail — that is the point of
   it. If OLD ever passes, the test has stopped testing anything: the filler
   below is no longer enough to keep the parser busy, so make it bigger.
 -->
-<script defer src="./test-section-race.js"></script>
+<script defer src="./section-race-module.js"></script>
 </head><body style="font-family:system-ui;padding:30px;line-height:1.8">
 <h2>Deferred module vs. an inline script that does not wait</h2>
 <div id="out">running…</div>
