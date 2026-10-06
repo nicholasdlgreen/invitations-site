@@ -99,6 +99,21 @@ is_('footer has exactly one, so nothing was duplicated',
     footer.count('@media(max-width:768px){'), 1)
 print('       (index.html has %d such blocks; all are read)' % index.count('@media(max-width:768px){'))
 
+print('\nTHE FOOTER COLLAPSES ON A PHONE')
+# It never did. The four-column grid is declared in footer.html while the rules
+# that narrowed it sat in header.html — and the build inlines the header first,
+# so footer.html's CSS came later and won at every width. The footer stayed four
+# columns on a phone and ran 121px past the right edge, which is what still made
+# every page scroll sideways after the header was fixed. The overrides now sit
+# beside the rule they override.
+is_('two columns below 768', '.footer-top{grid-template-columns:1fr 1fr;' in f_mob)
+f_small = block(footer, '@media(max-width:480px){')
+is_('one column below 480', '.footer-top{grid-template-columns:1fr;' in f_small)
+is_('the four-column rule is still the default',
+    'grid-template-columns:1.5fr 1fr 1fr 1fr' in outside_queries(footer))
+is_('and the overrides live in the same file as it now',
+    '.footer-top{grid-template-columns' in f_mob)
+
 print('\nMUTATION: A CONTROL SHRINKING BACK MUST FAIL')
 is_('a 38px burger is caught',
     '.nav-toggle{min-width:48px;min-height:48px' in '.nav-toggle{width:38px;height:42px;}', False)

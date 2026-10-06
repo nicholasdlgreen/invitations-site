@@ -148,5 +148,16 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   /* Footer links were 24px high and sat 8px apart, so the gap between two
      of them was smaller than a fingertip. */
   .footer-col a{min-height:48px;display:flex;align-items:center;margin-bottom:2px;}
+  /* THE FOOTER NEVER COLLAPSED. Its four-column grid is declared here, in
+     footer.html, while the rules that narrow it on smaller screens sat in
+     header.html. The build inlines the header first, so this file's CSS came
+     later and won at every width — the footer stayed four columns on a phone
+     and ran 121px past the right edge, which is what made every page scroll
+     sideways after the header was fixed. The overrides belong beside the rule
+     they override. Measured 6 October 2026. */
+  .footer-top{grid-template-columns:1fr 1fr;gap:28px;}
+}
+@media(max-width:480px){
+  .footer-top{grid-template-columns:1fr;gap:22px;}
 }
 </style>

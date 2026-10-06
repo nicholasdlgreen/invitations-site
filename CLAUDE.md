@@ -65,6 +65,11 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
   `header.html` and `footer.html` only.** Never copy it into a page. Every page
   used to carry its own alongside the baked copy, giving two of each with
   duplicate ids, so `getElementById` found the first and the rest sat inert.
+- **Responsive overrides must live in the same file as the rule they override.**
+  The footer's four-column grid is declared in `footer.html` while its mobile
+  rules sat in `header.html`; the build inlines the header first, so the
+  footer's own CSS came later and won at every width. The footer never
+  collapsed on a phone and nobody noticed for months.
 - **The repo stores the output of past builds.** A page's source will show
   chrome baked in from an earlier build, so editing `header.html` leaves every
   committed page carrying the old value until the next build. Do not read a
@@ -117,6 +122,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-mobile-menu.py` | The phone menu collapses its categories; the desktop mega-menu is untouched |
 | `tools/test-products-grid.py` | Two product columns on a phone; the desktop grid is untouched |
 | `tools/test-tap-targets.py` | Mobile controls are 48px; desktop keeps its own sizes |
+| `tools/test-size-step-mobile.py` | The size step is two columns on a phone with readable dimensions |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |

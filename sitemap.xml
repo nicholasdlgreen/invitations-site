@@ -13,7 +13,7 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://foreverprint.com/upload-and-print.html</loc>
+    <loc>https://foreverprint.com/upload-and-print</loc>
     <lastmod>2026-10-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -187,7 +187,19 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://foreverprint.com/delivery.html</loc>
+    <loc>https://foreverprint.com/help-support</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://foreverprint.com/delivery</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://foreverprint.com/contact</loc>
     <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -199,19 +211,19 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://foreverprint.com/returns.html</loc>
+    <loc>https://foreverprint.com/returns</loc>
     <lastmod>2026-10-06</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://foreverprint.com/privacy.html</loc>
+    <loc>https://foreverprint.com/privacy</loc>
     <lastmod>2026-10-06</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://foreverprint.com/terms.html</loc>
+    <loc>https://foreverprint.com/terms</loc>
     <lastmod>2026-10-06</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>

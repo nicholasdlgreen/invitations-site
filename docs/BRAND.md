@@ -179,29 +179,29 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 
 | Token | Value | Already used |
 |---|---|---|
-| `--space-1` | `4px` | 638 times |
-| `--space-2` | `8px` | 1,350 — the most used value on the site |
-| `--space-3` | `12px` | 312 |
-| `--space-4` | `16px` | 570 |
-| `--space-5` | `20px` | 1,032 |
-| `--space-6` | `24px` | 297 |
-| `--space-7` | `32px` | 871 |
-| `--space-8` | `48px` | 363 |
-| `--space-9` | `60px` | 218 |
+| `--space-1` | `4px` | 644 times |
+| `--space-2` | `8px` | 1,362 — the most used value on the site |
+| `--space-3` | `12px` | 313 |
+| `--space-4` | `16px` | 573 |
+| `--space-5` | `20px` | 1,040 |
+| `--space-6` | `24px` | 298 |
+| `--space-7` | `32px` | 879 |
+| `--space-8` | `48px` | 366 |
+| `--space-9` | `60px` | 220 |
 | `--space-10` | `80px` | 15 |
 
 **These are for new work. Existing spacing is deliberately left alone**, and
 that is the whole decision, so it is worth setting out why.
 
-The site has **12,413 spacing declarations using 47 distinct values**. Measured
+The site has **12,758 spacing declarations using 47 distinct values**. Measured
 against the obvious candidates:
 
 | Scale | Fits as-is | Would have to move |
 |---|---|---|
-| Strict 4px grid | 35% | 8,008 declarations |
-| Strict 8px grid | 28% | 8,943 |
-| These ten steps | 46% | 6,747 |
-| These ten plus a 6/10/14 tier | 68% | 3,960 |
+| Strict 4px grid | 35% | 8,319 declarations |
+| Strict 8px grid | 27% | 9,261 |
+| These ten steps | 45% | 7,048 |
+| These ten plus a 6/10/14 tier | 68% | 4,093 |
 
 Even the best fit means rewriting several thousand values across 58 files, each
 a small visual shift, with no practical way to check the result page by page.

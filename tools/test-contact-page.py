@@ -102,7 +102,10 @@ is_('the outlined button is the secondary of the two',
     'hs-chat-btn-out{background:transparent' in help_pg)
 
 print('\nNO PROMPT TEXT INSIDE ANY FIELD')
-is_('no placeholders at all', re.findall(r'placeholder=', visible), [])
+# Scoped to the form. Since the build inlines footer.html, the file also
+# contains Amy's widget, whose own fields legitimately use placeholders.
+form_only = re.search(r'<form id="ctForm".*?</form>', visible, re.S).group(0)
+is_('no placeholders in the contact form', re.findall(r'placeholder=', form_only), [])
 is_('the order format moved beside the label, in the optional grey',
     '(optional, like INV-2026-0000)' in contact)
 is_('the message field no longer repeats the heading',
