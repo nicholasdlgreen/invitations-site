@@ -192,13 +192,25 @@ padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
    The 300px floor stops a very short window turning the card into a stamp.
    Past that point the preview is allowed to be taller than the screen again,
    because a readable card you scroll to beats one you cannot see. */
-.ds-canvas{aspect-ratio:3/4;background:#FBF8F2;border-radius:8px;position:relative;overflow:hidden;box-shadow:0 8px 26px rgba(61,46,36,.12);
+/* THE TYPE IS SIZED FROM THE CARD, NOT THE WINDOW.
+   It used to be set in vw — a share of the browser window — while this card
+   is a fixed 380x536px above 768px wide. The two drifted apart: the names
+   were 5.3% of the card height at a 768px window and 7.4% at 1440px, and
+   because the print file is normalised to the card, that ratio is what got
+   PRINTED. The same design ordered from a laptop and from a large monitor
+   came out 40% different. Measured 6 October 2026.
+   --ds-cardh is the card height in pixels, set by sizeTextToCard() below.
+   The default matches the desktop card so nothing jumps before it runs. */
+.ds-canvas{--ds-cardh:536px;aspect-ratio:3/4;background:#FBF8F2;border-radius:8px;position:relative;overflow:hidden;box-shadow:0 8px 26px rgba(61,46,36,.12);
   max-height:max(300px, calc(100vh - var(--ds-head, 75px) - var(--ds-chrome, 110px) - 32px));
   width:auto;margin-left:auto;margin-right:auto;}
 .ds-safe{position:absolute;top:11%;left:10%;right:10%;bottom:11%;display:flex;align-items:center;justify-content:center;z-index:1;}
 /* draggable text mode (after generation) */
 .ds-canvas.is-generated .ds-safe{cursor:move;top:0;left:0;right:0;bottom:0;padding:0;align-items:flex-start;}
-.ds-canvas.is-generated .ds-stack{position:absolute;transition:none;width:84%;max-width:84%;}
+/* 78%, matching TEXT_AREA_W, so lines wrap at the width they are allowed to
+   occupy and fitTextToCard() only has to solve for height. It was 84%, which
+   with the text area at 78% would have shrunk even short wording. */
+.ds-canvas.is-generated .ds-stack{position:absolute;transition:none;width:78%;max-width:78%;}
 
 /* "we're working on it" state — generation takes a while and people watch
    the preview, not the button they just pressed */
@@ -233,21 +245,21 @@ padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
 .ds-act-tertiary:hover{color:var(--gold);}
 /* square: wider text zone (tighter sides, tighter top/bottom) so lines wrap cleanly */
 .ds-canvas.is-square .ds-safe{top:8%;bottom:8%;left:7%;right:7%;}
-.ds-canvas.is-square .ln.names{font-size:clamp(1.3rem,2.6vw,1.8rem);}
+.ds-canvas.is-square .ln.names{font-size:calc(var(--ds-cardh) * 6.384 / 100);margin-bottom:calc(var(--ds-cardh) * 0.747 / 100);}
 .ds-stack{width:100%;text-align:center;transform-origin:center center;}
 .ds-empty{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--pale);font-size:var(--text-sm);line-height:1.6;}
 .ds-stack .ln{font-family:'Cormorant Garamond',serif;color:#3D3833;line-height:1.32;display:none;}
 .ds-stack .ln.show{display:block;}
-.ln.host{font-style:italic;font-size:calc(var(--text-sm) * .95);color:#8A7A68;margin-bottom:9px;}
-.ln.request{font-style:italic;font-size:calc(var(--text-sm) * .9);color:#5C5148;margin-bottom:12px;}
-.ln.names{font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,3vw,2.1rem);font-weight:500;line-height:1.08;margin-bottom:4px;}
-.ln.date{font-size:var(--text-sm);letter-spacing:.5px;margin-top:11px;}
-.ln.time{font-size:calc(var(--text-sm) * .9);color:#5C5148;margin-bottom:6px;}
-.ln.venue{font-size:var(--text-sm);letter-spacing:.5px;margin-top:9px;}
-.ln.reception{font-style:italic;font-size:calc(var(--text-sm) * .9);color:#5C5148;margin-top:11px;}
-.ln.dress{font-size:calc(var(--text-xs) * .95);letter-spacing:.1em;text-transform:uppercase;color:#8A7A68;margin-top:9px;}
-.ln.rsvp{font-size:calc(var(--text-xs) * .95);color:#8A7A68;margin-top:9px;}
-.ln.custom{font-style:italic;font-size:calc(var(--text-sm) * .9);color:var(--gold);margin-top:11px;}
+.ln.host{font-style:italic;color:#8A7A68;font-size:calc(var(--ds-cardh) * 3.015 / 100);margin-bottom:calc(var(--ds-cardh) * 1.68 / 100);}
+.ln.request{font-style:italic;color:#5C5148;font-size:calc(var(--ds-cardh) * 2.857 / 100);margin-bottom:calc(var(--ds-cardh) * 2.24 / 100);}
+.ln.names{font-family:'Cormorant Garamond',serif;font-weight:500;line-height:1.08;font-size:calc(var(--ds-cardh) * 7.449 / 100);margin-bottom:calc(var(--ds-cardh) * 0.747 / 100);}
+.ln.date{letter-spacing:.5px;font-size:calc(var(--ds-cardh) * 3.174 / 100);margin-top:calc(var(--ds-cardh) * 2.054 / 100);}
+.ln.time{color:#5C5148;font-size:calc(var(--ds-cardh) * 2.857 / 100);margin-bottom:calc(var(--ds-cardh) * 1.12 / 100);}
+.ln.venue{letter-spacing:.5px;font-size:calc(var(--ds-cardh) * 3.174 / 100);margin-top:calc(var(--ds-cardh) * 1.68 / 100);}
+.ln.reception{font-style:italic;color:#5C5148;font-size:calc(var(--ds-cardh) * 2.857 / 100);margin-top:calc(var(--ds-cardh) * 2.054 / 100);}
+.ln.dress{letter-spacing:.1em;text-transform:uppercase;color:#8A7A68;font-size:calc(var(--ds-cardh) * 2.66 / 100);margin-top:calc(var(--ds-cardh) * 1.68 / 100);}
+.ln.rsvp{color:#8A7A68;font-size:calc(var(--ds-cardh) * 2.66 / 100);margin-top:calc(var(--ds-cardh) * 1.68 / 100);}
+.ln.custom{font-style:italic;color:var(--gold);font-size:calc(var(--ds-cardh) * 2.857 / 100);margin-top:calc(var(--ds-cardh) * 2.054 / 100);}
 .ds-art{position:absolute;pointer-events:none;transition:opacity .4s;opacity:0;}
 .ds-art.show{opacity:.85;}
 
@@ -257,6 +269,7 @@ padding:11% 13%;font-family:'Cormorant Garamond',serif;color:#4A3B30;z-index:4;}
 
 
 .ds-preview-cta{display:block;width:100%;margin-top:16px;background:var(--text);color:var(--cream);border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.12em;text-transform:uppercase;padding:14px;border-radius:60px;cursor:pointer;text-align:center;}
+.ds-fit-note{margin-top:12px;font-size:var(--text-xs);color:var(--soft);background:#FDF6EC;border:1px solid var(--gold-lt);border-radius:8px;padding:9px 12px;line-height:1.6;}
 .ds-preview-hint{text-align:center;font-size:var(--text-xs);color:var(--soft);margin-top:10px;line-height:1.5;}
 @media(max-width:820px){
   .ds-grid{grid-template-columns:1fr;}
@@ -1079,6 +1092,13 @@ was fetched and injected via innerHTML — that was the bug behind the
         </div>
         <div class="ds-preview-hint" id="ds-prehint">Add your wording, describe the look, then generate your design.</div>
       </div>
+      <!-- Outside .ds-preview on purpose. --ds-chrome is measured as the
+           preview's height minus the card's, and the card is capped by what is
+           left of the window after the chrome. Inside the box this note took
+           76px off the card, which made the wording need a smaller scale, which
+           kept the note up: a loop that shrank the card by a fifth. Out here it
+           costs the card nothing. -->
+      <div class="ds-fit-note" id="ds-fit-note" role="status" style="display:none;"></div>
       </div><!-- /.ds-preview-stick -->
     </div>
 
@@ -2145,6 +2165,16 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
     ['w-rsvp','pv-rsvp'],
     ['w-custom','pv-custom']
   ];
+  // After a design exists, editing the wording re-fits it. Without this a name
+  // typed after generating would grow the block straight back over the art.
+  var refitTimer = null;
+  function refitSoon(){
+    var cv = document.getElementById('ds-canvas');
+    if (!cv || !cv.classList.contains('is-generated')) return;
+    clearTimeout(refitTimer);
+    refitTimer = setTimeout(function(){ showFitNote(fitTextToCard()); }, 120);
+  }
+
   function refreshPreview(){
     var anyFilled = false;
     FIELD_MAP.forEach(function(pair){
@@ -2156,7 +2186,8 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
       else { line.textContent = ''; line.classList.remove('show'); }
     });
     document.getElementById('ds-empty').style.display = anyFilled ? 'none' : 'block';
-    autofit();
+    autofit();      // fits the block before a design exists
+    refitSoon();    // and re-fits it against the text area once one does
   }
 
   // --- auto-fit: shrink the stack to stay within the safe area ---
@@ -2320,10 +2351,31 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
     document.getElementById('ds-prehint').style.display='none';
     document.getElementById('ds-generate').textContent='↻ Generate again';
     enableDrag();
+    sizeTextToCard();
+    showFitNote(fitTextToCard());
     setStep(2);
   }
 
   // --- drag & resize the text over the generated design ---
+  // ── THE CARD TELLS THE TYPE HOW BIG TO BE ───────────────────────────
+  // Every .ln size is calc(var(--ds-cardh) * n / 100), so the wording keeps the
+  // same proportion to the card whatever the window is doing. Before this the
+  // sizes were in vw and the card was a fixed 380x536px, so they drifted: names
+  // were 5.3% of the card at a 768px window and 7.4% at 1440. The print file is
+  // normalised to the card, so that drift was printed.
+  function sizeTextToCard(){
+    var cv = document.getElementById('ds-canvas');
+    if(!cv) return;
+    var h = cv.getBoundingClientRect().height;
+    if(h > 0) cv.style.setProperty('--ds-cardh', h + 'px');
+  }
+  // The card is an aspect-ratio box, so its height changes whenever the column
+  // width does — a window resize, and also a change of card size or orientation.
+  window.addEventListener('resize', sizeTextToCard);
+  if (window.ResizeObserver) {
+    try { new ResizeObserver(sizeTextToCard).observe(document.getElementById('ds-canvas')); } catch(e){}
+  }
+
   var textScale = 1;
   function enableDrag(){
     var stack = document.getElementById('ds-stack');
@@ -2358,8 +2410,98 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
     stack.addEventListener('mousedown',down); document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
     stack.addEventListener('touchstart',down,{passive:false}); document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
   }
+  // ── FIT THE WORDING TO A TEXT AREA ──────────────────────────────────
+  // The text block used to open at full size and stay there. With a long name
+  // it ran to 89% of the card height and 84% of its width — three quarters of
+  // the card — so the decoration had nowhere to sit but underneath the words,
+  // and the customer had to shrink it by hand until it fitted. Measured
+  // 6 October 2026: five lines of names at scale 1 is 89% of an A5.
+  //
+  // So the studio does the fitting. The wording is sized to land inside a text
+  // area, leaving the border clear for the design. The customer can still drag
+  // it and still change the size — this only sets where it starts.
+  var TEXT_AREA_W = 0.78;   // share of the card the wording may use
+  var TEXT_AREA_H = 0.62;
+  var MIN_PRINT_PT = 7;     // nothing is allowed to print smaller than this
+
+  // The card's real height in millimetres, which is what decides whether a
+  // given scale is legible once printed.
+  function cardHeightMm(){
+    var spec = sizeInfo(size) || {};
+    var m = (spec.dim || '').match(/(\d+)\s*[x\u00d7]\s*(\d+)/i);
+    return m ? parseInt(m[2], 10) : 210;            // A5 if we cannot tell
+  }
+
+  // The smallest line actually on the card, as a share of the card height.
+  function smallestLineRatio(){
+    var smallest = null;
+    document.querySelectorAll('#ds-stack .ln.show').forEach(function(el){
+      var px = parseFloat(window.getComputedStyle(el).fontSize);
+      if (smallest === null || px < smallest) smallest = px;
+    });
+    var cardPx = document.getElementById('ds-canvas').getBoundingClientRect().height;
+    return (smallest && cardPx) ? smallest / cardPx : 0.0266;
+  }
+
+  // How far down we may scale before the smallest line stops being printable.
+  // On a small card — a place card is 85mm tall — the smallest line is already
+  // near the floor at full size, so this can come back as 1: do not shrink.
+  // The 7pt rule is the only floor, because it is the only one with a reason
+  // behind it. There used to be a flat 0.5 clamp as well, and on A5 that was
+  // what stopped the fit \u2014 at 0.5 the smallest line was still 7.9pt, so there
+  // was legible room left that the clamp would not let us use. The 0.2 is a
+  // guard against a bad measurement, not a design decision.
+  function minLegibleScale(){
+    var mmAtScale1 = smallestLineRatio() * cardHeightMm();
+    var floorMm = MIN_PRINT_PT / 2.835;
+    if (mmAtScale1 <= 0) return 0.5;
+    return Math.min(1, Math.max(0.2, floorMm / mmAtScale1));
+  }
+
+  // Returns true when the wording had to stop short of fitting because
+  // shrinking further would have made it too small to print.
+  function fitTextToCard(){
+    var canvas = document.getElementById('ds-canvas');
+    var stack  = document.getElementById('ds-stack');
+    if (!canvas || !stack) return false;
+    var card = canvas.getBoundingClientRect();
+    if (!card.height) return false;
+
+    // measure the block at its natural size, whatever the scale is now
+    var prev = stack.style.transform;
+    stack.style.transform = 'translate(-50%,-50%) scale(1)';
+    var nat = stack.getBoundingClientRect();
+    stack.style.transform = prev;
+    if (!nat.height) return false;
+
+    var fits = Math.min(TEXT_AREA_W * card.width / nat.width,
+                        TEXT_AREA_H * card.height / nat.height);
+    var floor = minLegibleScale();
+    var wanted = Math.min(1, fits);
+    var tooLong = wanted < floor;
+    textScale = Math.max(floor, Math.min(1, wanted));
+    stack.style.transform = 'translate(-50%,-50%) scale(' + textScale + ')';
+    return tooLong;
+  }
+
+  // Said once, quietly, when the wording cannot be made to fit without going
+  // below a printable size. Shrinking it silently is how you end up posting
+  // somebody an invitation with a 7.9pt RSVP line on it.
+  function showFitNote(show){
+    var el = document.getElementById('ds-fit-note');
+    if (!el) return;
+    if (show && !el.textContent) {
+      el.textContent = 'That is a lot of wording for this size of card. It is set as '
+        + 'large as it can be and still print clearly \u2014 shortening a line, or '
+        + 'choosing a bigger card, will give it more room.';
+    }
+    el.style.display = show ? 'block' : 'none';
+  }
+
+  // Shares minLegibleScale() with the auto-fit. With a flat 0.5 here instead,
+  // wording that auto-fitted to 0.44 grew when you pressed the minus button.
   function rescale(delta){
-    textScale = Math.max(0.5, Math.min(1.8, textScale + delta));
+    textScale = Math.max(minLegibleScale(), Math.min(1.8, textScale + delta));
     var stack = document.getElementById('ds-stack');
     var cur = stack.style.transform || 'translate(-50%,-50%) scale(1)';
     stack.style.transform = cur.replace(/scale\([^)]*\)/, 'scale('+textScale+')');
@@ -3057,6 +3199,15 @@ function artworkFileName(prefix, ext){
       }),
       sel: sel,
       textPos: { left: stack.style.left || '50%', top: stack.style.top || '50%', scale: textScale },
+      // The card's height in mm travels with the design, so the tweak page can
+      // work out the same 7pt print floor without keeping its own copy of the
+      // size list to drift out of step with this one.
+      heightMm: cardHeightMm(),
+      // The card's shape, so the tweak page shows the same card. It had a
+      // hardcoded 3/4 box, which is near enough for A5 (0.705) and simply
+      // wrong for DL (0.471) or a square.
+      cardRatio: (sizeInfo(size) || {}).ratio || '3/4',
+      cardSquare: size === 'Square',
       productSlug: PRODUCT_SLUG,
       savedAt: new Date().toISOString()
     };
@@ -3145,7 +3296,7 @@ function artworkFileName(prefix, ext){
   });
 
   // init
-  applySize(); buildBrief(); refreshPreview();
+  applySize(); buildBrief(); refreshPreview(); sizeTextToCard();
   setStep(0);
   loadStudioFields();   // config-driven wording fields (after deps defined)
 

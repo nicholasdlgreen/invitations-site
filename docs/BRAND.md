@@ -181,7 +181,7 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 |---|---|---|
 | `--space-1` | `4px` | 644 times |
 | `--space-2` | `8px` | 1,362 — the most used value on the site |
-| `--space-3` | `12px` | 313 |
+| `--space-3` | `12px` | 315 |
 | `--space-4` | `16px` | 573 |
 | `--space-5` | `20px` | 1,040 |
 | `--space-6` | `24px` | 298 |
@@ -193,15 +193,15 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 **These are for new work. Existing spacing is deliberately left alone**, and
 that is the whole decision, so it is worth setting out why.
 
-The site has **12,758 spacing declarations using 47 distinct values**. Measured
+The site has **12,762 spacing declarations using 47 distinct values**. Measured
 against the obvious candidates:
 
 | Scale | Fits as-is | Would have to move |
 |---|---|---|
-| Strict 4px grid | 35% | 8,319 declarations |
-| Strict 8px grid | 27% | 9,261 |
-| These ten steps | 45% | 7,048 |
-| These ten plus a 6/10/14 tier | 68% | 4,093 |
+| Strict 4px grid | 35% | 8,321 declarations |
+| Strict 8px grid | 27% | 9,265 |
+| These ten steps | 45% | 7,050 |
+| These ten plus a 6/10/14 tier | 68% | 4,095 |
 
 Even the best fit means rewriting several thousand values across 58 files, each
 a small visual shift, with no practical way to check the result page by page.

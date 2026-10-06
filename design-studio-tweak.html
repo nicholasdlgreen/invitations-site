@@ -21,26 +21,37 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 .tw-sub{text-align:center;font-size:var(--text-body);color:var(--soft);max-width:480px;margin:0 auto 30px;line-height:1.7;}
 .tw-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;align-items:start;}
 .tw-preview{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:18px;position:sticky;top:20px;}
-.tw-canvas{aspect-ratio:3/4;background:var(--cream);border-radius:8px;overflow:hidden;position:relative;box-shadow:0 8px 26px rgba(61,46,36,.12);}
+/* The same type sizes as the create page, expressed the same way: a share of
+   the card, not of the window. This page used fixed pixels — 32px for the
+   names — against a card that is a different height again, so the wording
+   showed about a third smaller here than on the page it came from: 4.9%% of
+   the card against 7.2%% at a 1280px window. Go to tweak and the text shrank,
+   come back and it grew, with nothing changed but the page. */
+.tw-canvas{--ds-cardh:536px;aspect-ratio:3/4;background:var(--cream);border-radius:8px;overflow:hidden;position:relative;box-shadow:0 8px 26px rgba(61,46,36,.12);}
 .tw-canvas img{width:100%;height:100%;object-fit:cover;display:block;}
 .tw-textlayer{position:absolute;inset:0;z-index:2;pointer-events:none;}
-.tw-stack{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:84%;text-align:center;transform-origin:center center;}
+/* 78%, the same as .ds-canvas.is-generated .ds-stack on the create page. At
+   84% the identical wording wrapped onto more lines here than it did there,
+   so a block that had been fitted to 62% of the card arrived taller. */
+.tw-stack{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78%;max-width:78%;text-align:center;transform-origin:center center;}
+.tw-canvas.is-square .tln.names{font-size:calc(var(--ds-cardh) * 6.384 / 100);margin-bottom:calc(var(--ds-cardh) * 0.747 / 100);}
+.tw-fit-note{margin-top:12px;font-size:var(--text-xs);color:var(--soft);background:#FDF6EC;border:1px solid var(--gold-lt);border-radius:8px;padding:9px 12px;line-height:1.6;}
 .tln{font-family:'Cormorant Garamond',serif;color:#3D3833;line-height:1.32;display:none;}
 .tln.show{display:block;}
-.tln.host{font-style:italic;font-size:14px;color:#8A7A68;margin-bottom:9px;}
-.tln.request{font-style:italic;font-size:13px;color:#5C5148;margin-bottom:12px;}
-.tln.names{font-size:32px;font-weight:500;line-height:1.08;margin-bottom:4px;}
-.tln.date{font-size:14px;letter-spacing:.5px;margin-top:11px;}
-.tln.time{font-size:13px;color:#5C5148;margin-bottom:6px;}
-.tln.venue{font-size:14px;letter-spacing:.5px;margin-top:9px;}
-.tln.reception{font-style:italic;font-size:13px;color:#5C5148;margin-top:11px;}
-.tln.dress{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#8A7A68;margin-top:9px;}
-.tln.rsvp{font-size:12px;color:#8A7A68;margin-top:9px;}
-.tln.custom{font-style:italic;font-size:13px;color:#B8976A;margin-top:11px;}
+.tln.host{font-style:italic;color:#8A7A68;font-size:calc(var(--ds-cardh) * 3.015 / 100);margin-bottom:calc(var(--ds-cardh) * 1.68 / 100);}
+.tln.request{font-style:italic;color:#5C5148;font-size:calc(var(--ds-cardh) * 2.857 / 100);margin-bottom:calc(var(--ds-cardh) * 2.24 / 100);}
+.tln.names{font-weight:500;line-height:1.08;font-size:calc(var(--ds-cardh) * 7.449 / 100);margin-bottom:calc(var(--ds-cardh) * 0.747 / 100);}
+.tln.date{letter-spacing:.5px;font-size:calc(var(--ds-cardh) * 3.174 / 100);margin-top:calc(var(--ds-cardh) * 2.054 / 100);}
+.tln.time{color:#5C5148;font-size:calc(var(--ds-cardh) * 2.857 / 100);margin-bottom:calc(var(--ds-cardh) * 1.12 / 100);}
+.tln.venue{letter-spacing:.5px;font-size:calc(var(--ds-cardh) * 3.174 / 100);margin-top:calc(var(--ds-cardh) * 1.68 / 100);}
+.tln.reception{font-style:italic;color:#5C5148;font-size:calc(var(--ds-cardh) * 2.857 / 100);margin-top:calc(var(--ds-cardh) * 2.054 / 100);}
+.tln.dress{letter-spacing:.1em;text-transform:uppercase;color:#8A7A68;font-size:calc(var(--ds-cardh) * 2.66 / 100);margin-top:calc(var(--ds-cardh) * 1.68 / 100);}
+.tln.rsvp{color:#8A7A68;font-size:calc(var(--ds-cardh) * 2.66 / 100);margin-top:calc(var(--ds-cardh) * 1.68 / 100);}
+.tln.custom{font-style:italic;color:#B8976A;font-size:calc(var(--ds-cardh) * 2.857 / 100);margin-top:calc(var(--ds-cardh) * 2.054 / 100);}
 /* The create page falls back to 'body' when a field has no preview_style.
    Nothing in studio_fields uses it today, but a new field added through
    admin without a style would otherwise land here unstyled. */
-.tln.body{font-size:14px;color:#5C5148;margin-top:8px;}
+.tln.body{color:#5C5148;font-size:calc(var(--ds-cardh) * 2.857 / 100);margin-top:calc(var(--ds-cardh) * 1.68 / 100);}
 .tw-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(251,248,244,.85);font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold);font-size:var(--text-body);}
 .tw-loading.show{display:flex;}
 .tw-panel{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:24px;}
@@ -90,6 +101,7 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
         </div>
         <div class="tw-loading" id="tw-loading">Tweaking your design…</div>
       </div>
+      <div class="tw-fit-note" id="tw-fit-note" role="status" style="display:none;"></div>
     </div>
 
     <div class="tw-panel">
@@ -127,6 +139,37 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
   var state = null;
   try { state = JSON.parse(sessionStorage.getItem('fp_design_tweak') || 'null'); } catch(e){}
   if(!state || !state.image){ window.location.href = '/design-studio-ai-create.html?back=1'; return; }
+
+  // ── THE SAME FIT AS THE CREATE PAGE ─────────────────────────────────
+  // These three numbers and the maths further down are deliberately identical
+  // to design-studio-ai-create.html. If one moves, move the other in the same
+  // commit: the whole point is that a design looks the same on both pages.
+  // They are declared up here because renderTextOverlay() below may call the
+  // fit, and a `var` read before its line is undefined, not 0.78.
+  var TEXT_AREA_W = 0.78;
+  var TEXT_AREA_H = 0.62;
+  var MIN_PRINT_PT = 7;
+
+  // The card tells the type how big to be, exactly as on the create page.
+  function sizeTextToCard(){
+    var cv = document.getElementById('tw-canvas');
+    if(!cv) return;
+    var h = cv.getBoundingClientRect().height;
+    if(h > 0) cv.style.setProperty('--ds-cardh', h + 'px');
+  }
+  // The card's own proportions, as chosen on the create page.
+  (function applyCardShape(){
+    var cv = document.getElementById('tw-canvas');
+    if (!cv) return;
+    cv.style.aspectRatio = state.cardRatio || '3/4';
+    cv.classList.toggle('is-square', !!state.cardSquare);
+  })();
+
+  sizeTextToCard();
+  window.addEventListener('resize', sizeTextToCard);
+  if (window.ResizeObserver) {
+    try { new ResizeObserver(sizeTextToCard).observe(document.getElementById('tw-canvas')); } catch(e){}
+  }
 
   var currentImage = state.image;
   document.getElementById('tw-img').src = currentImage;
@@ -172,13 +215,85 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
     }
     // apply saved position
     var tp = state.textPos;
-    if(tp){
-      var stack = document.getElementById('tw-stack');
-      stack.style.left = tp.left || '50%';
-      stack.style.top = tp.top || '50%';
-      stack.style.transform = 'translate(-50%,-50%) scale('+(tp.scale||1)+')';
+    var stack = document.getElementById('tw-stack');
+    stack.style.left = (tp && tp.left) || '50%';
+    stack.style.top  = (tp && tp.top)  || '50%';
+    if (tp && tp.scale) {
+      // The create page already fitted this, and the customer may have nudged
+      // it afterwards. Their scale is the one that goes on the card.
+      stack.style.transform = 'translate(-50%,-50%) scale(' + tp.scale + ')';
+    } else {
+      // No scale travelled with the design \u2014 a design saved before the fit
+      // existed, or one rebuilt from the library. Fit it the same way the
+      // create page would, so the two pages never show different proportions.
+      fitTextToCard();
     }
+    // One rule on both pages: the note is shown whenever the wording ends up
+    // over the text area it was meant to sit inside, whoever set the scale.
+    overflowNote();
   })();
+
+  function cardHeightMm(){ return state.heightMm || 148; }
+
+  function smallestLineRatio(){
+    var smallest = null;
+    document.querySelectorAll('#tw-stack .tln.show').forEach(function(el){
+      var px = parseFloat(window.getComputedStyle(el).fontSize);
+      if (smallest === null || px < smallest) smallest = px;
+    });
+    var cardPx = document.getElementById('tw-canvas').getBoundingClientRect().height;
+    return (smallest && cardPx) ? smallest / cardPx : 0.0266;
+  }
+
+  function minLegibleScale(){
+    var mmAtScale1 = smallestLineRatio() * cardHeightMm();
+    var floorMm = MIN_PRINT_PT / 2.835;
+    if (mmAtScale1 <= 0) return 0.5;
+    return Math.min(1, Math.max(0.2, floorMm / mmAtScale1));
+  }
+
+  function fitTextToCard(){
+    var canvas = document.getElementById('tw-canvas');
+    var stack  = document.getElementById('tw-stack');
+    if (!canvas || !stack) return false;
+    var card = canvas.getBoundingClientRect();
+    if (!card.height) return false;
+    var prev = stack.style.transform;
+    stack.style.transform = 'translate(-50%,-50%) scale(1)';
+    var nat = stack.getBoundingClientRect();
+    stack.style.transform = prev;
+    if (!nat.height) return false;
+    var fits = Math.min(TEXT_AREA_W * card.width / nat.width,
+                        TEXT_AREA_H * card.height / nat.height);
+    var floor = minLegibleScale();
+    var wanted = Math.min(1, fits);
+    var tooLong = wanted < floor;
+    var applied = Math.max(floor, Math.min(1, wanted));
+    stack.style.transform = 'translate(-50%,-50%) scale(' + applied + ')';
+    return tooLong;
+  }
+
+  // Measured, not inherited: the create page may have shown the note and the
+  // customer may have shortened a line since, or nudged the size themselves.
+  function overflowNote(){
+    var cv = document.getElementById('tw-canvas');
+    var st = document.getElementById('tw-stack');
+    if (!cv || !st) return;
+    var card = cv.getBoundingClientRect();
+    if (!card.height) return;
+    showFitNote(st.getBoundingClientRect().height > TEXT_AREA_H * card.height + 1);
+  }
+
+  function showFitNote(show){
+    var el = document.getElementById('tw-fit-note');
+    if (!el) return;
+    if (show && !el.textContent) {
+      el.textContent = 'That is a lot of wording for this size of card. It is set as '
+        + 'large as it can be and still print clearly \u2014 shortening a line, or '
+        + 'choosing a bigger card, will give it more room.';
+    }
+    el.style.display = show ? 'block' : 'none';
+  }
 
   var quick = [];
 
