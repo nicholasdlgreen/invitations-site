@@ -132,6 +132,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-studio-text-fit.py` | The wording is fitted to 62% of the card; the create and tweak pages use the same numbers; 7pt is the only floor |
 | `tools/test-studio-functions-run.js` | The studio functions execute; an unbound name fails here, not in front of a customer |
 | `tools/test-tweak-wording.js` | The tweak page shows wording where the customer put it |
+| `tools/test-slug-from-url.js` | A landing page works out its product from either address it is served at |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |
