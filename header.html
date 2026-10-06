@@ -15,7 +15,7 @@
 --text-h3:   clamp(21px, 1.3vw + 16px, 27px);
 --text-h2:   clamp(30px, 2.4vw + 19px, 42px);
 /* Was clamp(40px, 3.8vw + 21px, 58px) and used by precisely nothing, while 24 product pages set their own clamp(2rem, 3.6vw, 3rem) through .lp-h1. The token now carries the size the site actually uses, so adopting it changes no page that was already right. 6 Oct 2026. */--text-h1:   clamp(2rem, 3.6vw, 3rem);
---nav-size:  clamp(16px, 0.5vw + 14px, 18px);    /* nav links */
+/* SPACING. Derived from what the site already does, not from a textbook 4px grid: of 13,606 spacing declarations, a strict 4px grid would fit only 36% and force 8,741 values to move. These ten steps are the values already in heaviest use, so adopting one never shifts a page. Use them for NEW work; existing spacing is deliberately left alone. See docs/BRAND.md 4. */--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-7:32px;--space-8:48px;--space-9:60px;--space-10:80px;--nav-size:  clamp(16px, 0.5vw + 14px, 18px);    /* nav links */
 }
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html { scroll-behavior:smooth; font-size:var(--text-body); }

@@ -33,6 +33,10 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 - **`novalidate` on any form you validate yourself**, or the browser's own
   validation swallows the submit and your styled errors never run.
 - **The brand is `foreverprint`** — lowercase f, outside body prose.
+- **New spacing uses `var(--space-1..10)`** (4, 8, 12, 16, 20, 24, 32, 48, 60,
+  80px). They were derived from what the site already does, so they match their
+  surroundings. **Do not retrofit existing spacing** — there are 13,606
+  declarations and moving them is not worth the risk.
 - **Focus rings use `var(--focus, var(--soft))`** — never gold. Gold was 2.74:1
   and pale gold 1.89:1, both under the 3:1 an interface element needs.
 - **Page titles use `var(--text-h1)` at weight 400.** Heroes are a separate role

@@ -163,6 +163,50 @@ times; prefer 500.
 A pill for anything you press, a 20px card for anything you read. The 8px and
 14px values in circulation are drift, not a decision (§7).
 
+### Spacing
+
+| Token | Value | Already used |
+|---|---|---|
+| `--space-1` | `4px` | 702 times |
+| `--space-2` | `8px` | 1,470 — the most used value on the site |
+| `--space-3` | `12px` | 339 |
+| `--space-4` | `16px` | 620 |
+| `--space-5` | `20px` | 1,120 |
+| `--space-6` | `24px` | 333 |
+| `--space-7` | `32px` | 981 |
+| `--space-8` | `48px` | 411 |
+| `--space-9` | `60px` | 244 |
+| `--space-10` | `80px` | 27 |
+
+**These are for new work. Existing spacing is deliberately left alone**, and
+that is the whole decision, so it is worth setting out why.
+
+The site has **13,606 spacing declarations using 48 distinct values**. Measured
+against the obvious candidates:
+
+| Scale | Fits as-is | Would have to move |
+|---|---|---|
+| Strict 4px grid | 36% | 8,741 declarations |
+| Strict 8px grid | 28% | 9,755 |
+| These ten steps | 46% | 7,359 |
+| These ten plus a 6/10/14 tier | 68% | 4,326 |
+
+Even the best fit means rewriting several thousand values across 63 files, each
+a small visual shift, with no practical way to check the result page by page.
+The risk is entirely out of proportion to the benefit, and it is what every
+mature system advises against when tokenising a codebase that already exists:
+you adopt going forward.
+
+So the scale was **derived from the site rather than imposed on it** — the same
+move as `--text-h1` in §7d. Every step is a value already in heavy use, which
+means reaching for `var(--space-5)` on new work lands exactly where the
+surrounding page already sits. Nothing has been retrofitted.
+
+**Choosing a step.** `--space-1`/`-2` inside a control, `-3`/`-4` between
+related things, `-5`/`-6` between a label and its field or between cards,
+`-7`/`-8` section padding, `-9`/`-10` between major sections. If none fits, the
+honest answer is usually that the layout wants one of them and not a new value.
+
 ---
 
 ## 5. Components
@@ -370,8 +414,6 @@ the answer rather than "fixing" it unasked.
 - Whether the auth pages' alternative palette was ever an intention, or drift.
   Until that is answered, deleting those blocks is safe but changing the
   rendered colours is not.
-- A spacing scale. Padding is currently chosen per page; there are no `--space`
-  tokens.
 - Dark mode. Nothing on the site declares one, and `color-scheme` is unset.
 
 ---
