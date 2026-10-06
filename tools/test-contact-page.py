@@ -152,11 +152,11 @@ is_('she sends them to the page', "window.location.href='/contact'" in widget)
 for f in ('name', 'email', 'order', 'message'):
     is_('  carrying %s' % f, "q.set('%s'" % f in widget)
 
-print('\nBOTH COPIES OF THE WIDGET, NOT JUST THE SHARED ONE')
-# design-studio-ai-create.html does not load help-widget.js — it carries its own
-# inlined copy. The first pass fixed only the shared file, so that page kept the
-# mailto: and the reply-time promise for a while. Anything with its own copy has
-# to be found and checked, rather than listing the one page we know about.
+print('\nTHERE IS NOW ONLY ONE COPY OF THE WIDGET')
+# There used to be two: help-widget.js and an inlined fork in
+# design-studio-ai-create.html, which kept the mailto: and the reply-time
+# promise after the shared file was fixed. The fork was removed on 6 October.
+# This still searches rather than naming files, so a new fork would be found.
 owners = [(f, t) for f, t in
           [(f, io.open(os.path.join(ROOT, f), encoding='utf-8', errors='ignore').read())
            for f in ['help-widget.js'] +
@@ -165,7 +165,8 @@ owners = [(f, t) for f, t in
                      if '.git' not in dp and 'scratch' not in dp
                      for fn in fns if fn.endswith('.html')]]
           if 'function hwSubmitContact' in t]
-is_('every copy is accounted for', len(owners) >= 2)
+is_('exactly one file defines it', len(owners), 1)
+is_('and it is the shared one', [f for f, _ in owners], ['help-widget.js'])
 print('       (%s)' % ', '.join(f for f, _ in owners))
 for f, t in owners:
     code = re.sub(r'//[^\n]*', '', t)

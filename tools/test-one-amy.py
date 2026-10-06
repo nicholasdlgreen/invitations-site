@@ -14,17 +14,19 @@ normalised, on every page but one. Verified before removing anything — an
 earlier, cruder comparison using fixed line ranges said they differed, which
 was the comparison being wrong rather than the markup.
 
-design-studio-ai-create.html is the exception and is deliberately still
-duplicated here. Its own copy is an older fork — "Amy — foreverprint" rather
-than "Amy", and prompts for paper and delivery instead of order tracking and
-artwork — and its JavaScript is inlined rather than loaded from help-widget.js.
-Markup and script have to be removed together or the newer prompts call a
-handler that cannot serve them. That is stage 4.
+design-studio-ai-create.html was the exception and was fixed separately in
+stage 4. Its own copy was an older fork — "Amy — foreverprint" rather than
+"Amy", and prompts for paper and delivery instead of order tracking and
+artwork — and its JavaScript was inlined rather than loaded from
+help-widget.js. Markup and script had to go together, because the page was
+already showing the NEWER prompts from the baked footer while running the OLDER
+script: clicking "Where is my order?" sent the text to the AI instead of
+starting the tracking flow, and no chat from that page was logged because the
+inlined hwSend never sent a sessionId.
 """
 import io, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FORK = 'design-studio-ai-create.html'
 passed = failed = 0
 def is_(label, got, want=True):
     global passed, failed
@@ -47,12 +49,12 @@ site = [(f, t) for f, t in pages if f not in ('header.html', 'footer.html')]
 
 print('\nNO PAGE SHOWS TWO AMYS')
 for ident in ('hw-btn', 'hw-panel', 'hw-contact-form'):
-    dupes = [(f, n) for f, t in site if f != FORK
+    dupes = [(f, n) for f, t in site
              for n in [len(re.findall(r'id="%s"' % ident, t))] if n > 1]
     is_('  %-16s appears at most once' % ident, dupes, [])
 
 print('\nTHE ONE THAT REMAINS IS THE BUILD\'S')
-have = [(f, t) for f, t in site if 'id="hw-btn"' in t and f != FORK]
+have = [(f, t) for f, t in site if 'id="hw-btn"' in t]
 is_('pages still have Amy', len(have) > 40)
 print('       (%d pages)' % len(have))
 outside = []
@@ -72,11 +74,11 @@ is_('no page carries the old greeting', old, [])
 is_('the footer offers the order-tracking prompt', 'Where is my order?' in footer)
 is_('and the artwork prompt', 'Setting up my artwork' in footer)
 
-print('\nTHE ONE PAGE HELD BACK FOR STAGE 4')
-fork = dict(pages).get(FORK, '')
-is_('%s still has two' % FORK, len(re.findall(r'id="hw-btn"', fork)), 2)
-is_('because its script is inlined, not loaded', 'function hwToggle' in fork)
-print('       (removing its markup without its script would break the prompts)')
+print('\nNO PAGE RUNS ITS OWN COPY OF THE CODE')
+inlined = [f for f, t in site if 'function hwToggle' in t]
+is_('every page loads help-widget.js instead', inlined, [])
+is_('and the shared widget sends a sessionId, so chats are logged',
+    'sessionId' in io.open(os.path.join(ROOT, 'help-widget.js'), encoding='utf-8').read())
 
 print('\nMUTATION: A SECOND AMY COMING BACK MUST FAIL')
 two = '<button id="hw-btn">?</button><button id="hw-btn">?</button>'
