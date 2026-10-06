@@ -25,9 +25,9 @@ function is(label, got, want){
 
 print('\nTHE BUTTONS USE CLASSES, NOT INLINE STYLE');
 is('the filled one is .btn-light',
-   /<a class="btn-light" href="\/upload-and-print\.html">Upload My Design<\/a>/.test(IDX), true);
+   /<a class="btn-light" href="\/upload-and-print">Upload My Design<\/a>/.test(IDX), true);
 is('the outline one is .btn-out-light',
-   /<a class="btn-out-light" href="\/design-studio\.html">Open the Studio<\/a>/.test(IDX), true);
+   /<a class="btn-out-light" href="\/design-studio">Open the Studio<\/a>/.test(IDX), true);
 // The whole fault was styling written inline, which no :hover rule can reach.
 var STRIP = IDX.slice(IDX.indexOf('<!-- CTA STRIP -->'), IDX.indexOf('</section>', IDX.indexOf('<!-- CTA STRIP -->')));
 is('neither carries an inline style attribute', /<a [^>]*style="[^"]*"[^>]*>(Upload My Design|Open the Studio)/.test(STRIP), false);

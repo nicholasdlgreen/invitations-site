@@ -51,7 +51,12 @@ redirect = io.open(os.path.join(ROOT, '_redirects'), encoding='utf-8').read()
 
 print('\nTHE FOOTER LINK GOES SOMEWHERE')
 is_('Contact Us points at /contact', '<a href="/contact">Contact Us</a>' in footer)
-is_('and /contact serves the page', bool(
+# The /contact -> /contact.html rewrite was removed on 6 October: Netlify
+# serves a clean url from the matching file on its own, and the rewrite made
+# contact.html a rewrite target, which blocked redirecting it to the clean url.
+is_('and /contact.html sends people to /contact', bool(
+    re.search(r'^/contact\.html\s+/contact\s+301!', redirect, re.M)))
+is_('rather than a rewrite that would pin the .html address', not bool(
     re.search(r'^/contact\s+/contact\.html\s+200', redirect, re.M)))
 
 print('\nNO PROMISE WE CANNOT KEEP, ANYWHERE')

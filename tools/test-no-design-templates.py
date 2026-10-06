@@ -10,7 +10,7 @@ were still live and answering HTTP 200: the gallery
 reachable from the gallery's breadcrumbs, so anyone with a link could browse
 designs for a service we do not sell.
 
-Both pages are deleted and 301 to /design-studio.html.
+Both pages are deleted and 301 to /design-studio.
 
 What this does NOT forbid: the word "template" in code (HTML <template>
 elements, CSS grid-template-columns, JS template literals), and
@@ -55,8 +55,8 @@ print('\nAND BOTH ADDRESSES REDIRECT RATHER THAN 404')
 red = io.open(os.path.join(ROOT, '_redirects'), encoding='utf-8').read()
 for path in ('/design-studio-templates', '/design-studio-templates.html',
              '/design-studio-customise', '/design-studio-customise.html'):
-    is_(path + ' -> /design-studio.html 301',
-        bool(re.search(re.escape(path) + r'\s+/design-studio\.html\s+301', red)))
+    is_(path + ' -> /design-studio 301',
+        bool(re.search(re.escape(path) + r'\s+/design-studio\s+301', red)))
 # A rule after the catch-all never runs.
 is_('the rules sit above the 404 catch-all',
     red.index('/design-studio-templates ') < red.index('/*  /404.html  404'))

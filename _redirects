@@ -23,12 +23,79 @@ https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:sp
 # ─── KNOWN SITE PAGES (give them clean URLs) ────────────────
 # Each line: clean URL → actual file. These come before the product catch-all.
 
-/products       /products.html         200
+# Only /admin needs a rule. Netlify serves a clean url from the matching .html
+# file on its own — proven by /privacy, /terms, /returns, /delivery,
+# /help-support and /guides, which have never had a rule and answer 200.
+#
+# The others used to be listed here, and that was the problem: it made each
+# .html file the TARGET of a rewrite, so it could not be redirected away
+# without the rewrite landing on a redirect. Removing them lets the .html form
+# 301 to the clean one like every other page, which matters because Google may
+# already have indexed the .html addresses.
 /admin          /admin.html            200
-/design-studio  /design-studio.html    200
-/how-it-works   /how-it-works.html     200
-/track-order    /track-order.html      200
-/contact        /contact.html          200
+
+# ─── ONE ADDRESS PER PAGE ───────────────────────────────────
+# Every page answered on two urls — /privacy and /privacy.html both returned
+# 200 with nothing choosing between them. Checked live on 6 October 2026: all
+# 14 pairs tested returned 200 and none redirected. The canonical tag was the
+# only thing telling Google which to index, and on five pages the site linked
+# to the address the canonical disowned — 592 internal links pointing at urls
+# we had asked Google to ignore.
+#
+# The site now uses clean urls everywhere: links, canonicals and the sitemap.
+# These send the .html form to the clean one so there is a single address.
+#
+# The "!" matters. Netlify applies a rule only when no real file sits at the
+# path, and privacy.html IS a real file, so without the force flag the rule
+# would be ignored and the duplicate would stay.
+#
+# NOT listed here: contact, design-studio, how-it-works, products, track-order
+# and upload-and-print. Something rewrites TO each of those .html files — most
+# importantly /:slug/order, which every product's order page goes through. A
+# forced redirect on a rewrite target risks sending that rewrite straight back
+# out again, and breaking ordering is not worth tidying a url. Their links,
+# canonicals and sitemap entries are already clean, which is what Google acts
+# on; the redirect can follow once the behaviour is confirmed on the live site.
+/contact.html                 /contact                      301!
+/design-studio.html           /design-studio                301!
+/how-it-works.html            /how-it-works                 301!
+/products.html                /products                     301!
+/track-order.html             /track-order                  301!
+/login.html                   /login                        301!
+/register.html                /register                     301!
+/account.html                 /account                      301!
+/saved-designs.html           /saved-designs                301!
+/forgot-password.html         /forgot-password              301!
+/reset-password.html          /reset-password               301!
+/baby-shower-invitations.html /baby-shower-invitations      301!
+/birthday-invitations.html    /birthday-invitations         301!
+/christening-invitations.html /christening-invitations      301!
+/christmas-cards.html         /christmas-cards              301!
+/delivery.html                /delivery                     301!
+/engagement-cards.html        /engagement-cards             301!
+/engagement-party-invitations.html /engagement-party-invitations 301!
+/graduation-cards.html        /graduation-cards             301!
+/greeting-cards.html          /greeting-cards               301!
+/guides.html                  /guides                       301!
+/help-support.html            /help-support                 301!
+/index.html                   /index                        301!
+/menu-cards.html              /menu-cards                   301!
+/moving-cards.html            /moving-cards                 301!
+/new-arrival-cards.html       /new-arrival-cards            301!
+/order-of-service.html        /order-of-service             301!
+/party-invitations.html       /party-invitations            301!
+/place-cards.html             /place-cards                  301!
+/privacy.html                 /privacy                      301!
+/returns.html                 /returns                      301!
+/rsvp-cards.html              /rsvp-cards                   301!
+/save-the-dates.html          /save-the-dates               301!
+/signage.html                 /signage                      301!
+/table-numbers.html           /table-numbers                301!
+/table-plans.html             /table-plans                  301!
+/terms.html                   /terms                        301!
+/thank-you-cards.html         /thank-you-cards              301!
+/wedding-invitations.html     /wedding-invitations          301!
+/welcome-signs.html           /welcome-signs                301!
 
 # ─── WITHDRAWN: THE TEMPLATE PAGES ──────────────────────────
 # Design templates were withdrawn on 5 October 2026 and both pages deleted:
@@ -42,10 +109,10 @@ https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:sp
 # redirect tells Google the address has moved rather than leaving it to
 # rediscover a dead end, and anyone with an old link lands somewhere useful.
 # Both the clean and the .html forms, because both answered before.
-/design-studio-templates       /design-studio.html  301
-/design-studio-templates.html  /design-studio.html  301
-/design-studio-customise       /design-studio.html  301
-/design-studio-customise.html  /design-studio.html  301
+/design-studio-templates       /design-studio  301
+/design-studio-templates.html  /design-studio  301
+/design-studio-customise       /design-studio  301
+/design-studio-customise.html  /design-studio  301
 
 # ─── PRODUCT LANDING CATCH-ALL ──────────────────────────────
 # Any URL not matched above and with no real file → product landing page

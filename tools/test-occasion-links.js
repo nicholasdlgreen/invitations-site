@@ -34,10 +34,10 @@ function hrefOfCardTitled(title) {
 }
 
 print('\nEACH CARD GOES TO ITS OWN CATEGORY');
-[['Weddings',                  '/products.html?cat=weddings'],
- ['New Arrivals',              '/products.html?cat=announcements'],
- ['Milestone Birthdays',       '/products.html?cat=celebrations'],
- ['Celebrations &amp; Parties','/products.html?cat=celebrations']
+[['Weddings',                  '/products?cat=weddings'],
+ ['New Arrivals',              '/products?cat=announcements'],
+ ['Milestone Birthdays',       '/products?cat=celebrations'],
+ ['Celebrations &amp; Parties','/products?cat=celebrations']
 ].forEach(function (p) {
   is(p[0].replace('&amp;','&') + ' -> ' + p[1], hrefOfCardTitled(p[0]), p[1]);
 });
@@ -51,7 +51,7 @@ print('\nTHE CATEGORIES ARE THE ONES THE SITE ALREADY USES');
 // would mean a category with one product in it; Nicholas chose to keep three.
 ['weddings','celebrations','announcements'].forEach(function (c) {
   is('"' + c + '" is a category the mega-menu also links to',
-     new RegExp('products\\.html\\?cat=' + c).test(SRC), true);
+     new RegExp('products\\?cat=' + c).test(SRC), true);
 });
 is('no card invents a category that does not exist',
    /cat=(birthdays|parties|milestones|new-arrivals)/.test(BLOCK), false);
@@ -65,7 +65,7 @@ is('and a note records why rather than leaving it looking like a slip',
    /share \?cat=celebrations\s*\n?\s*DELIBERATELY/.test(SRC), true);
 
 print('\nMUTATION: THE OLD LINKS MUST FAIL');
-var OLD = BLOCK.replace(/href="\/products\.html\?cat=[a-z]+"/g, 'href="/design-studio.html"');
+var OLD = BLOCK.replace(/href="\/products\?cat=[a-z]+"/g, 'href="/design-studio.html"');
 is('all four pointing at the studio is caught',
    /occasion-card[^>]*href="\/design-studio/.test(OLD), true);
 is('and the weddings link is gone with it',

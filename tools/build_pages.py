@@ -44,17 +44,23 @@ SITE = "https://foreverprint.com"
 TEMPLATE = os.path.join(ROOT, "product.html")
 
 # Static pages that belong in the sitemap alongside the generated ones.
+# Clean urls throughout. Five of these carried .html until 6 October 2026,
+# which put them in the sitemap at one address while the rest of the site used
+# the other. help-support and contact were missing altogether — help-support
+# had 160 inbound links and no sitemap entry at all.
 CORE_PAGES = [
     ("/", "1.0", "weekly"),
     ("/products", "0.9", "weekly"),
-    ("/upload-and-print.html", "0.9", "weekly"),
+    ("/upload-and-print", "0.9", "weekly"),
     ("/design-studio", "0.8", "weekly"),
     ("/how-it-works", "0.6", "monthly"),
-    ("/delivery.html", "0.5", "monthly"),
+    ("/help-support", "0.6", "monthly"),
+    ("/delivery", "0.5", "monthly"),
+    ("/contact", "0.5", "monthly"),
     ("/track-order", "0.4", "monthly"),
-    ("/returns.html", "0.3", "yearly"),
-    ("/privacy.html", "0.2", "yearly"),
-    ("/terms.html", "0.2", "yearly"),
+    ("/returns", "0.3", "yearly"),
+    ("/privacy", "0.2", "yearly"),
+    ("/terms", "0.2", "yearly"),
 ]
 
 
