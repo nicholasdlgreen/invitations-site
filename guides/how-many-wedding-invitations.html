@@ -841,7 +841,12 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
         <h5>Help</h5>
         <a href="/guides">Guides</a>
         <a href="/how-it-works.html">How We Work</a>
-        <a href="/help-support.html#faq">FAQs</a>
+        <!-- No #faq anchor: it scrolled 381px in, 18% down the page, and pushed the
+             "How can we help?" heading off screen along with the invitation to ask
+             Amy — who now answers. You landed in a list of questions with no
+             context. The FAQ is the bulk of that page anyway, so the top of it is
+             the right place to arrive. -->
+        <a href="/help-support.html">FAQs</a>
         <a href="/help-support.html">Contact Us</a>
       </div>
       <div class="footer-col">
