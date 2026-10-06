@@ -79,7 +79,9 @@
 .hero-dots{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:4;display:flex;gap:10px;}
 .hero-dot{width:9px;height:9px;border-radius:50%;border:none;background:var(--gold-lt);opacity:.5;cursor:pointer;padding:0;transition:opacity .25s,transform .25s;}
 .hero-dot.is-active{opacity:1;transform:scale(1.25);background:var(--gold);}
-@media(max-width:768px){.hero-arrow{width:38px;height:38px;font-size:var(--text-h3);}.hero-prev{left:10px;}.hero-next{right:10px;}.hero-sub{min-height:120px;}}
+@media(max-width:768px){/* Was 38x38. The carousel arrows sit over the image, so a miss scrolls
+   the page instead of changing the slide. */
+.hero-arrow{width:48px;height:48px;font-size:var(--text-h3);}.hero-prev{left:10px;}.hero-next{right:10px;}.hero-sub{min-height:120px;}}
 @media(prefers-reduced-motion:reduce){.hero-bg-layer{transition:none;}.hero-copy{transition:none;}}
 /* Occasions block — reuses existing tokens, no new look */
 .occasions-grid{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:auto auto;gap:20px;margin-top:52px;}

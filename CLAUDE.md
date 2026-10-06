@@ -116,6 +116,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-checkout-fields.py` | Checkout fields clear 16px; hints sit under labels, not inside the box |
 | `tools/test-mobile-menu.py` | The phone menu collapses its categories; the desktop mega-menu is untouched |
 | `tools/test-products-grid.py` | Two product columns on a phone; the desktop grid is untouched |
+| `tools/test-tap-targets.py` | Mobile controls are 48px; desktop keeps its own sizes |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |

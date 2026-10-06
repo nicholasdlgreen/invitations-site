@@ -131,3 +131,22 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
     </button>
   </div>
 </div>
+<style>
+/* TAP TARGETS. Google's minimum is 48x48 with 8px between. Measured at
+   375px on 6 October 2026, these were the controls under it. Everything
+   here is inside a max-width query, so desktop, where a mouse is doing
+   the pointing, is untouched. */
+@media(max-width:768px){
+  /* Amy's close was 16x20, the smallest control on the site, and her send
+     button 21x21. Both sit at the edge of a panel on a small screen. */
+  .hw-close-btn{min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center;}
+  #hw-send{min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center;}
+  #hw-input{min-height:48px;}
+  /* Her suggested questions were 28px high — they are the first thing most
+     people tap in that panel. */
+  .hw-prompt{min-height:48px;display:inline-flex;align-items:center;}
+  /* Footer links were 24px high and sat 8px apart, so the gap between two
+     of them was smaller than a fingertip. */
+  .footer-col a{min-height:48px;display:flex;align-items:center;margin-bottom:2px;}
+}
+</style>
