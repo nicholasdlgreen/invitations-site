@@ -37,6 +37,10 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 .tln.dress{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#8A7A68;margin-top:9px;}
 .tln.rsvp{font-size:12px;color:#8A7A68;margin-top:9px;}
 .tln.custom{font-style:italic;font-size:13px;color:#B8976A;margin-top:11px;}
+/* The create page falls back to 'body' when a field has no preview_style.
+   Nothing in studio_fields uses it today, but a new field added through
+   admin without a style would otherwise land here unstyled. */
+.tln.body{font-size:14px;color:#5C5148;margin-top:8px;}
 .tw-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(251,248,244,.85);font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold);font-size:var(--text-body);}
 .tw-loading.show{display:flex;}
 .tw-panel{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:24px;}
@@ -129,17 +133,43 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
 
   // render the customer's wording as an overlay, in the position they left it
   (function renderTextOverlay(){
-    // FIELD_MAP order matches the create page:
-    // [host, line, names, date, time, venue, reception, dress, rsvp, custom]
-    var order = ['host','line','names','date','time','venue','reception','dress','rsvp','custom'];
-    var w = state.wording || [];
-    document.querySelectorAll('#tw-stack .tln').forEach(function(el){
-      var k = el.dataset.k;
-      var idx = order.indexOf(k);
-      var val = (idx>-1 && w[idx]) ? w[idx].trim() : '';
-      if(val){ el.textContent = val; el.classList.add('show'); }
-      else { el.classList.remove('show'); }
-    });
+    var stackEl = document.getElementById('tw-stack');
+
+    // The create page sends the lines it actually rendered — each with the
+    // style it was given and the words in it, in card order. Build from those.
+    //
+    // This used to match state.wording against a hardcoded
+    // [host, line, names, date, …], which is the create page's FALLBACK order
+    // rather than the order studio_fields returns. Wedding invitations begin
+    // names, host, line — so the couple's names appeared in the host line and
+    // the host in the request line. A birthday begins celebrant, age; a place
+    // card names, table, meal. Order of service has fifteen front fields and
+    // this page had ten slots, so five were simply lost. Every product was
+    // wrong in some way, and nobody spotted it because the hardcoded list here
+    // and the fallback there agreed with each other.
+    if (Array.isArray(state.lines)) {
+      stackEl.innerHTML = '';
+      state.lines.forEach(function (l) {
+        var val = (l && l.value || '').trim();
+        if (!val) return;                         // an empty box is not a line
+        var el = document.createElement('div');
+        el.className = 'tln ' + (l.style || 'body') + ' show';
+        el.dataset.k = l.key || '';
+        el.textContent = val;
+        stackEl.appendChild(el);
+      });
+    } else {
+      // A design captured before this change, still sitting in sessionStorage.
+      var order = ['host','line','names','date','time','venue','reception','dress','rsvp','custom'];
+      var w = state.wording || [];
+      document.querySelectorAll('#tw-stack .tln').forEach(function(el){
+        var k = el.dataset.k;
+        var idx = order.indexOf(k);
+        var val = (idx>-1 && w[idx]) ? w[idx].trim() : '';
+        if(val){ el.textContent = val; el.classList.add('show'); }
+        else { el.classList.remove('show'); }
+      });
+    }
     // apply saved position
     var tp = state.textPos;
     if(tp){

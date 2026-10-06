@@ -3037,6 +3037,24 @@ function artworkFileName(prefix, ext){
       fold: FOLD_CHOICE,
       brief: buildBrief(),
       wording: FIELD_MAP.map(function(p){ var el=document.getElementById(p[0]); return el?el.value:''; }),
+      // The lines exactly as this page rendered them: the style each one was
+      // given and the words in it, in the order they appear on the card.
+      //
+      // The tweak page used to map `wording` by position against a hardcoded
+      // list — host, line, names, date… — which is this file's FALLBACK order,
+      // not the order studio_fields actually returns. For wedding invitations
+      // the database starts names, host, line, so the couple's names were
+      // shown in the host line, the host in the request line, and so on; for a
+      // birthday (celebrant, age, …) or a place card (names, table, meal) it
+      // was further out still, and order of service has fifteen front fields
+      // against the tweak page's ten slots, so five were dropped. Sending the
+      // lines themselves means that page never has to guess again.
+      lines: FIELD_MAP.map(function(p){
+        var inp = document.getElementById(p[0]);
+        var ln  = document.getElementById(p[1]);
+        var style = ln ? (ln.className.replace(/\bln\b/, '').trim().split(/\s+/)[0] || 'body') : 'body';
+        return { key: p[0].replace(/^w-/, ''), style: style, value: inp ? inp.value : '' };
+      }),
       sel: sel,
       textPos: { left: stack.style.left || '50%', top: stack.style.top || '50%', scale: textScale },
       productSlug: PRODUCT_SLUG,
