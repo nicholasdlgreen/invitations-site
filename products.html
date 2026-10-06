@@ -84,7 +84,20 @@
   .product-grid{grid-template-columns:repeat(2,1fr);gap:16px;}
 }
 @media(max-width:640px){
-  .product-grid{grid-template-columns:1fr;gap:14px;}
+  /* Two columns, not one. At one per row this page was 13,644px on a phone —
+     seventeen screens of scrolling for twenty-two products, with barely one
+     card visible at a time. Measured 6 October 2026. Two columns halves it and
+     lets someone actually compare what is on offer, which is the whole job of
+     a product list. Mobile only: the 1024 and default rules are untouched. */
+  .product-grid{grid-template-columns:repeat(2,1fr);gap:12px;}
+  /* The card has to give up some padding to work at half the width. The
+     tagline goes: at ~170px wide it wrapped to five or six lines and pushed
+     the price off the first screen. The name and the price are what someone
+     scanning a list actually needs. */
+  .product-body{padding:12px 13px 14px;}
+  .product-name{font-size:1.05rem;line-height:1.25;}
+  .product-desc{display:none;}
+  .product-price{padding-top:9px;}
   .trust-grid{grid-template-columns:1fr;gap:20px;}
   .filter-bar-inner{flex-direction:column;align-items:flex-start;}
 }
