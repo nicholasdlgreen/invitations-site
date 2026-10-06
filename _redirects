@@ -97,6 +97,32 @@ https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:sp
 /wedding-invitations.html     /wedding-invitations          301!
 /welcome-signs.html           /welcome-signs                301!
 
+# ─── WITHDRAWN: WEDDING ALBUMS ──────────────────────────────
+# Wedding albums were withdrawn on 6 October 2026: the landing page, the four
+# builder steps, album-save.js and the curate-album function are all deleted.
+#
+# The section was already an island — nothing in the header or footer linked to
+# it, and its only inbound link came from inside itself — but every address
+# answered 200 on the live site, so anyone holding a link could still start
+# building an album for a product we do not sell. Checked before deleting:
+# no saved design, no order and no product row mentioned albums.
+#
+# 301 to /products rather than 404: the pages existed and answered, so a
+# permanent redirect tells Google the address has gone rather than leaving it
+# to rediscover a dead end. There is no album equivalent to send people to, so
+# the product list is the nearest useful place. Both forms, because both
+# answered. No "!" needed — the files are gone, so nothing shadows the rule.
+/wedding-albums                /products  301
+/wedding-albums.html           /products  301
+/album-builder                 /products  301
+/album-builder.html            /products  301
+/album-builder-upload          /products  301
+/album-builder-upload.html     /products  301
+/album-builder-design          /products  301
+/album-builder-design.html     /products  301
+/album-builder-cover           /products  301
+/album-builder-cover.html      /products  301
+
 # ─── WITHDRAWN: THE TEMPLATE PAGES ──────────────────────────
 # Design templates were withdrawn on 5 October 2026 and both pages deleted:
 # the gallery (design-studio-templates.html) and the template editor

@@ -179,31 +179,31 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 
 | Token | Value | Already used |
 |---|---|---|
-| `--space-1` | `4px` | 702 times |
-| `--space-2` | `8px` | 1,470 — the most used value on the site |
-| `--space-3` | `12px` | 339 |
-| `--space-4` | `16px` | 620 |
-| `--space-5` | `20px` | 1,120 |
-| `--space-6` | `24px` | 333 |
-| `--space-7` | `32px` | 981 |
-| `--space-8` | `48px` | 411 |
-| `--space-9` | `60px` | 244 |
-| `--space-10` | `80px` | 27 |
+| `--space-1` | `4px` | 638 times |
+| `--space-2` | `8px` | 1,349 — the most used value on the site |
+| `--space-3` | `12px` | 310 |
+| `--space-4` | `16px` | 569 |
+| `--space-5` | `20px` | 1,032 |
+| `--space-6` | `24px` | 297 |
+| `--space-7` | `32px` | 871 |
+| `--space-8` | `48px` | 363 |
+| `--space-9` | `60px` | 218 |
+| `--space-10` | `80px` | 15 |
 
 **These are for new work. Existing spacing is deliberately left alone**, and
 that is the whole decision, so it is worth setting out why.
 
-The site has **13,606 spacing declarations using 48 distinct values**. Measured
+The site has **12,401 spacing declarations using 47 distinct values**. Measured
 against the obvious candidates:
 
 | Scale | Fits as-is | Would have to move |
 |---|---|---|
-| Strict 4px grid | 36% | 8,741 declarations |
-| Strict 8px grid | 28% | 9,755 |
-| These ten steps | 46% | 7,359 |
-| These ten plus a 6/10/14 tier | 68% | 4,326 |
+| Strict 4px grid | 35% | 8,000 declarations |
+| Strict 8px grid | 28% | 8,933 |
+| These ten steps | 46% | 6,739 |
+| These ten plus a 6/10/14 tier | 68% | 3,956 |
 
-Even the best fit means rewriting several thousand values across 63 files, each
+Even the best fit means rewriting several thousand values across 58 files, each
 a small visual shift, with no practical way to check the result page by page.
 The risk is entirely out of proportion to the benefit, and it is what every
 mature system advises against when tokenising a codebase that already exists:
@@ -341,9 +341,7 @@ did not move; the outliers came to them.
 **Deliberate exceptions, both roles rather than faults:**
 
 - **Heroes keep their own, larger scale.** A hero is not a page title. The
-  homepage (`.hero-h1`), `wedding-albums` (`.hero h1`, up to 84px), the album
-  builder (`.builder-hero h1`) and `saved-designs` (`.page-hero h1`) all have
-  one. Anything whose selector contains `hero` is outside the page-title rule.
+  homepage (`.hero-h1`) and `saved-designs` (`.page-hero h1`) both have one. Anything whose selector contains `hero` is outside the page-title rule.
 - **`index.html`'s `<h1>` is `hero-h1-seo`** — 15px, gold, Jost. An SEO heading
   styled as a kicker, on purpose.
 

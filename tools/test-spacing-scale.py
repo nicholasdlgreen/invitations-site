@@ -68,6 +68,26 @@ is_('the document quotes counts for every step', len(quoted), 10)
 wrong = {px: (claimed, vals[px]) for px, claimed in quoted.items() if vals[px] != claimed}
 is_('all of them match the source', wrong, {})
 
+print('\nTHE COMPARISON TABLE IS RECOMPUTED TOO')
+# The argument for this scale rests on those four rows. Deleting the wedding
+# album pages moved every one of them, and only the per-step counts were
+# checked at first — so the table said one thing and the site another.
+CANDIDATES = {
+    'Strict 4px grid':               [4, 8, 12, 16, 24, 32, 48, 64],
+    'Strict 8px grid':               [8, 16, 24, 32, 48, 64, 80],
+    'These ten steps':               STEPS,
+    'These ten plus a 6/10/14 tier': [4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 48, 60, 80],
+}
+for name, steps in CANDIDATES.items():
+    m = re.search(r'\| %s \| (\d+)%% \| ([\d,]+)' % re.escape(name), doc)
+    is_('  %-30s is quoted' % name, bool(m))
+    if not m: continue
+    hit = sum(n for v, n in vals.items() if v in steps)
+    is_('    its fit is %s%%' % m.group(1), round(100 * hit / total), int(m.group(1)))
+    is_('    and %s would move' % m.group(2), total - hit, int(m.group(2).replace(',', '')))
+is_('the total is stated correctly',
+    format(total, ',') in doc)
+
 print('\nNOTHING HAS BEEN RETROFITTED')
 # Adoption is meant to be additive. If this total collapses, someone has begun
 # rewriting existing spacing, which the document explicitly rules out.

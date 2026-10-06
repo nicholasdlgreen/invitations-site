@@ -951,7 +951,7 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div class="empty-block" id="emptyBlock" style="display:none;">
         <div class="empty-icon">+</div>
         <h2>No saved designs yet</h2>
-        <p>Once you start designing an album, an invitation, or any other product, click "Save" and it'll appear here, ready to pick up at any time.</p>
+        <p>Once you start designing an invitation or any other product, click "Save" and it'll appear here, ready to pick up at any time.</p>
         <a href="/" class="start-btn">Browse Products →</a>
       </div>
 
@@ -1167,20 +1167,11 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
     fetch('/footer.html').then(r => r.text()).then(h => document.getElementById('site-footer').innerHTML = h).catch(() => {});
 
     // ===== Product type display info =====
+    // Wedding albums were withdrawn on 6 October 2026 and their pages deleted.
     const PRODUCT_INFO = {
-      'wedding-album': {
-        label: 'Wedding Album',
-        builderUrlForStep: (state) => {
-          // Route back to whichever step the design last reached
-          if (state && state.spreads && state.cover) return '/album-builder-cover.html';
-          if (state && state.spreads) return '/album-builder-design.html';
-          if (state && state.photos && state.photos.length) return '/album-builder-upload.html';
-          return '/album-builder.html';
-        }
-      },
       'invitation': {
         label: 'Wedding Invitation',
-        builderUrlForStep: () => '/design-studio.html'
+        builderUrlForStep: () => '/design-studio'
       }
     };
 
@@ -1227,13 +1218,6 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
 
     function progressLabel(design) {
       const d = design.design_data || {};
-      if (design.product_type === 'wedding-album') {
-        if (d.cover && d.spreads) return 'Cover personalised';
-        if (d.spreads) return 'Album draft created';
-        if (d.photos && d.photos.length) return d.photos.length + ' photos uploaded';
-        if (d.tier) return 'Started';
-        return 'Started';
-      }
       if (d.image) return 'Design created';
       return 'In progress';
     }
@@ -1241,9 +1225,6 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
     function thumbForDesign(design) {
       const meta = design.metadata || {};
       if (meta.thumbnail_url) return meta.thumbnail_url;
-      // For wedding album, fall back to first uploaded photo
-      const d = design.design_data || {};
-      if (d.photos && d.photos[0] && d.photos[0].url) return d.photos[0].url;
       return null;
     }
 
