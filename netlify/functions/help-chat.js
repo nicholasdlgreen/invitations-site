@@ -1,3 +1,8 @@
+const https = require('https');
+
+// Pinned deliberately: a snapshot cannot change answers underneath us.
+const MODEL = 'claude-haiku-4-5-20251001';
+
 // ── WHO AMY IS ────────────────────────────────────────────
 // Her identity, manner and limits. Fixed text: this is the agreed voice and
 // does not change with the catalogue.
