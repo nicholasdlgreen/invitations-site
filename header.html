@@ -141,6 +141,27 @@ nav a:hover,nav a.active{color:var(--gold);}
   font-size:11px;line-height:1;font-weight:500;letter-spacing:0;
   background:var(--text);color:#fff;border:2px solid var(--white);border-radius:20px;}
 .right-zone{gap:6px;}
+/* THE MENU SHOWED ONLY WEDDINGS. Opened on a phone the menu ran to 1,880px on
+   an 812px screen: 12 of its 28 items were reachable without scrolling, and
+   those 12 were "All Products" and all eleven wedding products. Celebrations
+   sat at the very bottom edge and Announcements two screens down, so the range
+   looked like weddings and nothing else. 6 October 2026.
+
+   The three categories now collapse, so all three are visible at once and a
+   tap opens one. Every rule here is inside the mobile query and the script
+   only adds a class, so the desktop mega-menu cannot be affected: nothing
+   outside this query refers to .mega-col.open. */
+.mega-cat{display:flex;align-items:center;justify-content:space-between;
+  min-height:48px;cursor:pointer;user-select:none;margin:0;}
+.mega-cat::after{content:"+";font-family:'Jost',sans-serif;font-size:20px;
+  line-height:1;color:var(--gold);font-weight:300;padding-left:12px;}
+.mega-col.open > .mega-cat::after{content:"\2212";}
+.mega-col > a{display:none;}
+.mega-col.open > a{display:block;}
+.mega-col:not(.open) > .mega-rule{display:none;}
+.mega-col{border-bottom:1px solid var(--border);}
+.mega-col:last-child{border-bottom:0;}
+
 
 .nav-toggle{display:block;order:-1;}
 .hinner{position:relative;}
@@ -285,6 +306,32 @@ window.toggleMobileNav = function(){
   btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
 };
+
+// Mega-menu categories collapse on a phone, so all three are visible at once
+// rather than eleven wedding products filling the screen. Bound only below
+// 768px; the CSS that does the collapsing lives in the same media query, so
+// even if this ran on desktop the class it adds would do nothing there.
+(function(){
+  if(!window.matchMedia('(max-width:768px)').matches) return;
+  var cols = document.querySelectorAll('#megaPanel .mega-col');
+  Array.prototype.forEach.call(cols, function(col){
+    var cat = col.querySelector('.mega-cat');
+    if(!cat) return;
+    // The heading is a <div> in the markup, which desktop needs it to stay.
+    // These make it a real control for a keyboard, set at runtime on mobile only.
+    cat.setAttribute('role','button');
+    cat.setAttribute('tabindex','0');
+    cat.setAttribute('aria-expanded','false');
+    function toggle(){
+      var open = col.classList.toggle('open');
+      cat.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    cat.addEventListener('click', toggle);
+    cat.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); }
+    });
+  });
+})();
 
 // Mega-menu: on touch/no-hover devices, tap the trigger to open the panel
 (function(){

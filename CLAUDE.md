@@ -114,6 +114,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-focus-and-headings.py` | Focus rings clear 3:1; page titles share one size |
 | `tools/test-mobile-header.py` | The header fits a phone; the mobile rules stay inside the media query |
 | `tools/test-checkout-fields.py` | Checkout fields clear 16px; hints sit under labels, not inside the box |
+| `tools/test-mobile-menu.py` | The phone menu collapses its categories; the desktop mega-menu is untouched |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |
