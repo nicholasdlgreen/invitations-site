@@ -47,14 +47,19 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 
 ## How the pages are built
 
-- `header.html` and `footer.html` are fetched by each page **at runtime** and
-  dropped into the body. (`tools/build_pages.py` does something different — it
-  pre-renders the product pages.) Because they land in the body and each page's
-  own `:root` is in the head, the shared tokens win the cascade.
+- `header.html` and `footer.html` are written into every page **at build time**
+  by `inline_chrome()` in `tools/build_pages.py`. The `fetch('/header.html')`
+  each page also carries is only a null-safe fallback. Because the baked-in
+  chrome sits in the body and each page's own `:root` is in the head, the
+  shared tokens win the cascade.
+- **The repo stores the output of past builds.** A page's source will show
+  chrome baked in from an earlier build, so editing `header.html` leaves every
+  committed page carrying the old value until the next build. Do not read a
+  page's source and conclude that is what a visitor gets.
 - **A token used in page CSS needs a fallback**: write
-  `var(--token, var(--local))`, not `var(--token)`. Browsers cache
-  `header.html`, so after a deploy a visitor can run old tokens against new CSS,
-  and a bare `var()` that misses resolves to `currentColor`.
+  `var(--token, var(--local))`, not `var(--token)` — a page may be running
+  chrome from an older build that does not define the token yet, and a bare
+  `var()` that misses resolves to `currentColor`.
 - **Anything you add to a single page's header or footer area is overwritten on
   the next deploy.** A one-line change there lands on 53 pages. Check the diff
   before committing; this has gone wrong twice.

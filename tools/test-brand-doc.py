@@ -65,6 +65,21 @@ is_('carries a verification date', bool(re.search(r'Last verified \d+ \w+ 20\d\d
 is_('and the same-commit rule, as PRICING.md has',
     'change this file in the same commit' in doc)
 
+print('\nHOW THE CHROME GETS ONTO A PAGE — CHECKED AGAINST THE BUILD')
+# This paragraph has been wrong in both directions and the wrong version was
+# committed. It is now asserted against build_pages.py rather than believed.
+build = io.open(os.path.join(ROOT, 'tools/build_pages.py'), encoding='utf-8').read()
+is_('the build really does inline the chrome', 'def inline_chrome' in build)
+is_('by swapping the site-header/site-footer placeholders', "site-%s" in build or 'site-header' in build)
+is_('and writing the file back', "open(path, \"w\"" in build)
+is_('so the document says build time', 'at build time' in doc)
+is_('and does NOT claim a runtime fetch does the work',
+    'Each page fetches it at runtime' not in doc)
+is_('while still recording the fetch as a fallback',
+    'fallback' in doc and "fetch('/header.html')" in doc)
+is_('CLAUDE.md agrees',
+    'at build time' in io.open(os.path.join(ROOT, 'CLAUDE.md'), encoding='utf-8').read())
+
 print('\nTHE CONTRAST FIGURES ARE RECOMPUTED, NOT TRUSTED')
 # These are the numbers that justify §8. If a token is darkened to fix the
 # button, the ratios in the document must move with it or the argument is

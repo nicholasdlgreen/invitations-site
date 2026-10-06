@@ -29,14 +29,21 @@ rendered page disagree, this file records what renders, and says so.
 
 ## 1. How this file works
 
-`header.html` holds the single `:root` block. **Each page fetches it at runtime**
-with JavaScript and drops it into the body — `tools/build_pages.py` does
-something else entirely (it pre-renders the product pages). An earlier draft of
-this file said build time; that was wrong, and it matters, because a runtime
-fetch can be cached or can fail.
+`header.html` holds the single `:root` block, and `tools/build_pages.py` writes
+it into every page at build time — `inline_chrome()` swaps the `site-header`
+and `site-footer` placeholders for the real markup and saves the file. Each
+page also carries a `fetch('/header.html')`, but that is only a null-safe
+fallback for the case where the build step did not run.
 
-Because it lands in the `<body>` and each page's own `:root` sits in the
-`<head>`, the header's values come later in the cascade and win. Three
+*(This paragraph has been wrong in both directions. It first said build time,
+which was right; a later edit "corrected" it to a runtime fetch, which was
+wrong, and that error was committed. Corrected again on 6 October after reading
+`inline_chrome()` rather than inferring from the page source. The source misled
+me because the repo stores the **output** of past builds — pages look as though
+they always had their own header.)*
+
+Because the baked-in header sits in the `<body>` and each page's own `:root` is
+in the `<head>`, the header's values come later in the cascade and win. Three
 consequences worth knowing before changing anything:
 
 - **The tokens have one home.** Change a colour in `header.html` and it changes
@@ -44,12 +51,17 @@ consequences worth knowing before changing anything:
 - **A page's own `:root` is decoration.** Nine pages declare tokens that never
   take effect. Reading those files tells you the wrong thing (§7).
 
-- **A stale header is a real failure mode.** Browsers cache `header.html`. After
-  a deploy a returning visitor can run yesterday's tokens against today's page
-  CSS. This is not hypothetical — it happened repeatedly while verifying this
-  work locally, and it is why `--focus` carries a fallback (§5). **A token used
-  by page CSS should be written `var(--token, var(--local-fallback))`** where a
-  sensible local fallback exists.
+- **An edit to `header.html` does not reach a page until the next build.** The
+  repo holds pages with chrome baked in from previous builds, so changing a
+  token leaves every committed page still carrying the old value until Netlify
+  rebuilds. While verifying the heading work this looked exactly like browser
+  caching and was diagnosed as such; it was not. `contact.html` appeared to
+  behave differently only because it is the one page still holding a
+  placeholder rather than baked chrome.
+- **A token used by page CSS is still worth writing
+  `var(--token, var(--local-fallback))`** where a sensible local fallback
+  exists — not because of caching, but because a page may be running chrome
+  from an older build that does not define the token yet. `--focus` does this.
 
 Anything added directly to a page is overwritten on the next deploy. This has
 caught us out before: a comment added to one page appeared on all 53. The
