@@ -52,6 +52,10 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
   each page also carries is only a null-safe fallback. Because the baked-in
   chrome sits in the body and each page's own `:root` is in the head, the
   shared tokens win the cascade.
+- **Shared furniture — the basket drawer, Amy, the toast — lives in
+  `header.html` and `footer.html` only.** Never copy it into a page. Every page
+  used to carry its own alongside the baked copy, giving two of each with
+  duplicate ids, so `getElementById` found the first and the rest sat inert.
 - **The repo stores the output of past builds.** A page's source will show
   chrome baked in from an earlier build, so editing `header.html` leaves every
   committed page carrying the old value until the next build. Do not read a
@@ -99,3 +103,8 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-brand-doc.py` | `docs/BRAND.md` still matches `header.html`; contrast figures recomputed |
 | `tools/test-path-icon-colour.py` | Pod icons state a colour and use the gold token |
 | `tools/test-focus-and-headings.py` | Focus rings clear 3:1; page titles share one size |
+| `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
+| `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
+| `tools/test-one-basket.py` | No page carries its own cart drawer |
+| `tools/test-one-amy.py` | No page carries its own widget or its own copy of the code |
+| `tools/test-widget-script-present.py` | Every page showing Amy also loads `help-widget.js` |
