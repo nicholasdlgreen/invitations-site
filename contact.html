@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<!--FAVICON-->
+<link rel="icon" href="/favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/img/brand/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/img/brand/favicon-16.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/img/brand/favicon-180.png"/>
+<!--/FAVICON-->
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Contact Us | foreverprint</title>
+<meta name="description" content="Get in touch with foreverprint. Send us a message about an order, a design or anything else."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://foreverprint.com/contact"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://foreverprint.com/contact"/>
+<meta property="og:title" content="Contact Us | foreverprint"/>
+<meta property="og:description" content="Send us a message about an order, a design or anything else."/>
+<meta property="og:locale" content="en_GB"/>
+<meta property="og:site_name" content="foreverprint"/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Contact Us | foreverprint"/>
+<meta name="twitter:description" content="Send us a message about an order, a design or anything else."/>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<style>
+.ct-wrap{max-width:760px;margin:0 auto;padding:72px 32px 100px;}
+.ct-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(1.9rem,3.6vw,2.6rem);font-weight:300;line-height:1.15;color:var(--text);margin:0 0 14px;}
+.ct-rule{width:44px;height:1px;background:var(--gold-lt);margin-bottom:22px;}
+.ct-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:32px;}
+/* Sentence case, no tracking — the same decision taken for the checkout form
+   on 5 October. Uppercase with letter-spacing is the heaviest way to set small
+   type and a form of five fields does not need shouting at. */
+.ct-label{font-size:var(--text-sm);color:var(--soft);display:block;margin-bottom:6px;}
+.ct-opt{color:var(--pale);}
+.ct-input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:var(--text-sm);color:var(--text);background:var(--white);outline:none;transition:border-color .2s;box-sizing:border-box;}
+.ct-input:focus{border-color:var(--gold-lt);}
+.ct-input.error{border-color:var(--err);}
+/* A hint, not an answer. Browser defaults put placeholder text at reading
+   weight, which is how the checkout form came to look pre-filled. */
+.ct-input::placeholder{color:var(--pale);opacity:1;}
+.ct-field{margin-bottom:18px;}
+/* The radio itself is taken out of the flow rather than display:none, which
+   would make it unfocusable and lose the keyboard. :has() colours the chip on
+   its own; the .on class is the same thing for anything that lacks :has(). */
+.ct-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.ct-chip{display:inline-flex;align-items:center;font-size:12px;color:var(--soft);background:var(--white);border:1px solid var(--border);border-radius:60px;padding:7px 14px;cursor:pointer;transition:border-color .2s,color .2s;}
+.ct-chip input{position:absolute;opacity:0;width:0;height:0;}
+.ct-chip:hover{border-color:var(--gold-lt);}
+.ct-chip:has(input:checked),.ct-chip.on{border-color:var(--gold-lt);color:var(--text);background:#FFFDF9;}
+.ct-chip:focus-within{border-color:var(--gold);}
+.ct-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+textarea.ct-input{resize:vertical;min-height:132px;line-height:1.8;}
+.ct-err{font-size:var(--text-xs);color:var(--err);margin-top:6px;display:none;}
+.ct-alt{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);font-size:var(--text-xs);color:var(--soft);line-height:2;}
+.ct-alt a{color:var(--gold);text-decoration:none;}
+.ct-alt a:hover{text-decoration:underline;}
+.ct-done{text-align:center;padding:44px 24px;}
+.ct-tick{width:52px;height:52px;border-radius:50%;background:var(--cream);border:1px solid var(--gold-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--gold);font-size:22px;}
+.ct-done-h{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:10px;}
+.ct-done-p{font-size:var(--text-sm);color:var(--soft);line-height:1.9;max-width:360px;margin:0 auto;}
+@media(max-width:560px){
+  .ct-wrap{padding:48px 20px 72px;}
+  .ct-card{padding:24px 20px;}
+  .ct-row{grid-template-columns:1fr;gap:0;}
+}
+</style>
+
+<div style="background:var(--cream);min-height:calc(100vh - 64px);">
+<div class="ct-wrap">
+
+  <!-- An offer, not a welcome. Someone whose order is late or wrong arrives on
+       this page too, and "we would love to hear from you" reads badly to them.
+       No line under the heading: what stood here promised a reply within one
+       working day, which is a service level we have not agreed. -->
+  <h1 class="ct-h1">How can we help?</h1>
+  <div class="ct-rule"></div>
+
+  <div class="ct-card" id="ctCard">
+
+    <!-- Netlify Forms. The site already uses this for the launch signup on the
+         home page, so the pattern is proven here and needs no backend. Every
+         submission is stored in the Netlify dashboard as well as emailed, which
+         a mailto: link never did — the widget's old "contact form" handed off
+         to the visitor's mail client and sent nothing at all when there was
+         none. bot-field is the honeypot: a real person never fills it. -->
+    <form id="ctForm" name="contact" method="POST" novalidate data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="contact"/>
+      <p style="display:none;"><label>Leave this empty <input name="bot-field"/></label></p>
+
+      <!-- Real radios rather than styled spans, so the row is reachable by
+           keyboard and announced as a group. Deliberately none preselected: a
+           default of "an order I have placed" would be answered for the many
+           people it is wrong for, and would tell us nothing. -->
+      <div class="ct-field">
+        <span class="ct-label" id="ctTopicLabel">What is it about?</span>
+        <div class="ct-chips" role="radiogroup" aria-labelledby="ctTopicLabel">
+          <label class="ct-chip"><input type="radio" name="topic" value="An order I have placed"/><span>An order I have placed</span></label>
+          <label class="ct-chip"><input type="radio" name="topic" value="A question before I order"/><span>A question before I order</span></label>
+          <label class="ct-chip"><input type="radio" name="topic" value="Something else"/><span>Something else</span></label>
+        </div>
+      </div>
+
+      <div class="ct-row">
+        <div class="ct-field">
+          <label class="ct-label" for="ctName">Your name</label>
+          <input class="ct-input" id="ctName" name="name" type="text" autocomplete="name"/>
+          <div class="ct-err" id="ctNameErr">Please tell us your name</div>
+        </div>
+        <div class="ct-field">
+          <label class="ct-label" for="ctEmail">Email address</label>
+          <input class="ct-input" id="ctEmail" name="email" type="email" autocomplete="email"/>
+          <div class="ct-err" id="ctEmailErr">We need an email address to reply to</div>
+        </div>
+      </div>
+
+      <div class="ct-field">
+        <label class="ct-label" for="ctOrder">Order number <span class="ct-opt">(optional, like INV-2026-0000)</span></label>
+        <input class="ct-input" id="ctOrder" name="order" type="text"/>
+      </div>
+
+      <div class="ct-field">
+        <label class="ct-label" for="ctMessage">Your message</label>
+        <textarea class="ct-input" id="ctMessage" name="message" rows="5"></textarea>
+        <div class="ct-err" id="ctMessageErr">Please tell us how we can help</div>
+      </div>
+
+      <button class="btn" id="ctSend" type="submit" style="justify-content:center;">Send message</button>
+      <div class="ct-err" id="ctFormErr" style="margin-top:12px;">That did not send. Please try again, or email us at hello@foreverprint.com.</div>
+    </form>
+
+    <div class="ct-alt">
+      Would rather not use a form? Email us at <a href="mailto:hello@foreverprint.com">hello@foreverprint.com</a>.<br>
+      Or ask Amy, bottom right of any page — she answers straight away.
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div id="site-footer"></div>
+
+<script>
+fetch('/header.html').then(r=>r.text()).then(html=>{
+  var __c=document.getElementById('site-header'); if(__c) __c.outerHTML=html;
+  if(typeof updateCartBadge==='function') updateCartBadge();
+});
+fetch('/footer.html').then(r=>r.text()).then(html=>{
+  var __c=document.getElementById('site-footer'); if(__c) __c.outerHTML=html;
+});
+
+// ── SENDING ───────────────────────────────────────────────
+// Submitted with fetch rather than a page POST so the confirmation replaces
+// the form in place, as designed, instead of bouncing to Netlify's own success
+// page. Same shape as the launch signup on the home page.
+(function () {
+  var form = document.getElementById('ctForm');
+  if (!form) return;
+
+  function field(id){ return document.getElementById(id); }
+
+  // Carried over from Amy's widget, so nothing typed there is asked for twice.
+  // Set as .value and never as markup: these come from the address bar, so
+  // writing them as HTML would hand a crafted link a way into the page.
+  (function () {
+    var q = new URLSearchParams(location.search);
+    [['name','ctName'],['email','ctEmail'],['order','ctOrder'],['message','ctMessage']]
+      .forEach(function (pair) {
+        var v = q.get(pair[0]);
+        if (v) field(pair[1]).value = v.slice(0, 4000);
+      });
+    // Leave the address bar clean, so a refresh or a shared link is not a
+    // half-filled form belonging to somebody else.
+    if (location.search) {
+      try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    }
+  })();
+
+  // Mirrors :has(input:checked) for anything that does not support it. The
+  // radios work regardless; this only paints them.
+  (function () {
+    var chips = form.querySelectorAll('.ct-chip');
+    Array.prototype.forEach.call(chips, function (chip) {
+      chip.querySelector('input').addEventListener('change', function () {
+        Array.prototype.forEach.call(chips, function (c) {
+          c.classList.toggle('on', c.querySelector('input').checked);
+        });
+      });
+    });
+  })();
+
+  function showErr(inputId, errId, show){
+    field(inputId).classList.toggle('error', show);
+    field(errId).style.display = show ? 'block' : 'none';
+  }
+  // Clear an error the moment they start fixing it, rather than making them
+  // submit again to find out.
+  ['ctName','ctEmail','ctMessage'].forEach(function(id){
+    field(id).addEventListener('input', function(){
+      showErr(id, id + 'Err', false);
+      field('ctFormErr').style.display = 'none';
+    });
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = field('ctName').value.trim();
+    var email = field('ctEmail').value.trim();
+    var order = field('ctOrder').value.trim();
+    var message = field('ctMessage').value.trim();
+    // Optional, and left empty when nobody picked one — the message says it anyway.
+    var picked = form.querySelector('input[name="topic"]:checked');
+    var topic = picked ? picked.value : '';
+
+    var bad = false;
+    showErr('ctName', 'ctNameErr', !name);            bad = bad || !name;
+    var emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    showErr('ctEmail', 'ctEmailErr', !emailOk);       bad = bad || !emailOk;
+    showErr('ctMessage', 'ctMessageErr', !message);   bad = bad || !message;
+    if (bad) { field(!name ? 'ctName' : !emailOk ? 'ctEmail' : 'ctMessage').focus(); return; }
+
+    var btn = field('ctSend');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    field('ctFormErr').style.display = 'none';
+
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        'form-name': 'contact', name: name, email: email,
+        topic: topic, order: order, message: message, 'bot-field': ''
+      }).toString()
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      document.getElementById('ctCard').innerHTML =
+        '<div class="ct-done">' +
+        '<div class="ct-tick">&#10003;</div>' +
+        '<div class="ct-done-h">Thank you &mdash; that is with us</div>' +
+        '<div class="ct-done-p">We will reply by email to the address you gave us. ' +
+        'If it is urgent, Amy can help straight away.</div>' +
+        '</div>';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }).catch(function () {
+      // Never leave them thinking it sent when it did not. The email address is
+      // in the message, so there is always a way through.
+      btn.disabled = false;
+      btn.textContent = 'Send message';
+      field('ctFormErr').style.display = 'block';
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

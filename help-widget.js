@@ -284,4 +284,18 @@ if(hwHandleFlow(text)){return;}
 input.disabled=true;document.getElementById('hw-send').disabled=true;hwHistory.push({role:'user',content:text});hwShowTyping();try{var res=await fetch('/.netlify/functions/help-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hwHistory,sessionId:hwSession})}),data=await res.json();hwRemoveTyping();var reply=data.text||'Sorry — I could not get through just then. Please email hello@foreverprint.com and a real person will pick it up.';hwHistory.push({role:'assistant',content:reply});hwAddMsg('bot',reply,/contact|problem|issue|wrong|damaged|missing|refund/i.test(text+reply));}catch(e){hwRemoveTyping();hwAddMsg('bot','Sorry, I\'m having trouble connecting. Please email hello@foreverprint.com',false);}input.disabled=false;document.getElementById('hw-send').disabled=false;input.focus();}
 function hwShowContact(){document.getElementById('hw-contact-form').style.display='block';document.getElementById('hw-input-area').style.display='none';}
 function hwHideContact(){document.getElementById('hw-contact-form').style.display='none';document.getElementById('hw-input-area').style.display='flex';}
-function hwSubmitContact(){var name=document.getElementById('hw-cf-name').value.trim(),email=document.getElementById('hw-cf-email').value.trim(),order=document.getElementById('hw-cf-order').value.trim(),msg=document.getElementById('hw-cf-msg').value.trim();if(!name||!email||!msg){alert('Please fill in your name, email and message.');return;}window.location.href='mailto:hello@foreverprint.com?subject='+encodeURIComponent('Customer Enquiry'+(order?' — Order '+order:''))+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+(order?'\nOrder: '+order:'')+'\n\n'+msg);hwHideContact();hwAddMsg('bot','Your email client should have opened — we\'ll get back to you within one working day.',false);}
+function hwSubmitContact(){
+  // Was a mailto: link. It opened the visitor's mail client and sent nothing at
+  // all when there was not one — on a phone, most often — while telling them it
+  // had. The contact page posts to Netlify Forms, which records every
+  // submission as well as emailing it. Anything already typed is carried over
+  // so it is not asked for twice.
+  var name=document.getElementById('hw-cf-name').value.trim(),
+      email=document.getElementById('hw-cf-email').value.trim(),
+      order=document.getElementById('hw-cf-order').value.trim(),
+      msg=document.getElementById('hw-cf-msg').value.trim();
+  var q=new URLSearchParams();
+  if(name)q.set('name',name); if(email)q.set('email',email);
+  if(order)q.set('order',order); if(msg)q.set('message',msg);
+  window.location.href='/contact'+(q.toString()?'?'+q.toString():'');
+}
