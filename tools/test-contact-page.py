@@ -81,6 +81,21 @@ alt = re.search(r'<div class="ct-alt">(.*?)</div>', contact, re.S).group(1)
 is_('the email address is still offered', 'hello@foreverprint.com' in alt)
 is_('and nothing else is', 'Amy' not in alt)
 
+is_('nor does the confirmation after sending', 'Amy' not in
+    re.search(r"ct-done-p\">(.*?)</div>", contact, re.S).group(1))
+
+print('\nBOTH WAYS TO REACH US ARE OFFERED ON THE HELP PAGE')
+help_pg = io.open(os.path.join(ROOT, 'help-support.html'), encoding='utf-8').read()
+is_('Amy is still offered', 'Chat with Amy' in help_pg)
+is_('and so is the contact page', '<a class="hs-chat-btn hs-chat-btn-out" href="/contact">' in help_pg)
+is_('they sit together and wrap on a narrow screen',
+    '.hs-chat-actions{display:flex' in help_pg and 'flex-wrap:wrap' in help_pg)
+# The band is var(--text) #3D2E24. Gold on it is 4.75:1 — the outlined button
+# passes AA where a gold FILL would not, so the outline is the right choice
+# here as well as the quieter one.
+is_('the outlined button is the secondary of the two',
+    'hs-chat-btn-out{background:transparent' in help_pg)
+
 print('\nNO PROMPT TEXT INSIDE ANY FIELD')
 is_('no placeholders at all', re.findall(r'placeholder=', visible), [])
 is_('the order format moved beside the label, in the optional grey',

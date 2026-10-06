@@ -47,6 +47,9 @@
 .hs-chat-band p{font-size:var(--text-body);color:rgba(255,255,255,.7);max-width:460px;margin:0 auto 26px;line-height:1.8;}
 .hs-chat-btn{display:inline-flex;align-items:center;gap:10px;background:var(--gold);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:500;padding:15px 34px;border-radius:60px;cursor:pointer;transition:background .2s;}
 .hs-chat-btn:hover{background:var(--gold-lt);}
+.hs-chat-actions{display:flex;gap:var(--space-3,12px);justify-content:center;flex-wrap:wrap;}
+.hs-chat-btn-out{background:transparent;color:var(--gold);border:1px solid var(--gold);text-decoration:none;}
+.hs-chat-btn-out:hover{background:var(--gold);color:#fff;}
 @media(max-width:768px){.hs-ask{flex-direction:column;border-radius:20px;padding:16px;}.hs-ask button{width:100%;}}
 </style>
 <script src="/vendor/supabase-js-2.116.0.min.js" defer></script>
@@ -578,7 +581,10 @@ was fetched and injected via innerHTML — that was the bug behind the
   <div class="container">
     <h2 class="hs-section-h2">Still have a question?</h2>
     <p>Amy is our assistant, and she's here to help with anything — ordering, paper choices, delivery, or a problem with an order.</p>
-    <button class="hs-chat-btn" type="button" onclick="hsOpenChat()">Chat with Amy</button>
+    <div class="hs-chat-actions">
+      <button class="hs-chat-btn" type="button" onclick="hsOpenChat()">Chat with Amy</button>
+      <a class="hs-chat-btn hs-chat-btn-out" href="/contact">Contact Us</a>
+    </div>
   </div>
 </section>
 
