@@ -203,7 +203,19 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: cors(),
-      body: JSON.stringify({ image: dataUrl, sourceUrl: images[0].url, width: (images[0].width||imageSize.width), height: (images[0].height||imageSize.height) })
+      // width/height come from fal, or are null when it does not say. They
+      // used to fall back to `imageSize`, which does not exist in this file —
+      // a ReferenceError waiting for the first response without dimensions,
+      // which would have turned a successful generation into a 500 AFTER the
+      // image was already paid for. Nothing reads these two fields; they are
+      // kept because they are useful in the logs, and honest about not knowing.
+      body: JSON.stringify({
+        image: dataUrl,
+        sourceUrl: images[0].url,
+        width: images[0].width || null,
+        height: images[0].height || null,
+        aspectRatio: aspectRatio
+      })
     };
 
   } catch (err) {

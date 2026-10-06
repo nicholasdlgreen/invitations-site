@@ -107,6 +107,12 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
   tools/preview-sync.py`. Several real bugs were invisible in the source and
   obvious in the rendered page — the blue icons, the swallowed form submit, the
   overridden palettes.
+- **A Netlify function needs a test that RUNS it, not one that reads it.**
+  Source tests cannot see an unbound name. Amy went down for a day that way,
+  and `netlify/functions/studio-nano.js` carried the same fault for months on a path that had
+  not fired yet. Execute the handler against stubs — see
+  `tools/test-help-chat-runs.js` and `tools/test-studio-functions-run.js` —
+  and exercise the branch that is NOT normally taken.
 - **Mutation-test every new test**: put the bug back, confirm the test fails,
   restore. Tests that pass by coincidence have slipped through here before.
 
@@ -123,6 +129,8 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-products-grid.py` | Two product columns on a phone; the desktop grid is untouched |
 | `tools/test-tap-targets.py` | Mobile controls are 48px; desktop keeps its own sizes |
 | `tools/test-size-step-mobile.py` | The size step is two columns on a phone with readable dimensions |
+| `tools/test-studio-functions-run.js` | The studio functions execute; an unbound name fails here, not in front of a customer |
+| `tools/test-tweak-wording.js` | The tweak page shows wording where the customer put it |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |
