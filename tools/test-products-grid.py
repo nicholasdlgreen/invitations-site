@@ -68,11 +68,38 @@ is_('the price is rendered', 'class="product-price"' in page)
 is_('and the tagline is still in the markup, just not shown on a phone',
     'class="product-desc"' in page)
 
+print('\nTHE CATEGORY FILTER HAS A CONTROL AT LAST')
+# The page always read ?cat= and always filtered; nothing on it could reach
+# that. The mega-menu's three "View all" links were the only way in.
+is_('there are four pills', len(re.findall(r'class="cat-pill[^"]*" data-cat=', page)), 4)
+for cat in ('', 'weddings', 'celebrations', 'announcements'):
+    is_('  a pill for %-14s' % (cat or '(all)'), 'data-cat="%s"' % cat in page)
+is_('All is the one selected to begin with',
+    'class="cat-pill active" data-cat=""' in page)
+is_('the count lives inside the All pill', 'All <span id="product-count">' in page)
+is_('they are a labelled group for a screen reader',
+    'role="group"' in page and 'aria-label="Filter by category"' in page)
+is_('and each says whether it is pressed', page.count('aria-pressed') >= 4)
+
+print('\nIT FILTERS IN PLACE AND KEEPS THE URL HONEST')
+is_('setCategory exists', 'function setCategory(' in page)
+is_('it reuses the filtering that was already there', 'renderProducts();' in page)
+is_('the url follows the filter', "history.pushState({ cat: currentCat }" in page)
+is_('back and forward work', "addEventListener('popstate'" in page)
+is_('arriving with ?cat= lights the matching pill', 'setCategory(currentCat, false);' in page)
+is_('and that does not push a duplicate history entry', 'push !== false' in page)
+
+print('\nTOUCH TARGETS')
+is_('40px on desktop, where a mouse points', 'min-height:40px' in outside)
+is_('44px on a phone, where a finger does', '.cat-pill{min-height:44px' in phone)
+
 print('\nMUTATION: GOING BACK TO ONE COLUMN MUST FAIL')
 is_('a single-column phone grid is caught',
     'repeat(2,1fr)' in '.product-grid{grid-template-columns:1fr;gap:14px;}', False)
 is_('and hiding the tagline on desktop would be caught',
     '.product-desc{display:none' in outside, False)
+is_('a pill that does not update the url is caught',
+    'pushState' in "function setCategory(c){ currentCat=c; renderProducts(); }", False)
 
 print('\n%d passed, %d failed\n' % (passed, failed))
 sys.exit(1 if failed else 0)

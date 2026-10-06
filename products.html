@@ -34,6 +34,11 @@
 .filter-bar-inner{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;}
 .filter-count{font-size:var(--text-xs);color:var(--soft);letter-spacing:.06em;}
 .sort-pills{display:flex;gap:6px;align-items:center;}
+.cat-pills{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.cat-pill{background:none;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.06em;padding:9px 16px;border-radius:60px;cursor:pointer;transition:all .2s;min-height:40px;}
+.cat-pill:hover{border-color:var(--gold-lt);color:var(--text);}
+.cat-pill.active{background:var(--gold);border-color:var(--gold);color:#fff;}
+.cat-pill:focus-visible{outline:2px solid var(--focus,var(--soft));outline-offset:2px;}
 .sort-label{font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--pale);margin-right:8px;}
 .sort-pill{background:none;border:1px solid var(--border);color:var(--soft);font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.06em;padding:7px 14px;border-radius:18px;cursor:pointer;transition:all .2s;}
 .sort-pill:hover{border-color:var(--gold-lt);color:var(--text);}
@@ -100,6 +105,7 @@
   .product-price{padding-top:9px;}
   .trust-grid{grid-template-columns:1fr;gap:20px;}
   .filter-bar-inner{flex-direction:column;align-items:flex-start;}
+  .cat-pill{min-height:44px;padding:10px 15px;}
 }
 </style>
 <script src="/vendor/supabase-js-2.116.0.min.js" defer></script>
@@ -584,7 +590,17 @@ was fetched and injected via innerHTML — that was the bug behind the
 <section class="filter-bar">
   <div class="container">
     <div class="filter-bar-inner">
-      <div class="filter-count" id="product-count">Loading…</div>
+      <!-- The page has always filtered by category — it reads ?cat= and the
+           mega-menu's "View all" links use it — but nothing on the page could
+           reach it. Once you were looking at all 22 products there was no way
+           to narrow them, on desktop or mobile. These wire a control to logic
+           that was already here. -->
+      <div class="cat-pills" role="group" aria-label="Filter by category">
+        <button class="cat-pill active" data-cat="" aria-pressed="true">All <span id="product-count">22</span></button>
+        <button class="cat-pill" data-cat="weddings" aria-pressed="false">Weddings</button>
+        <button class="cat-pill" data-cat="celebrations" aria-pressed="false">Celebrations</button>
+        <button class="cat-pill" data-cat="announcements" aria-pressed="false">Announcements</button>
+      </div>
       <div class="sort-pills">
         <span class="sort-label">Sorted A–Z</span>
       </div>
@@ -894,6 +910,28 @@ function applySort(products, mode) {
   return arr;
 }
 
+// Mirrors setSort below. Filtering happens in place — applyCategoryFilter and
+// renderProducts already existed — and the url is kept in step so a filtered
+// view can be shared, bookmarked and reached with the back button.
+function setCategory(cat, push) {
+  currentCat = cat || null;
+  document.querySelectorAll('.cat-pill').forEach(b => {
+    const on = (b.dataset.cat || '') === (currentCat || '');
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  // The banner is the page's existing way of saying a filter is on.
+  const banner = document.getElementById('cat-banner');
+  const bannerName = document.getElementById('cat-banner-name');
+  if (banner) banner.classList.toggle('visible', !!currentCat);
+  if (bannerName && currentCat) bannerName.textContent = CAT_LABELS[currentCat];
+  if (push !== false) {
+    const url = currentCat ? '/products?cat=' + currentCat : '/products';
+    try { history.pushState({ cat: currentCat }, '', url); } catch (e) {}
+  }
+  renderProducts();
+}
+
 function setSort(mode) {
   currentSort = mode;
   document.querySelectorAll('.sort-pill').forEach(b => {
@@ -907,11 +945,11 @@ function renderProducts() {
   const filtered = applyCategoryFilter(allProducts);
   const sorted = applySort(filtered, currentSort);
 
-  // Update count
+  // The count sits inside the All pill now, so the bar stays one line high and
+  // nothing else on the page moves. It counts the whole catalogue, not the
+  // current filter — it is a label on "All", not a result tally.
   const countEl = document.getElementById('product-count');
-  if (countEl) {
-    countEl.textContent = `${sorted.length} ${sorted.length === 1 ? 'product' : 'products'}`;
-  }
+  if (countEl) countEl.textContent = allProducts.length;
 
   if (!sorted.length) {
     grid.innerHTML = `<div class="product-grid-empty">No products match this filter.</div>`;
@@ -1043,9 +1081,23 @@ async function loadData() {
     }
   }
 
-  renderProducts();
+  // currentCat was set from the url by applyUrlCategory(); light the matching
+  // pill without pushing another history entry for the page we are already on.
+  setCategory(currentCat, false);
   renderItemListSchema(applySort(applyCategoryFilter(allProducts), 'featured'));
 }
+
+// Bind the category pills, and reflect whichever category the url arrived with
+// so a "View all →" from the mega-menu shows that pill already selected — which
+// it did not before: the page filtered but nothing said which filter was on.
+document.querySelectorAll('.cat-pill').forEach(function (b) {
+  b.addEventListener('click', function () { setCategory(b.dataset.cat || null, true); });
+});
+// Back and forward through filtered views.
+window.addEventListener('popstate', function () {
+  const cat = new URLSearchParams(window.location.search).get('cat');
+  setCategory(cat && CAT_LABELS[cat.toLowerCase()] ? cat.toLowerCase() : null, false);
+});
 
 loadData();
 
