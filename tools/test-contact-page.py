@@ -76,6 +76,11 @@ is_('and its style went with it, rather than lying around unused',
 is_('same for the eyebrow above it',
     'class="ct-tag"' not in contact and re.search(r'^\.ct-tag\{', contact, re.M) is None)
 
+print('\nTHE WAY ROUND THE FORM IS THE EMAIL ADDRESS, AND ONLY THAT')
+alt = re.search(r'<div class="ct-alt">(.*?)</div>', contact, re.S).group(1)
+is_('the email address is still offered', 'hello@foreverprint.com' in alt)
+is_('and nothing else is', 'Amy' not in alt)
+
 print('\nNO PROMPT TEXT INSIDE ANY FIELD')
 is_('no placeholders at all', re.findall(r'placeholder=', visible), [])
 is_('the order format moved beside the label, in the optional grey',
