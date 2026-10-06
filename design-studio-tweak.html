@@ -174,7 +174,21 @@ body{margin:0;background:#F1EFE9;font-family:'Jost',sans-serif;color:var(--text)
   sizeTextToCard();
   window.addEventListener('resize', resync);
   if (window.ResizeObserver) {
-    try { new ResizeObserver(resync).observe(document.getElementById('tw-canvas')); } catch(e){}
+    try {
+      new ResizeObserver(resync).observe(document.getElementById('tw-canvas'));
+      // Watch the WORDING as well as the card. The note is a statement about
+      // the block, and the block changes height on its own when Cormorant
+      // Garamond swaps in for the fallback -- the card does not move a pixel,
+      // so a card-only observer never fires and the note stays as it was set
+      // during the first paint. Live, with a cold font cache, that showed
+      // "a lot of wording for this size of card" on an A5 whose wording came
+      // out 0.97px INSIDE the limit. It passed locally only because the font
+      // was already cached, which is why this now also waits on fonts.ready.
+      new ResizeObserver(overflowNote).observe(document.getElementById('tw-stack'));
+    } catch(e){}
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(resync).catch(function(){});
   }
 
   var currentImage = state.image;

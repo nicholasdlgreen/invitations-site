@@ -2441,6 +2441,12 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
   if (window.ResizeObserver) {
     try { new ResizeObserver(sizeTextToCard).observe(document.getElementById('ds-canvas')); } catch(e){}
   }
+  // The wording is measured to fit the card, so it has to be measured in the
+  // font it will be set in. Until Cormorant Garamond arrives the block is the
+  // fallback's size, and nothing else would ever ask again.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function(){ refitSoon(); }).catch(function(){});
+  }
 
   var textScale = 1;
   function enableDrag(){
