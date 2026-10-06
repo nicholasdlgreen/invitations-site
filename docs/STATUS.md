@@ -1,9 +1,22 @@
-# Where we are — 5 October 2026
+# Where we are — 6 October 2026
 
 *Every figure below was checked against the live site, the live database or a
 generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
+
+**6 October. A design day, and nothing on the launch list moved.** Twenty-three
+commits across four threads — the mobile site, the contact page, a brand
+guidelines document the site did not have, and the design studio. None of it
+touches what blocks trading (§15 A1–A4), which is unchanged and still the three
+welcome-email passages, the copy read-back, the margins, and checkout refusing
+every basket. The day is written up in **§0a**.
+
+The one thing worth carrying into tomorrow is not a feature: **a bug passed
+locally and failed on the live site because my font cache was warm.** Details in
+§0a; the habit it should change is in §5.
+
+---
 
 **5 October. Nothing on the list was the day's work.** Twenty-one changes, and
 every one came from reading a page rather than from this document: the Terms
@@ -125,6 +138,149 @@ stopped working entirely, a sweep of marketing copy that was promising things we
 do not sell, and a price comparison against five competitors. Two incidents are
 worth reading on their own — §11, where Publish broke, and §12, where the studio
 was quietly charging double.
+
+---
+
+## 0a. 6 October — in one place
+
+Twenty-three commits, all pushed and verified on the live site. Four threads.
+
+### The design studio — the wording and the card
+
+Nicholas: *"when the image is generated it covers the text, which then needs to
+be adjusted in size, and in some cases it goes quite small."*
+
+Measured with deliberately long wording: the block ran to **119% of the card
+height** — taller than the card. The names ran off the top, the RSVP fell off
+the bottom and the artwork was completely hidden. Every customer with a long
+name had to shrink it by hand.
+
+The wording is now fitted to a clear area the moment a design arrives, and again
+whenever it is edited: **78% of the card's width, 62% of its height**. Measured
+on the live page, long wording lands on 62% at every window size from a 390px
+phone to 1920px, and the tweak page matches it exactly. Typical wording is
+untouched at full size, 54% of the card.
+
+**Nothing is allowed to print below 7pt.** On A6 and DL the wording genuinely
+cannot reach 62% without crossing that line, so it stops at exactly 7pt and says
+so rather than shrinking silently. A5, Square and Square 210 all reach 62%.
+
+Three faults the build turned up:
+
+- The note explaining the 7pt stop was **shrinking the card**. The card is
+  capped by the height left in the panel, so a note inside the panel took 76px
+  off it — which made the wording need a smaller scale, which kept the note up.
+  324x457 down to 270x381, a loop of my own making.
+- **The minus button could make the text bigger.** Auto-fit could land at 0.44
+  while the resize control had its own floor of 0.5.
+- **The tweak page showed a different card** — 84% text width against the create
+  page's 78%, so identical wording wrapped differently, and a canvas hardcoded
+  to 3:4, which is near enough for A5 (0.705) and wrong for DL (0.471).
+
+### The studio preview was too small — and the cause was not where it looked
+
+Nicholas: *"it can look quite small in the frame — we have quite a bit of grey
+space to the left and right."*
+
+Measured at 1440x900: the card was **289x407, a fifth of the screen's width and
+a twelfth of its area**. It was never limited by its width — there is a
+`max-width:380px` rule it does not reach. It was limited by **height**, and the
+**386px** of label, hint, text-size control and four full-width buttons stacked
+underneath it was what it was competing with. The grey at the sides was the
+symptom; the stack below was the cause. Widening the card alone would have
+changed nothing.
+
+The controls moved beside the card, the rail was cut to 140px, and the card is
+now **457x644 — 58% wider, two and a half times the area**.
+
+Nicholas then rejected the first version: *"Make some tweaks and save this
+design are way too big in terms of prominence."* He was right, and the reason
+was worth finding. The site is composed on a single centred axis, and the rail
+had pushed the card off it while the order button kept the full panel width —
+**card centre at x=874, button centre at x=971, 97px apart**. Both elements were
+individually fine; the composition was not.
+
+### Two things that cost time, recorded so they do not again
+
+- **An aspect-ratio box with no in-flow children collapses to 0x0 as a flex or
+  grid item.** The card is `width:auto` with an aspect-ratio and only
+  absolutely-positioned children, so as a grid item it measured its own empty
+  contents. It needs an ordinary block to fill — hence the wrapper inside the
+  track.
+- **An inline style beats every rule in the stylesheet.** `applySize()` set the
+  card's `max-width` inline, so the wider generated card could never have taken
+  effect whatever was written in CSS. It sets a custom property now.
+
+### The one to remember: a warm font cache hid a live bug
+
+The create page said the wording fitted; the tweak page, same design and same
+scale, said it did not. Measured on the live site the block was **0.97px inside
+the limit** with the warning still showing.
+
+The note was being decided **before Cormorant Garamond loaded**. Until the
+webfont swaps in the wording is set in the fallback, which is taller; the note
+is set from that and nothing asks again. The observer watched the *card*, and
+the card does not move a pixel when the font changes — only the wording does.
+
+**It passed locally and failed live because the font was already in my cache.**
+The first measurement was taken in the right font and happened to be correct.
+The bug only appears on a cold font cache — which is every first-time visitor
+and almost never me. Anything that measures text has to be re-measured after
+`document.fonts.ready`, and a local pass is not evidence.
+
+### Mobile
+
+Reviewed against Google's and Baymard's guidance rather than assumption —
+Baymard put mobile at roughly three-quarters of retail e-commerce traffic. Then
+fixed, with Nicholas approving each desktop-visible change before it was built:
+the header and basket that ran off the screen at every phone width; checkout
+fields raised to 16px so iOS stops zooming; the menu cut from 1,880px to 416px;
+the products grid from 17 screens to 6; every control to the 48px minimum; and a
+footer that had never collapsed on a phone because its responsive rules were in
+`header.html` while its grid was in `footer.html`.
+
+### The brand guidelines the site did not have
+
+`docs/BRAND.md`, modelled on `docs/PRICING.md` and carrying the same rule —
+change it in the same commit as the thing it describes. Colour, type, shape,
+spacing, components, voice, and a contrast audit that is recomputed by a test
+rather than remembered.
+
+**§4a, Layout and composition, was added at the end of the day** after the
+studio redesign went asymmetric and there was no written rule it had broken. It
+records the centred axis (673 centred alignments against 252 left), the 1180px
+container, the three real breakpoints, the button hierarchy — one solid button
+to a view, the real alternative outlined, everything after that a link — and the
+test for when something looks wrong and nobody can say why: find each stacked
+element's centre line and check they agree.
+
+`CLAUDE.md` was written the same day as the session-start library, carrying the
+rules that have actually caused bugs here.
+
+### Smaller, all live
+
+- The **contact page** rebuilt after Nicholas rejected the first draft: the
+  "within one working day" promise removed, the placeholder text taken out of
+  the fields, and the tone changed on the grounds that *"this could be about a
+  problem, so people aren't always happy on this page."* One real test
+  submission sent through the live form.
+- **Tracking says "your order"**, not "your invitations" — we sell more than
+  invitations.
+- **One address per page.** 1,202 links and 40 redirects consolidated so
+  `/privacy` and `/privacy.html` are no longer both indexable.
+- **Account pages out of search.**
+- **Wedding albums withdrawn** — not a product we are doing.
+- **The AI watermark cropped** off the home-page image.
+- **Two tests were not running at all** and nobody knew: one read a temp file
+  from a dead session, the other was a browser fixture the suite kept trying to
+  execute. Both fixed, and the fixture renamed so it stops being mistaken for a
+  test.
+
+### What this did not touch
+
+Nothing in §15 A1–A4. Checkout still refuses every basket (§18), margins are
+still zero on 22 products, the three welcome-email placeholders are still there,
+and the copy read-back is still outstanding and still growing.
 
 ---
 
@@ -1139,6 +1295,31 @@ instead, which ships with macOS and has a real event loop:
 
 It has `readFile()` and `print()`, and it is what the admin session tests run
 on.
+
+**A local pass is not evidence when the thing being measured is text.** Added
+6 October, the hard way. A check of whether wording fitted a card passed here
+and failed on the live site, because the webfont was already in the local cache:
+the first measurement was taken in Cormorant Garamond and was right. On a cold
+cache — every first-time visitor — the same measurement is taken in the fallback
+font, which is taller, and the answer is wrong. The page then told customers
+their wording was too long for the card when it was **0.97px inside** the limit.
+
+Two habits follow. Anything that measures rendered text re-measures after
+`document.fonts.ready`, and watches the text rather than its container: the card
+did not change size when the font swapped, so an observer on the card never
+fired. And when a visual check passes locally, confirm it on the deployed site
+before calling it done — that is what caught this one.
+
+**Two tests were not running at all, and nothing said so.** Found 6 October
+while running the whole suite rather than the few files being changed:
+`test-slug-from-url.js` read a scratch copy of the parser from a temp directory
+belonging to a session that had long since ended, so it threw on startup; and
+`test-section-race.js` was never a test at all — it is the one-line deferred
+stand-in module the browser reproduction loads, and being named `test-*.js`
+meant every suite run tried to execute it without a browser. The first now reads
+the parser out of `product.html`, which is the file that ships. The second is
+renamed `section-race-module.js`. A suite that reports a broken file as noise
+will hide a real failure the same way.
 
 One rule worth keeping: a test that holds its own copy of the code under test
 is a test of the copy. `tools/test-quality-report.js` instead cuts the seven
