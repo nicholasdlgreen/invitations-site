@@ -90,6 +90,27 @@ is_('no rule would fight a rewrite', clash, [])
 is_('and the order flow still rewrites to upload-and-print',
     '/:slug/order' in redirects and 'upload-and-print.html?product=:slug' in redirects)
 
+print('\nTHE ACCOUNT PAGES ARE KEPT OUT OF SEARCH')
+# They had no robots tag and no canonical, so Google was free to index both
+# addresses of each. A sign-in form is not a search result anyone wants, and
+# an indexed account page invites people to land somewhere they cannot use.
+# "follow" so the crawler still reads the navigation on them.
+ACCOUNT = ['login', 'register', 'account', 'saved-designs',
+           'forgot-password', 'reset-password']
+for name in ACCOUNT:
+    t = pages.get(name + '.html', '')
+    m = re.search(r'<meta name="robots"[^>]*content="([^"]*)"', t)
+    is_('  %-16s is noindex' % name, bool(m) and 'noindex' in m.group(1))
+is_('none of them is in the sitemap',
+    [n for n in ACCOUNT if '/' + n in core], [])
+
+print('\nAND THE PAGES THAT SHOULD BE FOUND STILL SAY SO')
+sellable = [p for p, t in pages.items()
+            if '/' not in p and p[:-5] not in ACCOUNT
+            and CANON.search(t) and 'noindex' not in t]
+is_('the public pages are still indexable', len(sellable) > 25)
+print('       (%d public pages)' % len(sellable))
+
 print('\nMUTATION: EACH FAULT COMING BACK MUST FAIL')
 is_('a .html canonical is caught',
     '<link rel="canonical" href="https://foreverprint.com/privacy.html"/>'.endswith('.html"/>'))
