@@ -193,14 +193,14 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 **These are for new work. Existing spacing is deliberately left alone**, and
 that is the whole decision, so it is worth setting out why.
 
-The site has **12,404 spacing declarations using 47 distinct values**. Measured
+The site has **12,405 spacing declarations using 47 distinct values**. Measured
 against the obvious candidates:
 
 | Scale | Fits as-is | Would have to move |
 |---|---|---|
-| Strict 4px grid | 35% | 8,003 declarations |
-| Strict 8px grid | 28% | 8,936 |
-| These ten steps | 46% | 6,742 |
+| Strict 4px grid | 35% | 8,004 declarations |
+| Strict 8px grid | 28% | 8,937 |
+| These ten steps | 46% | 6,743 |
 | These ten plus a 6/10/14 tier | 68% | 3,957 |
 
 Even the best fit means rewriting several thousand values across 58 files, each

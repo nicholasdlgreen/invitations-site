@@ -33,6 +33,10 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 - **`novalidate` on any form you validate yourself**, or the browser's own
   validation swallows the submit and your styled errors never run.
 - **The brand is `foreverprint`** — lowercase f, outside body prose.
+- **After changing any padding, margin or gap, run
+  `python3 tools/refresh-spacing-figures.py`.** `docs/BRAND.md` §4 quotes real
+  counts and `tools/test-spacing-scale.py` recomputes them, so almost any CSS edit
+  makes the document stale. The script rewrites the table; do not retype it.
 - **New spacing uses `var(--space-1..10)`** (4, 8, 12, 16, 20, 24, 32, 48, 60,
   80px). They were derived from what the site already does, so they match their
   surroundings. **Do not retrofit existing spacing** — there are 13,606
@@ -109,6 +113,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-path-icon-colour.py` | Pod icons state a colour and use the gold token |
 | `tools/test-focus-and-headings.py` | Focus rings clear 3:1; page titles share one size |
 | `tools/test-mobile-header.py` | The header fits a phone; the mobile rules stay inside the media query |
+| `tools/test-checkout-fields.py` | Checkout fields clear 16px; hints sit under labels, not inside the box |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |

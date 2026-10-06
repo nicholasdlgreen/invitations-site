@@ -37,8 +37,18 @@ print('\nNO FIELD IS PRE-FILLED WITH SOMETHING THAT LOOKS REAL');
 ['Charlotte Thornton', 'charlotte@example.com', '12 Rose Lane', 'SW1A 1AA', '+44 7700 000000']
   .forEach(function (s) { is('no "' + s + '"', SRC.indexOf(s) >= 0, false); });
 // A hint describes the shape of the answer; it is not an example of one.
-['First and last name', 'House number and street', 'UK postcode', 'For delivery updates']
-  .forEach(function (s) { is('hint present: "' + s + '"', SRC.indexOf(s) >= 0, true); });
+// On 6 October the hints that carry information moved OUT of the box and under
+// the label, where a phone cannot truncate them, and the ones that only
+// repeated their label were dropped. So the test of the same idea changed
+// shape: the informative ones must still be on the page, the redundant ones
+// must not, and none of them may sit in a placeholder any more.
+['House number and street', 'For delivery updates', 'For your order confirmation',
+ 'Flat, building or company']
+  .forEach(function (s) { is('hint kept: "' + s + '"', SRC.indexOf(s) >= 0, true); });
+['First and last name', 'UK postcode', 'Any special instructions']
+  .forEach(function (s) { is('redundant hint dropped: "' + s + '"', SRC.indexOf(s) >= 0, false); });
+is('the kept hints sit under the label, not in the box',
+   /<span class="co-hint">House number and street<\/span>/.test(SRC), true);
 is('no placeholder merely repeats its own label',
    /id="coCity" placeholder="Town or city"/.test(SRC), false);
 
