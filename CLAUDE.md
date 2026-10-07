@@ -10,6 +10,7 @@ Read this before changing anything. It is short on purpose; the detail lives in
 | `docs/BRAND.md` | **How the site looks and sounds.** Colour, type, shape, components, voice. Read it before building or restyling any page. |
 | `docs/PRICING.md` | How pricing works. Read before touching prices, margins or rates. |
 | `docs/STATUS.md` | What is done, what is outstanding, what blocks launch. |
+| `docs/CRM.md` | **Customer relationships and marketing.** The three pathways, the triggers, consent basis, and the decisions still open. Read before building anything that emails a customer. |
 | `BRAND-IMAGERY-GUIDE.md` | Generating product photography. |
 | `docs/ARTWORK-SPEC.md` | Press-file geometry. |
 
