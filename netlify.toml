@@ -20,37 +20,30 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(self)"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    # worker-src is NOT optional, and 'self' blob: alone is NOT enough.
+    # worker-src is NOT optional. With none at all the browser falls back to
+    # script-src, which does not allow blob:, and pdf.js drops to its
+    # main-thread "fake worker": on 3 October a studio RSVP card sat on
+    # "Checking your foil layer..." for forty seconds and never finished.
     #
-    # The original fault, 3 October: with no worker-src at all the browser falls
-    # back to script-src, which does not allow blob:, so pdf.js quietly dropped
-    # to its main-thread "fake worker". Measured on live: an RSVP card designed
-    # in the studio sat on "Checking your foil layer..." for over 40 seconds and
-    # never finished, so it could not be added to the basket at all.
-    #
-    # The directive added then said 'self' blob:, on the belief that pdf.js
-    # starts its worker from a blob: URL. It does not. pdf.js v3 points
+    # It is also NOT sufficient, and no CSP directive can be. pdf.js points
     # GlobalWorkerOptions.workerSrc at the cdnjs file and calls new Worker() on
-    # that URL directly, so 'self' blob: blocked it just as surely. Proven on
-    # live, 7 October, by constructing the worker in the page:
+    # that URL, and a Worker may not be constructed from a cross-origin script
+    # AT ALL — that is the same-origin rule, not CSP. Proven in the live page
+    # on 7 October, with cdnjs explicitly listed here at the time:
     #
-    #   Failed to construct 'Worker': Script at
-    #   'https://cdnjs.cloudflare.com/.../pdf.worker.min.js'
-    #   cannot be accessed from origin 'https://foreverprint.com'
+    #   same-origin worker   CONSTRUCTED
+    #   blob: worker         CONSTRUCTED
+    #   cdnjs worker         Failed to construct 'Worker': Script at '...'
+    #                        cannot be accessed from origin
     #
-    # So every PDF the site opened was still being parsed and rendered on the UI
-    # thread, four days after the fix that was supposed to stop that. Measured:
-    # a 998KB vector PDF took 364ms with the page frozen for 47% of it, and an
-    # image-heavy file is far worse.
+    # Note the wording. A CSP refusal says "violates the following Content
+    # Security Policy directive"; this does not. Adding cdnjs here was reverted
+    # because it granted trust that can never be used.
     #
-    # cdnjs is added rather than worked around. It grants no new trust: pdf.js
-    # itself already loads from cdnjs under script-src, so the worker comes from
-    # an origin the page is already executing code from.
-    #
-    # The tell is "Warning: Setting up fake worker" in the console. It is not
-    # enough to check the directive EXISTS — it existed all along. Check that a
-    # Worker can actually be constructed from the URL pdf.js is using.
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://cdnjs.cloudflare.com https://js.stripe.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://jvcpzmumkyjdyibmwlsd.supabase.co https://*.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.google.co.uk https://googleads.g.doubleclick.net https://ad.doubleclick.net https://www.googleadservices.com; connect-src 'self' https://apis.google.com https://jvcpzmumkyjdyibmwlsd.supabase.co https://*.supabase.co https://api.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net https://www.google.com https://ad.doubleclick.net https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.es https://www.google.it https://www.google.nl; frame-src https://apis.google.com https://www.google.com https://js.stripe.com https://hooks.stripe.com https://td.doubleclick.net https://www.googletagmanager.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com"
+    # So every PDF is still read on the UI thread. The fix is to SELF-HOST the
+    # worker under /vendor/, same-origin, which 'self' above already allows —
+    # see docs/STATUS.md, 7 October. Open.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://cdnjs.cloudflare.com https://js.stripe.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://jvcpzmumkyjdyibmwlsd.supabase.co https://*.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.google.co.uk https://googleads.g.doubleclick.net https://ad.doubleclick.net https://www.googleadservices.com; connect-src 'self' https://apis.google.com https://jvcpzmumkyjdyibmwlsd.supabase.co https://*.supabase.co https://api.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net https://www.google.com https://ad.doubleclick.net https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.es https://www.google.it https://www.google.nl; frame-src https://apis.google.com https://www.google.com https://js.stripe.com https://hooks.stripe.com https://td.doubleclick.net https://www.googletagmanager.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com"
 
 # The admin holds orders and financials — keep it out of search results.
 [[headers]]

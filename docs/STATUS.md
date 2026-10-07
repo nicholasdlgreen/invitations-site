@@ -547,6 +547,97 @@ stores a `vat` figure. Deferred at Nicholas's direction along with pricing.
 
 ---
 
+
+## 0e. 7 October, afternoon — the ordering page
+
+### Saved designs moved into the account
+
+The signed-in dropdown offered "My Account" and "My Saved Designs" as two
+places. They were one: the old page's own hero eyebrow already read "My
+Account". The designs are a card on `/account` now, above order history,
+`/saved-designs` 301s there, and the dropdown is down to three items.
+Verified live. Five tokens the moved CSS used are not in `header.html` and
+would have resolved to `currentColor`; they were mapped or carried across with
+fallbacks and checked in the rendered page.
+
+### `/upload-and-print` is no longer somewhere we send anyone
+
+That address is the order configurator with **no product on it**: 0 published
+price rows against 1,510 on `/wedding-invitations/order`, so `foldsOffered()`
+returns flat alone and the flat-or-folded and printed-sides toggles correctly
+hide themselves. It also offered all fifteen sizes including A0–A2, which have
+no rate coverage. The missing fold buttons were a symptom; drawing them would
+have put controls over data that does not exist.
+
+**The page is NOT removed and must not be.** `/:slug/order` rewrites to it for
+all 22 products, and `cart.js:149` sends every checkout on the site to
+`/upload-and-print.html?action=checkout` because the checkout modal lives in
+it. Removed instead: the footer link, the sitemap entry, the index tag, Amy's
+"Start your order", and the seven in-page links including the home page's
+"I Have a Design" button and path card — all now `/products`, words unchanged.
+
+**Consequence worth naming:** the "bring your own artwork" route no longer has
+a front door of its own. Someone with a finished design picks a product first.
+That is the only route that can price a job, but the wording still promises an
+upload and lands on a product list. Four sentence-level links are the
+candidates if that is ever revisited.
+
+### "Fix it" could never find the artwork on a one-sided order — FIXED
+
+Reported from a real attempt: foiling, a file that was not a foil layer, red on
+Colour, "Fix it" offered, and pressing it did nothing. Reproduced on the live
+site, then found: `handleFiles` with a single face to fill called `handleFile`
+and returned, **never recording the file in `sideFiles`**. The preview and the
+quality checks read the file directly, so nothing looked wrong — but Route B
+asks `panelSource('front')`, which reads `sideFiles`. Proven both ways, same
+file, sides the only difference:
+
+| | `sideFiles` | `panelSource('front')` | Fix it |
+|---|---|---|---|
+| single sided | `{}` | null | **fails silently** |
+| double sided | `{front}` | found | works |
+
+So it had never worked for most of what we sell. Fixed by recording the file on
+whichever single face the job asked for, and `openFoilPicker` is wrapped so a
+throw cannot leave the panel on "Opening your artwork..." for ever. Guarded by
+`tools/test-foil-fix-it-finds-artwork.js`, which runs the real `handleFiles`.
+
+### pdf.js still runs on the UI thread — OPEN, and the fix is known
+
+`worker-src 'self' blob:` was added on 3 October to stop this. It never worked,
+and **no CSP can make it work**. pdf.js calls `new Worker()` on the cdnjs URL,
+and a Worker may not be constructed from a cross-origin script at all. Proven
+live, with cdnjs explicitly listed in the directive at the time:
+
+```
+same-origin worker   CONSTRUCTED
+blob: worker         CONSTRUCTED
+cdnjs worker         Failed to construct 'Worker': ... cannot be accessed from origin
+```
+
+That wording is the same-origin rule, not a CSP refusal — a CSP block says
+"violates the following Content Security Policy directive". Adding cdnjs to
+`worker-src` was reverted, because it granted trust that can never be used, and
+a change that claims to fix something it does not is worse than the bug.
+
+Measured cost while it stands: a 998KB vector PDF takes ~190–360ms with the
+page frozen for roughly half of it. An image-heavy file is far worse, and this
+is the 3 October forty-second hang.
+
+**The fix, for tomorrow:**
+
+1. Download `pdf.worker.min.js` (3.11.174, matching `PDFJS_SRC`) into `/vendor/`,
+   the pattern `vendor/supabase-js-2.116.0.min.js` already sets.
+2. Point `PDFJS_WORKER` at `/vendor/pdf.worker.min.js`. Same-origin, so the
+   existing `'self'` covers it and the CSP needs no change.
+3. Verify by **constructing the Worker in the page**, not by reading a header.
+   Then write the test — it must assert the worker URL is same-origin or blob,
+   never that a CSP directive exists. The removed
+   `tools/test-pdf-worker-allowed.py` asserted the wrong rule and is deleted
+   rather than left to mislead.
+
+---
+
 ## 0a. 6 October — in one place
 
 Twenty-three commits, all pushed and verified on the live site. Four threads.
@@ -1028,6 +1119,12 @@ the autovacuum fix from §11 holding.
    the red** — "upload a different file" sits directly below it and the offer
    is only needed once — but **kept on green and amber**, where there is nothing
    below and removing it would leave no way to change the file at all.
+
+   **7 October: Fix it was broken on every ONE-SIDED order**, which is nothing to
+   do with which reds offer it. The artwork was never recorded on the
+   single-face upload path, so Route B could not find it and failed silently.
+   Fixed and verified — see §0e. The withholding below is unchanged and still a
+   testing item.
 
    **Fix it is withheld from two of the five reds, and this is a decision to
    revisit.** Route B would work on all five: it is built from their artwork
@@ -2256,7 +2353,8 @@ any Google host). Both struck through below.
 | 9 | **Arm the artwork sweep** | — | **You** | `ARTWORK_RETENTION_LIVE=true` in Netlify, after reading a few nightly dry-run reports. 198MB of unclaimed files waiting. The only unattended thing on the site that destroys customer data |
 | 10 | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
 | 11 | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` — which holds the line until we open |
-| 12 | **Shrink the published payload** | 38 | Me | 13MB, and the reason Publish breaks. Proven at 1.1MB, not built. Nothing is blocked by it today |
+| 12 | **Self-host the pdf.js worker** | — | Me | Every PDF is read on the UI thread and no CSP can change that — cross-origin Workers are forbidden outright. Small, known, written up in §0e |
+| 13 | **Shrink the published payload** | 38 | Me | 13MB, and the reason Publish breaks. Proven at 1.1MB, not built. Nothing is blocked by it today |
 | — | ~~**Checkout refuses every basket**~~ | A1 | — | **DONE.** Fixed 3 Oct, verified 7 Oct |
 | — | ~~**Consent and Google**~~ | 63 | — | **DONE 7 Oct.** Declined: 0 requests to any Google host |
 
