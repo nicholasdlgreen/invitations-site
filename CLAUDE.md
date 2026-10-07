@@ -146,6 +146,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-artwork-retention.js` | Runs the retention sweep: an ordered file is never deleted, five days is the line, and a dry run changes nothing |
 | `tools/test-submission-created.js` | Runs the form notifier: a contact message reaches somebody, Reply goes to the customer, markup is escaped, and a Resend failure is loud rather than silent |
 | `tools/test-design-save.js` | A saved design stores a LINK to its image, never the base64, on both the signed-in and queued routes; and the sweep treats a saved design as a claim |
+| `tools/test-consent-log.js` | The consent count carries the choice and nothing joinable, and is written on a click rather than on every page view |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |

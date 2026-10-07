@@ -97,6 +97,33 @@
   // Never send the full URL where it could carry personal data.
   gtag('set', 'ads_data_redaction', true);
 
+  // ── COUNTING THE CHOICE, AND NOTHING ELSE ───────────────────────────
+  // We do not know what share of visitors accept, and it decides whether a
+  // Google remarketing audience can ever reach its 100-user minimum, and how
+  // much of our own analytics we are seeing at all.
+  //
+  // Deliberately anonymous: one row saying a visitor chose this, at this time.
+  // No session id, no identifier, nothing joinable. Someone who declines is
+  // telling us not to track them, and the accept RATE answers the question
+  // without tracking anybody.
+  //
+  // Only ever called from an actual click. Restoring a decision from the
+  // cookie on later page views must not count again, or every returning
+  // visitor inflates the number.
+  function recordChoice(choice) {
+    try {
+      var cfg = window.__SUPABASE_CONFIG || {};
+      if (!cfg.url || !cfg.anonKey) return;
+      fetch(cfg.url + '/rest/v1/consent_log', {
+        method: 'POST',
+        headers: { 'apikey': cfg.anonKey, 'Authorization': 'Bearer ' + cfg.anonKey,
+                   'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ choice: choice }),
+        keepalive: true          // survives the page unloading right after
+      }).catch(function () {});  // never let counting break the page
+    } catch (e) {}
+  }
+
   if (known === 'granted') grantConsent(true);
 
   function grantConsent(silent) {
@@ -107,7 +134,7 @@
       analytics_storage:  'granted'
     });
     writeCookie(CONSENT_COOKIE, 'granted', CONSENT_DAYS);
-    if (!silent) { captureAttribution(); loadTag(); hideBanner(); }
+    if (!silent) { recordChoice('granted'); captureAttribution(); loadTag(); hideBanner(); }
     // Storage was denied when the tag first loaded, so ask it to send a page
     // view now that it may — otherwise this visit is missing from reporting.
     if (!silent && CONFIG.ga4Id) { try { gtag('event', 'page_view'); } catch (e) {} }
@@ -121,6 +148,7 @@
       analytics_storage:  'denied'
     });
     writeCookie(CONSENT_COOKIE, 'denied', CONSENT_DAYS);
+    recordChoice('denied');
     // Anything already captured under a previous 'yes' is removed.
     lsDel(ATTR_FIRST_KEY); lsDel(ATTR_LAST_KEY);
     hideBanner();

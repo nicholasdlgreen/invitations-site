@@ -20,7 +20,9 @@ Recorded so they are not re-opened by accident.
 | Store the wedding date | **No** | 7 Oct |
 | Chasing people who never identify themselves | Convert them to savers **and** Google retargeting — see §4a | 7 Oct |
 | Open and click tracking | **Turn on**, to learn how it behaves | 7 Oct |
-| Consent basis — soft opt-in or explicit only | **Open** | — |
+| Consent basis | **Soft opt-in**, with the caveat below | 7 Oct |
+| Open and click tracking | **ON** — done 7 Oct, verified | 7 Oct |
+| Counting the consent choice | **Built 7 Oct** — anonymous, one row per decision | 7 Oct |
 
 **One consequence of not storing the date, recorded without argument:** the
 cross-sell sequence in §4 cannot be timed. We can still sell the rest of the
@@ -178,13 +180,28 @@ the exact words someone agreed to, with `consent_at` and `consent_source`;
 `unsubscribed_at` and a one-click `unsubscribe_token` with no login wall; and
 the upsert will never re-grant consent to someone who has unsubscribed.
 
-**The open question is a business one, not a technical one**, and it decides
-who W4 and W6 may be sent to:
+**Decided 7 October: soft opt-in.** With one caveat that limits what it buys.
 
-- **Soft opt-in** — anyone who has bought or started to buy can be emailed about
-  similar products. Larger reachable list. Legal. Some people will not expect it.
-- **Explicit only** — we email nobody who has not actively ticked a box. Smaller
-  list, no one is ever surprised.
+**The checkout already asks explicitly, with an unticked box:** *"Email me
+occasionally with new designs, seasonal ideas and offers."* So a customer who
+leaves it unticked has been offered the choice and declined it. Soft opt-in
+exists for where we did not ask separately but gave an opportunity to object —
+not to overrule someone who took that opportunity. In practice, then, we are
+already running explicit consent at checkout, and soft opt-in changes nothing
+there.
+
+**Where it does apply is completing the range (W6).** "You bought save the
+dates, here are the matching invitations" is about the order they already
+started rather than a newsletter, and that is the most defensible use of the
+exception. It needs no change to a live page.
+
+**It does not apply to W4**, which needs no exception at all: a saved design is
+the customer asking us to keep something for them.
+
+**If the reachable list ever needs to be bigger**, the lever is changing the
+checkout from an opt-in tick to opt-out wording. That is a live page and a
+change of tone from notably respectful to assumed, so it is a decision rather
+than a tweak, and it is not taken.
 
 The 10 holding-page signups sit outside both: they agreed to be told when we
 open, which is one announcement, not a mailing list.
