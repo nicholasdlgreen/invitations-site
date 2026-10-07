@@ -348,8 +348,57 @@ mid-provisioning: Google answers senders with a temporary "not ready", so
 Microsoft holds the mail and retries for a day or two. They should deliver on
 their own once Google finishes. Resending only queues more copies.
 
+**Later the same afternoon, about an hour after the DNS change.** Gmail is
+**ON for everyone** in the admin console, DNS is still correct from Google's own
+resolver, and Google's setup page STILL says "Getting your domain ready".
+Nothing had arrived — searched `in:anywhere newer_than:2h` in the Workspace
+mailbox, which covers spam and trash, and nothing in Nicholas's personal
+`googlemail` account either. No bounces anywhere.
+
+**So the mail servers were asked directly, rather than trusting a status page.**
+An SMTP conversation to `smtp.google.com:25`, stopped before `DATA` so nothing
+was sent:
+
+```
+220 mx.google.com ESMTP ... gsmtp
+250 2.1.0 OK                         (MAIL FROM accepted)
+250 2.1.5 OK                         (RCPT TO:<hello@foreverprint.com> accepted)
+```
+
+**Google is routing and accepting the domain's mail.** That is protocol-level
+evidence and it means the cutover itself worked; the wizard page is simply
+stale.
+
+**But the same probe CANNOT prove the aliases, and nearly got read as if it
+could.** Run against `orders@`, `dmarc@` and a deliberately invented address,
+all four were accepted:
+
+```
+hello@foreverprint.com                               ACCEPTED  250 2.1.5 OK
+orders@foreverprint.com                              ACCEPTED  250 2.1.5 OK
+dmarc@foreverprint.com                               ACCEPTED  250 2.1.5 OK
+definitely-not-a-real-address-9z7q@foreverprint.com  ACCEPTED  250 2.1.5 OK
+```
+
+Google accepts at the door and sorts the recipient out afterwards. Without the
+invented address as a control, three OKs would have looked like proof that the
+aliases work. **Only a real email that lands in the mailbox proves an alias.**
+Run the control every time.
+
+**Best reading of the state when we stopped:** Google is accepting mail and
+holding it rather than delivering it, because the domain has not finished
+provisioning. That fits all of it — the door opens, nothing reaches the
+mailbox, nothing bounces, and the setup page is still turning. If so, the four
+test messages are queued on Google's side and will land together.
+
 **What to check first, next time:**
 
+0. **Has anything arrived in the Workspace mailbox?** That alone answers it.
+   If mail is landing, provisioning finished and the rest of this list applies.
+   If it is STILL empty and the setup page still says "Getting your domain
+   ready" a day later, that is a stuck provisioning job rather than slowness,
+   and Google support unstick those routinely. Everything on our side was
+   verified correct, so there is nothing to re-check first.
 1. Does the Workspace setup page still say "Getting your domain ready"? If it
    has finished, send one fresh test to each of the three addresses.
 2. All three must arrive. `orders@` and `dmarc@` are **aliases**, and Workspace
