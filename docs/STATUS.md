@@ -315,10 +315,73 @@ Google's servers, that mail fails DMARC.
    it, which is why `dig TXT` only ever saw one), and `send.foreverprint.com`
    carries `include:amazonses.com` for Resend's return path and must never be
    touched. Go by Name AND Type together.
-2. **Switch MX from ImprovMX to Google.** The only step that moves mail, and
-   the only one that can lose any. Keep the ImprovMX account until proven.
-3. Confirm delivery from outside, then stop using ImprovMX.
+2. ~~**Switch MX from ImprovMX to Google.**~~ **DNS DONE 7 October, Google
+   still provisioning.** See "the cutover, stopped mid-flight" below.
+3. Confirm delivery from outside, then stop using ImprovMX. **Not yet true.**
 4. Only then enforce DMARC.
+
+### The MX cutover — stopped mid-flight, 7 October
+
+**Our side is finished and verified. Google's side had not completed when we
+stopped.** Nothing is broken and nothing is lost; the next person picks up at
+"what to check first" below.
+
+**What is live now:**
+
+| Record | Value | State |
+|---|---|---|
+| `MX 1` | `smtp.google.com` | Added 7 Oct, verified from four resolvers |
+| `MX 10` / `MX 20` | `mx1`/`mx2.improvmx.com` | **Deliberately still there.** Do not delete yet |
+| SPF | `v=spf1 include:_spf.google.com include:spf.improvmx.com ~all` | Unchanged, covers both |
+| DKIM | `google._domainkey`, 2048-bit | Unchanged, resolving |
+| DMARC | `p=none; rua=mailto:dmarc@foreverprint.com` | Unchanged |
+| `send.foreverprint.com` | `feedback-smtp.eu-west-1.amazonses.com` | Resend's return path, untouched |
+
+Gmail was activated through Google's wizard (it had never been switched on, so
+the domain had a Workspace account with no mailbox behind it). The mailbox at
+`hello@foreverprint.com` exists and works. Google's **"Getting your domain
+ready"** step was still running when we stopped.
+
+Three test messages were sent from Outlook to `hello@`, `orders@` and `dmarc@`.
+**None arrived, and none bounced.** That combination is the expected one
+mid-provisioning: Google answers senders with a temporary "not ready", so
+Microsoft holds the mail and retries for a day or two. They should deliver on
+their own once Google finishes. Resending only queues more copies.
+
+**What to check first, next time:**
+
+1. Does the Workspace setup page still say "Getting your domain ready"? If it
+   has finished, send one fresh test to each of the three addresses.
+2. All three must arrive. `orders@` and `dmarc@` are **aliases**, and Workspace
+   has **no catch-all** where ImprovMX did — `orders@` is on the site in 11
+   places, so a silent failure there reaches customers. The three addresses on
+   the domain were checked against the repo and are the only ones: `hello@`,
+   `orders@`, `dmarc@`.
+3. Only after all three land: delete the two ImprovMX MX records, then stop the
+   ImprovMX account.
+4. Then DMARC enforcement opens up, which is the thing queued behind this.
+
+**Two corrections worth keeping, because both cost time today:**
+
+- **The value went in as `smpt.google.com`** — `p` and `t` transposed. It cost
+  nothing, because that host does not resolve, so senders fell through to
+  ImprovMX at priority 10. **Adding Google's record BEFORE deleting ImprovMX is
+  why.** Google's own instructions say to delete first, which would have left
+  the domain with one broken route and nothing behind it. Add first, delete
+  after proving — and paste the value rather than typing it.
+- **ImprovMX is a safety net only while Google is UNREACHABLE.** That is what
+  saved the typo. It does not help once Google answers: a server that accepts
+  the connection and then refuses the recipient produces a bounce, not a
+  fallback to priority 10. Claude was too reassuring about this at the time.
+
+**And one about where the truth lives.** When the typo was corrected, both
+authoritative nameservers (`dns1`/`dns2.p07.nsone.net`) still served the old
+value, and Claude reported that the edit had not saved. It had. Netlify's own
+store sits upstream of NS1 and pushes to it with a lag, so for Netlify DNS the
+**control panel is the source of truth, not the authoritative nameserver** —
+the opposite of the usual rule. A fourth instance, in one day, of a negative
+result read from somewhere that could not yet show the answer.
+
 
 **Claude cannot make DNS changes.** The environment refuses them outright,
 whatever the tool. That is a sensible guard and it shapes how this work goes:
