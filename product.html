@@ -968,9 +968,14 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
       </div>
       <div class="footer-col">
         <h5>Get Started</h5>
-        <a href="/upload-and-print">Upload &amp; Print</a>
-        <a href="/design-studio">Design Studio</a>
+        <!-- "Upload & Print" removed 7 Oct 2026. It pointed at the order
+             configurator with no product on it, which has no published prices
+             and so could not offer folding, printed sides or the right sizes.
+             People come in at product level. The page itself still exists and
+             must: /:slug/order rewrites to it, and cart.js sends every
+             checkout to it. It is simply no longer somewhere we send anyone. -->
         <a href="/products">All Products</a>
+        <a href="/design-studio">Design Studio</a>
       </div>
       <div class="footer-col">
         <h5>Help</h5>

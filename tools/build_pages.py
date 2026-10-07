@@ -51,7 +51,13 @@ TEMPLATE = os.path.join(ROOT, "product.html")
 CORE_PAGES = [
     ("/", "1.0", "weekly"),
     ("/products", "0.9", "weekly"),
-    ("/upload-and-print", "0.9", "weekly"),
+    # /upload-and-print removed 7 Oct 2026. It is the order configurator
+    # with no product on it: no published prices, so no folding, no
+    # printed sides and every size in the catalogue including ones we
+    # cannot price. It stays reachable because /:slug/order rewrites to
+    # it and cart.js sends checkout to it, but it is not a landing page
+    # and is now noindex. Editing sitemap.xml by hand does nothing —
+    # the build rewrites it from this list.
     ("/design-studio", "0.8", "weekly"),
     ("/how-it-works", "0.6", "monthly"),
     ("/help-support", "0.6", "monthly"),

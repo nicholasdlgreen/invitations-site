@@ -241,7 +241,9 @@ function hwArtworkFollowUp(offerContact){
   var buttons = [{ label: 'Something else', fn: 'hwStartArtwork()' }];
   if (offerContact) buttons.push({ label: 'Ask the team to check', fn: 'hwShowContact()' });
   if (!/upload-and-print/.test(window.location.pathname)) {
-    buttons.unshift({ label: 'Start your order', fn: "window.location.href='/upload-and-print.html'" });
+    // Was /upload-and-print.html — the configurator with no product on it,
+    // which cannot price anything. People choose a product first.
+    buttons.unshift({ label: 'Start your order', fn: "window.location.href='/products'" });
   }
   hwAddPromptRow(buttons);
 }

@@ -13,10 +13,10 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://foreverprint.com/upload-and-print</loc>
+    <loc>https://foreverprint.com/design-studio</loc>
     <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://foreverprint.com/baby-shower-invitations</loc>
@@ -173,12 +173,6 @@
     <lastmod>2026-10-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://foreverprint.com/design-studio</loc>
-    <lastmod>2026-10-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://foreverprint.com/how-it-works</loc>

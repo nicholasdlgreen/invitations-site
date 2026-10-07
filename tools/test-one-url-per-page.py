@@ -66,7 +66,18 @@ is_('the static list is all clean urls', [c for c in core if c.endswith('.html')
 for want in ('/help-support', '/contact'):
     is_('  %s is in the sitemap' % want, want in core)
 is_('and so are the pages that were already there',
-    all(x in core for x in ('/', '/products', '/upload-and-print', '/privacy', '/terms')))
+    all(x in core for x in ('/', '/products', '/privacy', '/terms')))
+# /upload-and-print was dropped from the sitemap on 7 October 2026 and made
+# noindex. It is the order configurator with no product on it, so it has no
+# published prices and cannot offer folding, printed sides or the right sizes.
+# It must stay REACHABLE though — /:slug/order rewrites to it and cart.js sends
+# every checkout to it — so this asserts it is out of the sitemap, not gone.
+is_('/upload-and-print is deliberately NOT in the sitemap', '/upload-and-print' in core, False)
+UP = io.open(os.path.join(ROOT, 'upload-and-print.html'), encoding='utf-8').read() \
+     if 'ROOT' in dir() else io.open('upload-and-print.html', encoding='utf-8').read()
+is_('and is noindex', 'noindex' in (re.search(r'<meta name="robots"[^>]*content="([^"]*)"', UP) or type('', (), {'group': lambda *a: ''})()).group(1))
+is_('but the order flow still rewrites to it',
+    '/upload-and-print.html?product=:slug' in redirects)
 
 print('\nTHE DUPLICATE ADDRESS IS SENT TO THE REAL ONE')
 # Netlify ignores a rule when a real file sits at the path, so these need "!".
