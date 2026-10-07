@@ -142,6 +142,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-slug-from-url.js` | A landing page works out its product from either address it is served at |
 | `tools/test-section-race.py` | The paper and finishing sections wait for their deferred modules; `tools/test-section-race.html` is the browser half |
 | `tools/test-layout-section.py` | `docs/BRAND.md` §4a's composition figures are recomputed; the studio card keeps the width and the centre line |
+| `tools/test-artwork-retention.js` | Runs the retention sweep: an ordered file is never deleted, five days is the line, and a dry run changes nothing |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |

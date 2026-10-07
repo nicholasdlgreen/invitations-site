@@ -91,3 +91,21 @@
 # set. ALERT_EMAIL is optional and falls back to FROM_EMAIL.
 [functions."printedeasy-price-watch"]
   schedule = "0 8 * * 1"
+
+# ─── ARTWORK RETENTION ──────────────────────────────────────
+# The artwork bucket had no DELETE policy, so nothing could ever clear it.
+# Measured 7 October: 140 files, 206MB, of which 130 files and 198MB were
+# unclaimed and over a day old. It only grows, and every file is a customer's
+# design sitting on the storage bill and in our data-protection obligations
+# for no reason.
+#
+# Deletes ONLY files no order refers to, and only when they are more than five
+# days old. Artwork attached to an order is never touched at any age: the
+# printer is sent links to these files and fetches them when they produce the
+# job, so a deleted file is an order that cannot be printed.
+#
+# It runs as a DRY RUN until ARTWORK_RETENTION_LIVE=true is set in Netlify.
+# Until then this schedule just writes a nightly report to the function log,
+# which is the point — read a few before arming it.
+[functions."artwork-retention"]
+  schedule = "0 3 * * *"
