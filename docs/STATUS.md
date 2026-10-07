@@ -278,10 +278,28 @@ so a visitor sees it again next time.
 
 ### Outstanding from the morning
 
-- **DMARC is `p=none`** — monitoring only, no enforcement. DNS is on NS1, so
-  the record is Nicholas's to paste. Staged: `p=quarantine; pct=10` first, read
-  the reports, then 100, then reject. The root domain forwards through ImprovMX,
-  which is why this is not jumped straight to reject.
+- **DMARC reporting was never working** — fixed 7 October, enforcement still to
+  come. The record sent reports to a `gmail.com` address, and when the report
+  address is on another domain that domain must publish an authorisation record
+  (`foreverprint.com._report._dmarc.gmail.com`). Gmail publishes none, so
+  conforming reporters sent nothing: the domain had been in "monitoring" mode
+  monitoring nothing, which is why there was no evidence to enforce on.
+  Now `v=DMARC1; p=none; rua=mailto:dmarc@foreverprint.com; fo=1`, verified
+  live. Mail to the domain forwards through ImprovMX with a catch-all, so
+  `dmarc@` arrives without any alias being created — confirmed by sending to it.
+  **Next, in about two weeks:** read the reports, then `p=quarantine; pct=10`,
+  then 100, then reject. Not jumped straight to reject because the root SPF
+  covers ImprovMX only and outbound alignment rests on the Resend DKIM key.
+  **Open question for that step:** whether Nicholas ever sends mail AS
+  `@foreverprint.com` from Gmail — that mail fails DMARC today and enforcing
+  would start putting some of it in spam.
+- **The contact form tells nobody.** Found 7 October while testing the above.
+  Mail to the domain works — `hello@` and `dmarc@` both arrive — so the contact
+  submission that never reached Nicholas on 6 October was not a delivery
+  failure. Netlify Forms stores submissions and only emails when a notification
+  is configured, and none is. A customer fills in the contact page and the
+  message waits in a dashboard nobody is watching. Not fixed: new, flagged, and
+  outside what was agreed for the morning.
 - Album bucket and its six files: dashboard deletion.
 - The 10 signups: waiting on a CSV export from Netlify.
 - Arming the artwork sweep, after a few nightly reports.
