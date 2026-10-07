@@ -3012,6 +3012,39 @@ function artworkFileName(prefix, ext){
   return prefix + '-' + id + '.' + ext;
 }
 
+  // ── A SAVED DESIGN KEEPS A LINK, NOT THE PICTURE ────────────────────
+  // Saving used to carry the generated image as a base64 data URL, and carry
+  // it TWICE: once as design_data.image and again as metadata.thumbnail_url.
+  // Base64 adds about a third on top, and the measured artwork on this project
+  // averages 1.9MB with a 7.5MB worst case, so a save was several megabytes.
+  // Both routes failed, which is why 7 people clicked Save and nothing was
+  // ever stored:
+  //   signed out — queuePendingSave writes to localStorage, quota is about
+  //                5MB, so it threw QuotaExceededError, which is caught and
+  //                only console.warn'd. The customer then made an account,
+  //                came back, and their design had silently gone.
+  //   signed in  — a multi-megabyte insert into saved_designs.
+  //
+  // So the image goes to our own storage and the row keeps a URL. Note it has
+  // to be OUR storage: studio-nano also returns fal.ai's sourceUrl, and those
+  // expire, so a design saved in March would be a broken image by April.
+  // enterGeneratedMode() only sets an <img> src, so a URL restores exactly as
+  // a data URL did.
+  function persistDesignImage(dataUrl){
+    if (!dataUrl || dataUrl.slice(0, 5) !== 'data:') return Promise.resolve(dataUrl || '');
+    var mime = (dataUrl.match(/^data:([^;]+)/) || [])[1] || 'image/jpeg';
+    var name = artworkFileName('saved-ai', mime === 'image/png' ? 'png' : 'jpg');
+    return fetch(SB_URL + '/storage/v1/object/artwork/' + name, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+                 'Content-Type': mime, 'x-upsert': 'false' },
+      body: dataUrlToBlob(dataUrl)
+    }).then(function(res){
+      if (!res.ok) throw new Error('could not store the design image (' + res.status + ')');
+      return SB_URL + '/storage/v1/object/public/artwork/' + name;
+    });
+  }
+
   // dataURL -> Blob
   function dataUrlToBlob(dataUrl){
     var parts = dataUrl.split(','), mime = parts[0].match(/:(.*?);/)[1];
@@ -3315,6 +3348,13 @@ function artworkFileName(prefix, ext){
     btn.disabled = true; btn.textContent = 'Saving…';
     logEvent('design_save', { size: size });
     try {
+      // Before anything else, and for BOTH routes: swap the megabytes of
+      // base64 for a link to our own storage. The queued copy has to be small
+      // too, or localStorage throws and the design is lost between making an
+      // account and coming back.
+      state.image = await persistDesignImage(state.image);
+      meta.thumbnail_url = state.image;
+
       if (window.invAuth && window.invAuth.isLoggedIn && window.invAuth.isLoggedIn()) {
         var res = await window.invAuth.saveDesign(PRODUCT_SLUG, CURRENT_DESIGN_ID, state, meta);
         if (res && res.error) throw res.error;

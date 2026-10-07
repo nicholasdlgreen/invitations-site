@@ -9,13 +9,22 @@
 // in our data-protection obligations for no reason.
 //
 // ── THE ONE RULE THAT MATTERS ────────────────────────────────────────
-// A file is deleted ONLY when no order refers to it. Artwork attached to an
-// order is never touched by this function, whatever its age, because the
-// printer is sent LINKS to these files in their job ticket and fetches them
-// when they produce the job — a deleted file is an order that cannot be
-// printed, and for a foiled job the foil layer missing means it cannot even
-// be placed. Retention for artwork that IS attached to an order is a separate
-// decision and is not made here.
+// A file is deleted ONLY when nothing refers to it. Two things can claim a
+// file, and BOTH are checked:
+//
+//   an order        — the printer is sent LINKS to these files in their job
+//                     ticket and fetches them when they produce the job, so a
+//                     deleted file is an order that cannot be printed, and a
+//                     missing foil layer means it cannot even be placed.
+//   a saved design  — the customer made an account specifically so their
+//                     design would still be there when they came back. Added
+//                     7 October: saved designs now store a link to the image
+//                     in this bucket rather than carrying it as base64, so
+//                     without this check a design would come back broken five
+//                     days after it was saved. That is the precise failure the
+//                     save feature exists to prevent.
+//
+// Retention for artwork that IS claimed is a separate decision, not made here.
 //
 // UNCLAIMED_DAYS is 5. A basket lives in the browser, so the server cannot see
 // one: someone who uploads on Monday and orders on Saturday would find their
@@ -55,10 +64,22 @@ async function sb(path, init) {
 // a foil job carries a third file, so the whole row is searched as text rather
 // than guessing at the shape. Cheap: this table is small and stays small.
 async function claimedPaths() {
-  const rows = await sb('orders?select=artwork_url,print_ready_url,items');
-  return rows.map(r =>
-    `${r.artwork_url || ''} ${r.print_ready_url || ''} ${r.items ? JSON.stringify(r.items) : ''}`
-  ).join(' ');
+  const [orders, designs] = await Promise.all([
+    sb('orders?select=artwork_url,print_ready_url,items'),
+    // design_data holds the image link; metadata holds the thumbnail. Both are
+    // searched as text rather than guessing at the shape, the same way orders
+    // are, because a saved design's payload changes as the studio changes.
+    sb('saved_designs?select=design_data,metadata').catch(e => {
+      // A failure here must never widen what gets deleted. Treat it as "cannot
+      // prove these are unclaimed" and stop, rather than sweeping them away.
+      throw new Error('could not read saved_designs, refusing to sweep: ' + e.message);
+    })
+  ]);
+  const fromOrders = orders.map(r =>
+    `${r.artwork_url || ''} ${r.print_ready_url || ''} ${r.items ? JSON.stringify(r.items) : ''}`);
+  const fromDesigns = designs.map(d =>
+    `${d.design_data ? JSON.stringify(d.design_data) : ''} ${d.metadata ? JSON.stringify(d.metadata) : ''}`);
+  return fromOrders.concat(fromDesigns).join(' ');
 }
 
 async function listObjects() {
@@ -111,7 +132,7 @@ exports.handler = async () => {
       mode: LIVE ? 'LIVE — files were deleted' : 'DRY RUN — nothing was deleted',
       rule: `unclaimed and older than ${UNCLAIMED_DAYS} days`,
       examined: objects.length,
-      kept_because_an_order_claims_them: keptClaimed,
+      kept_because_an_order_or_saved_design_claims_them: keptClaimed,
       kept_because_newer_than_cutoff: keptYoung,
       would_delete: doomed.length,
       would_free_mb: +(bytes / 1048576).toFixed(1),

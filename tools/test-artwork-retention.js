@@ -30,6 +30,7 @@ function run(opts) {
     function reply(v) { var r = Object.create(body); r._v = v; return Promise.resolve(r); }
 
     if (url.indexOf('/rest/v1/orders') > -1) return reply(opts.orders);
+    if (url.indexOf('/rest/v1/saved_designs') > -1) return reply(opts.designs || []);
     if (url.indexOf('storage_objects_artwork') > -1)
       return Promise.resolve({ ok: false, status: 404, text: function(){ return Promise.resolve('no view'); } });
     if (url.indexOf('/storage/v1/object/list/') > -1) return reply(opts.objects);
@@ -69,7 +70,7 @@ ok('it reports rather than deletes',        dry.deleted === null);
 ok('and says so',                           /DRY RUN/.test(dry.report.mode));
 
 print('\nTHE RULE THAT MATTERS: AN ORDERED FILE IS NEVER DELETED');
-ok('both ordered files are kept',           dry.report.kept_because_an_order_claims_them === 2);
+ok('both ordered files are kept',           dry.report.kept_because_an_order_or_saved_design_claims_them === 2);
 ok('even though they are 400 days old',     dry.report.would_delete === 2);
 ok('the one on the order row is safe',      dry.report.sample.indexOf('ORDERED-on-row.pdf') === -1);
 ok('and the one inside items[] too',        dry.report.sample.indexOf('ORDERED-in-items.pdf') === -1);
@@ -90,12 +91,33 @@ ok('neither of them ordered',               live.deleted &&
    live.deleted.indexOf('ORDERED-in-items.pdf') === -1);
 ok('and it says it was live',               /LIVE/.test(live.report.mode));
 
+print('\nA SAVED DESIGN PROTECTS ITS IMAGE TOO');
+// Saved designs keep a LINK to the bucket, not the picture. Without this the
+// image would be swept five days after it was saved and the customer would
+// come back to a broken design — the exact thing saving exists to prevent.
+var WITH_DESIGN = [{
+  design_data: { image: 'https://db.test/storage/v1/object/public/artwork/saved-ai-abc.jpg' },
+  metadata:    { thumbnail_url: 'https://db.test/storage/v1/object/public/artwork/saved-ai-abc.jpg' }
+}];
+var SAVED_OBJ = OBJECTS.concat([
+  { name: 'saved-ai-abc.jpg', created_at: daysAgo(90), metadata: { size: 1048576 } }
+]);
+var withDesign = run({ orders: ORDERS, designs: WITH_DESIGN, objects: SAVED_OBJ, live: false });
+ok('a 90-day-old image is kept when a saved design links to it',
+   withDesign.report.sample.indexOf('saved-ai-abc.jpg') === -1);
+ok('and it is counted as claimed',
+   withDesign.report.kept_because_an_order_or_saved_design_claims_them === 3);
+
+var noDesign = run({ orders: ORDERS, designs: [], objects: SAVED_OBJ, live: false });
+ok('MUTATION: with no saved design, that same image IS swept',
+   noDesign.report.sample.indexOf('saved-ai-abc.jpg') > -1);
+
 print('\nMUTATION: IF THE CLAIM CHECK BREAKS, THIS MUST FAIL');
 // No orders at all — every file becomes unclaimed, so the ordered ones would
 // be deleted. If this does NOT change the count, the claim check is not doing
 // anything and the test above passed by coincidence.
 var noOrders = run({ orders: [], objects: OBJECTS, live: false });
 ok('with no orders, the ordered files are no longer protected',
-   noOrders.report.would_delete === 4 && noOrders.report.kept_because_an_order_claims_them === 0);
+   noOrders.report.would_delete === 4 && noOrders.report.kept_because_an_order_or_saved_design_claims_them === 0);
 
 print('\n' + passed + ' passed, ' + failed + ' failed');
