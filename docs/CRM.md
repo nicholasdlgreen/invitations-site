@@ -45,7 +45,7 @@ This is the spine. Everything else hangs off it.
 | 1 | Lands, leaves | No | A `session_id` | unknown |
 | 2 | Designs something | No | Brief, motifs, size, season | **128 sessions** |
 | 3 | Presses "Love it" | No | …plus intent to order | **61** |
-| 4 | **Saves a design** | **Yes** | Email, the design, their wording | **0 — now possible** |
+| 4 | **Saves a design** | **Yes** | Email, the design, their wording | **working, proven 7 Oct** |
 | 5 | Adds to basket | No | Basket lives in their browser only | unknown |
 | 6 | Starts checkout | Yes, at the point they type it | Email, name, address | unknown |
 | 7 | **Buys** | **Yes** | Order, spec, value, consent | **1** |
@@ -76,9 +76,13 @@ Built, deployed, and has never sent. It is the closest thing to done in this
 file and it fires on action 4 and action 7. **Next session: review the three
 passages together.**
 
-**W3 — Prove the save works end to end.** *Needs Nicholas signed in.*
-Fixed 7 Oct but never watched succeeding. Until it is, action 4 is theoretical
-and W4 cannot start.
+**W3 — Prove the save works end to end.** **DONE 7 Oct.**
+Nicholas saved a design while signed in. Verified independently: the row is
+**1,705 bytes**, the image is a storage URL rather than base64, the file is in
+the bucket and returns HTTP 200, and all 10 lines of wording survived. The
+image is 1,061,467 bytes — as base64 that is about 1.4MB, stored twice, so the
+row would have been nearly 3MB. That is why both routes failed and why it now
+works. **Action 4 is live and W4 is unblocked.**
 
 ### After W3 proves out
 
