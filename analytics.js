@@ -317,14 +317,27 @@
   // ── START ────────────────────────────────────────────────────────────
   function start() {
     captureAttribution();          // memory always; storage only with consent
-    // Advanced Consent Mode: the tag loads for everyone, but the denied
-    // defaults set above mean it stores nothing and sends no identifying
-    // data until the visitor agrees. Two reasons this beats withholding the
-    // tag entirely: Google can verify the tag exists (it cannot accept a
-    // cookie banner), and cookieless pings let Google model the conversions
-    // of people who declined — typically a fifth of them, which we would
-    // otherwise bid blind without.
-    loadTag();
+    // The tag loads only once someone has agreed.
+    //
+    // It used to load for everyone. That is Google's "advanced" Consent Mode
+    // and the reasoning for it was sound: the denied defaults mean nothing is
+    // stored and nothing identifying is sent, and the cookieless pings let
+    // Google model the conversions of people who declined.
+    //
+    // Measured on the live site 7 October, with fp_consent=denied: a product
+    // page still loaded both tags and sent four hits — two to
+    // google-analytics.com/g/collect, two to googlesyndication.com — carrying
+    // gcs=G100 and npa=1. Correct Consent Mode behaviour, and no cookies were
+    // set. But the privacy policy tells people nothing is sent to Google when
+    // they decline, and something was. A promise we do not keep is the same
+    // fault as the VAT line and "each card in your set will differ".
+    //
+    // The modelling it buys needs far more traffic than this site has — 92
+    // sessions generated a design in the fortnight to 7 October — so the
+    // mismatch was being carried for a benefit we do not yet receive. When
+    // volume makes modelling worth having, change this and the privacy policy
+    // together, deliberately, rather than letting them drift apart again.
+    if (consentState() === 'granted') loadTag();
     if (consentState() === null) showBanner();
   }
   if (document.readyState === 'loading') {
