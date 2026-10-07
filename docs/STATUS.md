@@ -1953,6 +1953,16 @@ real customer arrives.
 ### D. The design studio
 
 31. **Place cards and table numbers cannot do what we tell customers they do.**
+    **Re-verified 7 October, and the exact wording is now located.** The claim
+    is in the DATABASE, not the HTML: `studio_fields` for `table-numbers`, the
+    required first field, reads *"Sample number — e.g. 1 (each card in your set
+    will differ)"*. Place cards carry the same problem without saying it aloud —
+    required field *"Guest name — e.g. Charlotte Hughes"*. Both quantity ladders
+    run to **250** and both default to **50**. All three products are `active`.
+    Parked 7 October at Nicholas's direction; nothing to be done on it without
+    his decision between building variable data, changing what we sell and say,
+    or withdrawing.
+
     There is no variable-data support anywhere: the uploader builds ONE artwork
     and prints N copies. So fifty place cards are fifty copies of one guest's
     name, and the table-number box says *"each card in your set will differ"*,
@@ -1960,13 +1970,23 @@ real customer arrives.
     artworks — or change what we sell and what we say. **The false line is live
     now.**
 32. **Table plans have no tables.** Heading, names and date, and nowhere to type
-    who sits where, which is the whole content of the product.
+    who sits where, which is the whole content of the product. **Confirmed
+    7 October** against `studio_fields`: the five fields are headline, names,
+    date, note and custom. Parked with item 31.
 33. **Sell the set.** Papier offer "Complete the set" inside the editor;
     Vistaprint sell invitation suites as a category. Closest thing we have is
     the design-suite idea.
-34. **Saving a design loses almost everyone.** 44 sessions generated, 24 pressed
-    "Love it", 5 tried to save, **2 designs exist**. Saving is gated behind
-    creating an account and that is where people stop.
+34. **Saving a design has never produced a saved design.** Re-measured against
+    the live database 7 October, and it is worse than first written. Across all
+    time: **128 sessions generated**, 61 pressed "Love it", **7 save clicks**,
+    and `saved_designs` holds **0 rows**. The last save click was **17
+    September** — in the fortnight to 7 October, **92 sessions generated a
+    design and not one pressed save**. 134 accounts exist and 19 have ever
+    signed in, so the account gate is not the whole story.
+    **Not diagnosed:** whether saving is broken or simply never reached. It
+    cannot be tested from here — it needs a signed-in account, and creating or
+    using a customer account is not Claude's to do. One attempt by Nicholas
+    while signed in would settle it.
 35. **`studio-nano.js` is misnamed** — it calls Flux Pro 1.1 Ultra, not Nano.
     The filename says the opposite of the decision on record.
 39. **"Love it" still waits about 7.7 seconds.** Halved on 3 October by not
