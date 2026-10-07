@@ -276,6 +276,53 @@ so a visitor sees it again next time.
 - **No secrets reach the browser.** The only client-side key is the anon key.
 - **SPF and DKIM are correct** for Resend on the sending subdomain.
 
+### Business email — Google Workspace, part done 7 October
+
+Nicholas needs to send FROM `@foreverprint.com` and cannot: the domain has
+inbound forwarding through ImprovMX and no mailbox. That also blocks DMARC
+enforcement, because the moment he starts sending via Gmail's "send as" over
+Google's servers, that mail fails DMARC.
+
+**Done 7 October:**
+
+- Workspace account created, `hello@foreverprint.com`, Business Starter. The
+  signup is Nicholas's — creating accounts and entering payment details is not
+  Claude's to do.
+- Domain verified by TXT record on the apex, added alongside the existing SPF
+  rather than replacing it.
+- **Aliases `orders@` and `dmarc@`** added to the single user. These matter
+  more than they look: ImprovMX has a CATCH-ALL, which is why `dmarc@` worked
+  this morning without existing. Workspace does not behave that way — after the
+  MX switch only addresses that exist receive. Without these two, `orders@`
+  (on the site in 7 places) would bounce and the DMARC reporting fixed this
+  morning would silently stop.
+- **DKIM generated, 2048-bit, selector `google`**, published at
+  `google._domainkey` and authenticating. Verified from outside rather than
+  trusted: Netlify split the 408-character value across the 255-char DNS chunk
+  limit correctly, it resolves identically on two independent resolvers, and
+  the published key parses under `openssl rsa -pubin` as a valid 2048-bit RSA
+  public key — so nothing was lost in the copy-paste.
+
+**Still to do, in this order:**
+
+1. Add `include:_spf.google.com` to the apex SPF. Zero risk, nothing moves.
+2. **Switch MX from ImprovMX to Google.** The only step that moves mail, and
+   the only one that can lose any. Keep the ImprovMX account until proven.
+3. Confirm delivery from outside, then stop using ImprovMX.
+4. Only then enforce DMARC.
+
+**Two things worth keeping from the setup, because they cost an hour:**
+
+- The admin console shows a page that *looks* right when signed in as the wrong
+  Google account, with the controls simply absent. Three accounts were signed
+  in; Workspace is `authuser=2`. If a control does nothing, check the avatar
+  before anything else.
+- Claude reported the aliases as missing when they were saved. They live inside
+  a panel that is not in the page's accessibility tree until it is opened, so
+  the check was looking somewhere the answer could never be. **A negative
+  result from the wrong place is not evidence of absence** — the same fault as
+  the migration that applied cleanly and fixed nothing.
+
 ### Outstanding from the morning
 
 - **DMARC reporting was never working** — fixed 7 October, enforcement still to
