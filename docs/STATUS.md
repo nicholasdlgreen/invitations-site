@@ -338,6 +338,51 @@ resolvers. That loop worked well all day and is the pattern to keep.
   result from the wrong place is not evidence of absence** — the same fault as
   the migration that applied cleanly and fixed nothing.
 
+### Signups — the register endpoint was being farmed by bots
+
+Found 7 October while looking at how signup works. **134 accounts, 19 ever
+confirmed an address.** The first reading was an 86% drop-off at email
+confirmation. The domains say otherwise: 50 gmail with ONE confirmed, aol.com,
+comcast.net, a `.ru` throwaway, a US electricity utility, a global media agency,
+a Texas fleet-telematics firm — on a pre-launch UK wedding stationery site that
+is behind a holding page and cannot sell anything. They arrive in bursts: 18 on
+21 September, 18 on the 22nd, 10 on the 23rd. The ones that did confirm signed
+in exactly once, on the day they registered, and never came back.
+
+**Cleared 7 October at Nicholas's direction** — "nobody else matters, we are not
+live". 132 accounts deleted, 2 kept:
+`nicholasdlgreen@outlook.com` (the ADMIN account, and the one holding the single
+order) and `nicholasdlgreen@gmail.com`. The migration refuses to run unless the
+keep-list matches exactly two rows, because a typo there would have deleted
+admin access. Verified after: 2 accounts, 1 admin row, 1 order, orphaned
+profiles and admin_users rows cleaned.
+
+**Why it matters beyond the mess.** Supabase's own docs warn that bots on auth
+endpoints "can increase your database size drastically". The built-in email
+sender is rate-limited and not meant for production, so junk signups plausibly
+exhaust the quota and a real customer's confirmation never arrives — which is a
+better explanation of 50 gmail accounts with one confirmation than disinterest.
+
+**Still to do:**
+
+1. **Turn off public signups while pre-launch** — dashboard toggle, Email
+   provider, "Allow new users to sign up". Free, instant, total. Nobody
+   legitimate can register anyway.
+2. **Cloudflare Turnstile before launch.** Supabase supports it natively; needs
+   a free Cloudflare account for a Sitekey and Secret (a new third party, so
+   Nicholas's call), the Secret pasted into Bot and Abuse Protection, and the
+   widget wired into register and login so the token reaches `signUp()`.
+   The default IP rate limit of 30/hour plainly did not stop this.
+3. Accounts are wanted at launch — Nicholas confirmed. So this is defence, not
+   removal.
+
+**A correction worth keeping.** Claude reported `contacts` as empty. It held one
+row — Nicholas's own, from 13 test checkouts. The count came from a query using
+the public anon key, which RLS correctly blocks, so a "0" that meant "not
+allowed to see" was read as "nothing there". That is the third instance in one
+day of the same fault: a negative result from a place that could never show the
+answer. Check WHO is asking before believing a nil result.
+
 ### Outstanding from the morning
 
 - **DMARC reporting was never working** — fixed 7 October, enforcement still to
