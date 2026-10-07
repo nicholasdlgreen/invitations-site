@@ -86,11 +86,34 @@ works. **Action 4 is live and W4 is unblocked.**
 
 ### After W3 proves out
 
-**W4 — "You saved a design and have not ordered."** *The big one.*
+**W4 — "You saved a design and have not ordered."** **Machinery built 7 Oct,
+cannot send — waiting on the words.**
 The research equivalent of abandoned checkout, which with welcome accounts for
 40–60% of all flow revenue. Our version is stronger than most: we can show
 people **their own design, with their own names on it**, not a product photo.
-Needs a trigger on saved-not-ordered after N days, and N agreed.
+
+`netlify/functions/saved-design-reminder.js`, scheduled daily at 09:00, and it
+runs as a **dry run that reports who it would email**. It stays that way even
+if the environment variable is set, because `buildReminderHtml()` returns null
+until the copy exists. Copy is Nicholas's, and an unattended email to a real
+customer is the last place to break that rule.
+
+Settings, all constants at the top of the file and easy to change:
+
+| | | Why |
+|---|---|---|
+| First reminder | **3 days** | A considered purchase; sooner reads as pushy |
+| Window closes | **21 days** | Older is not a live intention, and the upper bound means rows predating the function can never be swept up by a later deploy |
+| Cap per run | **25** | A mistake stays small and visible |
+| Messages | **One, ever** | Guarded by `saved_designs.reminder_sent_at` |
+
+Skipped at send time rather than trusted from a flag: anyone who has ordered
+since saving, anyone who has unsubscribed, and any design whose account has
+gone.
+
+**One message, not a series, and that is a consent decision.** A single
+reminder about something the customer asked us to keep is a service message. A
+second nudge is marketing and would need the tick.
 
 **W5 — Post-purchase, beyond the receipt.**
 Order confirmation, dispatch and review request already exist. What is missing

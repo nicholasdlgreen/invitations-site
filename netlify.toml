@@ -109,3 +109,17 @@
 # which is the point — read a few before arming it.
 [functions."artwork-retention"]
   schedule = "0 3 * * *"
+
+# ─── SAVED DESIGN REMINDER ──────────────────────────────────
+# docs/CRM.md W4. Somebody saved a design and has not ordered.
+#
+# It CANNOT send yet: the email body is deliberately unwritten, because copy
+# on this site is Nicholas's and an unattended email to a real customer is the
+# last place to break that. Until the words exist AND SAVED_REMINDER_LIVE=true
+# is set, this writes a nightly report of who it WOULD email and sends nothing
+# — which is the useful half anyway, because it shows the list before a word
+# is committed to.
+#
+# One email per saved design, ever, guarded by saved_designs.reminder_sent_at.
+[functions."saved-design-reminder"]
+  schedule = "0 9 * * *"
