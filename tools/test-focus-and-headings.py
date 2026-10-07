@@ -23,9 +23,10 @@ which nothing used, to clamp(2rem, 3.6vw, 3rem), which 24 product pages already
 used via .lp-h1 — otherwise standardising would have enlarged those 24 pages.
 
 Hero headings are deliberately excluded. A hero is a different role from a page
-title and keeps its own larger scale — the homepage and saved-designs both have
-one. (wedding-albums and the album builder also did, until they were withdrawn
-on 6 October 2026.)
+title and keeps its own larger scale — the homepage has one. (saved-designs had
+one too, until it was folded into the account page on 7 October 2026;
+wedding-albums and the album builder also did, until they were withdrawn on
+6 October 2026.)
 """
 import io, os, re, sys
 

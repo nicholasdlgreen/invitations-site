@@ -22,7 +22,7 @@ rendered page disagree, this file records what renders, and says so.
 | Type scale steps | **8**, all fluid `clamp()` |
 | Typefaces in use | **2** (a third is loaded and unused — §3) |
 | Pages whose own `:root` disagrees | **9**, all silently overridden (§7) |
-| Literal hex where a token exists | **91 uses** across 58 files (§7) |
+| Literal hex where a token exists | **91 uses** across 57 files (§7) |
 | Components that drift | inputs, cards — by 1–2px (§7e) |
 
 ---
@@ -179,31 +179,31 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 
 | Token | Value | Already used |
 |---|---|---|
-| `--space-1` | `4px` | 644 times |
-| `--space-2` | `8px` | 1,364 — the most used value on the site |
-| `--space-3` | `12px` | 315 |
-| `--space-4` | `16px` | 574 |
-| `--space-5` | `20px` | 1,040 |
-| `--space-6` | `24px` | 298 |
-| `--space-7` | `32px` | 879 |
-| `--space-8` | `48px` | 366 |
-| `--space-9` | `60px` | 220 |
-| `--space-10` | `80px` | 15 |
+| `--space-1` | `4px` | 632 times |
+| `--space-2` | `8px` | 1,342 — the most used value on the site |
+| `--space-3` | `12px` | 313 |
+| `--space-4` | `16px` | 567 |
+| `--space-5` | `20px` | 1,024 |
+| `--space-6` | `24px` | 291 |
+| `--space-7` | `32px` | 861 |
+| `--space-8` | `48px` | 359 |
+| `--space-9` | `60px` | 216 |
+| `--space-10` | `80px` | 12 |
 
 **These are for new work. Existing spacing is deliberately left alone**, and
 that is the whole decision, so it is worth setting out why.
 
-The site has **12,770 spacing declarations using 47 distinct values**. Measured
+The site has **12,554 spacing declarations using 47 distinct values**. Measured
 against the obvious candidates:
 
 | Scale | Fits as-is | Would have to move |
 |---|---|---|
-| Strict 4px grid | 35% | 8,326 declarations |
-| Strict 8px grid | 27% | 9,270 |
-| These ten steps | 45% | 7,055 |
-| These ten plus a 6/10/14 tier | 68% | 4,098 |
+| Strict 4px grid | 35% | 8,186 declarations |
+| Strict 8px grid | 27% | 9,119 |
+| These ten steps | 45% | 6,937 |
+| These ten plus a 6/10/14 tier | 68% | 4,028 |
 
-Even the best fit means rewriting several thousand values across 58 files, each
+Even the best fit means rewriting several thousand values across 57 files, each
 a small visual shift, with no practical way to check the result page by page.
 The risk is entirely out of proportion to the benefit, and it is what every
 mature system advises against when tokenising a codebase that already exists:
@@ -231,9 +231,9 @@ derived from what the site already does, not imposed on it.
 
 | `text-align` | Uses |
 |---|---|
-| `center` | **673** |
-| `left` | 252 |
-| `right` | 99 |
+| `center` | **668** |
+| `left` | 248 |
+| `right` | 97 |
 
 Centred wins by nearly three to one, and that is the house composition: an
 eyebrow, a heading, a line of supporting copy and the thing itself, all on one
@@ -254,10 +254,10 @@ below kept the full panel width — card centre at x=874, button centre at x=971
 
 | | Value | Uses |
 |---|---|---|
-| Page container | `1180px` | **280** — two and a half times the next value |
-| Primary breakpoint | `768px` | 173 |
-| Secondary breakpoint | `480px` | 143 |
-| Narrow phones | `359px` | 46 |
+| Page container | `1180px` | **273** — two and a half times the next value |
+| Primary breakpoint | `768px` | 170 |
+| Secondary breakpoint | `480px` | 140 |
+| Narrow phones | `359px` | 45 |
 
 New work uses `1180px` and those three breakpoints. A fourth breakpoint is
 almost always a sign that something inside wants to be fluid instead.
@@ -411,7 +411,7 @@ did not move; the outliers came to them.
 **Deliberate exceptions, both roles rather than faults:**
 
 - **Heroes keep their own, larger scale.** A hero is not a page title. The
-  homepage (`.hero-h1`) and `saved-designs` (`.page-hero h1`) both have one. Anything whose selector contains `hero` is outside the page-title rule.
+  homepage (`.hero-h1`) has one. Anything whose selector contains `hero` is outside the page-title rule. (`saved-designs` had one until 7 October 2026, when it became a card on the account page.)
 - **`index.html`'s `<h1>` is `hero-h1-seo`** — 15px, gold, Jost. An SEO heading
   styled as a kicker, on purpose.
 

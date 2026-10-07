@@ -64,7 +64,11 @@ https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:sp
 /login.html                   /login                        301!
 /register.html                /register                     301!
 /account.html                 /account                      301!
-/saved-designs.html           /saved-designs                301!
+# Saved designs moved into the account page on 7 Oct 2026. Both the old
+# address and its .html form go straight to /account rather than hopping
+# through a page that no longer exists.
+/saved-designs.html           /account                      301!
+/saved-designs                /account                      301!
 /forgot-password.html         /forgot-password              301!
 /reset-password.html          /reset-password               301!
 /baby-shower-invitations.html /baby-shower-invitations      301!

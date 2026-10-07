@@ -95,7 +95,9 @@ print('\nTHE ACCOUNT PAGES ARE KEPT OUT OF SEARCH')
 # addresses of each. A sign-in form is not a search result anyone wants, and
 # an indexed account page invites people to land somewhere they cannot use.
 # "follow" so the crawler still reads the navigation on them.
-ACCOUNT = ['login', 'register', 'account', 'saved-designs',
+# saved-designs was retired on 7 Oct 2026 — its contents are a card on the
+# account page now, and both of its old addresses 301 to /account.
+ACCOUNT = ['login', 'register', 'account',
            'forgot-password', 'reset-password']
 for name in ACCOUNT:
     t = pages.get(name + '.html', '')

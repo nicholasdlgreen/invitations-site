@@ -90,7 +90,12 @@ def mutates(name, doc=None, studio=None):
     if caught: passed += 1; print('  ok   %s is caught' % name)
     else: failed += 1; print('  FAIL %s SLIPPED THROUGH' % name)
 
-mutates('a stale centred-alignment figure', doc=SEC.replace('| **673** |', '| **999** |'))
+# Derived from the live count, never written as a literal. It WAS '| **673** |',
+# and when the real figure moved to 668 the replace silently matched nothing:
+# no drift was introduced, so none was caught, and the mutation passed by
+# doing nothing. A guard against stale figures must not itself hold one.
+mutates('a stale centred-alignment figure',
+        doc=SEC.replace('| **%d** |' % ta['center'], '| **999** |'))
 mutates('the rail growing back to 180px',
         studio=STUDIO.replace('minmax(0,1fr) 140px', 'minmax(0,1fr) 180px'))
 mutates('the rail going back to the top edge',
