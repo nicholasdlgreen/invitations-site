@@ -1,9 +1,19 @@
-# Where we are — 6 October 2026
+# Where we are — 7 October 2026
 
 *Every figure below was checked against the live site, the live database or a
 generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
+
+**7 October. Platform and security, prompted by a Supabase warning.** The
+morning's finding is that this document's own top blocker was wrong: **checkout
+has not refused a basket since 3 October** (§18), and the sheet still said
+"NOT FIXED". The warning itself turned out to be mostly noise and one real
+exposure — our supplier cost base was readable, writable and deletable by
+anyone. Written up in **§0d**. Pricing and VAT were deliberately left for
+another day at Nicholas's direction.
+
+---
 
 **6 October. A design day, and nothing on the launch list moved.** Twenty-three
 commits across four threads — the mobile site, the contact page, a brand
@@ -138,6 +148,152 @@ stopped working entirely, a sweep of marketing copy that was promising things we
 do not sell, and a price comparison against five competitors. Two incidents are
 worth reading on their own — §11, where Publish broke, and §12, where the studio
 was quietly charging double.
+
+---
+
+## 0d. 7 October — platform and security
+
+Prompted by a Supabase warning about publicly accessible tables. Scope was set
+deliberately: every third-party service except Stripe, which is not live.
+
+### The warning was mostly noise, and one thing was not
+
+Supabase flagged **44 tables as publicly visible**. The lint reports what is
+GRANTED, not what is readable. Tested with the public anon key that is printed
+in the page source: `admin_users`, `contacts`, `orders`, `profiles`, `expenses`,
+`suppliers`, `discount_codes` — **all returned 0 rows**. The RLS model is sound.
+`is_admin()` is correctly written and returns false for anonymous; user tables
+key on `auth.uid() = user_id`; the only deliberately-open write policy is
+`studio_events`, for anonymous analytics.
+
+**What was genuinely open: `_rate_rows` (6,070 rows) and `_fin_rows` (2,730).**
+RLS switched off entirely, with `anon` holding SELECT, INSERT, UPDATE and
+DELETE. They hold **our supplier cost base** — every row carries a `cost`. The
+whole pricing model, readable by anyone, and alterable and deletable too.
+
+Checked before touching them, because the question was whether pricing needs
+them: `_fin_rows` matches `finish_rates` exactly, 0 differences. Every one of
+`_rate_rows`' 6,070 rows exists in `sheet_rates` (8,796 rows), nothing in
+staging is missing from live, and the 20 rows that differ are **stale in
+staging**. Neither is referenced by the repo, by any database function or by
+any view. Leftover import staging from the September rebuild. **Locked, not
+dropped** — the exposure was the problem, and the September import stays
+available to compare against.
+
+### The fix that did nothing, and why it is worth remembering
+
+Four `SECURITY DEFINER` functions could be called by anyone with the anon key.
+`upsert_contact_from_order` writes to `contacts` with whatever email and
+consent flag the caller supplies, so **marketing consent could be forged** for
+an address that never gave it. `bump_rate_limit` takes any bucket name and the
+buckets are keyed by IP, so the rate limiter could be pointed at another
+visitor. Two cache rebuilds could be run in a loop.
+
+The first migration revoked EXECUTE from `anon` and `authenticated` and
+**achieved nothing**: Postgres grants EXECUTE to `PUBLIC` by default and `anon`
+inherits it. Tested with the live key afterwards and the contact forgery still
+returned 204 and wrote a row. Revoked from `PUBLIC`, granted back to
+`service_role`, re-tested: all four now 401, and a live `track-order` call
+wrote a fresh `rate_limits` row, so the limiter still works.
+
+**A migration that applies cleanly is not a fix that works.** Probe it with the
+same key an attacker would use.
+
+### Storage
+
+`album-photos` carried the worst policy on the project — DELETE granted to the
+PUBLIC role, so any visitor could delete anything in it, with a matching public
+INSERT. Albums were withdrawn on 6 October. Policies dropped, bucket set
+private. The six files (development uploads from 10 May) and the bucket row
+need the Storage API, so that is a dashboard step.
+
+`artwork` accepted **any file type, up to 50MB, from any visitor, into a public
+bucket** — and already held a text/plain file among the 98 PDFs and 40 images.
+Now limited to print formats. Honestly partial: `.ai` and `.indd` arrive as
+`application/octet-stream`, so that has to stay allowed.
+
+### Consent — item 63, measured and settled
+
+Cleared cookies, loaded the site as a new visitor, clicked "No thanks" and
+watched the network. The home page sent nothing. **Product pages still loaded
+both tags and sent four hits** — two to `google-analytics.com/g/collect`, two
+to `googlesyndication.com` — carrying `gcs=G100` and `npa=1`. Cookieless,
+non-personalised, no cookies set: correct "advanced" Consent Mode, and the
+comment explaining the choice was well reasoned.
+
+But the privacy policy says nothing is sent, and something was. Of the two ways
+to settle it, stopping is right **for now**: the modelling it buys needs far
+more traffic than this site has, so the mismatch was being carried for a
+benefit we do not yet receive, and the fix needs no copy Nicholas has not read.
+Verified on the built page — declined: 0 requests to any Google host. Granted:
+14 requests, both tags, 6 collect hits, `_ga` set.
+
+**When volume makes modelling worth having, change the code and the policy
+together rather than letting them drift apart again.**
+
+### Artwork retention — built, not armed
+
+The bucket had no DELETE policy, so nothing has ever cleared it: **140 files,
+206MB, of which 130 files and 198MB are unclaimed and over a day old.**
+
+`netlify/functions/artwork-retention.js` deletes **only** files no order refers
+to, older than **5 days** (Nicholas's figure). Artwork attached to an order is
+never touched at any age — the printer is sent LINKS and fetches them when they
+produce the job, so a deleted file is an order that cannot be printed, and on a
+foiled job the missing foil layer means it cannot even be placed.
+
+Five days rather than 24 hours because **a basket lives in the browser** and the
+server cannot see one: someone who uploads on Monday and orders on Saturday
+would find their basket pointing at a file that is gone.
+
+**It is a DRY RUN until `ARTWORK_RETENTION_LIVE=true` is set in Netlify**, and
+it is scheduled so it writes a nightly report to read first. This is the only
+unattended thing on the site that destroys customer data.
+
+### The holding page, which is not a bug
+
+Worth recording because it was nearly mistaken for one. Every new visitor to the
+home page gets a full-screen *"We're putting the final touches to our shop and
+will be open very soon"* overlay with the scroll locked. Nicholas never sees it
+because `?preview=natch` stored a bypass in his browser. That is correct for a
+pre-launch site.
+
+It matters for one reason: the **10 `launch-signup` addresses** in Netlify Forms
+are not stale leads, they are everyone who has asked to be told when we open,
+and the form is still collecting. They are outside `contacts`, so outside the
+consent and unsubscribe model. Being imported with the holding page's own
+wording recorded verbatim as the consent text — which makes them a **launch
+announcement list, not a mailing list**. Closing the overlay does not persist,
+so a visitor sees it again next time.
+
+### What was reviewed and found sound — no action
+
+- **Netlify security headers** are complete and live, verified on the response:
+  HSTS, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy, and
+  a CSP that names hosts rather than wildcarding.
+- **www and http both 301 to the apex**, and the `*.netlify.app` subdomain 301s
+  too, so there is no duplicate site.
+- **No secrets reach the browser.** The only client-side key is the anon key.
+- **SPF and DKIM are correct** for Resend on the sending subdomain.
+
+### Outstanding from the morning
+
+- **DMARC is `p=none`** — monitoring only, no enforcement. DNS is on NS1, so
+  the record is Nicholas's to paste. Staged: `p=quarantine; pct=10` first, read
+  the reports, then 100, then reject. The root domain forwards through ImprovMX,
+  which is why this is not jumped straight to reject.
+- Album bucket and its six files: dashboard deletion.
+- The 10 signups: waiting on a CSV export from Netlify.
+- Arming the artwork sweep, after a few nightly reports.
+- **Not started, flagged and parked:** wiring future holding-page signups into
+  `contacts` so this does not drift again.
+
+### What this did not touch
+
+**A3 (VAT) is unchanged and still real**: live `vatRegistered` is false, while
+the basket drawer baked into all 53 pages shows "Subtotal (excl. VAT)" and
+"VAT (20%)", `cart.js` splits the price as `sub / 1.2`, and every pending order
+stores a `vat` figure. Deferred at Nicholas's direction along with pricing.
 
 ---
 
@@ -1841,7 +1997,8 @@ switched on.
 Nothing can be sold until A1 and A2 are done. The rest must be true before a
 real customer arrives.
 
-- **A1. Checkout refuses every basket** — item 36 below, §18.
+- ~~**A1. Checkout refuses every basket**~~ — **FIXED 3 October**, verified
+  against the live payload 7 October: 7,262 configurations, 0 refused. §18.
 - **A2. Margins are 0 on 22 products.** The decision, not the build.
 - **A3. VAT at checkout.** The grid is clean and driven by
   `site_config.pricing.vatRegistered`, but checkout still shows "VAT (20%)" and
@@ -2821,11 +2978,31 @@ again** without the withdrawal being revisited.
   already broken; neither touches envelopes. Same rot that had killed
   `test-route-gating.js` until it was revived on 1 October.
 
-## 18. Checkout refuses every basket — found 3 October, NOT FIXED
+## 18. Checkout refuses every basket — found 3 October, FIXED 3 October
 
-**Nothing can be sold.** Found while reading the pricing chain for something
-else, confirmed against the live database, and **not fixed** — it wants a
-decision about how checkout should read prices once the payload is restructured.
+**FIXED, and this section said otherwise for four days.** The fix shipped the
+same day it was written up, in `aa1ba6d`, and the heading here still read "NOT
+FIXED" on the morning of 7 October — so the go-live sheet's top blocker, and
+Claude's own memory, were both wrong. Anyone reading top-down concluded nothing
+could be sold.
+
+**Verified 7 October, not taken on trust.** The floor function was cut out of
+the deployed `create-checkout.js` and run against the LIVE published prices:
+
+| | 3 October | 7 October |
+|---|---|---|
+| Configurations checked | 741 | **7,262** across three products |
+| Refused | **741** | **0** |
+
+Both faults are gone. It asks `pricing_for` per product instead of gating on
+`schema_version === 2`, and it takes the cheapest matching weight instead of
+whichever row came first. It also pulls ~960KB per product rather than 13MB.
+
+**What is still unproven:** nobody has ever posted a real basket end to end.
+`check-live.py` reads pages and prices; it never posts a basket. That needs
+live Stripe and is Nicholas's call.
+
+The account below is kept because the diagnosis is worth reading.
 
 `netlify/functions/create-checkout.js` rebuilds the price of every basket line
 and refuses anything materially cheaper than that floor. It loads the catalogue
