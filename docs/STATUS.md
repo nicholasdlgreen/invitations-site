@@ -290,9 +290,19 @@ so a visitor sees it again next time.
   **Next, in about two weeks:** read the reports, then `p=quarantine; pct=10`,
   then 100, then reject. Not jumped straight to reject because the root SPF
   covers ImprovMX only and outbound alignment rests on the Resend DKIM key.
-  **Open question for that step:** whether Nicholas ever sends mail AS
-  `@foreverprint.com` from Gmail — that mail fails DMARC today and enforcing
-  would start putting some of it in spam.
+  **Answered 7 October:** Nicholas does NOT currently send from
+  `@foreverprint.com` — "we will need to do it though". That makes enforcing
+  LOW RISK now, because the website's mail is the only thing sending as the
+  domain and Resend signs it. It also sets a trap for later: the usual way to
+  start sending from a business address is Gmail's "send mail as" pointed at
+  Google's servers, which has no DKIM for our domain and is not in our SPF, so
+  it fails DMARC. Set that up after enforcing and his replies to customers
+  quietly start landing in spam, looking like a mail fault rather than a DNS
+  one. **Sending has to be set up properly before, or at the same time as,
+  enforcing.** Two ways when it comes up: Google Workspace on the domain
+  (proper mailbox, Google publishes the DKIM key, alignment automatic, costs
+  per user) or ImprovMX's paid tier for SMTP (cheaper, already covered by our
+  SPF, but still a forwarding service rather than a mailbox). Not started.
 - **The contact form tells nobody.** Found 7 October while testing the above.
   Mail to the domain works — `hello@` and `dmarc@` both arrive — so the contact
   submission that never reached Nicholas on 6 October was not a delivery
