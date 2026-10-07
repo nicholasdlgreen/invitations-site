@@ -365,9 +365,10 @@ better explanation of 50 gmail accounts with one confirmation than disinterest.
 
 **Still to do:**
 
-1. **Turn off public signups while pre-launch** — dashboard toggle, Email
-   provider, "Allow new users to sign up". Free, instant, total. Nobody
-   legitimate can register anyway.
+1. ~~**Turn off public signups while pre-launch.**~~ **DONE** — confirmed
+   7 October against the live auth settings endpoint, which reports
+   `disable_signup: true`. Checked rather than assumed, because the dashboard
+   toggle and the running configuration are two different things.
 2. **Cloudflare Turnstile before launch.** Supabase supports it natively; needs
    a free Cloudflare account for a Sitekey and Secret (a new third party, so
    Nicholas's call), the Secret pasted into Bot and Abuse Protection, and the
@@ -415,8 +416,10 @@ answer. Check WHO is asking before believing a nil result.
   submission that never reached Nicholas on 6 October was not a delivery
   failure. Netlify Forms stores submissions and only emails when a notification
   is configured, and none is. A customer fills in the contact page and the
-  message waits in a dashboard nobody is watching. Not fixed: new, flagged, and
-  outside what was agreed for the morning.
+  message waits in a dashboard nobody is watching. **Fixed later the same day**
+  by `netlify/functions/submission-created.js`, which Netlify invokes by name on
+  every verified submission — contact messages and launch signups both now reach
+  `hello@`, with Reply going back to the customer.
 - Album bucket and its six files: dashboard deletion.
 - The 10 signups: waiting on a CSV export from Netlify.
 - Arming the artwork sweep, after a few nightly reports.
@@ -2097,8 +2100,10 @@ one it needs to see.
 
 ## 15. The full to-do list
 
-**Regenerated 3 October 2026, end of day.** Everything outstanding, in one
-place, grouped by what it is rather than when it turned up.
+**Regenerated 3 October 2026, end of day; the "Next up" table below rebuilt
+7 October.** Everything outstanding, in one place, grouped by what it is rather
+than when it turned up. The body of the list below the table still reads from
+3 October — the 7 October work is in §0d and `docs/CRM.md`.
 
 **The numbers are stable labels, not an order of work** — item 31 has been item
 31 since 27 September and is referred to by that number elsewhere in this
@@ -2117,15 +2122,41 @@ switched on.
 
 ### Next up — the order I would do them
 
-| | What | Item | Why it is here |
-|---|---|---|---|
-| 1 | **Write the three welcome-email passages** | 52 | Square-bracket placeholders would reach a customer as written. Nothing should send a welcome until they are done, and only Nicholas can write them |
-| 2 | **Read back the copy Claude wrote** | 44 | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, and all of Amy's knowledge. Live, and none of it in Nicholas's words |
-| 3 | **Set the margins** | A2 | 22 products at cost. A decision, not a build. §14 is the evidence. May carry a floor — **if PrintedEasy's 20% discount excludes the delivery line, Express needs a 25% markup to clear** (§2, unresolved) |
-| 4 | **Decide on place cards and table numbers** | 31 | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
-| 5 | **Switch on the Send Email Hook** | 54 | Built and deployed, deliberately not enabled. Needs a live test first |
-| 6 | **Shrink the published payload** | 38 | 13MB, and the reason Publish breaks. Proven at 1.1MB but not built |
-| 7 | **Decide what to do about consent and Google** | 63 | The Privacy Policy promises nothing is sent to Google when a visitor declines. Something is. Parked 5 October at Nicholas's direction |
+**Rebuilt 7 October, end of day.** The previous table was written on 3 October
+and four of its seven rows had moved. Each row now says **who it is waiting
+on**, because the commonest question is "what do I have to do myself".
+
+Cleared since the 3 October table: **A1** (checkout refuses every basket —
+verified fixed against the live payload, 7,262 configurations, 0 refused) and
+**63** (consent and Google — a visitor who declines now causes zero requests to
+any Google host). Both struck through below.
+
+| | What | Item | Waiting on | Why it is here |
+|---|---|---|---|---|
+| 1 | **Switch MX from ImprovMX to Google** | — | **You** | The only step in the mail work that can lose a message. Everything else is done: Workspace, aliases, DKIM, SPF. DMARC enforcement and sending from `@foreverprint.com` both wait behind it |
+| 2 | **Post a real basket through checkout, end to end** | 51a | Either | A1 was the worst bug on the site and survived because no test ever submits a cart. 12,722 row checks still would not have caught it. Nothing should take money until one does |
+| 3 | **Stripe live keys and a live-mode webhook** | A4 | **You** | Without the webhook, payments succeed and orders sit pending for ever |
+| 4 | **Print one real sample through PrintedEasy** | A5 | **You** | The file geometry is verified; the handover to their press is not. Pair it with A6 — head-to-head or head-to-foot decides whether every double-sided job comes back upside down |
+| 5 | **Read back the copy Claude wrote** | 44 | **You** | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, all of Amy's knowledge. Live, and none of it in your words |
+| 6 | **Set the margins, and settle VAT** | A2, A3 | **You** | 22 products at cost; checkout still shows "VAT (20%)" while we are not registered. **Deferred 7 October at your direction** — kept here because it is still the gate on trading |
+| 7 | **Rewrite the welcome email** | 52 | **You** | One of three passages written (where the cards are printed). You read it whole on 7 October and judged it not good enough, so this is a rewrite. It cannot embarrass us meanwhile: the guard refuses to send while any section is unwritten |
+| 8 | **Switch on the Send Email Hook** | 54 | Either | Built, deployed, deliberately inert. Needs a live test first |
+| 9 | **Arm the artwork sweep** | — | **You** | `ARTWORK_RETENTION_LIVE=true` in Netlify, after reading a few nightly dry-run reports. 198MB of unclaimed files waiting. The only unattended thing on the site that destroys customer data |
+| 10 | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
+| 11 | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` — which holds the line until we open |
+| 12 | **Shrink the published payload** | 38 | Me | 13MB, and the reason Publish breaks. Proven at 1.1MB, not built. Nothing is blocked by it today |
+| — | ~~**Checkout refuses every basket**~~ | A1 | — | **DONE.** Fixed 3 Oct, verified 7 Oct |
+| — | ~~**Consent and Google**~~ | 63 | — | **DONE 7 Oct.** Declined: 0 requests to any Google host |
+
+**Small chores, no order between them:** delete the `album-photos` bucket and
+its six files (Storage dashboard); export the 10 holding-page signups from
+Netlify Forms; set `ALERT_EMAIL` in Netlify for the Monday price watch (A7);
+remove the homepage holding overlay when you decide to open (A8).
+
+**Not on this list on purpose:** the CRM work. It has its own file, and §0b of
+`docs/CRM.md` says where to pick it up. The short version is that W2 and W4 are
+finished machines blocked on copy, and the hole is that 61 people have pressed
+"Love it" and one address came out.
 
 ### A. Blocking launch
 
