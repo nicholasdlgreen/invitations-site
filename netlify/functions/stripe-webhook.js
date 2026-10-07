@@ -98,8 +98,20 @@ async function sendEmail({ to, subject, html }) {
 // they have actually paid — so nobody is welcomed for an abandoned basket.
 //
 // ⚠ THE PARTS IN [SQUARE BRACKETS] ARE PLACEHOLDERS. They are the bits only
-// you know — who started it, when, where you print, who is on the team. Fill
-// them in before this goes out; an invented history is worse than none.
+// you know — who started it, when, who is on the team. Fill them in before this
+// goes out; an invented history is worse than none. NOTHING IN THE CODE STOPS
+// THIS SENDING WITH THEM STILL IN.
+//
+// The printing passage was filled on 7 October 2026. Every fact in it is about
+// the press our work goes through, not about us, and is checked:
+//   Hertfordshire, printing since 1976  — Companies House 01275697, incorporated
+//                                         2 Sep 1976, registered office Letchworth
+//                                         Garden City (was Falkland Press to 2018)
+//   HP Indigo, Canon, Scodix            — their published plant list
+// Deliberately it does not name them, does not say WE have printed since 1976,
+// and does not mention their Heidelberg litho press: litho is for long runs and
+// a wedding order never touches it. Their history is theirs; where your cards
+// are made is ours to state.
 function buildWelcomeHtml(contact, unsubscribeUrl) {
   const firstName = String(contact.name || '').trim().split(' ')[0] || 'there';
   return `
@@ -129,7 +141,9 @@ function buildWelcomeHtml(contact, unsubscribeUrl) {
         </p>
         <p style="font-size:14px;line-height:1.8;color:#5C4A3D;margin:0;">
           Everything is printed here in the UK, on paper chosen for how it feels in the hand as much as
-          how it looks. [WHERE YOU PRINT, AND ANYTHING TRUE ABOUT THE PRESSES OR PAPER YOU ARE PROUD OF.]
+          how it looks. Your cards are made in Hertfordshire, at a works that has been printing since
+          1976 &mdash; on HP Indigo and Canon presses, with a Scodix for the foiled and raised finishes.
+          That is the reason the edges stay clean and the colour holds.
         </p>
       </div>
 
@@ -192,11 +206,45 @@ function buildWelcomeHtml(contact, unsubscribeUrl) {
   </div>`;
 }
 
+// WOULD THIS EMAIL EMBARRASS US IF IT WENT NOW?
+//
+// Nothing used to stop the welcome email going out with the unwritten parts
+// still in it — both senders simply built the html and posted it. The Terms
+// page reached the live site carrying five of these blanks in October, which
+// is the reason this check exists rather than a note asking someone to
+// remember.
+//
+// It renders the real template and looks for an opening bracket followed by a
+// run of capitals. An earlier version of this pattern insisted on capitals all
+// the way to the closing bracket, and so matched NEITHER of the two blanks
+// actually present — both carry ordinary prose after the dash. It reported the
+// template clean. If you change the pattern, put a blank back and confirm it
+// is still caught.
+const UNFILLED_BLANK = /\[[A-Z]{2,}[^\]]*\]/g;
+
+function unfilledWelcomeBlanks() {
+  const sample = buildWelcomeHtml({ name: 'Check', email: 'check@example.com' },
+                                  'https://example.com/unsubscribe');
+  return sample.match(UNFILLED_BLANK) || [];
+}
+
 // Claim-and-send: the database hands back the contact only if they may be
 // welcomed, and marks them welcomed in the same step, so two orders arriving at
 // once cannot both send one.
 async function sendWelcomeIfDue(email) {
   if (!email || !SUPABASE_KEY) return;
+
+  // Before the claim, never after. The claim marks them welcomed, so refusing
+  // to send once it is taken would leave a customer flagged as welcomed who
+  // never hears from us — the same trap the send-failure path below undoes.
+  const blanks = unfilledWelcomeBlanks();
+  if (blanks.length) {
+    console.error(`Welcome email WITHHELD from ${email}: the template still has ` +
+      `${blanks.length} unwritten section(s) — ` +
+      blanks.map(b => b.slice(0, 44) + '…').join('  |  '));
+    return;
+  }
+
   try {
     const rows = await fetch(`${SUPABASE_URL}/rest/v1/rpc/claim_welcome_email`, {
       method: 'POST',
@@ -815,3 +863,6 @@ exports.handler = async (event) => {
 // welcome email, and the parts of it Nicholas still has to write must not need
 // writing twice.
 exports.buildWelcomeHtml = buildWelcomeHtml;
+// Exported so send-welcome.js makes the same refusal, and so a test can
+// assert on it without reaching into the template.
+exports.unfilledWelcomeBlanks = unfilledWelcomeBlanks;

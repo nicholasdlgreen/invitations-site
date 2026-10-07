@@ -148,6 +148,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-design-save.js` | A saved design stores a LINK to its image, never the base64, on both the signed-in and queued routes; and the sweep treats a saved design as a claim |
 | `tools/test-consent-log.js` | The consent count carries the choice and nothing joinable, and is written on a click rather than on every page view |
 | `tools/test-saved-design-reminder.js` | Runs the W4 sweep: it sends nothing without copy, skips anyone who ordered or unsubscribed, and honours the window and the send-once guard |
+| `tools/test-welcome-guard.js` | The welcome email cannot go out with an unwritten section in it; the refusal happens before the claim, so nobody is marked welcomed and then skipped |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |

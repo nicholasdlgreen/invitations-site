@@ -38,7 +38,7 @@ const CONSENT_TEXT = 'Keep me in touch with new products, offers and ideas';
 
 // One welcome email, one template. stripe-webhook.js owns it because that is
 // where it was written; this sends the same thing to someone who registered.
-const { buildWelcomeHtml } = require('./stripe-webhook.js');
+const { buildWelcomeHtml, unfilledWelcomeBlanks } = require('./stripe-webhook.js');
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -115,6 +115,19 @@ exports.handler = async (event) => {
 
     if (!consent) {
       return { statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify({ sent: false, reason: 'no marketing consent' }) };
+    }
+
+    // The template still has sections nobody has written. Refuse before the
+    // claim, not after — the claim marks them welcomed, so a refusal taken
+    // afterwards would leave someone flagged as welcomed who never hears from
+    // us. Their contact row above is still recorded, so once the words exist
+    // they are welcomed on their next sign-in.
+    const blanks = unfilledWelcomeBlanks();
+    if (blanks.length) {
+      console.error(`[send-welcome] WITHHELD from ${user.email}: the template still has ` +
+        `${blanks.length} unwritten section(s)`);
+      return { statusCode: 200, headers: JSON_HEADERS,
+               body: JSON.stringify({ sent: false, reason: 'welcome template unfinished' }) };
     }
 
     // Claim-and-send: the database hands the contact back only if they may be
