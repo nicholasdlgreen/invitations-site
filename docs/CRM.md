@@ -1,11 +1,116 @@
 # Customer relationships and marketing
 
-Working plan, 7 October 2026. **Nothing here is built yet.** Organised by what
-a customer *does*, because that is what we can detect and therefore what we can
+Working plan, started 7 October 2026. **Last reviewed 7 October 2026**, against
+the database and Resend rather than against this file. Organised by what a
+customer *does*, because that is what we can detect and therefore what we can
 act on.
+
+The first draft of this file said "nothing here is built yet". That stopped
+being true within the day. §0 below is the standing answer to "where are we",
+and it is checked rather than remembered — every figure in it came from a query
+run on the date shown.
 
 Where this says what a message is *for*, that is a proposal. The words are
 Nicholas's to write, as everything customer-facing on this site is.
+
+---
+
+## 0. Where we are — checked 7 October 2026
+
+Verified by query, not from memory. Re-run these before trusting them again.
+
+| | Item | State | How it was checked |
+|---|---|---|---|
+| **W1** | Open and click tracking | ✅ **Done** | Resend domain `foreverprint.com`: verified, Open Tracking `true`, Click Tracking `true` |
+| **W3** | Saving a design works | ✅ **Done** | 1 row in `saved_designs`, image held as a storage URL, proven on the live site |
+| **W8** | Counting the consent choice | ⚠ **Built, never fired** | `consent_log` exists and holds **0 rows**. Expected behind a holding page, but it means the accept rate is still unknown and the code is unproven in the wild |
+| **W2** | Welcome email | 🔒 **Built, cannot send** | Two passages unwritten. `unfilledWelcomeBlanks()` refuses the send while any remain |
+| **W4** | Saved-design reminder | 🔒 **Built, cannot send** | Scheduled daily 09:00, dry run only; `buildReminderHtml()` returns null until the copy exists |
+| **W5** | After the wedding | ❌ Not started | |
+| **W6** | Sell the rest of the range | ❌ Not started | |
+| **W7** | Suppression at 12 months | ❌ Not started | |
+| **§4a** | Google retargeting | ⏸ Parked | Tag live, Consent Mode v2 correct. Cannot sensibly start before launch |
+
+**Two of the three "ready now" items are finished. The other two are complete
+machines blocked on the same thing — words.**
+
+### The funnel, 9 September to 7 October
+
+From `studio_events`, which counts distinct sessions.
+
+| | | |
+|---|---|---|
+| Generated a design | **129** | |
+| Pressed "Love it" | **61** | 47% of them |
+| Pressed "Save this design" | **6** | 10% of those who loved one |
+| Designs actually saved | **1** | the other 5 hit the base64 fault fixed 7 Oct |
+| Orders | **1** | |
+| **People we could email today** | **1** | |
+
+The gap between 61 and 6 is the whole of §0a.
+
+---
+
+## 0a. The three journeys, and what each one has
+
+The framing Nicholas asked for: somebody visits and buys, visits and saves, or
+visits and does neither.
+
+### Journey 1 — visits and buys. Identified.
+
+**In place:** order confirmation, dispatch email, Trustpilot review invitation
+(BCC'd on dispatch, so Trustpilot invites them after their own delay — our own
+review sweep is deliberately unscheduled so nobody is asked twice), and an
+explicit unticked consent box at checkout.
+
+**Missing:** everything after delivery. W5 and W6 are both unbuilt.
+
+**Well served up to delivery, silent after it.**
+
+### Journey 2 — visits and saves. Identified.
+
+**In place:** an account is required, saving is proven, the W4 reminder is
+built, scheduled and dry-running safely, and the welcome fires on first sign-in
+after confirmation.
+
+**Missing:** only the copy. Two finished machines waiting on words.
+
+**Worth remembering:** 6 sessions pressed Save and 1 design exists. The other 5
+were lost to the fault fixed on 7 October, and we hold no address for any of
+them.
+
+### Journey 3 — visits and does neither. Not identified.
+
+**In place:** `studio_events`, GA4, and the Ads tag with Consent Mode v2.
+
+**Missing:** any way to reach them.
+
+**The finding that matters.** 61 people pressed "Love it" — the strongest
+signal anyone gives us — and that button takes them straight into the order
+flow. **Nothing ever asks them to save.** `showSavePrompt()` in
+`design-studio-ai-create.html` only runs when a logged-out visitor
+independently presses "Save this design", which 3 sessions have ever done, all
+on 17 September.
+
+So the route from journey 3 to journey 2 exists and is almost never offered.
+
+---
+
+## 0b. Where to start, when we come back to this
+
+In this order, and reviewed before anything is built.
+
+1. **The "Love it" moment.** 61 people reached it and 1 address came out. It is
+   the cheapest address capture on the site and it is not currently asked for.
+   It feeds W4, which is already built and waiting. Review the screen and bring
+   options; change nothing first.
+2. **The copy for W2 and W4.** Two finished machines, blocked. W4 is one short
+   email. W2 needs two passages: how foreverprint started, and the team.
+   Nicholas said on 7 October that the welcome email as drafted **is not good
+   enough**, so that is a rewrite and not just a gap-fill.
+
+W5, W6, W7 and retargeting are all real and all serve volumes this business
+does not have yet.
 
 ---
 
@@ -43,12 +148,13 @@ This is the spine. Everything else hangs off it.
 | # | Action | Identified? | What we hold | Count to 7 Oct |
 |---|---|---|---|---|
 | 1 | Lands, leaves | No | A `session_id` | unknown |
-| 2 | Designs something | No | Brief, motifs, size, season | **128 sessions** |
+| 2 | Designs something | No | Brief, motifs, size, season | **129 sessions** |
 | 3 | Presses "Love it" | No | …plus intent to order | **61** |
 | 4 | **Saves a design** | **Yes** | Email, the design, their wording | **working, proven 7 Oct** |
 | 5 | Adds to basket | No | Basket lives in their browser only | unknown |
 | 6 | Starts checkout | Yes, at the point they type it | Email, name, address | unknown |
 | 7 | **Buys** | **Yes** | Order, spec, value, consent | **1** |
+| — | *Pressed Save while logged out and was shown the prompt* | No | — | **3 sessions, all 17 Sep** |
 | 8 | Receives the order | Yes | …plus a delivery date | 0 |
 | 9 | Unsubscribes | Yes | Suppression, for ever | 0 |
 
@@ -66,15 +172,22 @@ starts until the decision above it is settled.
 
 ### Ready now
 
-**W1 — Turn on open and click tracking.** *Decided 7 Oct.*
-Resend domain setting. Without it no later item can be judged. Five minutes,
-no code. Do first so everything after it is measurable.
+**W1 — Turn on open and click tracking.** **DONE 7 Oct.**
+Resend domain setting. Verified on the domain itself: Open Tracking `true`,
+Click Tracking `true`. Everything after it is now measurable.
 
-**W2 — Make the welcome email send.** *Blocked on three passages only
-Nicholas can write.*
+**W2 — Make the welcome email send.** *Blocked, and now a rewrite rather than
+a gap-fill.*
 Built, deployed, and has never sent. It is the closest thing to done in this
-file and it fires on action 4 and action 7. **Next session: review the three
-passages together.**
+file and it fires on action 4 and action 7. The passage on where the cards are printed was written on 7 Oct from checked
+facts about the trade printer. Two remain: how it started, and the team. On
+reading it whole, **Nicholas judged the email not good enough** — so the next
+move is the email itself, not only the blanks.
+
+It can no longer go out half-written: `unfilledWelcomeBlanks()` renders the
+template and refuses the send while any `[CAPITALS]` blank is in it, checked
+**before** the claim is taken so nobody is marked welcomed and then skipped.
+Guarded by `tools/test-welcome-guard.js`.
 
 **W3 — Prove the save works end to end.** **DONE 7 Oct.**
 Nicholas saved a design while signed in. Verified independently: the row is
@@ -128,10 +241,11 @@ the range is designed to be bought in sequence.
 
 ### Housekeeping, before the list is big enough to matter
 
-**W8 — Count the consent choice.** *Prerequisite for §4a.*
-Record whether a visitor accepted or declined, so we know what share of traffic
-can ever be retargeted or measured. Small. Needs doing before launch or the
-retargeting decision is a guess.
+**W8 — Count the consent choice.** **BUILT 7 Oct — but it has recorded
+nothing.** `consent_log` holds 0 rows. Behind a holding page that is what you
+would expect, so it is not evidence of a fault; it is also not evidence the
+code works. Check it again once real traffic arrives, and before the
+retargeting decision rests on it.
 
 **W7 — Suppression.** Anyone who has not opened anything in twelve months stops
 receiving. Protects deliverability, which protects the order confirmations that
@@ -166,9 +280,8 @@ sessions a fortnight, Display is plausibly in range.
 1. **The consent accept rate.** Since 7 October a visitor who declines sends
    Google nothing at all, by design, because the privacy policy says so. Only
    accepters can enter a remarketing audience. If most people decline, the
-   audience never reaches 100 and the spend does nothing. **We do not currently
-   record the choice**, so this is unknown — and it is a small piece of work to
-   start counting it.
+   audience never reaches 100 and the spend does nothing. We now record the choice (W8), but it has
+   captured nothing yet, so the rate is still unknown.
 
 2. **Where the ad would send them.** The site is behind a holding page saying
    "we will be open very soon". Paying to bring someone back to a wall is
@@ -243,7 +356,7 @@ open, which is one announcement, not a mailing list.
 | Marketing platform | None. Resend holds 0 contacts, 0 broadcasts |
 | Customer table | `contacts` — sound, **1 row** |
 | Transactional emails | 7, live, through Resend on a verified domain |
-| Lifecycle emails | **None** |
+| Lifecycle emails | **Two built, neither able to send** — W2 and W4, both on copy |
 | People we could email today | **1** |
 
 The list is owned in `contacts` and the admin exports it. A CRM becomes worth
