@@ -305,11 +305,26 @@ Google's servers, that mail fails DMARC.
 
 **Still to do, in this order:**
 
-1. Add `include:_spf.google.com` to the apex SPF. Zero risk, nothing moves.
+1. ~~Add `include:_spf.google.com` to the apex SPF.~~ **Done 7 October.** Now
+   `v=spf1 include:_spf.google.com include:spf.improvmx.com ~all`, verified.
+   ImprovMX stays until MX moves. Costs 2 of the 10 allowed DNS lookups, since
+   both includes are flat IP lists with no nesting.
+   Three records on this domain contain `v=spf1` and only one was the target,
+   which cost time: the apex had BOTH a `TXT` and a legacy `SPF`-type record
+   with identical values (the SPF type was deprecated in 2014 and nothing reads
+   it, which is why `dig TXT` only ever saw one), and `send.foreverprint.com`
+   carries `include:amazonses.com` for Resend's return path and must never be
+   touched. Go by Name AND Type together.
 2. **Switch MX from ImprovMX to Google.** The only step that moves mail, and
    the only one that can lose any. Keep the ImprovMX account until proven.
 3. Confirm delivery from outside, then stop using ImprovMX.
 4. Only then enforce DMARC.
+
+**Claude cannot make DNS changes.** The environment refuses them outright,
+whatever the tool. That is a sensible guard and it shapes how this work goes:
+Claude finds the exact record and states precisely what to change, Nicholas
+makes the change, Claude verifies from outside with `dig` against two
+resolvers. That loop worked well all day and is the pattern to keep.
 
 **Two things worth keeping from the setup, because they cost an hour:**
 
