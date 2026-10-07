@@ -2960,8 +2960,28 @@ async function handleFiles(list){
   if (!files.length) return;
   const slots = sidesNeeded();
 
-  // One face to fill: nothing to work out, and nothing changes.
-  if (slots.length < 2){ handleFile(files[0]); return; }
+  // One face to fill: nothing to work out, and nothing to place.
+  //
+  // It still has to be RECORDED on that face. This path used to call
+  // handleFile and return, leaving sideFiles empty — everything on screen
+  // worked, because the preview and the checks read the file directly, so the
+  // gap was invisible. But Route B's "Fix it" asks panelSource('front') for the
+  // artwork, and panelSource reads sideFiles. On a single-sided order it found
+  // nothing, frontFaceForFoil returned null, and Fix it failed silently with
+  // "We could not read your artwork" — on a file the page had just rendered.
+  // Broken for every single-sided order, which is most of them; it worked on
+  // double-sided and folded only because those populate sideFiles for their
+  // own reasons. Reproduced both ways on the live site, 7 October 2026.
+  //
+  // Safe to write here: every other reader of sideFiles on this path is behind
+  // a `sides.length > 1` guard (sidesCheck returns null, updateProceedButton's
+  // blocking branch, and the slot rendering), so nothing else changes.
+  if (slots.length < 2){
+    const only = (slots[0] && slots[0].key) || 'front';
+    sideFiles[only] = { file: files[0], page: 1 };
+    handleFile(files[0]);
+    return;
+  }
 
   // Several files IS the statement that they are separate pieces. We do not
   // guess which is which \u2014 that is the whole reason they sent more than one.
@@ -6460,9 +6480,25 @@ async function foilLayerFromMask(){
 async function openFoilPicker(){
   foilPick = { art:null, targets:[], mask:null, verdict:null, busy:true, palette:[] };
   if (window.Step3 && Step3.redraw) Step3.redraw();
-  const art = await frontFaceForFoil(selectedSize);
-  if (!art){ foilPick = { art:null, targets:[], busy:false, failed:true, palette:[] };
-             if (window.Step3 && Step3.redraw) Step3.redraw(); return; }
+  // It only recovered from frontFaceForFoil returning NULL. Anything that
+  // THREW — the redraw, reading the file, composing the canvas, getImageData
+  // on a large page — escaped an async onclick handler and left busy:true, so
+  // the panel sat on "Opening your artwork..." for ever with no message and no
+  // way back. A failure has to end somewhere the customer can act.
+  let art = null;
+  try {
+    art = await frontFaceForFoil(selectedSize);
+  } catch (e) {
+    // Loud, because this is ours. The silent failure is exactly why the
+    // single-sided fault above survived: there was nothing in the console.
+    console.error('[foil] could not open the artwork for Fix it:', e && e.message, e);
+  }
+  if (!art){
+    if (!sideFiles || !sideFiles.front)
+      console.error('[foil] no artwork recorded on the front face — nothing to build a layer from');
+    foilPick = { art:null, targets:[], busy:false, failed:true, palette:[] };
+    if (window.Step3 && Step3.redraw) Step3.redraw(); return;
+  }
   foilPick.art = art;
   foilPick.palette = artworkPalette(art.data, art.w, art.h, 6);
   foilPick.busy = false;
