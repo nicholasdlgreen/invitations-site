@@ -18,7 +18,7 @@ Recorded so they are not re-opened by accident.
 | Saving a design requires an account | **Yes** — that is how we get an address | 7 Oct |
 | What we offer for an address | **The saved design itself.** Nothing further | 7 Oct |
 | Store the wedding date | **No** | 7 Oct |
-| Chasing people who never identify themselves | Convert them to savers; no retargeting spend | 7 Oct |
+| Chasing people who never identify themselves | Convert them to savers **and** Google retargeting — see §4a | 7 Oct |
 | Open and click tracking | **Turn on**, to learn how it behaves | 7 Oct |
 | Consent basis — soft opt-in or explicit only | **Open** | — |
 
@@ -99,6 +99,11 @@ the range is designed to be bought in sequence.
 
 ### Housekeeping, before the list is big enough to matter
 
+**W8 — Count the consent choice.** *Prerequisite for §4a.*
+Record whether a visitor accepted or declined, so we know what share of traffic
+can ever be retargeted or measured. Small. Needs doing before launch or the
+retargeting decision is a guess.
+
 **W7 — Suppression.** Anyone who has not opened anything in twelve months stops
 receiving. Protects deliverability, which protects the order confirmations that
 actually matter.
@@ -110,7 +115,40 @@ actually matter.
 | Winback at 60–120 days | They are married |
 | Replenishment | Nobody reorders a wedding |
 | VIP / loyalty | Needs a frequency this business will never see |
-| Retargeting the unidentified | Decided 7 Oct — convert them to savers instead |
+| Retargeting the unidentified | **Not ruled out** — see §4a. Parked until the shop is open |
+
+---
+
+## 4a. Google retargeting — the one thing that reaches the unidentified
+
+Actions 1, 2, 3 and 5 leave no address, so email cannot reach them. Paid
+retargeting can, and it is the only thing that can.
+
+**The plumbing already exists.** The Ads tag `AW-18457098398` is live with
+Consent Mode v2 correctly implemented. Nothing needs building.
+
+**The size threshold is no longer the obstacle it was.** Google dropped the
+minimum audience to **100 active users in 30 days** for Search and Display in
+December 2025, down from 1,000. YouTube still needs 1,000. At 92 design
+sessions a fortnight, Display is plausibly in range.
+
+**Two things decide whether it is worth doing, and we can answer neither yet.**
+
+1. **The consent accept rate.** Since 7 October a visitor who declines sends
+   Google nothing at all, by design, because the privacy policy says so. Only
+   accepters can enter a remarketing audience. If most people decline, the
+   audience never reaches 100 and the spend does nothing. **We do not currently
+   record the choice**, so this is unknown — and it is a small piece of work to
+   start counting it.
+
+2. **Where the ad would send them.** The site is behind a holding page saying
+   "we will be open very soon". Paying to bring someone back to a wall is
+   spending money to annoy a warm prospect. **This cannot sensibly start before
+   launch.**
+
+**Recommended order:** start counting the consent choice now, so that by launch
+we know whether an audience can form at all. Decide the spend at launch, not
+before.
 
 ---
 
