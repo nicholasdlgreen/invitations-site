@@ -1,9 +1,22 @@
-# Where we are — 7 October 2026
+# Where we are — 8 October 2026
 
 *Every figure below was checked against the live site, the live database or a
 generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
+
+**8 October. A clearing day — four items closed, one withdrawn, and a money bug
+nobody was looking for.** Mail is on Google Workspace, the artwork sweep is
+armed and has run, Supabase no longer sends our account emails, and the pdf.js
+worker item turned out to have no bug behind it. The find of the day was not on
+the list at all: **checkout was asking Stripe for a different figure from the
+one the customer had agreed** — caught by posting one real basket through the
+live site. Thirteen commits, all pushed. The day is indexed in **§0f**.
+
+The competitor pricing exercise was **stopped at Nicholas's direction** and
+nothing from it is recorded anywhere — see the warning above §15's table.
+
+---
 
 **7 October. Platform and security, prompted by a Supabase warning.** The
 morning's finding is that this document's own top blocker was wrong: **checkout
@@ -151,6 +164,44 @@ worth reading on their own — §11, where Publish broke, and §12, where the st
 was quietly charging double.
 
 ---
+
+## 0f. 8 October — in one place
+
+Thirteen commits, all pushed. Nothing new was started. **Each thread is written
+up where it belongs rather than retold here — this is the index.**
+
+| Thread | Outcome | Where it is written up |
+|---|---|---|
+| Business email | **Closed.** MX cut over to Google, Outlook sending and receiving on the alias | §0d, "The MX cutover" |
+| **Checkout charged the wrong amount** | **Fixed.** The find of the day, and it was not on any list | §15 item 51a |
+| The artwork sweep | **Armed and run.** It had never listed a single file — 160 files to 44, 186MB freed, ordered artwork untouched | §15 item 40 |
+| Account emails | **Live.** The Send Email Hook is on; Supabase sends none of them | §15 item 54 |
+| The pdf.js worker | **Withdrawn — there was no bug.** It has run in a real worker since 3 October | §0, "pdf.js and the worker" |
+| Place cards and table numbers | **Parked at your direction**, pending what PrintedEasy can actually do. What variable data would cost is now measured | §15 item 31 |
+| Competitor pricing | **Stopped. Nothing agreed, nothing recorded.** The figures were rejected twice | the warning above §15's table |
+| The go-live list | **Regenerated and renumbered.** It implied four items remained; thirteen did | §15 |
+
+### Two things to carry into tomorrow
+
+**The money bug is this document's own lesson.** `create-checkout.js` divided a
+line total by the quantity to get a per-card price, rounded it to whole pence,
+and then asked Stripe for that quantity — so the rounding error was multiplied
+by the quantity. It undercharged at some quantities on our own ladder and
+**overcharged at others**: 500 cards at £39.20 would have taken £40.00. It also
+left the order row and the payment permanently out of step, which would have
+surfaced months later as an accounting mystery rather than a bug. Nothing in
+this file suspected it, no test covered it, and the source looked entirely
+reasonable. **It was found by doing the thing** — posting one real basket
+through to Stripe — not by reading code. That is the argument for item 1 on the
+next-up list, and for A5: the remaining unknowns are all of this shape.
+
+**Check an item is still true before working it off.** Two items closed today
+had been wrong in *opposite* directions, and both had been wrong for days. The
+list said checkout refused every basket; it had not since 3 October. It said
+pdf.js ran on the UI thread; it had not since 3 October. In both cases something
+was fixed and then wrongly reported as still broken — once by a test that read a
+comment, once by a probe that tested a call the library never makes. A few
+minutes spent confirming the premise has now twice saved a day of building.
 
 ## 0d. 7 October — platform and security
 
@@ -2480,6 +2531,12 @@ and 54 (the Send Email Hook). The last four were all done on 8 October, and the
 basket test and the sweep each found something nobody knew was there. The
 pdf.js worker item was **withdrawn** the same day rather than done: it had
 already been fixed on 3 October and the list was wrong to carry it.
+
+**Ten items are open: 1–7, 10, 11 and 13.** Nine of them wait on you. **Item 13
+is the only one I can do on my own** — so if you want something moving without
+you, that is the one to say yes to. Items 1 and 2 are the ones that would tell
+us most, because both are of the shape that found the money bug: doing the
+thing rather than reading about it.
 
 | | What | Item | Waiting on | Why it is here |
 |---|---|---|---|---|
