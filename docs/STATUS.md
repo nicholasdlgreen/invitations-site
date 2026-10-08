@@ -2309,20 +2309,60 @@ one it needs to see.
 
 ## 15. The full to-do list
 
-**Regenerated 3 October 2026, end of day; the "Next up" table below rebuilt
-7 October.** Everything outstanding, in one place, grouped by what it is rather
-than when it turned up. The body of the list below the table still reads from
-3 October — the 7 October work is in §0d and `docs/CRM.md`.
+**Regenerated 8 October 2026.** Everything outstanding, in one place, grouped by
+what it is rather than when it turned up.
 
 **The numbers are stable labels, not an order of work** — item 31 has been item
 31 since 27 September and is referred to by that number elsewhere in this
-document. The order to do things in is the table immediately below. Gaps in the
-sequence are items that have been cleared; they are not missing.
+document. The order to do things in is the "Next up" table. Gaps in the sequence
+are items that have been cleared; they are not missing. The lettered items
+A1–A8 are the launch gate.
 
-**Everything from 3 October is pushed, deployed and verified on the live site.**
-Twenty commits: the CSP fix, the studio foiling work, the shape lock, checkout
-reading prices again, the fold routes, the order and welcome emails, the Send
-Email Hook, and the finishing section. `check-live.py` passes 5,277 checks.
+### The list, at 8 October
+
+Status is what was CHECKED, not what was remembered. Where a line says
+*unverified*, nobody has looked since 3 October.
+
+| | Group | Open | Closed since 3 Oct | Notes |
+|---|---|---|---|---|
+| **A** | Blocking launch | **A2 A3 A4 A5 A6 A7 A8** | A1 | A1 verified 7 Oct: 7,262 configs, 0 refused |
+| **B** | Checkout and orders | 51a | 36, 37 | Nothing on the site posts a basket end to end |
+| **C** | Pricing | 16–24, 24b, 24c, 24e, 38, 45, 46, 47 | 24a, 24d | See the warning below before trusting any competitor figure |
+| **D** | Design studio | 31, 32, 33, 35, 39, 43, 48, 49 | **34** | 34 fixed and proven 7 Oct — but see the note on it |
+| **E** | Artwork and press | 41, 50 | **40** | 40 answered by the retention sweep, which is built but NOT armed |
+| **F** | Site testing | 15, 42, 51 | — | The largest untouched block |
+| **G** | Housekeeping | 26, 27, 28, 29, 29a, 29c, 44 | **25** | 25 cleared 7 Oct: 132 bot accounts deleted, 2 kept |
+| **H** | Email and comms | 52, 53, 54, 55, 56, 58 | 57 | Plus the mail cutover, below |
+
+**New since 3 October, not yet numbered:**
+
+| | What | Waiting on |
+|---|---|---|
+| — | **Finish the MX cutover.** DNS done and verified; Google still provisioning. §0e step 0 | You, then Google |
+| — | **Enforce DMARC**, about two weeks after the reports start arriving | You |
+| — | **Self-host the pdf.js worker.** Every PDF is read on the UI thread; no CSP can fix it | Me |
+| — | **Cloudflare Turnstile** before launch. Public signups are off meanwhile (`disable_signup: true`, verified) | You |
+| — | **Delete the `album-photos` bucket** and its six files — a dashboard step | You |
+| — | **Export the 10 holding-page signups** from Netlify Forms | You |
+| — | **Arm the artwork sweep** (`ARTWORK_RETENTION_LIVE=true`) after reading a few dry runs | You |
+
+**Checked on 8 October, and worth knowing:**
+
+- **`saved_designs` is back to 0.** It held 1 on 7 October after the save was
+  proven working. It may simply have been deleted; it is not evidence the fix
+  broke. **Check before concluding anything** — item 34.
+- **`description` is empty on 7 products**, not six as item 29c says. 22 active
+  products.
+- **`from_price_text` is empty on all 23** — unchanged, item 26.
+- **2 accounts, 1 order.** The bot clearance is holding.
+
+⚠ **Competitor pricing: nothing from 8 October is agreed.** A benchmarking
+exercise was run against PrintedEasy, printed.com, instantprint, Papier and
+others. Nicholas reviewed the figures and rejected them as wrong, twice, and the
+work was stopped. **No number from that session is recorded here or anywhere
+else, and none should be relied on.** What IS settled is section C's existing
+items and the supplier relationship in §2. Start again from the spec, not from
+those numbers.
 
 **One thing is deployed but deliberately inert:** the Send Email Hook, item 54.
 It is live as a locked endpoint — no hook configured, no secret set, Supabase
