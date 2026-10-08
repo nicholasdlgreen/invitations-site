@@ -2383,7 +2383,7 @@ Status is what was CHECKED, not what was remembered. Where a line says
 
 | | Group | Open | Closed since 3 Oct | Notes |
 |---|---|---|---|---|
-| **A** | Blocking launch | **A2 A3 A4 A5 A6 A7 A8** | A1 | A1 verified 7 Oct: 7,262 configs, 0 refused |
+| **A** | Blocking launch | **A2 A3 A4 A5 A6 A7 A8** | A1 | Seven of the eight launch gates are still open. A1 verified 7 Oct: 7,262 configs, 0 refused |
 | **B** | Checkout and orders | 51b, 51c | 36, 37, **51a** | 51a done 8 Oct and found Stripe being asked for the wrong amount. 51b/51c are the merchant name and the address asked twice |
 | **C** | Pricing | 16–24, 24b, 24c, 24e, 38, 45, 46, 47 | 24a, 24d | See the warning below before trusting any competitor figure |
 | **D** | Design studio | 31, 32, 33, 35, 39, 43, 48, 49 | **34** | 34 fixed and proven 7 Oct — but see the note on it |
@@ -2429,32 +2429,43 @@ switched on.
 
 ### Next up — the order I would do them
 
-**Rebuilt 7 October, end of day.** The previous table was written on 3 October
-and four of its seven rows had moved. Each row now says **who it is waiting
-on**, because the commonest question is "what do I have to do myself".
+**Renumbered 8 October, end of day.** Each row says **who it is waiting on**,
+because the commonest question is "what do I have to do myself". The open items
+are numbered **1 upwards** — closed ones are listed separately below rather than
+holding their old places, which made the list look shorter than it is.
 
-Cleared since the 3 October table: **A1** (checkout refuses every basket —
-verified fixed against the live payload, 7,262 configurations, 0 refused) and
-**63** (consent and Google — a visitor who declines now causes zero requests to
-any Google host). Both struck through below.
+**Cleared so far:** A1 (checkout refused every basket), 63 (consent and Google),
+the MX cutover, and 51a (nothing posted a basket end to end). The last two were
+done on 8 October and each found something nobody knew was there.
 
 | | What | Item | Waiting on | Why it is here |
 |---|---|---|---|---|
-| — | ~~**Switch MX from ImprovMX to Google**~~ | — | — | **DONE 8 October.** All three addresses proven, mail reaching Outlook and sending through Google, ImprovMX removed from DNS, SPF and account. Only DMARC enforcement (~22 Oct) and `orders@` send-as carried forward |
-| — | ~~**Post a real basket through checkout, end to end**~~ | 51a | — | **DONE 8 October.** Found and fixed Stripe being asked for the wrong amount; verified on live. Carried forward: 51b the merchant name, 51c the address asked twice, and what Stripe COLLECTS, which needs A4 |
-| 3 | **Stripe live keys and a live-mode webhook** | A4 | **You** | Without the webhook, payments succeed and orders sit pending for ever |
-| 4 | **Print one real sample through PrintedEasy** | A5 | **You** | The file geometry is verified; the handover to their press is not. Pair it with A6 — head-to-head or head-to-foot decides whether every double-sided job comes back upside down |
-| 5 | **Read back the copy Claude wrote** | 44 | **You** | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, all of Amy's knowledge. Live, and none of it in your words |
-| 6 | **Set the margins, and settle VAT** | A2, A3 | **You** | 22 products at cost; checkout still shows "VAT (20%)" while we are not registered. **Deferred 7 October at your direction** — kept here because it is still the gate on trading |
-| 7 | **Rewrite the welcome email** | 52 | **You** | One of three passages written (where the cards are printed). You read it whole on 7 October and judged it not good enough, so this is a rewrite. It cannot embarrass us meanwhile: the guard refuses to send while any section is unwritten |
-| 8 | **Switch on the Send Email Hook** | 54 | Either | Built, deployed, deliberately inert. Needs a live test first |
-| 9 | **Arm the artwork sweep** | — | **You** | `ARTWORK_RETENTION_LIVE=true` in Netlify, after reading a few nightly dry-run reports. 198MB of unclaimed files waiting. The only unattended thing on the site that destroys customer data |
-| 10 | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
-| 11 | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` — which holds the line until we open |
-| 12 | **Self-host the pdf.js worker** | — | Me | Every PDF is read on the UI thread and no CSP can change that — cross-origin Workers are forbidden outright. Small, known, written up in §0e |
-| 13 | **Shrink the published payload** | 38 | Me | 13MB, and the reason Publish breaks. Proven at 1.1MB, not built. Nothing is blocked by it today |
-| — | ~~**Checkout refuses every basket**~~ | A1 | — | **DONE.** Fixed 3 Oct, verified 7 Oct |
-| — | ~~**Consent and Google**~~ | 63 | — | **DONE 7 Oct.** Declined: 0 requests to any Google host |
+| **1** | **Stripe live keys and a live-mode webhook** | A4 | **You** | Without the webhook, payments succeed and orders sit pending for ever. Also the only way to prove what Stripe COLLECTS rather than what it is asked for |
+| **2** | **Print one real sample through PrintedEasy** | A5 | **You** | The file geometry is verified; the handover to their press is not. Pair it with **A6** — head to head or head to foot decides whether every double-sided job comes back upside down |
+| **3** | **Read back the copy Claude wrote** | 44 | **You** | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, all of Amy's knowledge. Live, and none of it in your words |
+| **4** | **Set the margins, and settle VAT** | A2, A3 | **You** | 22 products at cost; checkout still shows "VAT (20%)" while we are not registered. **Deferred at your direction** — kept here because it is still the gate on trading |
+| **5** | **Rewrite the welcome email** | 52 | **You** | Two passages unwritten, and you judged the whole thing not good enough on 7 October. It cannot embarrass us meanwhile: the guard refuses to send while any section is blank |
+| **6** | **Fix the Stripe merchant name** | 51b | **You** | It reads "invitations sandbox" on the payment page, beside "Pay securely at…". That is what a customer sees while paying |
+| **7** | **Enforce DMARC** | — | **You** | Around **22 October**, after a fortnight of reports. `p=none` → quarantine 10% → 100 → reject. Safe now that outbound goes through Google |
+| **8** | **Switch on the Send Email Hook** | 54 | Either | Built, deployed, deliberately inert. Needs a live test first |
+| **9** | **Arm the artwork sweep** | — | **You** | `ARTWORK_RETENTION_LIVE=true` in Netlify, after reading a few nightly dry runs. 198MB of unclaimed files waiting. The only unattended thing on the site that destroys customer data |
+| **10** | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
+| **11** | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` |
+| **12** | **Self-host the pdf.js worker** | — | Me | Every PDF is read on the UI thread and no CSP can change that — cross-origin Workers are forbidden outright. Small and known |
+| **13** | **Shrink the published payload** | 38 | Me | 13MB, and the reason Publish breaks. Proven at 1.1MB, not built. Nothing is blocked by it today |
+
+**Closed, kept here so the count is honest:**
+
+| What | Item | When |
+|---|---|---|
+| ~~Checkout refuses every basket~~ | A1 | Fixed 3 Oct, verified 7 Oct |
+| ~~Consent and Google~~ | 63 | 7 Oct |
+| ~~Switch MX from ImprovMX to Google~~ | — | 8 Oct |
+| ~~Post a real basket through checkout~~ | 51a | 8 Oct |
+
+**Smaller, and genuinely small:** `orders@` as a send-FROM address (mail TO it
+already arrives); **51c**, the delivery address collected twice, once by our form
+and again by Stripe.
 
 **Small chores, no order between them:** delete the `album-photos` bucket and
 its six files (Storage dashboard); export the 10 holding-page signups from
