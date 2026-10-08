@@ -2549,7 +2549,18 @@ real customer arrives.
 33. **Sell the set.** Papier offer "Complete the set" inside the editor;
     Vistaprint sell invitation suites as a category. Closest thing we have is
     the design-suite idea.
-34. **Saving a design has never produced a saved design.** Re-measured against
+34. ~~**Saving a design has never produced a saved design.**~~ **FIXED and
+    PROVEN 7 October.** The row stored the image as base64 TWICE, so it blew
+    the size limit on both the signed-in and queued routes. It now stores a
+    storage URL: the proven row was 1,705 bytes, the file returned HTTP 200 and
+    all 10 lines of wording survived. Guarded by `tools/test-design-save.js`.
+    **Checked again 8 October: `saved_designs` is back to 0.** The one proven
+    row is gone — most likely deleted deliberately. That is not evidence the
+    fix broke, and it is not evidence it still works. Save one and look before
+    concluding either way.
+
+    The original account, kept because the funnel numbers in it are still the
+    best picture we have: re-measured against
     the live database 7 October, and it is worse than first written. Across all
     time: **128 sessions generated**, 61 pressed "Love it", **7 save clicks**,
     and `saved_designs` holds **0 rows**. The last save click was **17
@@ -2594,6 +2605,16 @@ real customer arrives.
     layer we cannot open, and a file that was never a PDF. Held back on purpose
     until the fixing has been tested properly.
 
+    **Separately, and far worse: "Fix it" could never work at all on a
+    single-sided order.** Found and fixed 7 October. `handleFiles` with one face
+    to fill never recorded the artwork in `sideFiles`, so Route B asked
+    `panelSource('front')` and got nothing — it failed SILENTLY, with no console
+    output, telling the customer to upload a foil layer, which is the one thing
+    they could not do. It worked on double-sided and folded only because those
+    populate `sideFiles` for their own reasons, which is why nobody caught it.
+    Proven both ways on the live site before changing anything. Guarded by
+    `tools/test-foil-fix-it-finds-artwork.js`.
+
 ### F. Site testing
 
 15. **Build the test suite.** Five stages, agreed in outline and paused, in the
@@ -2626,7 +2647,11 @@ real customer arrives.
 
 ### G. Housekeeping
 
-25. **~112 junk bot signups** remain. The orders table is empty.
+25. ~~**~112 junk bot signups.**~~ **DONE 7 October.** 134 accounts, 19 ever
+    confirmed; the domains said bots rather than drop-off. 132 deleted, 2 kept,
+    and the migration refused to run unless the keep-list matched exactly two
+    rows. Public signup is off (`disable_signup: true`, verified 7 Oct) until
+    Turnstile is in. Checked 8 Oct: 2 accounts, 1 order.
 26. **`from_price_text` is empty on all 23 products and nothing reads it** —
     confirmed 3 October. Either delete the column and its admin field or wire it
     up as an override; a writable field that renders nowhere is a trap.
@@ -2640,7 +2665,8 @@ real customer arrives.
     with nothing under it for months. The race is fixed, but the failure mode
     remains: any future fault shows as a heading over a gap, which reads as
     "they have no papers". Cheap insurance on 23 pages.
-29c. **`description` is empty on six products** — confirmed 3 October. It is
+29c. **`description` is empty on 7 products** — six on 3 October, re-counted as
+    **seven** on 8 October against 22 active products. It is
     only the fallback for meta_description and every product has one of those,
     so nothing is broken; the column is half-filled.
 44. **Customer-facing copy in Claude's words, not Nicholas's.** Three strings
@@ -2670,11 +2696,18 @@ Reviewed end to end on 3 October. What a customer receives when they sign up
 and when they order now works; what it looks like, and the two providers behind
 it, are what is left.
 
-52. **The welcome email has three unfilled placeholders in it**, in square
-    brackets, and they would be sent to a customer as written: how Foreverprint
-    started, where it prints and what it is proud of, and who is on the team.
-    Only Nicholas can write them. **Nothing should send a welcome until they are
-    done.**
+52. **The welcome email needs rewriting, and TWO passages remain unwritten** —
+    how foreverprint started, and who is on the team. The third, where the cards
+    are printed, was written on 7 October from checked facts about the trade
+    printer; it names nobody and claims none of their history as ours.
+
+    **It can no longer be sent half-written.** `unfilledWelcomeBlanks()` renders
+    the template and refuses while any `[CAPITALS]` blank remains, checked
+    BEFORE the claim is taken so nobody is marked welcomed and then skipped.
+    Guarded by `tools/test-welcome-guard.js`.
+
+    **Nicholas read it whole on 7 October and judged it not good enough**, so
+    this is a rewrite rather than filling two gaps.
 53. **Email design — imagery and personality.** Agreed 3 October: the emails are
     plain, and want pictures and some character. Deliberately deferred; the
     sequence and the code were done first. Applies to the welcome, the order
