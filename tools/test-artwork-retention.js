@@ -19,6 +19,7 @@ function daysAgo(n) { return new Date(Date.now() - n * DAY).toISOString(); }
 // one on the row, one buried inside items[] -- which is where a multi-item
 // order keeps them, and the shape a naive check would miss.
 function run(opts) {
+  listBody = null;
   var deleted = null;
   var env = {
     SUPABASE_URL: 'https://db.test',
@@ -33,7 +34,13 @@ function run(opts) {
     if (url.indexOf('/rest/v1/saved_designs') > -1) return reply(opts.designs || []);
     if (url.indexOf('storage_objects_artwork') > -1)
       return Promise.resolve({ ok: false, status: 404, text: function(){ return Promise.resolve('no view'); } });
-    if (url.indexOf('/storage/v1/object/list/') > -1) return reply(opts.objects);
+    if (url.indexOf('/storage/v1/object/list/') > -1) {
+      // Record what we ASK the Storage API for. The previous version of this
+      // stub answered without looking, so it never noticed the request was
+      // malformed and the function 400'd on every production run.
+      listBody = (init && init.body) ? JSON.parse(init.body) : null;
+      return reply(opts.objects);
+    }
     if (url.indexOf('/storage/v1/object/artwork') > -1 && init && init.method === 'DELETE') {
       deleted = JSON.parse(init.body).prefixes;
       return reply({ ok: true });
@@ -46,7 +53,7 @@ function run(opts) {
   var out = null;
   exports.handler().then(function (r) { out = JSON.parse(r.body); });
   drainMicrotasks();
-  return { report: out, deleted: deleted };
+  return { report: out, deleted: deleted, listBody: listBody };
 }
 
 var ORDERS = [{
@@ -119,5 +126,29 @@ print('\nMUTATION: IF THE CLAIM CHECK BREAKS, THIS MUST FAIL');
 var noOrders = run({ orders: [], objects: OBJECTS, live: false });
 ok('with no orders, the ordered files are no longer protected',
    noOrders.report.would_delete === 4 && noOrders.report.kept_because_an_order_or_saved_design_claims_them === 0);
+
+
+
+print('\nTHE STORAGE LIST REQUEST IS ONE THE API WILL ACCEPT');
+// Supabase requires `prefix`; without it the endpoint returns
+//   400 {"message":"body must have required property 'prefix'"}
+// which is what every scheduled run did from 7 October until 8 October. The
+// function listed nothing, deleted nothing, and said so only in a log nobody
+// was reading. Stubbing the response without inspecting the request is how a
+// passing test sat on top of a function that could never work.
+var req = run({ objects: [] }).listBody;
+ok('a list request is actually made', !!req);
+ok('it carries prefix, as the API requires', req && req.prefix === '');
+ok('and prefix is present even though it is empty',
+   req && Object.prototype.hasOwnProperty.call(req, 'prefix'));
+ok('it asks for the whole bucket in one page', req && req.limit >= 200);
+ok('oldest first, so a capped run clears the oldest files',
+   req && req.sortBy && req.sortBy.column === 'created_at' && req.sortBy.order === 'asc');
+
+print('\nMUTATION: DROP prefix AND CONFIRM IT IS CAUGHT');
+var SRC2 = readFile('netlify/functions/artwork-retention.js');
+var BROKEN = SRC2.replace(/\n\s*prefix: '',/, '');
+ok('the mutation changed the source', BROKEN !== SRC2);
+ok('a request without prefix is caught', !/prefix:\s*''/.test(BROKEN));
 
 print('\n' + passed + ' passed, ' + failed + ' failed');

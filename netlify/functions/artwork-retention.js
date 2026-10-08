@@ -88,9 +88,25 @@ async function listObjects() {
   return sb(`storage_objects_artwork?select=name,created_at,size&order=created_at.asc&limit=${MAX_PER_RUN * 5}`)
     .catch(async () => {
       // No helper view: ask the Storage API instead.
+      //
+      // `prefix` is REQUIRED and an empty string means "the whole bucket".
+      // Leaving it out returns 400 {"message":"body must have required property
+      // 'prefix'"} — which is exactly what this function did on every run from
+      // 7 October until it was caught on the 8th. The sweep never listed a
+      // single file, and because it is scheduled and unattended, nothing said
+      // so. Arming it would have changed nothing except hiding the fault
+      // behind a variable that looked like the reason it was not deleting.
+      //
+      // The test that covered this stubbed fetch and never inspected the body,
+      // so it passed throughout. It now asserts the request the API actually
+      // requires.
       const res = await fetch(`${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`, {
         method: 'POST', headers: headers(),
-        body: JSON.stringify({ limit: MAX_PER_RUN * 5, sortBy: { column: 'created_at', order: 'asc' } })
+        body: JSON.stringify({
+          prefix: '',
+          limit: MAX_PER_RUN * 5,
+          sortBy: { column: 'created_at', order: 'asc' }
+        })
       });
       if (!res.ok) throw new Error(`storage list -> ${res.status} ${await res.text()}`);
       return (await res.json()).map(o => ({
