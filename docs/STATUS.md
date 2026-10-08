@@ -2422,21 +2422,25 @@ else, and none should be relied on.** What IS settled is section C's existing
 items and the supplier relationship in §2. Start again from the spec, not from
 those numbers.
 
-**One thing is deployed but deliberately inert:** the Send Email Hook, item 54.
-It is live as a locked endpoint — no hook configured, no secret set, Supabase
-still sending its own account emails — and must be tested live before it is
-switched on.
+**The Send Email Hook is now on** (item 54). Every account email — confirm an
+address, sign-in link, password reset, email change, invite — goes through our
+own function and Resend; Supabase sends none of them. Proven on a real password
+reset at 15:07 on 8 October. If one ever fails, turning the hook off in Supabase
+hands them straight back.
 
 ### Next up — the order I would do them
 
 **Renumbered 8 October, end of day.** Each row says **who it is waiting on**,
 because the commonest question is "what do I have to do myself". The open items
 are numbered **1 upwards** — closed ones are listed separately below rather than
-holding their old places, which made the list look shorter than it is.
+holding their old places, which made the list look shorter than it is. Rows
+closed on 8 October keep their position, struck through, so the numbers we have
+both been using still mean the same thing; they are in the closed table too.
 
 **Cleared so far:** A1 (checkout refused every basket), 63 (consent and Google),
-the MX cutover, and 51a (nothing posted a basket end to end). The last two were
-done on 8 October and each found something nobody knew was there.
+the MX cutover, 51a (nothing posted a basket end to end), 40 (the artwork sweep)
+and 54 (the Send Email Hook). The last four were all done on 8 October, and the
+basket test and the sweep each found something nobody knew was there.
 
 | | What | Item | Waiting on | Why it is here |
 |---|---|---|---|---|
@@ -2447,7 +2451,7 @@ done on 8 October and each found something nobody knew was there.
 | **5** | **Rewrite the welcome email** | 52 | **You** | Two passages unwritten, and you judged the whole thing not good enough on 7 October. It cannot embarrass us meanwhile: the guard refuses to send while any section is blank |
 | **6** | **Fix the Stripe merchant name** | 51b | **You** | It reads "invitations sandbox" on the payment page, beside "Pay securely at…". That is what a customer sees while paying |
 | **7** | **Enforce DMARC** | — | **You** | Around **22 October**, after a fortnight of reports. `p=none` → quarantine 10% → 100 → reject. Safe now that outbound goes through Google |
-| **8** | **Switch on the Send Email Hook** | 54 | Either | Built, deployed, deliberately inert. Needs a live test first |
+| — | ~~**Switch on the Send Email Hook**~~ | 54 | — | **DONE 8 October.** Proven on a real password reset: the subject line is our function's, not Supabase's, and Resend logged it clicked. Rollback is one toggle |
 | — | ~~**Arm the artwork sweep**~~ | 40 | — | **DONE 8 October.** Found it had never listed a file — a missing `prefix` 400'd every run. Fixed, armed, verified: 160 files to 44, 186 MB freed, the ordered artwork untouched |
 | **10** | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
 | **11** | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` |
@@ -2462,6 +2466,8 @@ done on 8 October and each found something nobody knew was there.
 | ~~Consent and Google~~ | 63 | 7 Oct |
 | ~~Switch MX from ImprovMX to Google~~ | — | 8 Oct |
 | ~~Post a real basket through checkout~~ | 51a | 8 Oct |
+| ~~Arm the artwork sweep~~ | 40 | 8 Oct |
+| ~~Switch on the Send Email Hook~~ | 54 | 8 Oct |
 
 **Smaller, and genuinely small:** `orders@` as a send-FROM address (mail TO it
 already arrives); **51c**, the delivery address collected twice, once by our form
@@ -2889,40 +2895,46 @@ it, are what is left.
     plain, and want pictures and some character. Deliberately deferred; the
     sequence and the code were done first. Applies to the welcome, the order
     confirmation and the dispatch email.
-54. **The account emails through Resend — DEPLOYED, NOT SWITCHED ON.**
-    `netlify/functions/auth-email.js` is Supabase's Send Email Hook. Pushed and
-    live on 3 October (`f1275eb`), but **inert**: no hook is configured in
-    Supabase and `SEND_EMAIL_HOOK_SECRET` is not set, so it answers 401 to
-    everything and Supabase is still sending its own account emails. Verified
-    by creating a test account against the live auth API — signup returned 200
-    with `confirmation_sent_at` set, so nothing is broken in the meantime.
+54. ~~**The account emails through Resend**~~ — **LIVE 8 October.** Supabase
+    sends no account email any more. `netlify/functions/auth-email.js` sends
+    them all — confirm an address, sign-in link, password reset, email change,
+    invite — through Resend, from `foreverprint <orders@foreverprint.com>`.
 
-    **Do not enable it before testing it live.** With the hook on, Supabase does
-    NOT fall back — a non-2xx reply fails the auth operation itself, so a
-    mistake means nobody can register, confirm an address or reset a password.
-    Rollback is turning the hook off in Supabase; no deploy needed.
+    **Proven on a real email, not assumed.** At 15:07 on 8 October Nicholas
+    asked for a password reset at `/forgot-password`. Resend logged the send to
+    his Outlook address with the subject **"Reset your password"** — that is
+    line 87 of our own function, where Supabase's old template said "Reset your
+    forever·print password", so the subject alone settles which side sent it.
+    Resend then recorded the status as **clicked**; the reset page loaded and
+    the password changed. One email proves the signature, the template, the
+    link and Resend together.
 
-    The order to switch it on:
+    **The ordering trap.** `SEND_EMAIL_HOOK_SECRET` must be in Netlify **and
+    deployed** BEFORE the hook is created in Supabase. Supabase does not fall
+    back — a non-2xx reply fails the auth operation itself — so a hook pointed
+    at a function that has no secret answers 401 to everything, and nobody can
+    register, confirm an address or reset a password. Get the order wrong and
+    every account email is dead until the next deploy.
 
-    1. Supabase → Authentication → Hooks → Send Email Hook → HTTPS
-       `https://foreverprint.com/.netlify/functions/auth-email`. Copy the
-       `v1,whsec_…` secret. **Leave it disabled.**
-    2. Netlify: add `SEND_EMAIL_HOOK_SECRET` (production, secret).
-    3. Claude signs a real request with openssl and posts it, so a genuine
-       email arrives and the link can be clicked — proving the signature, the
-       link and Resend while Supabase is still sending its own.
-    4. Only then enable the hook.
+    **Rollback, if an account email ever fails:** Supabase → Authentication →
+    Auth Hooks → turn the Send Email hook off. Supabase resumes its own emails
+    at once, with no deploy.
 
-    **The signature check is the one part no test covers** — it needs node's
-    crypto and there is no node on this machine. Step 3 is how it gets proved.
-    Two mistakes would break every account email silently and both are pinned by
-    `tools/test-auth-email.js` (36 checks, five mutants): the verify endpoint is
-    on the SUPABASE API domain rather than foreverprint.com, and an email change
-    carries two token hashes where `token_hash_new` belongs to the new address.
+    **Where it hides in the dashboard**, because it took a while to find: Send
+    Email is not a section of its own. It is a *type* inside Authentication →
+    Auth Hooks → "Add a new hook", and it is Pro plan only.
 
-    Worth checking while in the dashboard: Authentication → Emails → SMTP
-    Settings. Until the hook is on, confirmations go through Supabase's shared
-    sender, which is rate limited.
+    Two mistakes would break every account email silently and both are pinned
+    by `tools/test-auth-email.js` (36 checks, five mutants): the verify endpoint
+    is on the SUPABASE API domain rather than foreverprint.com, and an email
+    change carries two token hashes where `token_hash_new` belongs to the new
+    address. **The signature check is the one part no local test covers** — it
+    needs node's crypto and there is no node on this machine. The 15:07 reset
+    is the evidence for it.
+
+    **One thing this closed quietly:** account emails no longer go through
+    Supabase's shared sender, so its rate limit no longer applies to us.
+    Authentication → Emails → SMTP Settings is now irrelevant.
 
 55. **No record of what was emailed.** There is no log table; the only evidence
     an email was sent is Resend's dashboard. If a customer says they never got
