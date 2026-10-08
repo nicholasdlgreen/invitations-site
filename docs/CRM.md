@@ -23,7 +23,7 @@ Verified by query, not from memory. Re-run these before trusting them again.
 |---|---|---|---|
 | **W1** | Open and click tracking | ✅ **Done** | Resend domain `foreverprint.com`: verified, Open Tracking `true`, Click Tracking `true` |
 | **W3** | Saving a design works | ✅ **Done** | 1 row in `saved_designs`, image held as a storage URL, proven on the live site |
-| **W8** | Counting the consent choice | ⚠ **Built, never fired** | `consent_log` exists and holds **0 rows**. Expected behind a holding page, but it means the accept rate is still unknown and the code is unproven in the wild |
+| **W8** | Counting the consent choice | ✅ **Done and proven** | `consent_log` holds **2 rows and both branches have fired** — 1 declined 7 Oct 20:09, 1 accepted 8 Oct 08:15. The code works. **Two rows is not an accept rate**; do not read 50% into it |
 | **W2** | Welcome email | 🔒 **Built, cannot send** | Two passages unwritten. `unfilledWelcomeBlanks()` refuses the send while any remain |
 | **W4** | Saved-design reminder | 🔒 **Built, cannot send** | Scheduled daily 09:00, dry run only; `buildReminderHtml()` returns null until the copy exists |
 | **W5** | After the wedding | ❌ Not started | |
@@ -241,11 +241,15 @@ the range is designed to be bought in sequence.
 
 ### Housekeeping, before the list is big enough to matter
 
-**W8 — Count the consent choice.** **BUILT 7 Oct — but it has recorded
-nothing.** `consent_log` holds 0 rows. Behind a holding page that is what you
-would expect, so it is not evidence of a fault; it is also not evidence the
-code works. Check it again once real traffic arrives, and before the
-retargeting decision rests on it.
+**W8 — Count the consent choice.** **DONE, and proven working 8 October.**
+`consent_log` now holds two rows and **both branches have fired**: one `denied`
+at 20:09 on 7 October and one `granted` at 08:15 on 8 October. The code records
+the choice and nothing joinable, exactly as built.
+
+**Two rows is not an accept rate.** It says the counter works, not what share of
+visitors accept. §4a's question — whether a retargeting audience can ever form —
+needs real traffic behind an open shop, and reading 50% into a sample of two
+would be worse than having no figure at all.
 
 **W7 — Suppression.** Anyone who has not opened anything in twelve months stops
 receiving. Protects deliverability, which protects the order confirmations that
@@ -280,8 +284,9 @@ sessions a fortnight, Display is plausibly in range.
 1. **The consent accept rate.** Since 7 October a visitor who declines sends
    Google nothing at all, by design, because the privacy policy says so. Only
    accepters can enter a remarketing audience. If most people decline, the
-   audience never reaches 100 and the spend does nothing. We now record the choice (W8), but it has
-   captured nothing yet, so the rate is still unknown.
+   audience never reaches 100 and the spend does nothing. We now record the choice (W8) and the
+   counter is proven working, but with two rows there is no rate to read — that
+   needs real traffic behind an open shop.
 
 2. **Where the ad would send them.** The site is behind a holding page saying
    "we will be open very soon". Paying to bring someone back to a wall is
