@@ -150,6 +150,7 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
 | `tools/test-saved-design-reminder.js` | Runs the W4 sweep: it sends nothing without copy, skips anyone who ordered or unsubscribed, and honours the window and the send-once guard |
 | `tools/test-welcome-guard.js` | The welcome email cannot go out with an unwritten section in it; the refusal happens before the claim, so nobody is marked welcomed and then skipped |
 | `tools/test-foil-fix-it-finds-artwork.js` | "Fix it" can find the artwork on a ONE-SIDED order, which it never could; and a failure says so instead of hanging |
+| `tools/test-checkout-charges-what-it-quotes.js` | Stripe is asked for exactly the figure the customer was shown, at every quantity on the real ladder; the quantity is never a multiplier |
 | `tools/test-spacing-scale.py` | The spacing figures stay true; nothing gets retrofitted |
 | `tools/test-chrome-after-build.py` | **After the build**, each page has exactly one basket and one Amy |
 | `tools/test-one-basket.py` | No page carries its own cart drawer |

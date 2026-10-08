@@ -258,6 +258,48 @@ function floorPriceFor(item, ctx) {
   return base + envelopes;             // delivery deliberately excluded
 }
 
+
+// WHAT STRIPE IS ASKED TO CHARGE MUST EQUAL WHAT THE CUSTOMER WAS SHOWN.
+//
+// It did not. The line was priced per CARD and multiplied back up:
+//
+//   unit_amount: Math.round((item.total / item.qty) * 100),   quantity: item.qty
+//
+// Rounding a per-card price to whole pence and multiplying by the quantity
+// amplifies the rounding error by however many cards they buy. Measured on the
+// live site, 8 October 2026, against our own published ladder:
+//
+//   100 at £23.20  ->  Stripe charged £23.00   (20p under)
+//   200 at £28.80  ->  Stripe charged £28.00   (80p under)
+//   500 at £39.20  ->  Stripe charged £40.00   (80p OVER)
+//
+// The undercharging is lost margin. The overcharging is worse than that: it
+// takes more than the price displayed, which is not a rounding nuisance.
+// It also put the order row and the payment permanently out of step — the row
+// said £23.20 while Stripe collected £23.00, so nothing would ever reconcile.
+//
+// One line per basket item, charged ONCE, at the line total. The quantity the
+// customer bought is already named in the description, so nothing is lost from
+// what they read on the payment page.
+function stripeLineItems(cart) {
+  return cart.map(item => ({
+    price_data: {
+      currency: 'gbp',
+      product_data: {
+        name: item.name,
+        description: `${item.qty} invitations · ${item.paper || 'Smooth White'}`,
+      },
+      unit_amount: Math.round(item.total * 100),
+    },
+    quantity: 1,
+  }));
+}
+
+// The sum of what Stripe will charge, in pence.
+function lineItemsTotalPence(items) {
+  return items.reduce((p, l) => p + l.price_data.unit_amount * l.quantity, 0);
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -449,20 +491,34 @@ exports.handler = async (event) => {
       }
     }
 
+    // ── Charge exactly what was quoted, or do not charge ──
+    //
+    // The line items are built to equal the basket, and the Stripe coupon is an
+    // exact pence amount_off, so these cannot drift by construction. This
+    // checks it anyway, because the cost of being wrong is taking a different
+    // sum from someone's card than the one they agreed to.
+    //
+    // It REFUSES rather than charging a figure we cannot explain. That matches
+    // how a rejected discount is handled above: stopping and saying so is
+    // defensible, quietly charging something else is not.
+    const lineItems    = stripeLineItems(cart);
+    const chargePence  = lineItemsTotalPence(lineItems) - Math.round(discountAmt * 100);
+    const quotedPence  = Math.round(total * 100);
+    if (chargePence !== quotedPence) {
+      console.error('[checkout] REFUSED: Stripe would charge', chargePence,
+                    'pence but the customer was quoted', quotedPence,
+                    '- cart:', JSON.stringify(cart.map(i => ({ q: i.qty, t: i.total }))));
+      return {
+        statusCode: 500,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'We could not take payment for that basket. Nothing has been charged — please contact us and we will sort it out.' }),
+      };
+    }
+
     // ── Create Stripe Checkout Session ──────────────────
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: cart.map(item => ({
-        price_data: {
-          currency: 'gbp',
-          product_data: {
-            name: item.name,
-            description: `${item.qty} invitations · ${item.paper || 'Smooth White'}`,
-          },
-          unit_amount: Math.round((item.total / item.qty) * 100),
-        },
-        quantity: item.qty,
-      })),
+      line_items: lineItems,
       mode: 'payment',
       ...(stripeCoupon ? { discounts: [{ coupon: stripeCoupon }] } : {}),
      success_url: `${successUrl}&ref=${orderNumber}`,
@@ -505,3 +561,8 @@ exports.handler = async (event) => {
     };
   }
 };
+
+// Exported so a test can run the real builder rather than read it. The fault
+// this replaced was invisible in the source and obvious in the arithmetic.
+exports.stripeLineItems = stripeLineItems;
+exports.lineItemsTotalPence = lineItemsTotalPence;
