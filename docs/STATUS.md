@@ -2384,7 +2384,7 @@ Status is what was CHECKED, not what was remembered. Where a line says
 | | Group | Open | Closed since 3 Oct | Notes |
 |---|---|---|---|---|
 | **A** | Blocking launch | **A2 A3 A4 A5 A6 A7 A8** | A1 | A1 verified 7 Oct: 7,262 configs, 0 refused |
-| **B** | Checkout and orders | 51a | 36, 37 | Nothing on the site posts a basket end to end |
+| **B** | Checkout and orders | 51b, 51c | 36, 37, **51a** | 51a done 8 Oct and found Stripe being asked for the wrong amount. 51b/51c are the merchant name and the address asked twice |
 | **C** | Pricing | 16–24, 24b, 24c, 24e, 38, 45, 46, 47 | 24a, 24d | See the warning below before trusting any competitor figure |
 | **D** | Design studio | 31, 32, 33, 35, 39, 43, 48, 49 | **34** | 34 fixed and proven 7 Oct — but see the note on it |
 | **E** | Artwork and press | 41, 50 | **40** | 40 answered by the retention sweep, which is built but NOT armed |
@@ -2441,7 +2441,7 @@ any Google host). Both struck through below.
 | | What | Item | Waiting on | Why it is here |
 |---|---|---|---|---|
 | — | ~~**Switch MX from ImprovMX to Google**~~ | — | — | **DONE 8 October.** All three addresses proven, mail reaching Outlook and sending through Google, ImprovMX removed from DNS, SPF and account. Only DMARC enforcement (~22 Oct) and `orders@` send-as carried forward |
-| 2 | **Post a real basket through checkout, end to end** | 51a | Either | A1 was the worst bug on the site and survived because no test ever submits a cart. 12,722 row checks still would not have caught it. Nothing should take money until one does |
+| — | ~~**Post a real basket through checkout, end to end**~~ | 51a | — | **DONE 8 October.** Found and fixed Stripe being asked for the wrong amount; verified on live. Carried forward: 51b the merchant name, 51c the address asked twice, and what Stripe COLLECTS, which needs A4 |
 | 3 | **Stripe live keys and a live-mode webhook** | A4 | **You** | Without the webhook, payments succeed and orders sit pending for ever |
 | 4 | **Print one real sample through PrintedEasy** | A5 | **You** | The file geometry is verified; the handover to their press is not. Pair it with A6 — head-to-head or head-to-foot decides whether every double-sided job comes back upside down |
 | 5 | **Read back the copy Claude wrote** | 44 | **You** | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, all of Amy's knowledge. Live, and none of it in your words |
@@ -2506,10 +2506,49 @@ real customer arrives.
     7,129 configurations ABOVE the cheapest legitimate order. It now takes the
     lowest matching row, because the floor is the LEAST an order could cost.
 
-51a. **Nothing posts a basket end to end.** The floor is now covered by 12,722
-    row-level checks, but no test actually submits a cart to the function. That
-    gap is exactly why 36 survived unnoticed. Belongs with item 15's
-    price-correctness stage.
+51a. ~~**Nothing posts a basket end to end.**~~ **DONE 8 October**, and it paid
+    for itself on the first run.
+
+    A real basket was posted through the LIVE site — configure, upload, paper,
+    quantity, delivery, basket, checkout form, Stripe. The path works. **It also
+    found that Stripe was being asked for the wrong amount.** The site quoted
+    £23.20 for 100 cards and the session asked for £23.00.
+
+    The line was priced per CARD and multiplied back up —
+    `unit_amount: Math.round((item.total / item.qty) * 100)` with
+    `quantity: item.qty` — so rounding a per-card price to whole pence and
+    multiplying by the quantity amplified the error by the quantity. Against our
+    own ladder it undercharged at some quantities and **OVERCHARGED** at others:
+    500 at £39.20 would have taken £40.00. Taking more than the price displayed
+    is a different kind of problem from losing margin. It also left the order row
+    and the payment permanently out of step — the row said £23.20, Stripe
+    collected £23.00 — so nothing would ever have reconciled, and it would have
+    surfaced months later as an accounting mystery rather than a bug.
+
+    Fixed: one line per basket item, charged once, at the line total, quantity
+    pinned to 1. A guard in front of the session sums what Stripe will be asked
+    for, subtracts the coupon, compares it with the quote and REFUSES if they
+    differ, saying nothing has been charged — the same standard this file
+    already applies to a rejected discount. The discount cannot drift, being an
+    exact pence `amount_off` rather than a percentage.
+
+    **Verified on live after deploying:** quote, Stripe session and order row all
+    £23.20. Guarded by `tools/test-checkout-charges-what-it-quotes.js`, which
+    runs the real builder — a source-reading test would not have caught this,
+    because the source looked entirely reasonable and only the arithmetic gave it
+    away.
+
+    **Still unproven: what Stripe COLLECTS.** This proves what it is asked for.
+    Watching money move needs live keys, which is A4.
+
+51b. **Stripe shows the merchant as "invitations sandbox"** on the payment page,
+    next to "Pay securely at…". That is what a customer reads while paying.
+    Must say foreverprint before launch. Seen 8 October.
+
+51c. **The delivery address is collected twice** — once on our checkout form,
+    then again by Stripe's own shipping step. Two address forms at the moment of
+    payment. A decision rather than a bug: either drop ours and let Stripe
+    collect it, or stop Stripe asking.
 
 ### C. Pricing
 
