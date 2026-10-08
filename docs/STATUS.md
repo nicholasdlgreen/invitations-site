@@ -315,12 +315,21 @@ Google's servers, that mail fails DMARC.
    it, which is why `dig TXT` only ever saw one), and `send.foreverprint.com`
    carries `include:amazonses.com` for Resend's return path and must never be
    touched. Go by Name AND Type together.
-2. ~~**Switch MX from ImprovMX to Google.**~~ **DNS DONE 7 October, Google
-   still provisioning.** See "the cutover, stopped mid-flight" below.
-3. Confirm delivery from outside, then stop using ImprovMX. **Not yet true.**
-4. Only then enforce DMARC.
+2. ~~**Switch MX from ImprovMX to Google.**~~ **DONE.** DNS 7 October, Google
+   finished provisioning overnight.
+3. ~~Confirm delivery from outside, then stop using ImprovMX.~~ **DONE
+   8 October.** All three addresses proven, ImprovMX removed from DNS and SPF
+   and the account deleted.
+4. **Enforce DMARC** — the only step left. Around 22 October, after a fortnight
+   of reports. See the ladder below.
 
-### The MX cutover — stopped mid-flight, 7 October
+### The MX cutover — COMPLETED 8 October
+
+**Point 1 of the go-live list is closed.** What follows is the account as it was
+written mid-flight on 7 October, kept because the reasoning is still the record;
+the completion is at the end of it.
+
+### How it was left on 7 October
 
 **Our side is finished and verified. Google's side had not completed when we
 stopped.** Nothing is broken and nothing is lost; the next person picks up at
@@ -409,6 +418,55 @@ test messages are queued on Google's side and will land together.
 3. Only after all three land: delete the two ImprovMX MX records, then stop the
    ImprovMX account.
 4. Then DMARC enforcement opens up, which is the thing queued behind this.
+
+### What actually happened — 8 October
+
+**Provisioning finished overnight and every prediction above held.**
+
+A DMARC aggregate report from `noreply-dmarc-support@google.com` arrived at
+11:02, addressed to `dmarc@foreverprint.com`. One message proved three things
+at once: external mail reaches Google, the `dmarc@` ALIAS resolves (Workspace
+has no catch-all, so it could not have landed otherwise), and the DMARC
+reporting fixed on 7 October is producing real reports.
+
+**ImprovMX confirmed it from the other side**, unprompted, at 09:44: *"Your MX
+records no longer point at us, so we're not forwarding mail."*
+
+**The four "lost" test messages were never lost.** They were in SPAM, along
+with the new one — `orders@` included, so all three addresses are proven.
+Google's reason: *"This message is similar to messages that were identified as
+spam in the past"*, which is a fair reading of six near-identical one-line
+messages titled "Test 1".."Test 5" from a personal account to a domain with no
+history. **The 7 October entry above says they timed out at Microsoft. That was
+wrong, and it was wrong because the Workspace account's Spam folder was never
+checked.**
+
+**Mail now reaches Nicholas where he works.** Outlook for Mac 16.113 would not
+offer Google sign-in for the custom domain, so it went in over IMAP with an App
+Password — which first needed 2-Step Verification turning on, since Google only
+offers App Passwords once it is. Settings that worked: `imap.gmail.com` 993 SSL
+in, `smtp.gmail.com` 587 STARTTLS out, same username and App Password on both.
+**Verified it sends through Google**, not Microsoft: the test appears in the
+Workspace account's own Sent folder, so it is DKIM-signed and domain-aligned and
+will survive enforcement.
+
+**ImprovMX is gone** — both MX records deleted, `include:spf.improvmx.com`
+removed from the apex SPF, and the account deleted. Verified from Cloudflare,
+Google's resolver and the authoritative nameserver: MX is `1 smtp.google.com`
+alone, the apex SPF is `v=spf1 include:_spf.google.com ~all` with exactly one
+`v=spf1` record, and `send.foreverprint.com` still carries
+`include:amazonses.com` untouched. An SMTP probe confirms Google still accepts
+both `hello@` and `orders@` with the fallback gone.
+
+**Two things carried forward, neither blocking:**
+
+- **`orders@` as a send-FROM address.** Mail TO it arrives; replying AS it needs
+  a send-as entry in Gmail settings.
+- **DMARC enforcement, around 22 October.** `p=none` → `p=quarantine; pct=10`
+  → 100 → reject, reading the reports between each. Safe to do now that outbound
+  goes through Google: the trap of setting up "send mail as" over non-Google
+  servers after enforcing never applies, because Outlook already sends via
+  `smtp.gmail.com`.
 
 **Two corrections worth keeping, because both cost time today:**
 
@@ -2382,7 +2440,7 @@ any Google host). Both struck through below.
 
 | | What | Item | Waiting on | Why it is here |
 |---|---|---|---|---|
-| 1 | **Switch MX from ImprovMX to Google** | — | **You** | The only step in the mail work that can lose a message. Everything else is done: Workspace, aliases, DKIM, SPF. DMARC enforcement and sending from `@foreverprint.com` both wait behind it |
+| — | ~~**Switch MX from ImprovMX to Google**~~ | — | — | **DONE 8 October.** All three addresses proven, mail reaching Outlook and sending through Google, ImprovMX removed from DNS, SPF and account. Only DMARC enforcement (~22 Oct) and `orders@` send-as carried forward |
 | 2 | **Post a real basket through checkout, end to end** | 51a | Either | A1 was the worst bug on the site and survived because no test ever submits a cart. 12,722 row checks still would not have caught it. Nothing should take money until one does |
 | 3 | **Stripe live keys and a live-mode webhook** | A4 | **You** | Without the webhook, payments succeed and orders sit pending for ever |
 | 4 | **Print one real sample through PrintedEasy** | A5 | **You** | The file geometry is verified; the handover to their press is not. Pair it with A6 — head-to-head or head-to-foot decides whether every double-sided job comes back upside down |
