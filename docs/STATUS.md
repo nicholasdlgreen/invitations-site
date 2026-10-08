@@ -2644,6 +2644,41 @@ real customer arrives.
     his decision between building variable data, changing what we sell and say,
     or withdrawing.
 
+    **What variable data would COST, measured 8 October.** Nicholas chose to
+    build it properly (option A) and the first question was whether PrintedEasy
+    can supply it affordably. Their order form carries a `versions` parameter,
+    and it is priced as separate jobs rather than as digital variable data.
+    Like for like — the `totalWeight` field confirms the card counts match row
+    for row:
+
+    | Cards | All identical | Each different | Per card |
+    |---|---|---|---|
+    | 10 | £22 | **£161** | £16.10 |
+    | 25 | £23 | **£225** | £9.00 |
+    | 50 | £23 | **£281** | £5.62 |
+    | 100 | £25 | **£394** | £3.94 |
+    | 150 | £27 | **£506** | £3.37 |
+
+    Fifty place cards with fifty names is **twelve times** the cost of fifty
+    identical ones. At our 20%-below pricing that is £224.80 to the customer,
+    £4.50 a card. Table numbers are easier — about twelve versions, roughly £170
+    at cost, near £11 a number.
+
+    **A trap worth keeping: `quantity` is PER VERSION.** The first reading of
+    these numbers compared qty 50 × 50 versions against 50 cards and made
+    versioning look like +1400%. It was 2,500 cards. `totalWeight` settled it —
+    11.655 kg on both sides. Check the weight before believing a versions price.
+
+    **There is no cheap way round it through them.** Their cutting is set to the
+    finished card, so different cards cannot be ganged onto one sheet and sent
+    as a single version.
+
+    **Parked 8 October:** Nicholas is checking directly what they do and do not
+    offer. The decision after that is between selling it as a premium line at
+    roughly £4.50 a card, finding a supplier who prices true variable data
+    properly, or building it for table numbers only and reframing place cards.
+    **Nothing has been taken off the site.**
+
     There is no variable-data support anywhere: the uploader builds ONE artwork
     and prints N copies. So fifty place cards are fifty copies of one guest's
     name, and the table-number box says *"each card in your set will differ"*,
