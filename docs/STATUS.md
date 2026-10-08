@@ -2387,7 +2387,7 @@ Status is what was CHECKED, not what was remembered. Where a line says
 | **B** | Checkout and orders | 51b, 51c | 36, 37, **51a** | 51a done 8 Oct and found Stripe being asked for the wrong amount. 51b/51c are the merchant name and the address asked twice |
 | **C** | Pricing | 16–24, 24b, 24c, 24e, 38, 45, 46, 47 | 24a, 24d | See the warning below before trusting any competitor figure |
 | **D** | Design studio | 31, 32, 33, 35, 39, 43, 48, 49 | **34** | 34 fixed and proven 7 Oct — but see the note on it |
-| **E** | Artwork and press | 41, 50 | **40** | 40 answered by the retention sweep, which is built but NOT armed |
+| **E** | Artwork and press | 41, 50 | **40** | 40 closed 8 Oct: the sweep is armed and verified, 186 MB freed, ordered artwork untouched |
 | **F** | Site testing | 15, 42, 51 | — | The largest untouched block |
 | **G** | Housekeeping | 26, 27, 28, 29, 29a, 29c, 44 | **25** | 25 cleared 7 Oct: 132 bot accounts deleted, 2 kept |
 | **H** | Email and comms | 52, 53, 54, 55, 56, 58 | 57 | Plus the mail cutover, below |
@@ -2448,7 +2448,7 @@ done on 8 October and each found something nobody knew was there.
 | **6** | **Fix the Stripe merchant name** | 51b | **You** | It reads "invitations sandbox" on the payment page, beside "Pay securely at…". That is what a customer sees while paying |
 | **7** | **Enforce DMARC** | — | **You** | Around **22 October**, after a fortnight of reports. `p=none` → quarantine 10% → 100 → reject. Safe now that outbound goes through Google |
 | **8** | **Switch on the Send Email Hook** | 54 | Either | Built, deployed, deliberately inert. Needs a live test first |
-| **9** | **Arm the artwork sweep** | — | **You** | `ARTWORK_RETENTION_LIVE=true` in Netlify, after reading a few nightly dry runs. 198MB of unclaimed files waiting. The only unattended thing on the site that destroys customer data |
+| — | ~~**Arm the artwork sweep**~~ | 40 | — | **DONE 8 October.** Found it had never listed a file — a missing `prefix` 400'd every run. Fixed, armed, verified: 160 files to 44, 186 MB freed, the ordered artwork untouched |
 | **10** | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
 | **11** | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` |
 | **12** | **Self-host the pdf.js worker** | — | Me | Every PDF is read on the UI thread and no CSP can change that — cross-origin Workers are forbidden outright. Small and known |
@@ -2700,11 +2700,45 @@ real customer arrives.
 
 ### E. Artwork, print and the press
 
-40. **Nothing can delete from the `artwork` bucket.** It has INSERT and SELECT
-    policies for `anon` and **no DELETE policy at all**, so abandoned artwork
-    accumulates for ever and only the service role can clear it. This is the
-    real shape of "abandoned artwork is never deleted"; the agreed retention was
-    one week and nothing enforces it.
+40. ~~**Nothing can delete from the `artwork` bucket.**~~ **DONE 8 October.**
+    The retention sweep is built, fixed, armed and verified.
+
+    **It had never worked.** Every scheduled run from 7 October ended
+    `storage list -> 400 {"message":"body must have required property
+    'prefix'"}`. Supabase's Storage list endpoint requires `prefix`; an empty
+    string means the whole bucket. The sweep listed nothing, deleted nothing,
+    and said so only into a log nobody read.
+
+    **Arming it without checking would have hidden that.** Setting
+    `ARTWORK_RETENTION_LIVE=true` would have changed nothing, and the absence of
+    deletions would have looked like the sweep being careful rather than broken.
+    It was caught only by running it in production first and reading the log.
+
+    The test passed throughout, because it stubbed the list response and never
+    inspected the request. It now asserts `prefix` is sent, that the whole
+    bucket is asked for in one page, and that the sort is oldest-first.
+    Mutation-tested.
+
+    **Result, verified against the bucket afterwards rather than from the log:**
+
+    | | Before | After |
+    |---|---|---|
+    | Files | 160 | **44** |
+    | Size | 216 MB | **30 MB** |
+    | Older than 5 days | 116 | **0** |
+    | Order INV-2026-1770's files | 3 | **3** |
+
+    186 MB freed and the ordered artwork untouched, which is the rule that
+    matters — the printer is sent links, so a deleted file is an order that
+    cannot be printed. What went was development leftovers dated 27 Sep to
+    3 Oct: speed probes, sub-kilobyte foil tests, reference images, and
+    upload/press pairs from testing.
+
+    **Now unattended, 03:00 nightly.** Worth one glance at the function log in a
+    week. A customer who leaves artwork in a basket for six days loses it — that
+    is the chosen rule, and the first place to look if anyone reports a design
+    vanishing.
+
 41. **37 files, about 22MB, were added to the bucket on 3 October** between
     Claude's testing and Nicholas's. Seven named `_speedprobe-...` are certainly
     test files; the rest are `print-ai`, `ref-ai` and `foil-ai` sets from studio
