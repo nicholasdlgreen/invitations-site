@@ -631,7 +631,11 @@ have put controls over data that does not exist.
 **The page is NOT removed and must not be.** `/:slug/order` rewrites to it for
 all 22 products, and `cart.js:149` sends every checkout on the site to
 `/upload-and-print.html?action=checkout` because the checkout modal lives in
-it. Removed instead: the footer link, the sitemap entry, the index tag, Amy's
+it. **A third route, not listed here until 8 October:** the design studio
+navigates to it in code, at `design-studio-ai-create.html:3238` and `:3247`,
+so it is where a studio design is actually ordered. The whole chain is live —
+`/wedding-invitations` to `/design-studio` to `/design-studio-ai-create.html`
+to `/upload-and-print.html?source=design-studio`, all 200 on 8 October. Removed instead: the footer link, the sitemap entry, the index tag, Amy's
 "Start your order", and the seven in-page links including the home page's
 "I Have a Design" button and path card — all now `/products`, words unchanged.
 
