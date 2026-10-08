@@ -45,8 +45,9 @@ that Nicholas has not read back. Item 2 grew considerably on 5 October.
 Then the design studio, after Nicholas hit the same foiling fault twice on live
 work. The cause was not in the page: the Content-Security-Policy set no
 `worker-src`, so pdf.js was refused its worker, fell back to a main-thread
-"fake worker", and reading a foil layer sometimes never finished. Everything the
-site reads with pdf.js has been rasterising on the UI thread. Fixed, along with
+"fake worker", and reading a foil layer sometimes never finished. Until then,
+everything the site read with pdf.js had been rasterising on the UI thread; this
+fix ended that and it has stayed ended. Fixed, along with
 three things the fault exposed — the failure latched with no retry, a hang was
 not treated as a failure, and a foil layer we draw ourselves was being judged
 like a customer's upload and offered a "Fix it" that could not work on it. His
@@ -660,12 +661,28 @@ whichever single face the job asked for, and `openFoilPicker` is wrapped so a
 throw cannot leave the panel on "Opening your artwork..." for ever. Guarded by
 `tools/test-foil-fix-it-finds-artwork.js`, which runs the real `handleFiles`.
 
-### pdf.js still runs on the UI thread — OPEN, and the fix is known
+### pdf.js and the worker — CLOSED 8 October. It was never broken after 3 October
 
-`worker-src 'self' blob:` was added on 3 October to stop this. It never worked,
-and **no CSP can make it work**. pdf.js calls `new Worker()` on the cdnjs URL,
-and a Worker may not be constructed from a cross-origin script at all. Proven
-live, with cdnjs explicitly listed in the directive at the time:
+**This section said the opposite for a day, and it was wrong.** It claimed pdf.js
+still ran on the UI thread, that `worker-src 'self' blob:` "never worked", and
+that "no CSP can make it work". All three are false. The 3 October fix worked.
+Kept here in full, because the way it went wrong is the useful part.
+
+**Verified on the live site on 8 October** — a PDF built in the page, read back
+through pdf.js, and the machinery inspected rather than inferred:
+
+```
+workerSrc    https://cdnjs.cloudflare.com/.../pdf.worker.min.js
+portType     [object Worker]      a real browser Worker
+realWorker   true
+textRead     "foreverprint worker check"   read back correctly
+totalMs      223   including fetching the library
+```
+
+**Why 7 October drew the wrong conclusion.** The test was
+`new Worker('https://cdnjs.cloudflare.com/.../pdf.worker.min.js')`. That does
+fail, and the three-line table it produced is correct — it was reproduced on
+8 October, same `SecurityError`, so nothing was mismeasured:
 
 ```
 same-origin worker   CONSTRUCTED
@@ -673,26 +690,42 @@ blob: worker         CONSTRUCTED
 cdnjs worker         Failed to construct 'Worker': ... cannot be accessed from origin
 ```
 
-That wording is the same-origin rule, not a CSP refusal — a CSP block says
-"violates the following Content Security Policy directive". Adding cdnjs to
-`worker-src` was reverted, because it granted trust that can never be used, and
-a change that claims to fix something it does not is worse than the bug.
+**But pdf.js never calls that.** Seeing a cross-origin worker URL, pdf.js 3.11
+writes a one-line script of its own — `importScripts("<the cdnjs url>")` —
+turns it into a `blob:` URL and starts the worker from that. So `blob:` in
+`worker-src 'self' blob:` is not decoration; it is the entire fix. The test
+pushed on a door pdf.js never walks through, which is why a true measurement
+produced a false conclusion. **The reading, not the reading's evidence, is what
+needs checking** — see the rule in §15's notes about asking what a PASS proves.
 
-Measured cost while it stands: a 998KB vector PDF takes ~190–360ms with the
-page frozen for roughly half of it. An image-heavy file is far worse, and this
-is the 3 October forty-second hang.
+**The check was mutation-tested** before any of this was believed. Forcing a
+worker URL the browser cannot use makes pdf.js name the fallback itself —
+*"Setting up fake worker failed"*. With the real URL it never says it. So the
+check distinguishes the two states rather than passing by coincidence.
 
-**The fix, for tomorrow:**
+Incidental, and worth knowing if a hang is ever reported again: **once pdf.js
+falls back to the fake worker it never retries for the life of that page load.**
 
-1. Download `pdf.worker.min.js` (3.11.174, matching `PDFJS_SRC`) into `/vendor/`,
-   the pattern `vendor/supabase-js-2.116.0.min.js` already sets.
-2. Point `PDFJS_WORKER` at `/vendor/pdf.worker.min.js`. Same-origin, so the
-   existing `'self'` covers it and the CSP needs no change.
-3. Verify by **constructing the Worker in the page**, not by reading a header.
-   Then write the test — it must assert the worker URL is same-origin or blob,
-   never that a CSP directive exists. The removed
-   `tools/test-pdf-worker-allowed.py` asserted the wrong rule and is deleted
-   rather than left to mislead.
+**Self-hosting the worker is therefore not a bug fix, and was not done.**
+Nicholas's decision on 8 October: correct the documents, change no code. The
+only thing self-hosting would still buy is independence from cdnjs — today the
+worker fetches its own code from there at runtime, so a cdnjs outage stops
+uploaded PDFs being read. It would buy nothing at all on the UI thread, because
+there is nothing wrong with the UI thread. If it is ever wanted: a copy of
+`pdf.worker.min.js` (3.11.174, matching `PDFJS_SRC`) in `/vendor/`, the pattern
+`vendor/supabase-js-2.116.0.min.js` already sets, and `PDFJS_WORKER` pointed at
+it. Two lines and about 1MB.
+
+**One figure here should not be relied on.** The old section measured "190–360ms
+with the page frozen for roughly half of it". Drawing a PDF onto a canvas
+genuinely is main-thread work in pdf.js and no worker changes that, so part of
+that may be real but is not fixable by self-hosting anything. Re-measure before
+acting on it.
+
+**And a test that must not come back in its old form.** The deleted
+`tools/test-pdf-worker-allowed.py` asserted that a CSP directive existed, which
+proves nothing about whether a worker starts. Any future test must construct the
+worker in a browser and assert on what it gets.
 
 ---
 
@@ -2398,7 +2431,7 @@ Status is what was CHECKED, not what was remembered. Where a line says
 |---|---|---|
 | — | **Finish the MX cutover.** DNS done and verified; Google still provisioning. §0e step 0 | You, then Google |
 | — | **Enforce DMARC**, about two weeks after the reports start arriving | You |
-| — | **Self-host the pdf.js worker.** Every PDF is read on the UI thread; no CSP can fix it | Me |
+| — | ~~**Self-host the pdf.js worker**~~ — **withdrawn 8 October.** The premise was wrong: pdf.js has run in a real worker since 3 October | — |
 | — | **Cloudflare Turnstile** before launch. Public signups are off meanwhile (`disable_signup: true`, verified) | You |
 | — | **Delete the `album-photos` bucket** and its six files — a dashboard step | You |
 | — | **Export the 10 holding-page signups** from Netlify Forms | You |
@@ -2440,7 +2473,9 @@ both been using still mean the same thing; they are in the closed table too.
 **Cleared so far:** A1 (checkout refused every basket), 63 (consent and Google),
 the MX cutover, 51a (nothing posted a basket end to end), 40 (the artwork sweep)
 and 54 (the Send Email Hook). The last four were all done on 8 October, and the
-basket test and the sweep each found something nobody knew was there.
+basket test and the sweep each found something nobody knew was there. The
+pdf.js worker item was **withdrawn** the same day rather than done: it had
+already been fixed on 3 October and the list was wrong to carry it.
 
 | | What | Item | Waiting on | Why it is here |
 |---|---|---|---|---|
@@ -2455,7 +2490,7 @@ basket test and the sweep each found something nobody knew was there.
 | — | ~~**Arm the artwork sweep**~~ | 40 | — | **DONE 8 October.** Found it had never listed a file — a missing `prefix` 400'd every run. Fixed, armed, verified: 160 files to 44, 186 MB freed, the ordered artwork untouched |
 | **10** | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
 | **11** | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` |
-| **12** | **Self-host the pdf.js worker** | — | Me | Every PDF is read on the UI thread and no CSP can change that — cross-origin Workers are forbidden outright. Small and known |
+| — | ~~**Self-host the pdf.js worker**~~ | — | — | **WITHDRAWN 8 October, not done — there was nothing to fix.** pdf.js has run in a real worker since 3 October; verified live. The 7 October finding tested a door pdf.js never walks through. See §0's pdf.js section |
 | **13** | **Shrink the published payload** | 38 | Me | 13MB, and the reason Publish breaks. Proven at 1.1MB, not built. Nothing is blocked by it today |
 
 **Closed, kept here so the count is honest:**
@@ -2468,6 +2503,7 @@ basket test and the sweep each found something nobody knew was there.
 | ~~Post a real basket through checkout~~ | 51a | 8 Oct |
 | ~~Arm the artwork sweep~~ | 40 | 8 Oct |
 | ~~Switch on the Send Email Hook~~ | 54 | 8 Oct |
+| ~~Self-host the pdf.js worker~~ — withdrawn, premise wrong | — | 8 Oct |
 
 **Smaller, and genuinely small:** `orders@` as a send-FROM address (mail TO it
 already arrives); **51c**, the delivery address collected twice, once by our form
@@ -3324,7 +3360,10 @@ list because none of it was known:**
 - **Red envelopes** — withdrawn, §17.
 - **The foiling hang in the design studio** — the CSP had no `worker-src`, so
   pdf.js silently ran on the main thread. Fixed and live, §16 of the memory
-  notes; the three faults it exposed are fixed too.
+  notes; the three faults it exposed are fixed too. **This stayed fixed.** On
+  7 October it was wrongly reported as still broken and an item was opened to
+  self-host the worker; that was withdrawn on 8 October after checking the live
+  page. See §0's pdf.js section.
 
 ### Notes worth keeping, not tasks
 
