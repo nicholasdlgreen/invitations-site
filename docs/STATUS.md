@@ -2601,7 +2601,7 @@ Status is what was CHECKED, not what was remembered. Where a line says
 | — | **Enforce DMARC**, about two weeks after the reports start arriving | You |
 | — | ~~**Self-host the pdf.js worker**~~ — **withdrawn 8 October.** The premise was wrong: pdf.js has run in a real worker since 3 October | — |
 | — | **Cloudflare Turnstile** before launch. Public signups are off meanwhile (`disable_signup: true`, verified) | You |
-| — | **Delete the `album-photos` bucket** and its six files — a dashboard step | You |
+| — | **Delete the `album-photos` bucket** and its six files — a dashboard step. **The code side is done** (9 Oct): `img/albums` and its four images removed, nothing referenced them. Only the bucket is left | You |
 | — | **Export the 10 holding-page signups** from Netlify Forms | You |
 | — | **Arm the artwork sweep** (`ARTWORK_RETENTION_LIVE=true`) after reading a few dry runs | You |
 
@@ -2688,7 +2688,8 @@ already arrives); **51c**, the delivery address collected twice, once by our for
 and again by Stripe.
 
 **Small chores, no order between them:** delete the `album-photos` bucket and
-its six files (Storage dashboard); export the 10 holding-page signups from
+its six files (Storage dashboard — the only part left of the album work, since
+`img/albums` and its four unreferenced images went on 9 October); export the 10 holding-page signups from
 Netlify Forms; set `ALERT_EMAIL` in Netlify for the Monday price watch (A7);
 remove the homepage holding overlay when you decide to open (A8).
 
