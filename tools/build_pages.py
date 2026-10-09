@@ -632,7 +632,13 @@ def inline_favicon():
         pages += [(n, os.path.join(guides_dir, n)) for n in sorted(os.listdir(guides_dir))]
 
     block = FAVICON_START + "\n" + FAVICON_TAGS + FAVICON_END
-    done = skipped = 0
+    # Four outcomes, counted separately, because one number cannot tell
+    # "nothing needed doing" apart from "nothing worked". The old log said
+    # "favicon in 0 page(s), 3 skipped" when all 49 pages were correct and the
+    # 3 were fragments that must be skipped -- it read as a failure and was
+    # chased as one on 9 October.
+    changed = already = fragments = 0
+    missing_head = []
     for name, path in pages:
         if not name.endswith(".html"):
             continue
@@ -650,15 +656,31 @@ def inline_favicon():
             if not m:
                 # No charset to anchor to. Say so rather than guessing at a
                 # position and quietly putting the tags somewhere useless.
-                log(f"  {name}: no <meta charset> — favicon not added")
-                skipped += 1
+                #
+                # A file with no <head> of its own is not a page: header.html
+                # and footer.html are fragments inlined into real pages, and
+                # the Google verification file is one line of plain text. Those
+                # SHOULD be skipped silently. A file that has a <head> and no
+                # charset is a genuine problem and is named.
+                if re.search(r"<head[ >]", html, re.I):
+                    missing_head.append(name)
+                else:
+                    fragments += 1
                 continue
             html = html[:m.end()] + "\n" + block + html[m.end():]
 
         if html != before:
             open(path, "w", encoding="utf-8").write(html)
-            done += 1
-    log(f"favicon in {done} page(s)" + (f", {skipped} skipped" if skipped else ""))
+            changed += 1
+        else:
+            already += 1
+
+    log(f"favicon: {already + changed} page(s) correct "
+        f"({changed} updated this run, {already} already right)"
+        + (f"; {fragments} fragment(s) skipped, as expected" if fragments else ""))
+    for name in missing_head:
+        log(f"  PROBLEM {name}: has a <head> but no <meta charset>, "
+            f"so the favicon could not be anchored \u2014 this one is a real page")
 
 
 def inline_chrome():
