@@ -199,6 +199,20 @@ https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:sp
 /BRAND-IMAGERY-GUIDE.md    /404.html   404!
 /package.json              /404.html   404!
 
+# Withdrawn 9 October after review: three products built that morning and
+# taken straight back off. They were live and published, so the addresses
+# exist and must not 404.
+#
+# These MUST sit above the /* catch-all below. Appended at the end of the file
+# they never fired: Netlify takes the first matching rule, and /* caught them
+# first, so all three 404'd on live.
+/pregnancy-announcements       /products  301
+/pregnancy-announcements.html  /products  301
+/thanksgiving-invitations      /products  301
+/thanksgiving-invitations.html /products  301
+/new-job-cards                 /products  301
+/new-job-cards.html            /products  301
+
 # Anything that reaches here does not exist. It used to fall through to
 # product.html, which answered HTTP 200 with "Product not found" — a soft 404.
 # Google treats that as a real page: it indexes junk URLs, wastes crawl budget
@@ -209,13 +223,3 @@ https://lighthearted-sunburst-4f0ba2.netlify.app/*  https://foreverprint.com/:sp
 # rest), which Netlify serves for the clean path without needing a rule, so
 # nothing depends on the old catch-all.
 /*  /404.html  404
-
-# Withdrawn 9 October after review: three products built that morning and
-# taken straight back off. They were live and published, so the addresses
-# exist and must not 404.
-/pregnancy-announcements      /products  301
-/pregnancy-announcements.html /products  301
-/thanksgiving-invitations     /products  301
-/thanksgiving-invitations.html /products  301
-/new-job-cards                /products  301
-/new-job-cards.html           /products  301
