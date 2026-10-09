@@ -2647,10 +2647,22 @@ basket test and the sweep each found something nobody knew was there. The
 pdf.js worker item was **withdrawn** the same day rather than done: it had
 already been fixed on 3 October and the list was wrong to carry it.
 
-**Ten items are open, 1 to 10.** Nine of them wait on you. **Item 10 is the only
-one I can do on my own.** Items 1 and 3 are the ones that would tell us most,
-because both are of the shape that found the money bug: doing the thing rather
-than reading about it.
+**Eleven items are open, 1 to 11 — and every row was re-checked against the
+live site, the live database or the code on 9 October.** The "Checked" column
+says what was actually looked at, so nobody works an item whose premise has
+expired, which has now cost most of three days. Two rows could not be checked
+from here and say so plainly: item 3 is physical and item 6 needs your Stripe
+dashboard.
+
+**Ten of the eleven wait on you. Item 10 is the only one I can do on my own.**
+**Item 11 is new, found on 9 October, and is one setting.** Items 1 and 3 are
+still the two that would tell us most, because both are of the shape that found
+the money bug: doing the thing rather than reading about it.
+
+**Removed from the list on 9 October because they were already done:** setting
+`ALERT_EMAIL` (the alerts had been delivering all along on the `FROM_EMAIL`
+fallback — now set explicitly anyway, and live) and the album imagery (deleted;
+only the storage bucket remains, which is a dashboard step).
 
 **Item 10 changed character on 9 October.** It was filed as "shrink the payload,
 and the reason Publish breaks". Publish is not broken — proven on the live site
@@ -2658,18 +2670,19 @@ that morning. What the work actually buys is that **a margin becomes one number
 instead of a 15MB rewrite**, which makes it groundwork for item 2 rather than a
 size fix at the bottom of the list.
 
-| | What | Item | Waiting on | Why it is here |
-|---|---|---|---|---|
-| **1** | **Stripe live keys and a live-mode webhook** | A4 | **You** | Without the webhook, payments succeed and orders sit pending for ever. Also the only way to prove what Stripe COLLECTS rather than what it is asked for |
-| **2** | **Set the margins, and settle VAT** | A2, A3 | **You** | 22 products at cost; checkout still shows "VAT (20%)" while we are not registered. **Deferred at your direction** — kept here because it is still the gate on trading |
-| **3** | **Print one real sample through PrintedEasy** | A5 | **You** | The file geometry is verified; the handover to their press is not. Pair it with **A6** — head to head or head to foot decides whether every double-sided job comes back upside down |
-| **4** | **Read back the copy Claude wrote** | 44 | **You** | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, all of Amy's knowledge. Live, and none of it in your words |
-| **5** | **Rewrite the welcome email** | 52 | **You** | Two passages unwritten, and you judged the whole thing not good enough on 7 October. It cannot embarrass us meanwhile: the guard refuses to send while any section is blank |
-| **6** | **Fix the Stripe merchant name** | 51b | **You** | It reads "invitations sandbox" on the payment page, beside "Pay securely at…". That is what a customer sees while paying |
-| **7** | **Enforce DMARC** | — | **You** | **Evidence is in as of 9 October** — all three sending paths measured `dmarc=pass` with strict alignment (§0g), so the fortnight of reports is no longer the constraint. `p=none` → quarantine 10% → 100% → reject, at your pace. Also needs a Gmail filter so the reports stop going to Spam |
-| **8** | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` |
-| **9** | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
-| **10** | **Make margins editable** (was “shrink the published payload”) | 38 | Me | **Re-framed 9 October.** Publish is NOT broken — proven live. The point is that changing one margin today rewrites all 15MB; after this it is one number. Groundwork for item 4, measured at 12x |
+| | What | Item | Waiting on | Checked 9 Oct | Why it is here |
+|---|---|---|---|---|---|
+| **1** | **Stripe live keys and a live-mode webhook** | A4 | **You** | **Still test** — every stored session id begins `cs_test_` | Without the webhook, payments succeed and orders sit pending for ever. Also the only way to prove what Stripe COLLECTS rather than what it is asked for |
+| **2** | **Set the margins, and settle VAT** | A2, A3 | **You** | **Both halves true** — 22 active products at zero margin, and the live checkout still prints "VAT (20%)" | Deferred at your direction and kept because it gates trading. The VAT half is NOT a flag flip: "VAT (20%)" is hardcoded at `upload-and-print.html:907` and `:8570` while `VAT_REGISTERED` lives only in `admin.html` |
+| **3** | **Print one real sample through PrintedEasy** | A5 | **You** | **Cannot be checked from here** — physical | The geometry is verified; the handover to their press is not. Pair with **A6**: head to head or head to foot decides whether every double-sided job returns upside down |
+| **4** | **Read back the copy Claude wrote** | 44 | **You** | **Your judgement, not checkable** | Live, and none of it in your words. The largest item on the list and the only one where I cannot tell you whether it is right |
+| **5** | **Rewrite the welcome email** | 52 | **You** | **2 passages still blank** — the guard still refuses the send | How it started, and who is on the team. You judged the whole thing not good enough on 7 October, so it is a rewrite |
+| **6** | **Fix the Stripe merchant name** | 51b | **You** | **NOT verified** — needs your Stripe dashboard | It read "invitations sandbox" beside "Pay securely at…". I have no way to see it without creating a checkout session, so this row is on the 7 October report, not a fresh check |
+| **7** | **Enforce DMARC** | — | **You** | **`p=none` confirmed live**; all three sending paths measured passing (§0g) | The evidence is in and the fortnight of reports is no longer the constraint. `quarantine; pct=10` → `quarantine` → `reject`, at your pace. Add a Gmail filter first so the reports stop going to Spam |
+| **8** | **Cloudflare Turnstile** | — | **You** | **Not implemented** (no reference anywhere); signups still off — `auth.users` is 2 and the newest is 12 May | Before launch, and a new third party so your call. Nothing is leaking meanwhile |
+| **9** | **Decide on place cards and table numbers** | 31 | **You** | **The claim is still live, verbatim** — `studio_fields` for `table-numbers` reads "Sample number — e.g. 1 (each card in your set will differ)", required and active | We tell customers each card will differ and nothing makes that true. Parked pending what PrintedEasy can actually do; separate jobs cost about £4.50 a card |
+| **10** | **Make margins editable** (was "shrink the published payload") | 38 | Me | **Publish works** — proven live 9 Oct, and the 12x saving remeasured | Changing one margin today rewrites all 15MB. After this it is one number, which makes it groundwork for item 2 rather than a size fix |
+| **11** | **The GitHub repository is public** | — | **You** | **Confirmed today** — anonymous requests read `docs/STATUS.md`, `docs/PRICING.md` and `tools/printedeasy_refresh.py` | **Found 9 October.** No credential is exposed (checked, and Netlify's own scan agrees) but the 20% supplier discount, the cost-base method, this whole status file and the CRM plan are readable by anyone. `/docs` and `/tools` were deliberately 404'd on the site in September, which shows the intent — GitHub makes that moot. One setting to fix; Netlify keeps deploying from a private repo |
 
 **Closed, kept here so the count is honest:**
 
@@ -2687,16 +2700,66 @@ size fix at the bottom of the list.
 already arrives); **51c**, the delivery address collected twice, once by our form
 and again by Stripe.
 
-**Small chores, no order between them:** delete the `album-photos` bucket and
-its six files (Storage dashboard — the only part left of the album work, since
-`img/albums` and its four unreferenced images went on 9 October); export the 10 holding-page signups from
-Netlify Forms; ~~set `ALERT_EMAIL` in Netlify for the Monday price watch (A7)~~ — **SET 9 October** to `hello@foreverprint.com`, live after the next deploy. The alert was never broken: `ALERT_EMAIL` is optional and fell back to `FROM_EMAIL`, so Monday alerts had been delivering to `orders@` all along (28 Sep and 5 Oct, both delivered). Setting it explicitly stops the alert silently following `FROM_EMAIL` if that ever changes, and sends it to a different mailbox than the one it comes from;
-remove the homepage holding overlay when you decide to open (A8).
+**Small chores — re-checked 9 October, and this is what is genuinely left:**
+
+| Chore | Who | Checked 9 Oct |
+|---|---|---|
+| Delete the `album-photos` bucket and its six files | You | **Still there** — 6 files, 5.7MB, from 10 May. Needs the Storage dashboard; SQL cannot delete storage. The code side is done |
+| Remove the homepage holding overlay when you decide to open | You, then me | **Still live** — "final touches" and "NOTIFY ME" are on the home page now |
+| Stop collecting the delivery address twice | Me | **Still doubled** — `create-checkout.js:538` sets `shipping_address_collection` as well as our own form |
+| Export the 10 holding-page signups | You | **10 confirmed** in Netlify Forms (`launch-signup`), last one 28 August. **Do NOT export them into this repository** — it is public, see item 11 |
+| `orders@` as a send-FROM address | You | **Not verified.** Resend sends FROM it successfully, so if this is about sending as `orders@` from Outlook, only you can confirm |
+
+**Done and removed on 9 October:** `ALERT_EMAIL` (was never broken — the alerts
+had been delivering on the `FROM_EMAIL` fallback since September; now set to
+`hello@foreverprint.com` explicitly and live), and the wedding-album imagery.
 
 **Not on this list on purpose:** the CRM work. It has its own file, and §0b of
 `docs/CRM.md` says where to pick it up. The short version is that W2 and W4 are
 finished machines blocked on copy, and the hole is that 61 people have pressed
 "Love it" and one address came out.
+
+### The GitHub repository is public — found 9 October
+
+**Anyone can read the repository without signing in.** Verified by anonymous
+request:
+
+```
+raw.githubusercontent.com/.../docs/STATUS.md                200
+raw.githubusercontent.com/.../docs/PRICING.md               200
+raw.githubusercontent.com/.../tools/printedeasy_refresh.py  200
+```
+
+Netlify's deploy record carries `"public_repo": true`, which is what prompted
+the check.
+
+**No credential is exposed.** Every match for `sk-ant-`, `sk_live_`, `whsec_`
+and `service_role` is a test fixture, a comment documenting a prefix, or a SQL
+grant — checked one pattern at a time, and Netlify's own secret scan reports
+`secretsScanMatches: []` across 281 files. The Supabase **anon** key is in the
+pages and belongs there; it is public by design.
+
+**What IS exposed is commercial:**
+
+- `tools/printedeasy_refresh.py` states the supplier discount in its own words
+  — *"We buy at 20% off their list"*, and `DISCOUNT = 0.20`
+- `docs/PRICING.md` — the whole cost-to-sell chain and the margin model
+- `docs/STATUS.md` — this file: every open fault, every security decision, the
+  trading position
+- `docs/CRM.md` — the marketing plan
+
+**The intent was clearly otherwise.** In September `/docs/*` and `/tools/*` were
+deliberately made to 404 on the live site, specifically because
+`printedeasy_refresh.py` had been serving the supplier discount at a plain URL.
+That fix stands, and GitHub makes it moot.
+
+**One setting fixes it:** GitHub → Settings → General → Danger Zone → Change
+visibility → Private. **Netlify keeps deploying from a private repository** —
+the existing connection is already authorised, so nothing about the build
+changes. It is item 11 on the list.
+
+**It also makes one chore delicate:** exporting the 10 holding-page signups.
+Those are real email addresses, and they must not land in this repository.
 
 ### The Monday price watch — working, and what it has been saying
 
