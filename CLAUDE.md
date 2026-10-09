@@ -13,6 +13,7 @@ Read this before changing anything. It is short on purpose; the detail lives in
 | `docs/CRM.md` | **Customer relationships and marketing.** The three pathways, the triggers, consent basis, and the decisions still open. Read before building anything that emails a customer. |
 | `BRAND-IMAGERY-GUIDE.md` | Generating product photography. |
 | `docs/ARTWORK-SPEC.md` | Press-file geometry. |
+| `docs/NEW-PRODUCT-RECIPE.md` | **Adding a product.** The field rules, copy patterns, imagery spec and verification order, so it does not cost a conversation each time. |
 
 **If you change how the site looks, change `docs/BRAND.md` in the same commit.**
 The same rule `docs/PRICING.md` already carries. A guideline nobody updates
