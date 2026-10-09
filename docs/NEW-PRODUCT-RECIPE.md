@@ -125,8 +125,25 @@ ivory linen, foliage framing, visible paper texture, never cluttered. Pick a
 **florals + prop + background combination no existing product uses** — the guide
 carries the differentiation matrix.
 
-Claude can generate candidates; Nicholas picks. Generated images come out square
-unless the ratio is forced, and need cropping to 4:3 at 1600px before use.
+**Claude can generate candidates but cannot deliver the file.** Tested
+9 October: image generation returns a Canva media reference and a 200x200
+thumbnail. `get-assets` returns thumbnails only, `export-design` needs a design
+id rather than a media id, and `create-design` would produce something different
+rather than wrap the chosen image. There is no route from a generated candidate
+to a 1600px JPG in the repo.
+
+**So the hero always ends with Nicholas**, by one of two routes:
+
+1. **Google AI Studio**, the route this guide already specifies — Claude supplies
+   the exact prompt, Nicholas generates and downloads at 1600px.
+2. **Canva** — candidates Claude generates land in Nicholas's Canva account and
+   can be downloaded from there.
+
+Either way the file goes in the repo root as `/<slug>-hero.jpg`, and Claude
+crops and resizes it to 1600px at 4:3 with `sips` before wiring it up.
+
+Generated candidates also come out square unless the ratio is forced, and even
+then not reliably.
 
 **One caution:** the imagery guide lists wax seals among the gold props and the
 Save the Date photograph uses a wax-sealed envelope. We do not sell wax seals.
