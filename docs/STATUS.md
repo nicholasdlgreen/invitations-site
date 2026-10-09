@@ -1,9 +1,20 @@
-# Where we are — 8 October 2026
+# Where we are — 9 October 2026
 
 *Every figure below was checked against the live site, the live database or a
 generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
+
+**9 October. Two items re-grounded, neither the way the sheet expected.** Publish
+turned out not to be broken, so the payload item was re-framed from a size fix
+into groundwork for setting the margins (§0 and item 38). Then **every path that
+sends as foreverprint.com was measured passing DMARC** — including Outlook,
+which was the one that could have quarantined Nicholas's own mail — so
+enforcement no longer waits on a fortnight of reports. Written up in **§0g**,
+along with two errors of mine: I sent Nicholas looking for reports this file had
+already recorded arriving, and I asserted a mail catch-all that does not exist.
+
+---
 
 **8 October. A clearing day — four items closed, one withdrawn, and a money bug
 nobody was looking for.** Mail is on Google Workspace, the artwork sweep is
@@ -202,6 +213,99 @@ pdf.js ran on the UI thread; it had not since 3 October. In both cases something
 was fixed and then wrongly reported as still broken — once by a test that read a
 comment, once by a probe that tested a call the library never makes. A few
 minutes spent confirming the premise has now twice saved a day of building.
+
+## 0g. 9 October — every sending path proven, and two of my own errors
+
+**All three paths that send as `foreverprint.com` now pass DMARC, measured from
+a real receiver's headers rather than reasoned about.** Google's own
+`Authentication-Results` on three separate messages:
+
+| Path | SPF | DKIM | DMARC | Evidence |
+|---|---|---|---|---|
+| **Resend** — every site email | pass | pass, `d=foreverprint.com s=resend` | **pass** | contact-form email, 7 Oct 20:12 |
+| **Workspace via Gmail** in a browser | pass | pass, `d=foreverprint.com s=google` | **pass** | 9 Oct 11:39 |
+| **Workspace via Outlook** | pass | pass, `d=foreverprint.com s=google` | **pass** | 9 Oct 11:49 |
+
+Both SPF and DKIM align **strictly** on all three, which is the harder of the
+two alignment tests. The Outlook message's own path settles how that client is
+configured:
+
+```
+Received: from DB9P193MB2898.EURP193.PROD.OUTLOOK.COM
+          by smtp.gmail.com with ESMTPSA
+```
+
+Outlook hands the message to Google as an authenticated submission and Google
+signs it. **That was the real risk in enforcing DMARC** — had Outlook been
+sending through Microsoft's own servers with the address as an alias, SPF would
+have failed, there would have been no DKIM, and Nicholas's own mail would have
+been quarantined on enforcement day. It is not, and that is now measured.
+
+**Only one sender exists in the code.** Every outbound email uses `FROM_EMAIL`;
+`NOTIFY_EMAIL`, `PRINTER_EMAIL`, `ALERT_EMAIL` and `TRUSTPILOT_BCC` are all
+recipients. A fourth sender, `noreply@foreverprint.com`, retired itself on
+8 October when the Send Email Hook took over Supabase's account emails.
+
+### The record, and a directive that was doing nothing
+
+`fo=1` asks receivers for failure reports when SPF or DKIM fail — but failure
+reports go to a `ruf=` address, and there was none. **It was inert.** Dropped.
+
+Reports now go to an address Nicholas reads. Verified from two independent
+resolvers after the edit:
+
+```
+v=DMARC1; p=none; rua=mailto:hello@foreverprint.com
+```
+
+### Two errors of mine, recorded because both are repeats
+
+**I sent Nicholas hunting for something this file already answered.** I asked him
+to search for DMARC aggregate reports. §0e of this document already records one
+arriving at 11:02 on 8 October from `noreply-dmarc-support@google.com`. The
+reports were never the open question; I had not read the existing record before
+asking him to do work. That is exactly the fault in
+`verify-the-item-before-working-it`, pointed at my own notes instead of at the
+code.
+
+**I asserted a catch-all that does not exist.** An SMTP probe accepted
+`dmarc@`, `orders@` and a deliberately invented address, all with 250. I
+concluded there was a catch-all. §0e establishes there is not — the aliases are
+explicit, and that is how the 8 October report is known to have resolved. Google
+accepted at RCPT and would have bounced afterwards. **The only sound conclusion
+from that probe was "it cannot tell", which is what the control address was
+there to reveal.** The control did its job; I then talked past it.
+
+### Why the reports were invisible, and the actual fix
+
+They go to **Spam**. So did the five test messages on 8 October (§0e), and so
+did the Outlook test today. The cause is not authentication — everything passes
+— it is that `foreverprint.com` has almost no sending reputation, and a
+one-word message titled "test" from a new domain reads as spam.
+
+**So the fix is a Gmail filter, not a new address**: a rule matching
+`from:noreply-dmarc-support@google.com` (and the Microsoft and Yahoo equivalents)
+set to "Never send it to Spam". Without that, the reports keep arriving and keep
+being unreadable. The `rua` change is still worth having — it points at the
+mailbox actually in use — but it was not what was wrong.
+
+### Where enforcement stands
+
+**The evidence to enforce now exists**, and it is stronger than report-watching
+would have produced: reports describe what happened to be sent, whereas the three
+verdicts above cover every path that can send. The staged rollout remains the
+safety mechanism, not the reports:
+
+```
+v=DMARC1; p=quarantine; pct=10; rua=mailto:hello@foreverprint.com
+v=DMARC1; p=quarantine;          rua=mailto:hello@foreverprint.com
+v=DMARC1; p=reject;              rua=mailto:hello@foreverprint.com
+```
+
+At `pct=10` only one in ten *failing* messages is affected, so an unknown sender
+surfaces with ninety per cent of its mail still getting through. **Nicholas's
+call on timing**; the 22 October date was chosen to allow a fortnight of reports
+and is no longer the constraint.
 
 ## 0d. 7 October — platform and security
 
@@ -614,10 +718,13 @@ answer. Check WHO is asking before believing a nil result.
   (`foreverprint.com._report._dmarc.gmail.com`). Gmail publishes none, so
   conforming reporters sent nothing: the domain had been in "monitoring" mode
   monitoring nothing, which is why there was no evidence to enforce on.
-  Now `v=DMARC1; p=none; rua=mailto:dmarc@foreverprint.com; fo=1`, verified
-  live. Mail to the domain forwards through ImprovMX with a catch-all, so
-  `dmarc@` arrives without any alias being created — confirmed by sending to it.
-  **Next, in about two weeks:** read the reports, then `p=quarantine; pct=10`,
+  **Superseded 9 October — see §0g.** The record is now
+  `v=DMARC1; p=none; rua=mailto:hello@foreverprint.com`, and the sentence below
+  about ImprovMX no longer applies: mail goes to Google, which has no catch-all,
+  and `dmarc@` and `hello@` are explicit aliases.
+  ~~Mail to the domain forwards through ImprovMX with a catch-all, so
+  `dmarc@` arrives without any alias being created.~~
+  **Next:** read the reports, then `p=quarantine; pct=10`,
   then 100, then reject. Not jumped straight to reject because the root SPF
   covers ImprovMX only and outbound alignment rests on the Resend DKIM key.
   **Answered 7 October:** Nicholas does NOT currently send from
@@ -2559,7 +2666,7 @@ size fix at the bottom of the list.
 | **4** | **Read back the copy Claude wrote** | 44 | **You** | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, all of Amy's knowledge. Live, and none of it in your words |
 | **5** | **Rewrite the welcome email** | 52 | **You** | Two passages unwritten, and you judged the whole thing not good enough on 7 October. It cannot embarrass us meanwhile: the guard refuses to send while any section is blank |
 | **6** | **Fix the Stripe merchant name** | 51b | **You** | It reads "invitations sandbox" on the payment page, beside "Pay securely at…". That is what a customer sees while paying |
-| **7** | **Enforce DMARC** | — | **You** | Around **22 October**, after a fortnight of reports. `p=none` → quarantine 10% → 100 → reject. Safe now that outbound goes through Google |
+| **7** | **Enforce DMARC** | — | **You** | **Evidence is in as of 9 October** — all three sending paths measured `dmarc=pass` with strict alignment (§0g), so the fortnight of reports is no longer the constraint. `p=none` → quarantine 10% → 100% → reject, at your pace. Also needs a Gmail filter so the reports stop going to Spam |
 | **8** | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` |
 | **9** | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
 | **10** | **Make margins editable** (was “shrink the published payload”) | 38 | Me | **Re-framed 9 October.** Publish is NOT broken — proven live. The point is that changing one margin today rewrites all 15MB; after this it is one number. Groundwork for item 4, measured at 12x |
