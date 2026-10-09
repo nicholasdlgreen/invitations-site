@@ -2690,13 +2690,52 @@ and again by Stripe.
 **Small chores, no order between them:** delete the `album-photos` bucket and
 its six files (Storage dashboard — the only part left of the album work, since
 `img/albums` and its four unreferenced images went on 9 October); export the 10 holding-page signups from
-Netlify Forms; set `ALERT_EMAIL` in Netlify for the Monday price watch (A7);
+Netlify Forms; ~~set `ALERT_EMAIL` in Netlify for the Monday price watch (A7)~~ — **SET 9 October** to `hello@foreverprint.com`, live after the next deploy. The alert was never broken: `ALERT_EMAIL` is optional and fell back to `FROM_EMAIL`, so Monday alerts had been delivering to `orders@` all along (28 Sep and 5 Oct, both delivered). Setting it explicitly stops the alert silently following `FROM_EMAIL` if that ever changes, and sends it to a different mailbox than the one it comes from;
 remove the homepage holding overlay when you decide to open (A8).
 
 **Not on this list on purpose:** the CRM work. It has its own file, and §0b of
 `docs/CRM.md` says where to pick it up. The short version is that W2 and W4 are
 finished machines blocked on copy, and the hole is that 61 people have pressed
 "Love it" and one address came out.
+
+### The Monday price watch — working, and what it has been saying
+
+**Checked 9 October.** The watch runs on `0 8 * * 1` and has been delivering:
+alerts on Monday 28 September and Monday 5 October, both to
+`orders@foreverprint.com`, both recorded delivered by Resend. **`ALERT_EMAIL`
+was never required** — `printedeasy-price-watch.js:29` reads
+`process.env.ALERT_EMAIL || FROM_EMAIL`. The chore that said to set it read as
+"no alerts are being sent"; they were.
+
+It is now set to `hello@foreverprint.com` anyway, for two reasons that are not
+"it was broken": the alert no longer silently follows `FROM_EMAIL` if that
+address ever changes, and it is no longer sent from and to the same mailbox,
+which filters treat with suspicion. **Live only after the next deploy** —
+Netlify bakes environment variables in at deploy time.
+
+**What the alert has been reporting, twice, with nothing done:**
+
+> Uncoated 350gsm · folded-leaflet · DL · 25 — on file £53.00, theirs now
+> £51.00, −3.8%
+
+Confirmed in `sheet_rates`: that rung holds a cost of **£42.40**, which is
+£53.00 × 0.80 — our trade price off their old list. Their list is now £51.00, so
+the cost should be **£40.80**. Last refreshed **27 September**. Nothing is lost
+at a zero margin; the cost base is simply stale.
+
+**The figure that matters more than that one price.** `sheet_rates` holds
+**8,796 rows, 8,418 active, every one last refreshed on 27 September.** The
+watch samples 20 and managed 10 before Netlify's 10-second limit stopped it. So
+it checks roughly **ten rows a week out of 8,418** — it is a smoke alarm, not an
+audit. It found one stale price in the ten it looked at; that is far too small a
+sample to say what share of the rest has drifted, and nothing has verified them
+since 27 September.
+
+**This bears on A2, setting the margins**, and Nicholas's position on 9 October
+is explicit: the site is not live, so the cost base does not need correcting
+yet. Recorded so it is not mistaken for an oversight later. `tools/printedeasy_refresh.py`
+reports every change without `--write`, but needs `SUPABASE_SERVICE_KEY`, so it
+is a terminal step for Nicholas rather than something Claude can run.
 
 ### A. Blocking launch
 
