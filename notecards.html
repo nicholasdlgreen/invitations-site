@@ -1,61 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"/>
 <!--FAVICON-->
 <link rel="icon" href="/favicon.ico" sizes="any"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/img/brand/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="16x16" href="/img/brand/favicon-16.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/img/brand/favicon-180.png"/>
 <!--/FAVICON-->
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Sign in | foreverprint</title>
-<meta name="description" content="Sign in to your foreverprint account to view your orders and saved designs.">
-<meta name="robots" content="noindex, follow"/>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="/prefetch.js" defer></script>
-<script src="/vendor/supabase-js-2.116.0.min.js"></script>
-<script src="/supabase-config.js"></script>
-<script src="/auth.js"></script>
-<script src="/cart.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Personalised Notecards, Printed in the UK | foreverprint</title>
+<meta name="description" content="Personalised notecards printed in the UK on premium papers, with envelopes included. Flat correspondence cards from a pack of 25."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://foreverprint.com/notecards"/>
+<meta property="og:title" content="Personalised Notecards, Printed in the UK | foreverprint"/>
+<meta property="og:description" content="Personalised notecards printed in the UK on premium papers, with envelopes included. Flat correspondence cards from a pack of 25."/>
+<meta property="og:url" content="https://foreverprint.com/notecards"/>
+<meta property="og:image" content="https://foreverprint.com/notecards-hero.jpg"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta property="og:type" content="product"/>
+<meta property="og:site_name" content="foreverprint"/>
+<link rel="preload" as="image" href="/.netlify/images?url=/notecards-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75" imagesrcset="/.netlify/images?url=/notecards-hero.jpg&amp;w=400&amp;fm=webp&amp;q=75 400w, /.netlify/images?url=/notecards-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75 800w, /.netlify/images?url=/notecards-hero.jpg&amp;w=1200&amp;fm=webp&amp;q=75 1200w" imagesizes="(max-width: 768px) 92vw, 44vw"/>
+<link rel="preconnect" href="https://jvcpzmumkyjdyibmwlsd.supabase.co" crossorigin/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="dns-prefetch" href="https://www.googletagmanager.com"/>
+
 <style>
-  :root{
-    --cream:#FAF7F2;--white:#FFFFFF;--gold:#B8976A;--gold-lt:#D4B896;
-    --brown:#6B4F3A;--text:#3D2E24;--soft:#7A6558;--pale:#B0A098;
-    --border:#E8DDD8;--err:#C94A3A;--ok:#5A9E6F;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{background:var(--cream);color:var(--text);font-family:'Jost',sans-serif;font-weight:300;-webkit-font-smoothing:antialiased;}
-  body{min-height:100vh;display:flex;flex-direction:column;}
-  main{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px;}
-  .auth-card{width:100%;max-width:440px;background:var(--white);border:1px solid var(--border);border-radius:20px;padding:48px 40px;box-shadow:0 12px 36px rgba(61,46,36,.06);}
-  @media(max-width:560px){.auth-card{padding:36px 24px;}}
-  .auth-eyebrow{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:14px;}
-  .auth-title{font-family:'Cormorant Garamond',serif;font-size:2.1rem;font-weight:400;color:var(--text);text-align:center;margin-bottom:8px;line-height:1.15;}
-  .auth-sub{font-size:var(--text-sm);color:var(--soft);text-align:center;margin-bottom:32px;line-height:1.6;}
-  .form-group{margin-bottom:18px;}
-  .form-label-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
-  .form-label{font-size:var(--text-xs);font-weight:500;color:var(--text);letter-spacing:.08em;text-transform:uppercase;}
-  .form-label-link{font-size:var(--text-xs);color:var(--gold);text-decoration:none;font-weight:500;}
-  .form-label-link:hover{color:var(--brown);}
-  .form-input{width:100%;padding:13px 16px;border:1px solid var(--border);border-radius:10px;background:var(--cream);font-family:inherit;font-size:var(--text-body);color:var(--text);font-weight:400;transition:border-color .2s,background .2s;}
-  .form-input:focus{outline:none;border-color:var(--focus,var(--soft));background:var(--white);}
-  .btn-submit{width:100%;background:var(--gold);color:var(--white);border:none;padding:15px 24px;border-radius:10px;font-family:inherit;font-size:var(--text-body);font-weight:500;letter-spacing:.04em;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;}
-  .btn-submit:hover:not(:disabled){background:var(--brown);}
-  .btn-submit:disabled{background:var(--pale);cursor:not-allowed;}
-  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;flex-shrink:0;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .auth-divider{display:flex;align-items:center;gap:12px;margin:26px 0;color:var(--pale);font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;}
-  .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-  .auth-foot{text-align:center;font-size:var(--text-sm);color:var(--soft);}
-  .auth-foot a{color:var(--gold);text-decoration:none;font-weight:500;}
-  .auth-foot a:hover{color:var(--brown);}
-  .form-msg{padding:12px 16px;border-radius:10px;font-size:var(--text-sm);margin-bottom:18px;display:none;line-height:1.5;}
-  .form-msg.err{background:#FCEAEA;color:var(--err);display:block;}
-  .form-msg.ok{background:#EAF4ED;color:var(--ok);display:block;}
+/* Product landing page — PPC-optimised. Site-wide tokens (--cream, --gold,
+   --soft, --text, --white, --border, --pale, --gold-lt) inherited from
+   header.html. */
+
+/* HERO — H1 plain (message-match), price prominent, single CTA */
+.lp-hero{background:var(--cream);padding:44px 0 40px;}
+.lp-hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:start;}
+@media(min-width:769px){.lp-hero-grid > div:last-child{margin-top:34px;}}
+.lp-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;margin-bottom:12px;}
+.lp-h1{font-family:'Cormorant Garamond',serif;font-size:var(--text-h1);font-weight:400;line-height:1.06;color:var(--text);margin:0 0 12px;}
+.lp-hero-sub{font-size:var(--text-body);color:var(--soft);line-height:1.7;margin:0 0 22px;max-width:500px;}
+/* One line, read as a sentence: "From £18 for 50". The previous version led
+   with the figure and stacked the words beside it, which put "From" to the
+   RIGHT of the number and read as "£18 From for 50". The markup order was
+   always correct — a screen reader heard it properly — but that is no defence
+   when the visible line is nonsense. Baseline alignment keeps the small words
+   sitting on the figure's feet rather than floating against its middle. */
+.lp-price-block{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:13px 20px;display:inline-flex;align-items:baseline;gap:8px;margin-bottom:18px;min-width:186px;min-height:52px;box-sizing:border-box;}
+.lp-price-label{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500;}
+.lp-price-value{font-family:'Cormorant Garamond',serif;font-size:1.95rem;font-weight:400;color:var(--text);line-height:1;}
+.lp-price-qty{font-size:var(--text-xs);letter-spacing:.04em;color:var(--soft);}
+/* Nothing to say after the figure until the pack loads. The flex gap applies
+   between items whatever they contain, so an empty span would leave 8px of
+   trailing air inside the box. */
+.lp-price-block.is-solo .lp-price-qty{display:none;}
+.lp-cta{display:inline-flex;align-items:center;gap:12px;padding:16px 30px;background:var(--gold);color:#fff;font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;font-weight:500;border-radius:60px;text-decoration:none;border:1px solid var(--gold);cursor:pointer;transition:all .2s;}
+.lp-cta:hover{background:transparent;color:var(--gold);}
+.lp-cta::after{content:'→';transition:transform .2s;}
+.lp-cta:hover::after{transform:translateX(4px);}
+.lp-hero-trust{display:flex;gap:22px;margin-top:16px;font-size:var(--text-xs);color:var(--soft);flex-wrap:wrap;}
+.lp-hero-reassure{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-top:22px;padding-top:20px;border-top:1px solid var(--border);}
+.lp-hr-item{display:flex;align-items:center;gap:9px;font-size:var(--text-sm);color:var(--soft);}
+.lp-hr-icon{color:var(--gold);font-size:var(--text-sm);flex-shrink:0;}
+.lp-hero-trust span::before{content:'✓ ';color:var(--gold);font-weight:600;}
+.lp-hero-img{width:100%;max-width:480px;aspect-ratio:4/3;object-fit:cover;border-radius:16px;background:var(--pale);}
+.lp-hero-img-placeholder{width:100%;max-width:480px;aspect-ratio:4/3;border-radius:16px;background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:var(--text-body);font-style:italic;color:var(--gold-lt);border:1px solid var(--border);}
+.lp-hero-img-placeholder::before{content:'✦';font-size:var(--text-h2);}
+
+/* PRICING SECTION — full quantity table */
+.lp-section{padding:44px 0;}
+.lp-section-cream{background:var(--cream);}
+.lp-section-white{background:var(--white);}
+.lp-section-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;display:block;text-align:center;margin-bottom:10px;}
+.lp-section-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,2.6vw,2.1rem);font-weight:400;line-height:1.15;text-align:center;color:var(--text);margin:0 0 8px;}
+.lp-section-h2 em{color:var(--gold);font-style:italic;}
+.lp-section-divider{width:36px;height:1px;background:var(--gold);margin:14px auto 28px;}
+.pt-badge{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold-lt);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;}
+.lp-price-note{font-size:var(--text-xs);color:var(--soft);text-align:center;margin-top:14px;line-height:1.6;}
+.pt-gsm{display:block;font-size:.72rem;font-weight:400;letter-spacing:.04em;color:var(--soft);margin-top:2px;text-transform:none;}
+.lp-cta-row{text-align:center;margin-top:36px;}
+
+/* PAPER & FINISH SHOWCASE — editorial, sensory, no prices */
+.lp-strip{padding:52px 0;border-top:1px solid var(--border);}
+.lp-strip-tag{font-size:var(--text-xs);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:8px;}
+.lp-strip-h{font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,2.4vw,2rem);font-weight:400;text-align:center;color:var(--text);margin:0 0 6px;}
+.lp-strip-intro{font-size:var(--text-sm);color:var(--soft);text-align:center;max-width:500px;margin:10px auto 30px;line-height:1.75;}
+.lp-showcase{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:920px;margin:0 auto;}
+.lp-show-card{text-align:left;}
+.lp-swatch{aspect-ratio:3/2;border-radius:12px;border:1px solid var(--border);background:linear-gradient(135deg,var(--cream),var(--pale));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-sm);color:var(--gold-lt);margin-bottom:12px;}
+.lp-show-name{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);margin-bottom:2px;}
+.lp-show-tier{font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.lp-show-desc{font-size:var(--text-sm);color:var(--soft);line-height:1.7;}
+/* Finishing — dark panel, framed as craft */
+
+/* HOW IT WORKS — compact horizontal */
+.lp-how{padding:48px 0;background:var(--cream);}
+.lp-how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1000px;margin:0 auto;}
+.lp-how-step{text-align:center;padding:0 16px;}
+.lp-how-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--white);border:1px solid var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:12px;}
+.lp-how-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:400;color:var(--text);margin-bottom:6px;}
+.lp-how-text{font-size:var(--text-xs);color:var(--soft);line-height:1.7;}
+
+/* WHY US — 4 items, real claims */
+.lp-why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;max-width:1000px;margin:0 auto;}
+.lp-why-item{text-align:center;padding:0 8px;}
+.lp-why-icon{font-size:var(--text-h3);color:var(--gold);margin-bottom:12px;}
+.lp-why-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);margin-bottom:8px;}
+.lp-why-text{font-size:var(--text-sm);color:var(--soft);line-height:1.85;}
+
+/* Product intro + buying guide — only rendered for products that have one */
+.lp-intro-wrap{max-width:720px;margin:0 auto;}
+.lp-intro-body{font-size:var(--text-sm);color:var(--soft);line-height:1.95;margin:0;text-align:left;}
+.lp-intro-body a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-lt);padding-bottom:1px;transition:border-color .2s,color .2s;}
+.lp-intro-body a:hover{color:var(--brown);border-bottom-color:var(--brown);}
+
+/* FAQs */
+.lp-faq-wrap{max-width:680px;margin:0 auto;}
+.lp-faq-item{border-bottom:1px solid var(--border);}
+.lp-faq-q{padding:20px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:24px;list-style:none;}
+.lp-faq-q::-webkit-details-marker{display:none;}
+.lp-faq-q-text{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text);}
+.lp-faq-toggle{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:var(--text-sm);color:var(--gold);transition:transform .25s;}
+.lp-faq-item[open] .lp-faq-toggle{transform:rotate(45deg);}
+.lp-faq-a{font-size:var(--text-sm);color:var(--soft);line-height:1.95;padding:0 0 20px;max-width:600px;}
+
+/* FINAL CTA */
+.lp-final{background:var(--cream);padding:88px 0;text-align:center;}
+.lp-final-h{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:300;line-height:1.15;margin:0 0 16px;color:var(--text);}
+.lp-final-h em{color:var(--gold);font-style:italic;}
+
+/* PATH-CHOOSER MODAL */
+.path-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
+.path-modal.open{display:flex;}
+.path-modal-backdrop{position:absolute;inset:0;background:rgba(33,22,12,.62);animation:pmFade .2s ease;}
+.path-modal-panel{position:relative;background:var(--cream);border-radius:18px;padding:40px 40px 36px;max-width:680px;width:100%;box-shadow:0 30px 80px rgba(33,22,12,.30);animation:pmSlide .25s ease;}
+.path-modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:var(--text-body);color:var(--soft);cursor:pointer;line-height:1;}
+.path-modal-close:hover{color:var(--text);}
+.path-modal-tag{font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:500;text-align:center;display:block;margin-bottom:8px;}
+.path-modal-h{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;line-height:1.15;color:var(--text);text-align:center;margin:0 0 8px;}
+.path-modal-h em{color:var(--gold);font-style:italic;}
+.path-modal-sub{font-size:var(--text-sm);color:var(--soft);text-align:center;line-height:1.7;margin:0 auto 28px;max-width:440px;}
+.path-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.path-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:28px 28px 24px;text-decoration:none;display:flex;flex-direction:column;transition:all .2s;cursor:pointer;}
+.path-card:hover{border-color:var(--gold);box-shadow:0 12px 28px rgba(184,153,104,.10);transform:translateY(-2px);}
+.path-icon{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);margin-bottom:10px;}
+.path-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;color:var(--text);margin:0 0 8px;line-height:1.2;}
+.path-desc{font-size:var(--text-sm);color:var(--soft);line-height:1.75;margin:0 0 16px;flex:1;}
+.path-card-cta{font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--text);font-weight:500;border-bottom:1px solid var(--gold);padding-bottom:3px;display:inline-block;align-self:flex-start;}
+.path-card-cta::after{content:' →';color:var(--gold);}
+.path-modal-help{margin-top:22px;text-align:center;font-size:var(--text-xs);color:var(--soft);}
+.path-modal-help a{color:var(--gold);text-decoration:none;}
+@keyframes pmFade{from{opacity:0;}to{opacity:1;}}
+@keyframes pmSlide{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+@media(max-width:768px){
+  .lp-hero-grid{grid-template-columns:1fr;gap:32px;}
+  .lp-how-steps,.lp-why-grid{grid-template-columns:1fr;gap:18px;}
+  .lp-strip-pills{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding:0 16px;}
+  .path-modal-grid{grid-template-columns:1fr;}
+  .path-modal-panel{padding:28px 24px;}
+}
 </style>
+<script src="/vendor/supabase-js-2.116.0.min.js" defer></script>
+<script src="/supabase-config.js"></script>
+<script>
+// Start fetching the "from" price HERE, in the head.
+//
+// The script that needs it sits at the bottom of the body, so on the live site
+// the request did not even start until 601ms and the figure landed at 1,614ms
+// — most of a second of empty box while the customer looked straight at it.
+// supabase-config.js above is not deferred, so its config is already set and
+// the key is not repeated. Nothing on the page waits for this; if it fails or
+// arrives late, loadData() asks again in the ordinary way.
+(function () {
+  try {
+    var c = window.__SUPABASE_CONFIG;
+    if (!c || !c.url || !c.anonKey || typeof fetch !== 'function') return;
+    window.__fromPricesEarly = fetch(c.url + '/rest/v1/rpc/from_prices', {
+      headers: { apikey: c.anonKey, Authorization: 'Bearer ' + c.anonKey }
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  } catch (e) { /* the page will fetch it again below */ }
+})();
+</script>
+<script src="/auth.js" defer></script>
+<script src="/cart.js"></script>  
+<link rel="stylesheet" href="/papers/section.css">
+<link rel="stylesheet" href="/finishing/section.css">
+<script src="/papers/section.js" defer></script>
+<script src="/finishing/section.js" defer></script>
 </head>
 <body>
 
@@ -612,44 +742,139 @@ was fetched and injected via innerHTML — that was the bug behind the
 "updateCartBadge is not defined" error.
 -->
 
-<main>
-  <div class="auth-card">
-    <div class="auth-eyebrow">foreverprint</div>
-    <h1 class="auth-title">Welcome back</h1>
-    <p class="auth-sub">Sign in to view your orders and saved designs.</p>
-
-    <div id="formMsg" class="form-msg"></div>
-
-    <form id="loginForm" novalidate>
-      <div class="form-group">
-        <label class="form-label" for="email">Email</label>
-        <input class="form-input" type="email" id="email" name="email" autocomplete="email" required>
-      </div>
-
-      <div class="form-group">
-        <div class="form-label-row">
-          <label class="form-label" for="password">Password</label>
-          <a class="form-label-link" href="/forgot-password">Forgot?</a>
+<!-- HERO -->
+<section class="lp-hero">
+  <div class="container">
+    <div class="lp-hero-grid">
+      <div>
+        <span class="lp-tag" id="lp-tag">Wedding Stationery</span>
+        <h1 class="lp-h1" id="lp-h1">Notecards</h1>
+        <p class="lp-hero-sub" id="lp-sub">Your own stationery, for the notes still worth writing by hand. Notecards printed in the UK on premium papers, with envelopes included and every card checked before it leaves us. Put a name, a monogram or a quiet pattern on the front and leave the rest of the page to you. Choose your paper and finishing, upload your design or create something new in our studio.</p>
+        <div class="lp-price-block" id="lp-price-block">
+          <div class="lp-price-label">From</div>
+          <div class="lp-price-value" id="lp-price-value">£—</div>
+          <div class="lp-price-qty" id="lp-price-qty"></div>
         </div>
-        <input class="form-input" type="password" id="password" name="password" autocomplete="current-password" required>
+        <div><button class="lp-cta" id="lp-hero-cta" type="button" onclick="openPathModal(this)">Start Your Order</button></div>
+        <div class="lp-hero-reassure">
+          <div class="lp-hr-item"><span class="lp-hr-icon">✦</span><span>UK printed</span></div>
+          <div class="lp-hr-item"><span class="lp-hr-icon">✧</span><span>Premium paper</span></div>
+          <div class="lp-hr-item"><span class="lp-hr-icon">✸</span><span>Tracked delivery</span></div>
+          <div class="lp-hr-item"><span class="lp-hr-icon">✶</span><span>File checked by hand</span></div>
+        </div>
       </div>
-
-      <button type="submit" class="btn-submit" id="submitBtn">
-        <span class="spinner" id="spinner"></span>
-        <span id="submitText">Sign in</span>
-      </button>
-    </form>
-
-    <div class="auth-divider">or</div>
-
-    <div class="auth-foot">
-      New to foreverprint? <a href="/register">Create an account</a>
-    </div>
-    <div class="auth-foot" style="margin-top:16px;font-size:var(--text-xs);color:var(--pale);">
-      You don't need an account to place an order — <a href="/products" style="color:var(--pale);text-decoration:underline;">order as a guest</a>.
+      <div>
+        <div id="lp-hero-img-wrap"><img class="lp-hero-img" data-prerendered src="/.netlify/images?url=/notecards-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75" srcset="/.netlify/images?url=/notecards-hero.jpg&amp;w=400&amp;fm=webp&amp;q=75 400w, /.netlify/images?url=/notecards-hero.jpg&amp;w=800&amp;fm=webp&amp;q=75 800w, /.netlify/images?url=/notecards-hero.jpg&amp;w=1200&amp;fm=webp&amp;q=75 1200w" sizes="(max-width: 768px) 92vw, 44vw" alt="Notecards" width="800" height="644" fetchpriority="high" decoding="async"/></div>
+      </div>
     </div>
   </div>
-</main>
+</section>
+
+<!-- PRICING -->
+<!-- OUR PAPER STOCKS -->
+<!-- Replaced the "Simple, honest pricing" section. Drawn by /papers/section.js
+     from /papers/section.css; the stocks are this product's own, and clicking
+     one opens its full description. -->
+<section class="lp-strip lp-section-white" id="lp-papers-section">
+  <div class="container">
+    <span class="lp-strip-tag">Paper</span>
+    <h2 class="lp-strip-h">Our paper stocks</h2>
+    <p class="lp-strip-intro" id="lp-papers-intro"></p>
+    <div id="lp-papers-mount"></div>
+    <div class="lp-cta-row">
+      <button class="lp-cta" type="button" onclick="openPathModal(this)">Start Your Order</button>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- FINISHING TOUCHES -->
+<!-- Drawn by /finishing/section.js from /finishing/section.css. Square cards
+     showing the real colours; click one for a close-up. -->
+<section class="lp-strip lp-section-cream" id="lp-finishes-section" style="display:none;">
+  <div class="container">
+    <span class="lp-strip-tag">Finishing touches</span>
+    <h2 class="lp-strip-h">The details that make it unforgettable</h2>
+    <p class="lp-strip-intro">Pressed, coated or raised after printing.</p>
+    <div id="lp-finishes-mount"></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="lp-how">
+  <div class="container">
+    <span class="lp-section-tag">How it works</span>
+    <h2 class="lp-section-h2">From design to <em>doorstep.</em></h2>
+    <div class="lp-section-divider"></div>
+    <div class="lp-how-steps">
+      <div class="lp-how-step">
+        <div class="lp-how-num">1</div>
+        <div class="lp-how-title">Upload or design</div>
+        <div class="lp-how-text">Upload finished artwork or use our Design Studio to create from scratch.</div>
+      </div>
+      <div class="lp-how-step">
+        <div class="lp-how-num">2</div>
+        <div class="lp-how-title">Choose specs</div>
+        <div class="lp-how-text">Pick your size, paper, finish and quantity.</div>
+      </div>
+      <div class="lp-how-step">
+        <div class="lp-how-num">3</div>
+        <div class="lp-how-title">We print</div>
+        <div class="lp-how-text">Printed in the UK on paper we have chosen and checked ourselves.</div>
+      </div>
+      <div class="lp-how-step">
+        <div class="lp-how-num">4</div>
+        <div class="lp-how-title">Delivered</div>
+        <div class="lp-how-text">Tracked delivery, included as standard. Faster options at checkout.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US — 4 items, real claims only -->
+<!-- FAQS — the visible answers and the FAQPage data below must match -->
+<!--LP_INTRO-->
+
+<section class="lp-section lp-section-cream">
+  <div class="container">
+    <span class="lp-section-tag">FAQs</span>
+    <h2 class="lp-section-h2">Common <em>questions.</em></h2>
+    <div class="lp-section-divider"></div>
+    <div class="lp-faq-wrap">
+      <!--LP_FAQ_START-->
+      <details class="lp-faq-item">
+        <summary class="lp-faq-q"><span class="lp-faq-q-text">What's your turnaround time?</span><span class="lp-faq-toggle">+</span></summary>
+        <div class="lp-faq-a">Standard orders are printed within 3 working days and sent free by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout.</div>
+      </details>
+      <details class="lp-faq-item">
+        <summary class="lp-faq-q"><span class="lp-faq-q-text">What file formats do you accept?</span><span class="lp-faq-toggle">+</span></summary>
+        <div class="lp-faq-a">We accept PDF, AI (Adobe Illustrator), InDesign, and high-resolution PNG or JPG (300dpi minimum). PDF is preferred for best results.</div>
+      </details>
+      <details class="lp-faq-item">
+        <summary class="lp-faq-q"><span class="lp-faq-q-text">What if my artwork has issues?</span><span class="lp-faq-toggle">+</span></summary>
+        <div class="lp-faq-a">Every file is checked the moment you upload it — page size against the size you ordered, resolution at that size, and bleed. Anything that would print poorly is flagged on screen before you pay, and our studio looks again before it goes to press. Nothing blocks your order: we tell you what we have found and let you decide.</div>
+      </details>
+      <details class="lp-faq-item">
+        <summary class="lp-faq-q"><span class="lp-faq-q-text">Do you offer design services?</span><span class="lp-faq-toggle">+</span></summary>
+        <div class="lp-faq-a">Yes. If you don't have artwork ready, our Design Studio walks you through creating from scratch.</div>
+      </details>
+      <details class="lp-faq-item">
+        <summary class="lp-faq-q"><span class="lp-faq-q-text">Can I change my order after placing it?</span><span class="lp-faq-toggle">+</span></summary>
+        <div class="lp-faq-a">Contact us as soon as you can, quoting your order reference. We can refund in full right up until your file goes to press. Once printing has begun a personalised order cannot be refunded.</div>
+      </details>
+      <!--LP_FAQ_END-->
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="lp-final">
+  <div class="container">
+    <h2 class="lp-final-h">Ready to <em>start?</em></h2>
+    <button class="lp-cta" type="button" onclick="openPathModal(this)">Start Your Order</button>
+  </div>
+</section>
 
 <style>
 footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
@@ -874,121 +1099,418 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:60px 0 32px;}
 
 
 
-<script>
-  fetch('/header.html').then(r=>r.text()).then(h=>{document.getElementById('site-header').innerHTML=h;}).catch(()=>{});
-  fetch('/footer.html').then(r=>r.text()).then(h=>{document.getElementById('site-footer').innerHTML=h;}).catch(()=>{});
-</script>
+<!-- PATH-CHOOSER MODAL -->
+<div id="path-modal" class="path-modal" role="dialog" aria-modal="true" aria-labelledby="path-modal-title" aria-hidden="true">
+  <div class="path-modal-backdrop" onclick="closePathModal()"></div>
+  <div class="path-modal-panel" role="document">
+    <button class="path-modal-close" type="button" onclick="closePathModal()" aria-label="Close">×</button>
+    <span class="path-modal-tag" id="path-modal-tag">Wedding Invitations</span>
+    <h2 class="path-modal-h" id="path-modal-title">How would you like to <em>start?</em></h2>
+    <p class="path-modal-sub">Whether your design is ready to print or you are starting from a blank page, we will take it from here.</p>
+    <div class="path-modal-grid">
+      <a id="path-upload" class="path-card" href="#">
+        <div class="path-icon">✦</div>
+        <h3 class="path-title">I have my design ready</h3>
+        <p class="path-desc">Upload your artwork. Choose your size, paper and finish.</p>
+        <span class="path-card-cta">Upload &amp; configure</span>
+      </a>
+      <a id="path-design" class="path-card" href="#">
+        <div class="path-icon">✧</div>
+        <h3 class="path-title">Help me design it</h3>
+        <p class="path-desc">Use our Design Studio to create from scratch — no design experience needed.</p>
+        <span class="path-card-cta">Open Design Studio</span>
+      </a>
+    </div>
+    <div class="path-modal-help">Not sure which is right for you? <a href="#">Get in touch</a></div>
+  </div>
+</div>
+
+<!-- JSON-LD: Product schema (no inline price; price is JS-rendered, would
+     violate Google's structured-data-must-match-HTML rule. Add Offer.price
+     when we move to build-time pre-rendering for Google Shopping.) -->
+<script type="application/ld+json" id="ld-product">{"@context": "https://schema.org", "@type": "Product", "name": "Notecards", "url": "https://foreverprint.com/notecards", "brand": {"@type": "Brand", "name": "foreverprint"}, "description": "Personalised notecards printed in the UK on premium papers, with envelopes included. Flat correspondence cards from a pack of 25.", "image": "https://foreverprint.com/notecards-hero.jpg"}</script>
+<script type="application/ld+json" id="ld-faq">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What's your turnaround time?","acceptedAnswer":{"@type":"Answer","text":"Standard orders are printed within 3 working days and sent free by tracked delivery. If you need it sooner, Express (2 working days, order by 4pm) and Express Plus (next working day, order by 1pm) are offered at checkout."}},
+    {"@type":"Question","name":"What file formats do you accept?","acceptedAnswer":{"@type":"Answer","text":"PDF, AI, InDesign, and high-resolution PNG or JPG (300dpi minimum)."}},
+    {"@type":"Question","name":"What if my artwork has issues?","acceptedAnswer":{"@type":"Answer","text":"Every file is checked the moment you upload it — page size against the size you ordered, resolution at that size, and bleed. Anything that would print poorly is flagged on screen before you pay, and our studio looks again before it goes to press. Nothing blocks your order: we tell you what we have found and let you decide."}},
+    {"@type":"Question","name":"Do you offer design services?","acceptedAnswer":{"@type":"Answer","text":"Yes. Our Design Studio walks you through creating an invitation from scratch."}},
+    {"@type":"Question","name":"Can I change my order after placing it?","acceptedAnswer":{"@type":"Answer","text":"Contact us as soon as you can, quoting your order reference. We can refund in full right up until your file goes to press. Once printing has begun a personalised order cannot be refunded."}}
+  ]
+}</script>
 
 <script>
-const form = document.getElementById('loginForm');
-const submitBtn = document.getElementById('submitBtn');
-const submitText = document.getElementById('submitText');
-const spinner = document.getElementById('spinner');
-const formMsg = document.getElementById('formMsg');
+// ── PRODUCT IDENTIFIER FROM URL ──────────────────────────
+const PRODUCT = (function() {
+  const params = new URLSearchParams(window.location.search);
+  let slug = params.get('product');
+  if (!slug) {
+    // Netlify serves this file at BOTH /wedding-invitations and
+    // /wedding-invitations.html. The dot test was meant to skip asset paths,
+    // and it skipped our own page too: the .html address returned 200 and
+    // rendered "Product not found" on all 23 landing pages, indexable and
+    // linkable. Drop a trailing .html before deciding.
+    const path = window.location.pathname
+      .replace(/^\//, '').replace(/\/$/, '').replace(/\.html$/i, '');
+    if (path && !path.includes('.') && !path.includes('/')) slug = path;
+  }
+  slug = (slug || '').toLowerCase().trim();
+  const name = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  return { slug, name };
+})();
 
-function showMsg(text, type){
-  formMsg.textContent = text;
-  formMsg.className = 'form-msg ' + type;
+const SUPABASE_URL      = 'https://jvcpzmumkyjdyibmwlsd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Y3B6bXVta3lqZHlpYm13bHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2MzYsImV4cCI6MjA4OTg5MjYzNn0.JBOAoMdotrbxmL3M4nFhdJ6yQWX45YbgtDCgMtJktSE';
+
+const SIZE_DIMS = {
+  'A4':'210 × 297 mm', 'A5':'148 × 210 mm', 'A6':'105 × 148 mm',
+  '5x7':'127 × 178 mm', 'DL':'99 × 210 mm', 'Square':'148 × 148 mm'
+};
+
+let productData = null;
+let publishedPapers = null;      // the paper catalogue, ~7KB
+let fromPrice = null;            // { price, qty } for this product only
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
-function clearMsg(){ formMsg.className = 'form-msg'; formMsg.textContent = ''; }
-function setLoading(loading){
-  submitBtn.disabled = loading;
-  spinner.style.display = loading ? 'inline-block' : 'none';
-  submitText.textContent = loading ? 'Signing in…' : 'Sign in';
+
+function domReady(){
+  return document.readyState === 'loading'
+    ? new Promise(function (go) {
+        document.addEventListener('DOMContentLoaded', go, { once: true });
+      })
+    : Promise.resolve();
 }
 
-const params = new URLSearchParams(window.location.search);
-if (params.get('verified') === 'true'){
-  showMsg('Your email has been verified — please sign in to continue.', 'ok');
-}
-if (params.get('reset') === 'true'){
-  showMsg('Your password has been updated — please sign in.', 'ok');
-}
+async function loadData() {
+  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clearMsg();
+  // This page used to fetch pricing_for, which is 571KB — 3,738 sheet prices
+  // and 1,008 finishing prices for the configurator. Nothing here reads either
+  // array. The page painted at 668ms and the price landed at 1,614ms, so the
+  // block sat empty for most of a second while the customer looked at it.
+  //
+  // from_prices() is what the products grid already calls, so the two pages
+  // now share one definition of the "from" price instead of agreeing by
+  // coincidence. Both calls together are about 9KB.
+  const ptP     = fetch(`${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(PRODUCT.slug)}&active=eq.true&select=*`, { headers });
+  const papersP = fetch(`${SUPABASE_URL}/rest/v1/rpc/published_papers`, { headers });
+  // Usually already in flight from the head, where it starts about half a
+  // second sooner. Falls back to asking now if that never ran.
+  const priceP  = window.__fromPricesEarly ||
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/from_prices`, { headers })
+      .then(r => r.ok ? r.json() : null).catch(() => null);
 
-  const email = document.getElementById('email').value.trim().toLowerCase();
-  const password = document.getElementById('password').value;
+  // The price is above the fold and depends on nothing else on this page, so
+  // it is drawn the moment its own answer arrives rather than waiting for the
+  // product row or the paper catalogue.
+  priceP.then(rows => {
+    if (!Array.isArray(rows)) return;
+    const row = rows.find(r => r && r.slug === PRODUCT.slug);
+    if (!row || row.from_price == null) return;
+    fromPrice = { price: parseFloat(row.from_price),
+                  qty: parseInt(row.display_quantity, 10) || 1 };
+    renderPricing();
+  }).catch(() => { /* the placeholder stays; nothing is claimed */ });
 
-  if (!email || !password){
-    showMsg('Please enter your email and password.', 'err');
+  const ptRes = await ptP;
+  // Did Supabase actually answer? A failed request and a genuine "no such
+  // product" look the same from here, and they must not be treated the same.
+  let lookupAnswered = false;
+  if (ptRes.ok) {
+    lookupAnswered = true;
+    const rows = await ptRes.json();
+    if (rows && rows.length) productData = rows[0];
+  }
+  if (!productData) {
+    // Only claim the product does not exist when Supabase said so. If the
+    // request itself failed — an outage, a rate limit, a dropped connection —
+    // the page already served is correct and complete, and replacing it with
+    // an error would turn a working page into a dead one for customers and
+    // for search engines alike.
+    if (lookupAnswered) showNotFound();
+    else console.warn('[product] could not reach Supabase; keeping the page as served');
     return;
   }
+  renderHero();
+  updateModalLinks();
+  renderPricing();
+  // Only the stocks this product is sold on. available_papers is the admin's
+  // own list on product_types, so the section cannot offer a paper we do not
+  // print this product on.
+  // /papers/section.js and /finishing/section.js are deferred, which means they
+  // are guaranteed to have run by DOMContentLoaded and NOT before it. loadData()
+  // is started by an inline script during parsing, so on a warm connection the
+  // product data can arrive long before either module exists — measured on the
+  // live site: the product fetch takes 54-80ms, papers/section.js is not ready
+  // until ~170ms and finishing/section.js until ~723ms.
+  //
+  // The guards below are written to skip quietly when the module is missing, so
+  // losing that race printed the heading "Our paper stocks" with nothing at all
+  // underneath it, and no error anywhere. It is intermittent, which is why it
+  // survived: reload and it looks fine.
+  await domReady();
 
-  if (!window.invAuth || !window.invAuth.signInWithPassword){
-    showMsg('Sign-in is not available right now. Please try again in a moment.', 'err');
-    return;
+  const paperMount = document.getElementById('lp-papers-mount');
+  if (paperMount && window.PaperSection) {
+    const names = Array.isArray(productData.available_papers) ? productData.available_papers : [];
+    const intro = document.getElementById('lp-papers-intro');
+    if (intro) intro.textContent = names.length === 1
+      ? 'The stock we print ' + (productData.name || PRODUCT.name).toLowerCase() + ' on.'
+      : 'The ' + names.length + ' stocks we print ' + (productData.name || PRODUCT.name).toLowerCase()
+        + ' on, and what each one feels like in the hand.';
+    PaperSection.mount(paperMount, { names, url: SUPABASE_URL, key: SUPABASE_ANON_KEY });
   }
-
-  setLoading(true);
-
-  const { error } = await window.invAuth.signInWithPassword(email, password);
-
-  if (error){
-    setLoading(false);
-    let msg = error.message;
-    if (msg.toLowerCase().includes('invalid login') || msg.toLowerCase().includes('invalid email')){
-      msg = 'Email or password is incorrect. Please try again.';
-    } else if (msg.toLowerCase().includes('email not confirmed')){
-      msg = 'Please verify your email first — check your inbox for the verification link we sent.';
+  renderSizesStrip();
+  // Finishing: what this product offers, narrowed again to the stocks that can
+  // physically take it. The laminate cards sit on a real paper photograph.
+  // This is the one section that needs the paper catalogue, so it is the only
+  // thing that waits for it.
+  const papersRes = await papersP.catch(() => null);
+  if (papersRes && papersRes.ok) {
+    const pj = await papersRes.json().catch(() => null);
+    if (Array.isArray(pj)) publishedPapers = pj;
+  }
+  const finMount = document.getElementById('lp-finishes-mount');
+  if (finMount && window.FinishSection) {
+    const caps = {};
+    (publishedPapers || []).forEach(p => { caps[p.name] = p.finishes || []; });
+    const mine = Array.isArray(productData.available_papers) ? productData.available_papers : [];
+    const takers = mine.filter(n => (caps[n] || []).some(f => f && f.toLowerCase() !== 'none'));
+    if (takers.length) {
+      document.getElementById('lp-finishes-section').style.display = '';
+      FinishSection.mount(finMount, {
+        url: SUPABASE_URL, key: SUPABASE_ANON_KEY,
+        allowed: productData.available_finishes || [],
+        papers: takers,
+        paperSrc: (window.PaperSection && PaperSection.photo(takers[0])) || null
+      });
     }
-    showMsg(msg, 'err');
+  }
+  renderJsonLd();
+}
+
+function showNotFound() {
+  const sections = document.querySelectorAll('section');
+  if (sections.length) {
+    const html = `<section style="padding:120px 20px;text-align:center;background:var(--cream);">
+      <div style="max-width:560px;margin:0 auto;font-family:'Cormorant Garamond',serif;color:var(--text);">
+        <div style="font-size:2.4rem;font-weight:300;margin-bottom:14px;">Product not found</div>
+        <p style="font-family:'Jost',sans-serif;font-size:var(--text-body);color:var(--soft);line-height:1.9;margin-bottom:32px;">We couldn't find a product matching <strong style="color:var(--text);">/${escapeHtml(PRODUCT.slug)}</strong>.</p>
+        <a href="/products" style="font-family:'Jost',sans-serif;font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:4px;">Browse all products →</a>
+      </div></section>`;
+    sections[0].outerHTML = html;
+    for (let i = sections.length - 1; i > 0; i--) sections[i].remove();
+  }
+  document.title = 'Product not found | foreverprint';
+}
+
+function renderHero() {
+  const name = productData.name || PRODUCT.name;
+  document.title = productData.meta_title || `${name} | foreverprint`;
+  const setMeta = (sel, content) => {
+    const el = document.querySelector(sel);
+    if (el && content) el.setAttribute('content', content);
+  };
+  setMeta('meta[name="description"]', productData.meta_description || productData.description || '');
+  setMeta('meta[property="og:title"]', productData.meta_title || `${name} | foreverprint`);
+  setMeta('meta[property="og:description"]', productData.meta_description || productData.description || '');
+  setMeta('meta[property="og:url"]', `https://foreverprint.com/${PRODUCT.slug}`);
+  if (productData.hero_image_url) {
+    // Absolute, or social networks cannot fetch it.
+    const img = productData.hero_image_url.startsWith('http')
+      ? productData.hero_image_url
+      : 'https://foreverprint.com' + productData.hero_image_url;
+    setMeta('meta[property="og:image"]', img);
+  }
+  let canonical = document.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.setAttribute('rel', 'canonical');
+    document.head.appendChild(canonical);
+  }
+  canonical.setAttribute('href', `https://foreverprint.com/${PRODUCT.slug}`);
+  document.getElementById('lp-h1').textContent = name;
+  if (productData.tagline) document.getElementById('lp-sub').textContent = productData.tagline;
+  document.getElementById('path-modal-tag').textContent = name;
+  const wrap = document.getElementById('lp-hero-img-wrap');
+  // The build puts the hero straight into the HTML so it can start loading
+  // immediately. Replacing it here would throw that away and fetch the
+  // full-size original a second time.
+  if (wrap.querySelector('img[data-prerendered]')) {
+    // already there, and already the right size
+  } else if (productData.hero_image_url) {
+    const src = productData.hero_image_url;
+    // Netlify resizes and re-encodes on the fly: a 1600px JPEG becomes an
+    // 800px WebP — same picture, roughly a tenth of the bytes.
+    const cdn = (w) => `/.netlify/images?url=${encodeURIComponent(src)}&w=${w}&fm=webp&q=75`;
+    wrap.innerHTML = `<img class="lp-hero-img" src="${cdn(800)}"
+      srcset="${cdn(400)} 400w, ${cdn(800)} 800w, ${cdn(1200)} 1200w"
+      sizes="(max-width: 768px) 92vw, 44vw"
+      alt="${escapeHtml(name)}" width="800" height="644" fetchpriority="high" decoding="async"/>`;
+  } else {
+    wrap.innerHTML = `<div class="lp-hero-img-placeholder">✦</div>`;
+  }
+}
+
+function updateModalLinks() {
+  const upload = document.getElementById('path-upload');
+  const design = document.getElementById('path-design');
+  if (upload) upload.href = `/${PRODUCT.slug}/order`;
+  // Straight into the studio for THIS product — the customer has already told
+  // us what they are making by being on this page, so asking again is friction.
+  if (design) design.href = `/design-studio-ai-create.html?product=${PRODUCT.slug}`;
+}
+
+function pickAnchorQtys(qtys) {
+  const sorted = [...qtys].sort((a,b) => a - b);
+  if (sorted.length <= 3) return sorted;
+  return [sorted[0], sorted[Math.floor(sorted.length/2)], sorted[sorted.length-1]];
+}
+
+// The hero's "from" price, and nothing else. The quantity-by-paper table this
+// function used to draw lived in the "Simple, honest pricing" section, which
+// "Our paper stocks" replaced.
+function renderPricing() {
+  const priceValue = document.getElementById('lp-price-value');
+  if (!priceValue) return;
+  const priceQty = document.getElementById('lp-price-qty');
+  // One figure, worked out in the database by from_prices() — the same
+  // function the products grid reads, so the grid and this page cannot quote
+  // different numbers for one product. It already applies the rule this
+  // function used to apply in JavaScript: cheapest flat, single-sided, at the
+  // nearest rung to display_quantity, with VAT only if we are registered.
+  if (!fromPrice || !isFinite(fromPrice.price)) {
+    priceValue.textContent = '\u00a3\u2014';
+    if (priceQty) priceQty.textContent = '';
+    setPriceSolo(true);
     return;
   }
+  priceValue.textContent = '\u00a3' + Math.round(fromPrice.price);
+  if (priceQty) priceQty.textContent = fromPrice.qty > 1 ? ('for ' + fromPrice.qty) : 'each';
+  setPriceSolo(false);
+}
 
-  // Success — redirect to where they wanted to go.
-  // Defaults to the account dashboard.
-  const redirectTo = params.get('next') || '/account.html';
-  window.location.href = redirectTo;
+
+// The divider between the figure and the words only earns its place once there
+// are words to divide.
+function setPriceSolo(solo) {
+  const block = document.getElementById('lp-price-block');
+  if (block) block.classList.toggle('is-solo', !!solo);
+}
+
+// What the other choices cost, against one baseline order, so a customer can
+// see the shape of the range without opening the studio. Everything is quoted
+// as a difference from the same (paper, weight, size, quantity).
+
+
+
+function renderSizesStrip() {
+  const section = document.getElementById('lp-sizes-strip-section');
+  const strip = document.getElementById('lp-sizes-strip');
+  if (!section || !strip) return;
+  // available_sizes is on the product_types row this page already has. It was
+  // being read out of the 571KB payload instead, which is why the strip waited
+  // on it.
+  const sizes = (productData && productData.available_sizes) || [];
+  if (!sizes.length) return;
+  strip.innerHTML = sizes.map(size => {
+    const dim = SIZE_DIMS[size] || '';
+    return `<span class="lp-strip-pill" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:var(--text-sm);">${escapeHtml(size)}${dim ? `<span class="pill-dim" style="display:block;font-size:var(--text-xs);color:var(--soft);margin-top:3px;">${escapeHtml(dim)}</span>` : ''}</span>`;
+  }).join('');
+  document.getElementById('lp-sizes-strip-section').style.display = '';
+}
+
+
+function renderJsonLd() {
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": productData.name || PRODUCT.name,
+    "description": productData.meta_description || productData.description || '',
+    "brand": { "@type": "Brand", "name": "foreverprint" },
+    "url": `https://foreverprint.com/${PRODUCT.slug}`,
+    ...(productData.hero_image_url ? { "image": productData.hero_image_url } : {})
+  };
+  const el = document.getElementById('ld-product');
+  if (el) el.textContent = JSON.stringify(ld);
+}
+
+// ── PATH-CHOOSER MODAL ───────────────────────────────────
+let lastPathTrigger = null;
+
+function openPathModal(trigger) {
+  lastPathTrigger = trigger || null;
+  const modal = document.getElementById('path-modal');
+  modal.setAttribute('aria-hidden', 'false');
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const firstFocusable = modal.querySelector('.path-card, .path-modal-close');
+  if (firstFocusable) setTimeout(() => firstFocusable.focus(), 50);
+  // GA event for funnel tracking; safe no-op if gtag not loaded.
+  try {
+    if (typeof gtag === 'function') {
+      gtag('event', 'path_chooser_opened', {
+        product_slug: PRODUCT.slug,
+        product_name: PRODUCT.name || ''
+      });
+    }
+  } catch (e) { /* swallow */ }
+}
+
+function closePathModal() {
+  const modal = document.getElementById('path-modal');
+  modal.setAttribute('aria-hidden', 'true');
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+  if (lastPathTrigger && typeof lastPathTrigger.focus === 'function') {
+    lastPathTrigger.focus();
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('path-modal');
+    if (modal && modal.classList.contains('open')) closePathModal();
+  }
 });
 
-// On page load, handle a few states:
-// 1. If user just verified their email (?verified=true) and is auto-logged-in
-//    by Supabase, show a welcome message — DON'T auto-redirect (better UX
-//    than dumping them somewhere unexpected).
-// 2. If user is already signed in (returning visit) and there's no special
-//    state, redirect to home (or 'next' param).
-(async () => {
-  if (!window.invAuth || !window.invAuth.init) return;
-  await window.invAuth.init();
-
-  const justVerified = params.get('verified') === 'true';
-
-  if (justVerified && window.invAuth.isLoggedIn()){
-    // Replace the form with a welcome message. They're already signed in.
-    const formEl = document.getElementById('loginForm');
-    const subEl = document.querySelector('.auth-sub');
-    const titleEl = document.querySelector('.auth-title');
-    // Somebody who signed up to save a design must come back to that design.
-    // This branch used to send everyone to the account page regardless, so the
-    // one thing they created an account for appeared to have vanished.
-    const next = params.get('next') || '';
-    const backToDesign = /design-studio/.test(next);
-    if (titleEl) titleEl.textContent = 'Welcome to foreverprint';
-    if (subEl) {
-      subEl.textContent = backToDesign
-        ? 'Your account is verified and your design is saved to it.'
-        : 'Your account is verified and you\'re signed in.';
-    }
-    if (formEl){
-      formEl.innerHTML =
-        '<a href="' + (next || '/account.html') + '" class="btn-submit" style="text-decoration:none;">' +
-          (backToDesign ? 'Back to your design' : (next ? 'Continue' : 'Go to my account')) +
-        '</a>';
-    }
-    // Hide the divider + bottom links since they don't apply now
-    document.querySelectorAll('.auth-divider, .auth-foot').forEach(el => el.style.display = 'none');
-    return;
+['path-upload', 'path-design'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('click', () => {
+      try {
+        if (window.fpAnalytics) {
+          window.fpAnalytics.track('path_chooser_selected', {
+            product_slug: PRODUCT.slug,
+            path: id === 'path-upload' ? 'upload' : 'design'
+          });
+        }
+      } catch (e) { /* swallow */ }
+    });
   }
+});
 
-  // Returning visitor already signed in — quietly redirect
-  if (window.invAuth.isLoggedIn()){
-    const redirectTo = params.get('next') || '/account.html';
-    window.location.href = redirectTo;
-  }
-})();
+loadData().then(function(){
+  // Which product was viewed, and at what price. Pairs with add_to_cart and
+  // purchase to give a per-product funnel rather than a site-wide one.
+  try {
+    if (window.fpAnalytics) window.fpAnalytics.track('view_item', {
+      currency: 'GBP',
+      value: (typeof getStartingPrice === 'function' ? getStartingPrice(PRODUCT.slug) : null) || undefined,
+      items: [{ item_id: PRODUCT.slug, item_name: (productData && productData.name) || PRODUCT.name || PRODUCT.slug }]
+    });
+  } catch (e) {}
+}).catch(function(){});
+
+// Header / footer
+fetch('/header.html').then(r=>r.text()).then(html=>{var __c=document.getElementById('site-header'); if(__c) __c.outerHTML=html;if(typeof updateCartBadge==='function')if (typeof updateCartBadge === 'function') updateCartBadge();
+  else document.addEventListener('DOMContentLoaded', function(){ if (typeof updateCartBadge === 'function') updateCartBadge(); });});
+fetch('/footer.html').then(r=>r.text()).then(html=>{var __c=document.getElementById('site-footer'); if(__c) __c.outerHTML=html;});
 </script>
 
   <script src="/analytics.js" defer></script>
