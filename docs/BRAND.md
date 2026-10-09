@@ -22,7 +22,7 @@ rendered page disagree, this file records what renders, and says so.
 | Type scale steps | **8**, all fluid `clamp()` |
 | Typefaces in use | **2** (a third is loaded and unused — §3) |
 | Pages whose own `:root` disagrees | **9**, all silently overridden (§7) |
-| Literal hex where a token exists | **91 uses** across 57 files (§7) |
+| Literal hex where a token exists | **91 uses** across 71 files (§7) |
 | Components that drift | inputs, cards — by 1–2px (§7e) |
 
 ---
@@ -179,31 +179,31 @@ A pill for anything you press, a 20px card for anything you read. The 8px and
 
 | Token | Value | Already used |
 |---|---|---|
-| `--space-1` | `4px` | 632 times |
-| `--space-2` | `8px` | 1,342 — the most used value on the site |
-| `--space-3` | `12px` | 313 |
-| `--space-4` | `16px` | 567 |
-| `--space-5` | `20px` | 1,024 |
-| `--space-6` | `24px` | 291 |
-| `--space-7` | `32px` | 861 |
-| `--space-8` | `48px` | 359 |
-| `--space-9` | `60px` | 216 |
+| `--space-1` | `4px` | 800 times |
+| `--space-2` | `8px` | 1,748 — the most used value on the site |
+| `--space-3` | `12px` | 397 |
+| `--space-4` | `16px` | 735 |
+| `--space-5` | `20px` | 1,332 |
+| `--space-6` | `24px` | 389 |
+| `--space-7` | `32px` | 1,099 |
+| `--space-8` | `48px` | 471 |
+| `--space-9` | `60px` | 272 |
 | `--space-10` | `80px` | 12 |
 
 **These are for new work. Existing spacing is deliberately left alone**, and
 that is the whole decision, so it is worth setting out why.
 
-The site has **12,554 spacing declarations using 47 distinct values**. Measured
+The site has **16,152 spacing declarations using 47 distinct values**. Measured
 against the obvious candidates:
 
 | Scale | Fits as-is | Would have to move |
 |---|---|---|
-| Strict 4px grid | 35% | 8,186 declarations |
-| Strict 8px grid | 27% | 9,119 |
-| These ten steps | 45% | 6,937 |
-| These ten plus a 6/10/14 tier | 68% | 4,028 |
+| Strict 4px grid | 35% | 10,510 declarations |
+| Strict 8px grid | 28% | 11,695 |
+| These ten steps | 45% | 8,897 |
+| These ten plus a 6/10/14 tier | 68% | 5,190 |
 
-Even the best fit means rewriting several thousand values across 57 files, each
+Even the best fit means rewriting several thousand values across 71 files, each
 a small visual shift, with no practical way to check the result page by page.
 The risk is entirely out of proportion to the benefit, and it is what every
 mature system advises against when tokenising a codebase that already exists:
@@ -231,9 +231,9 @@ derived from what the site already does, not imposed on it.
 
 | `text-align` | Uses |
 |---|---|
-| `center` | **668** |
-| `left` | 248 |
-| `right` | 97 |
+| `center` | **934** |
+| `left` | 332 |
+| `right` | 125 |
 
 Centred wins by nearly three to one, and that is the house composition: an
 eyebrow, a heading, a line of supporting copy and the thing itself, all on one
@@ -254,10 +254,10 @@ below kept the full panel width — card centre at x=874, button centre at x=971
 
 | | Value | Uses |
 |---|---|---|
-| Page container | `1180px` | **273** — two and a half times the next value |
-| Primary breakpoint | `768px` | 170 |
-| Secondary breakpoint | `480px` | 140 |
-| Narrow phones | `359px` | 45 |
+| Page container | `1180px` | **357** — two and a half times the next value |
+| Primary breakpoint | `768px` | 226 |
+| Secondary breakpoint | `480px` | 182 |
+| Narrow phones | `359px` | 59 |
 
 New work uses `1180px` and those three breakpoints. A fourth breakpoint is
 almost always a sign that something inside wants to be fluid instead.

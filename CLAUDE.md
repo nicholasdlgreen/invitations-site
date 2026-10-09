@@ -39,8 +39,8 @@ These are the ones that have actually caused bugs. `docs/BRAND.md` explains why.
   `python3 tools/refresh-spacing-figures.py`.** `docs/BRAND.md` §4 quotes real
   counts and `tools/test-spacing-scale.py` recomputes them, so almost any CSS edit
   makes the document stale. The script rewrites the table; do not retype it.
-- **The site is composed on one centred axis** (673 centred alignments against
-  252 left). Going off-axis needs a reason, and when something looks wrong and
+- **The site is composed on one centred axis** (934 centred alignments against
+  332 left). Going off-axis needs a reason, and when something looks wrong and
   you cannot say why, check that stacked elements share a centre line. See
   `docs/BRAND.md` §4a.
 - **One solid button to a view.** The real alternative is outlined; everything
