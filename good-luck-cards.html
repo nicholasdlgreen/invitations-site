@@ -554,7 +554,6 @@ nav a:hover,nav a.active{color:var(--gold);}
       <a href="/birthday-cards">Birthday Cards</a>
       <a href="/anniversary-cards">Anniversary Cards</a>
       <a href="/new-home-cards">New Home Cards</a>
-      <a href="/new-job-cards">New Job Cards</a>
       <a href="/congratulations-cards">Congratulations Cards</a>
       <a href="/sympathy-cards">Sympathy Cards</a>
       <a href="/notecards">Notecards</a>
@@ -563,14 +562,12 @@ nav a:hover,nav a.active{color:var(--gold);}
       <a href="/dinner-party-place-cards">Dinner Party Place Cards</a>
       <a href="/anniversary-party-invitations">Anniversary Party Invitations</a>
       <a href="/diwali-invitations">Diwali Invitations</a>
-      <a href="/thanksgiving-invitations">Thanksgiving Invitations</a>
       <a href="/products?cat=celebrations" class="mega-viewall">View all →</a>
     </div>
     <div class="mega-col">
       <div class="mega-cat">Announcements</div>
       <div class="mega-rule"></div>
       <a href="/new-arrival-cards">New Arrival Cards</a>
-      <a href="/pregnancy-announcements">Pregnancy Announcements</a>
       <a href="/christening-invitations">Christening Invitations</a>
       <a href="/engagement-cards">Engagement Cards</a>
       <a href="/moving-cards">Moving Cards</a>
@@ -749,7 +746,7 @@ was fetched and injected via innerHTML — that was the bug behind the
       <div>
         <span class="lp-tag" id="lp-tag">Wedding Stationery</span>
         <h1 class="lp-h1" id="lp-h1">Good Luck Cards</h1>
-        <p class="lp-hero-sub" id="lp-sub">Wish someone well on paper they will keep. Good luck cards folded and printed in the UK on premium papers, with envelopes included and every card checked by hand. Leave the inside blank to write yourself, or have your words set in type. Choose your paper and finishing, and order as many as you need.</p>
+        <p class="lp-hero-sub" id="lp-sub">An exam, a driving test, a first day, an audition. Good luck cards for the morning someone needs to know you are thinking of them, printed in the UK on premium papers with envelopes included. Leave the inside blank, or have your words set in type.</p>
         <div class="lp-price-block" id="lp-price-block">
           <div class="lp-price-label">From</div>
           <div class="lp-price-value" id="lp-price-value">£—</div>
@@ -1334,6 +1331,16 @@ function renderHero() {
     document.head.appendChild(canonical);
   }
   canonical.setAttribute('href', `https://foreverprint.com/${PRODUCT.slug}`);
+  // The eyebrow above the title. It was the hardcoded string "Wedding
+  // Stationery" on all 42 pages, which was defensible while every product was
+  // wedding-adjacent and is plainly wrong above Sympathy Cards or Diwali
+  // Invitations. The element always carried an id and nothing ever set it.
+  // Labels match CAT_LABELS in products.html so the eyebrow, the filter pills
+  // and the page heading cannot disagree.
+  const CAT_LABELS = { weddings: 'Weddings', celebrations: 'Celebrations',
+                       announcements: 'Announcements' };
+  const tagEl = document.getElementById('lp-tag');
+  if (tagEl) tagEl.textContent = CAT_LABELS[productData.category] || 'Stationery';
   document.getElementById('lp-h1').textContent = name;
   if (productData.tagline) document.getElementById('lp-sub').textContent = productData.tagline;
   document.getElementById('path-modal-tag').textContent = name;

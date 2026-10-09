@@ -550,7 +550,6 @@ nav a:hover,nav a.active{color:var(--gold);}
       <a href="/birthday-cards">Birthday Cards</a>
       <a href="/anniversary-cards">Anniversary Cards</a>
       <a href="/new-home-cards">New Home Cards</a>
-      <a href="/new-job-cards">New Job Cards</a>
       <a href="/congratulations-cards">Congratulations Cards</a>
       <a href="/sympathy-cards">Sympathy Cards</a>
       <a href="/notecards">Notecards</a>
@@ -559,14 +558,12 @@ nav a:hover,nav a.active{color:var(--gold);}
       <a href="/dinner-party-place-cards">Dinner Party Place Cards</a>
       <a href="/anniversary-party-invitations">Anniversary Party Invitations</a>
       <a href="/diwali-invitations">Diwali Invitations</a>
-      <a href="/thanksgiving-invitations">Thanksgiving Invitations</a>
       <a href="/products?cat=celebrations" class="mega-viewall">View all →</a>
     </div>
     <div class="mega-col">
       <div class="mega-cat">Announcements</div>
       <div class="mega-rule"></div>
       <a href="/new-arrival-cards">New Arrival Cards</a>
-      <a href="/pregnancy-announcements">Pregnancy Announcements</a>
       <a href="/christening-invitations">Christening Invitations</a>
       <a href="/engagement-cards">Engagement Cards</a>
       <a href="/moving-cards">Moving Cards</a>
@@ -1330,6 +1327,16 @@ function renderHero() {
     document.head.appendChild(canonical);
   }
   canonical.setAttribute('href', `https://foreverprint.com/${PRODUCT.slug}`);
+  // The eyebrow above the title. It was the hardcoded string "Wedding
+  // Stationery" on all 42 pages, which was defensible while every product was
+  // wedding-adjacent and is plainly wrong above Sympathy Cards or Diwali
+  // Invitations. The element always carried an id and nothing ever set it.
+  // Labels match CAT_LABELS in products.html so the eyebrow, the filter pills
+  // and the page heading cannot disagree.
+  const CAT_LABELS = { weddings: 'Weddings', celebrations: 'Celebrations',
+                       announcements: 'Announcements' };
+  const tagEl = document.getElementById('lp-tag');
+  if (tagEl) tagEl.textContent = CAT_LABELS[productData.category] || 'Stationery';
   document.getElementById('lp-h1').textContent = name;
   if (productData.tagline) document.getElementById('lp-sub').textContent = productData.tagline;
   document.getElementById('path-modal-tag').textContent = name;
