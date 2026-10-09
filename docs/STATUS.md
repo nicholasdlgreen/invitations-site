@@ -2215,7 +2215,13 @@ both axes, and which sizes may be offered the choice at all.
 
 ---
 
-## 11. Publish stopped working — 27 September
+## 11. Publish stopped working — 27 September, and has worked ever since
+
+**Verified on the live site 9 October 2026.** Nicholas pressed Publish at
+11:19:42; 22 products and 15 MB written, and autovacuum cleared the TOAST table
+50 seconds later, taking dead rows back to 0 on its 25th run. The mitigation
+below holds. The failure needs publishes closer together than about a minute,
+repeatedly — so if it ever returns, that is the pattern to look for first.
 
 Three publishes failed at 16:43, 16:44 and 16:45 with HTTP 500 and
 `57014 — canceling statement due to statement timeout`. The one before, at
@@ -2521,9 +2527,11 @@ hands them straight back.
 **Renumbered 8 October, end of day.** Each row says **who it is waiting on**,
 because the commonest question is "what do I have to do myself". The open items
 are numbered **1 upwards** — closed ones are listed separately below rather than
-holding their old places, which made the list look shorter than it is. Rows
-closed on 8 October keep their position, struck through, so the numbers we have
-both been using still mean the same thing; they are in the closed table too.
+holding their old places, which made the list look shorter than it is. **Renumbered
+again on 9 October, 1 to 10 with no gaps**, to match the worksheet Nicholas
+actually reads from — two numbering schemes had started to diverge, which is
+exactly the drift this file warns about everywhere else. Closed rows are in the
+closed table below and nowhere else.
 
 **Cleared so far:** A1 (checkout refused every basket), 63 (consent and Google),
 the MX cutover, 51a (nothing posted a basket end to end), 40 (the artwork sweep)
@@ -2532,27 +2540,29 @@ basket test and the sweep each found something nobody knew was there. The
 pdf.js worker item was **withdrawn** the same day rather than done: it had
 already been fixed on 3 October and the list was wrong to carry it.
 
-**Ten items are open: 1–7, 10, 11 and 13.** Nine of them wait on you. **Item 13
-is the only one I can do on my own** — so if you want something moving without
-you, that is the one to say yes to. Items 1 and 2 are the ones that would tell
-us most, because both are of the shape that found the money bug: doing the
-thing rather than reading about it.
+**Ten items are open, 1 to 10.** Nine of them wait on you. **Item 10 is the only
+one I can do on my own.** Items 1 and 3 are the ones that would tell us most,
+because both are of the shape that found the money bug: doing the thing rather
+than reading about it.
+
+**Item 10 changed character on 9 October.** It was filed as "shrink the payload,
+and the reason Publish breaks". Publish is not broken — proven on the live site
+that morning. What the work actually buys is that **a margin becomes one number
+instead of a 15MB rewrite**, which makes it groundwork for item 2 rather than a
+size fix at the bottom of the list.
 
 | | What | Item | Waiting on | Why it is here |
 |---|---|---|---|---|
 | **1** | **Stripe live keys and a live-mode webhook** | A4 | **You** | Without the webhook, payments succeed and orders sit pending for ever. Also the only way to prove what Stripe COLLECTS rather than what it is asked for |
-| **2** | **Print one real sample through PrintedEasy** | A5 | **You** | The file geometry is verified; the handover to their press is not. Pair it with **A6** — head to head or head to foot decides whether every double-sided job comes back upside down |
-| **3** | **Read back the copy Claude wrote** | 44 | **You** | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, all of Amy's knowledge. Live, and none of it in your words |
-| **4** | **Set the margins, and settle VAT** | A2, A3 | **You** | 22 products at cost; checkout still shows "VAT (20%)" while we are not registered. **Deferred at your direction** — kept here because it is still the gate on trading |
+| **2** | **Set the margins, and settle VAT** | A2, A3 | **You** | 22 products at cost; checkout still shows "VAT (20%)" while we are not registered. **Deferred at your direction** — kept here because it is still the gate on trading |
+| **3** | **Print one real sample through PrintedEasy** | A5 | **You** | The file geometry is verified; the handover to their press is not. Pair it with **A6** — head to head or head to foot decides whether every double-sided job comes back upside down |
+| **4** | **Read back the copy Claude wrote** | 44 | **You** | Grew a lot on 5 October — delivery, the home-page pods, twelve FAQs, every checkout label, all of Amy's knowledge. Live, and none of it in your words |
 | **5** | **Rewrite the welcome email** | 52 | **You** | Two passages unwritten, and you judged the whole thing not good enough on 7 October. It cannot embarrass us meanwhile: the guard refuses to send while any section is blank |
 | **6** | **Fix the Stripe merchant name** | 51b | **You** | It reads "invitations sandbox" on the payment page, beside "Pay securely at…". That is what a customer sees while paying |
 | **7** | **Enforce DMARC** | — | **You** | Around **22 October**, after a fortnight of reports. `p=none` → quarantine 10% → 100 → reject. Safe now that outbound goes through Google |
-| — | ~~**Switch on the Send Email Hook**~~ | 54 | — | **DONE 8 October.** Proven on a real password reset: the subject line is our function's, not Supabase's, and Resend logged it clicked. Rollback is one toggle |
-| — | ~~**Arm the artwork sweep**~~ | 40 | — | **DONE 8 October.** Found it had never listed a file — a missing `prefix` 400'd every run. Fixed, armed, verified: 160 files to 44, 186 MB freed, the ordered artwork untouched |
-| **10** | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
-| **11** | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` |
-| — | ~~**Self-host the pdf.js worker**~~ | — | — | **WITHDRAWN 8 October, not done — there was nothing to fix.** pdf.js has run in a real worker since 3 October; verified live. The 7 October finding tested a door pdf.js never walks through. See §0's pdf.js section |
-| **13** | **Shrink the published payload** | 38 | Me | 13MB, and the reason Publish breaks. Proven at 1.1MB, not built. Nothing is blocked by it today |
+| **8** | **Cloudflare Turnstile** | — | **You** | Before launch. A new third party, so your call. Public signups are off meanwhile — verified `disable_signup: true` |
+| **9** | **Decide on place cards and table numbers** | 31 | **You** | We tell customers each card in a set will differ. Nothing makes that true, and the claim is live |
+| **10** | **Make margins editable** (was “shrink the published payload”) | 38 | Me | **Re-framed 9 October.** Publish is NOT broken — proven live. The point is that changing one margin today rewrites all 15MB; after this it is one number. Groundwork for item 4, measured at 12x |
 
 **Closed, kept here so the count is honest:**
 
@@ -2611,7 +2621,7 @@ real customer arrives.
     says 3, so it loaded no prices and floored every item on the
     `(qty/50) x GBP150` fallback — 741 of 741 configurations refused at 100
     cards. It now asks `pricing_for` per basket slug, the same function the
-    order page prices from, which also stops it pulling 13MB on every checkout.
+    order page prices from, which also stops it pulling 15MB on every checkout.
     Proved over 12,722 real published rows: the floor never exceeds what the
     site would charge. §18 has the full account.
 37. ~~**The checkout price floor is weight-blind.**~~ **DONE 3 October**, same
@@ -2718,13 +2728,39 @@ real customer arrives.
 24e. **Vellum.** Scores 96 against foil's 100 in UK search and we do not stock
     it. printed.com do. Removed from our copy as a false claim; worth pricing as
     a real product.
-38. **The published payload is 13MB** and carries every price for every product.
-    The dedup is **designed, proven and NOT built**: costs stored once, margin
-    applied on read, measured at **1,136 kB against 14 MB** and verified
-    identical across 78,431 sheet rows and 37,380 finish rows with zero price
-    differences. The working was dropped from the database afterwards, so it has
-    to be rebuilt from `docs/PRICING-STRUCTURE.md`, the only surviving artefact.
-    Must come after item 36, because checkout would have to read the new shape.
+38. **The published payload is 15MB** and carries every price for every product.
+    Still **designed and NOT built**, but **re-framed on 9 October: this is not a
+    broken-Publish item and never should have been filed as a size fix.**
+
+    **Publish works.** Nicholas pressed it on the live site at 11:19:42 on
+    9 October — 22 products, 15 MB written — and autovacuum cleared the TOAST
+    table 50 seconds later, dead rows back to 0. The 27 September mitigation
+    (§11) holds. The old failure needs publishes closer together than about a
+    minute, repeatedly.
+
+    **Remeasured 9 October**, like for like: 15 MB → 1,293 kB of JSON (12.0x);
+    2,188 kB → 180 kB as Postgres stores it (12.1x); 340 ms → 26 ms to write.
+    Compression does not erode the saving.
+
+    **A fault in the old proof was caught, and it would have broken prices.** The
+    note recorded the dedup as lossless because "6,070 rows, 6,070 distinct
+    keys", which is trivially true of any grouped output. On that key **924 of
+    6,070 keys disagree between products.** The key must include the supplier
+    family, which is not a field on a published row — it sits at
+    `routes[rt].family`. With family: 6,994 keys, 0 disagreements, all 88,303
+    rows matched, worst difference GBP 0.00. Mutation-tested: one planted penny
+    shows up as 18 changed rows.
+
+    **Why it is worth doing is margins, not megabytes.** Changing one product's
+    margin today rewrites all 15 MB, because margin is multiplied into every
+    stored price. After the restructure a margin is one number on one product and
+    nothing is recomputed. That makes it groundwork for **A2**, which blocks
+    trading — do it first if margins will be tuned by trial and error, leave it
+    if they are set once. See `docs/PRICING-STRUCTURE.md` §5.
+
+    The working was dropped from the database, so it is a rebuild from that
+    document. One old blocker has gone: row order no longer moves the checkout
+    floor, because `ladderFloor` sorts and takes a minimum (fixed 3 October).
 45. **Two questions for PrintedEasy by email**: the 7pt minimum type size, and
     the maximum foiled area. Both affect what we are allowed to accept.
 46. **Order of service reads "From GBP 37 for 50"** while every other card
@@ -3734,7 +3770,7 @@ the deployed `create-checkout.js` and run against the LIVE published prices:
 
 Both faults are gone. It asks `pricing_for` per product instead of gating on
 `schema_version === 2`, and it takes the cheapest matching weight instead of
-whichever row came first. It also pulls ~960KB per product rather than 13MB.
+whichever row came first. It also pulls ~960KB per product rather than 15MB.
 
 **What is still unproven:** nobody has ever posted a real basket end to end.
 `check-live.py` reads pages and prices; it never posts a basket. That needs
@@ -3776,7 +3812,7 @@ products carry their prices inline. If the payload is deduplicated — which is
 the other outstanding pricing job — products no longer carry `sheet_sells`, and
 checkout would be back to the fallback formula without saying so. The fix is to
 call the `pricing_for` RPC per basket slug instead of downloading the whole
-payload, which also stops this function pulling 13MB on every checkout.
+payload, which also stops this function pulling 15MB on every checkout.
 
 **A second fault in the same floor**, independent of the first: the basket never
 records which paper WEIGHT was ordered, so `product.sheet_sells.find(...)` keys

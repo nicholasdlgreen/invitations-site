@@ -41,7 +41,7 @@ This is why **299 published prices sit below cost** at 0% margin. That is the
 flattening working, not a fault, and it stops being a loss the moment a margin
 exists.
 
-## 3. Why the payload is 14 MB
+## 3. Why the payload is 15 MB
 
 It stores every price **once per product** rather than once per family.
 
@@ -85,12 +85,29 @@ pricing_for reads the family's costs, filters to the product,
 3. **Only two things are genuinely per product**: the margin, and `rt`, the
    index into that product's own `routes` array. Both stay with the product.
 
-**Expected result: 14 MB → about 1.5 MB.**
+**Measured 9 October 2026, not estimated: 15 MB → 1,293 kB, a 12.0x saving.**
+Compressed as Postgres stores it, 2,188 kB → 180 kB, 12.1x — so compression does
+not erode it. The write itself goes from 340 ms to 26 ms on the same operation.
+
+**The dedup key MUST include the supplier family.** It is
+`(family, paper, gsm, size, fold, sides, qty)`, and the family is NOT a field on
+a published row — it is at `routes[rt].family`, via the `rt` index each row
+carries. This is not a detail:
+
+| key used | distinct keys | keys where products disagree |
+|---|---|---|
+| without family | 6,070 | **924** |
+| with family | **6,994** | **0** |
+
+Build it on the key without family and 924 keys silently take one product's price
+for another's. With family it is lossless: all 88,303 published rows match, no
+price changes, worst difference GBP 0.00 — and a penny planted on one row is
+caught, showing up as 18 changed rows because that one price is stored 18 times.
 
 ## 5. Why this matters for setting margins specifically
 
 **Today, changing one product's margin means rebuilding and rewriting the whole
-14 MB document.** Every one of the 78,431 sheet prices is recomputed because the
+15 MB document.** Every one of the 78,431 sheet prices is recomputed because the
 margin is baked into each stored price.
 
 After the change, a margin is a **single number on one product**. Nothing is
