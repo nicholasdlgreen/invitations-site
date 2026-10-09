@@ -2682,7 +2682,7 @@ size fix at the bottom of the list.
 | **8** | **Cloudflare Turnstile** | — | **You** | **Not implemented** (no reference anywhere); signups still off — `auth.users` is 2 and the newest is 12 May | Before launch, and a new third party so your call. Nothing is leaking meanwhile |
 | **9** | **Decide on place cards and table numbers** | 31 | **You** | **The claim is still live, verbatim** — `studio_fields` for `table-numbers` reads "Sample number — e.g. 1 (each card in your set will differ)", required and active | We tell customers each card will differ and nothing makes that true. Parked pending what PrintedEasy can actually do; separate jobs cost about £4.50 a card |
 | **10** | **Make margins editable** (was "shrink the published payload") | 38 | Me | **Publish works** — proven live 9 Oct, and the 12x saving remeasured | Changing one margin today rewrites all 15MB. After this it is one number, which makes it groundwork for item 2 rather than a size fix |
-| **11** | **The GitHub repository is public** | — | **You** | **Confirmed today** — anonymous requests read `docs/STATUS.md`, `docs/PRICING.md` and `tools/printedeasy_refresh.py` | **Found 9 October.** No credential is exposed (checked, and Netlify's own scan agrees) but the 20% supplier discount, the cost-base method, this whole status file and the CRM plan are readable by anyone. `/docs` and `/tools` were deliberately 404'd on the site in September, which shows the intent — GitHub makes that moot. One setting to fix; Netlify keeps deploying from a private repo |
+| **11** | **The GitHub repository is public** | — | **You** | **Confirmed today**, and **left as is at your direction** — anonymous requests still read `docs/STATUS.md`, `docs/PRICING.md` and `tools/printedeasy_refresh.py` | **Found 9 October.** No credential is exposed (checked, and Netlify's own scan agrees) but the 20% supplier discount, the cost-base method, this whole status file and the CRM plan are readable by anyone. `/docs` and `/tools` were deliberately 404'd on the site in September, which shows the intent — GitHub makes that moot. One setting to fix; Netlify keeps deploying from a private repo |
 
 **Closed, kept here so the count is honest:**
 
@@ -2753,7 +2753,18 @@ deliberately made to 404 on the live site, specifically because
 `printedeasy_refresh.py` had been serving the supplier discount at a plain URL.
 That fix stands, and GitHub makes it moot.
 
-**One setting fixes it:** GitHub → Settings → General → Danger Zone → Change
+**LEFT AS IS on 9 October, at Nicholas's direction.** He tried and there was no
+Settings tab on the repository, so the change could not be made from the account
+he was signed in as — most likely signed out, since the repo page loads for
+anyone. He chose to leave it rather than chase it, which is defensible: no
+credential and no customer data is exposed, and it has been this way for months.
+**It stays on the list as item 11.**
+
+**One thing worth checking when he is next definitely signed in:** if there is
+still no Settings tab, he does not administer the repository his site deploys
+from, which matters well beyond this item.
+
+**The fix, when wanted:** GitHub → Settings → General → Danger Zone → Change
 visibility → Private. **Netlify keeps deploying from a private repository** —
 the existing connection is already authorised, so nothing about the build
 changes. It is item 11 on the list.
