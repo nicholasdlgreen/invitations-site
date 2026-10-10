@@ -94,6 +94,16 @@ sheet prices and 67,620 finishing prices, identical values and identical order.
 See `docs/PRICING-STRUCTURE.md` and
 `supabase/migrations/20261009_pricing_payload_v3.sql`.
 
+**Publish has an eight-second budget and the from-price rebuild runs inside
+it.** The first deduped version of `rebuild_from_prices_cache()` called the
+expansion once per product — 4,552 ms, and 18.8 MB of JSON built to find 36
+cheap prices — and Publish timed out four times on 10 October without writing
+anything. It is now one set-based pass over the flat, single-sided rates only:
+about 950 ms. **Before adding work to publish, measure what publish has left.**
+`supabase/migrations/20261010_from_price_cache_set_based.sql` carries the
+numbers; `tools/test-payload-version-gate.py` fails if the per-product
+expansion comes back.
+
 Cost is keyed on **(family, paper, weight, size, quantity, printed_sides)**.
 Every part of that key earns its place:
 

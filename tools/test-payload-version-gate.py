@@ -100,6 +100,20 @@ is_('no page refuses the payload Publish writes', refused, [])
 exact = ['%s (%s %s)' % (r, o, n) for r, o, n in gates if o in ('===', '==')]
 is_('no page pins an EXACT version', exact, [])
 
+# --- 3. the publish trigger stays cheap -------------------------------------
+print('\nTHE FROM-PRICE REBUILD DOES NOT EXPAND WHOLE PRODUCTS')
+# It runs inside the publish, on a connection with statement_timeout = 8s.
+# The first deduped version called pricing_expand() per product: 4,552 ms and
+# 18.8 MB of JSON built to find 36 cheap prices. Publish timed out four times
+# on 10 October. A "from" price needs 738 rows, not 18.8 MB.
+FP = 'supabase/migrations/20261010_from_price_cache_set_based.sql'
+fp = sql_strip_comments(read(FP))
+is_('the rebuild never calls pricing_expand', 'pricing_expand' in fp, False)
+is_('it drops double-sided rates before doing any work',
+    "coalesce(r ->> 'sides', 'single') = 'single'" in fp)
+is_('and it still applies the flattening, which can only lower a price',
+    'rows between unbounded preceding and current row' in fp)
+
 print('\nMUTATION: EACH GUARD MUST FAIL WHEN THE TRAP IS PUT BACK')
 mut = mig.replace("payload ? 'rate_sets'", "coalesce((c.payload ->> 'schema_version')::int, 2) >= 3")
 is_('a version branch in the migration is caught',
@@ -108,6 +122,8 @@ is_('and the ::int form is caught',
     re.search(r"schema_version'\s*\)\s*::int", mut) is not None)
 is_('a reader pinned to the wrong number is caught',
     GATE.search('if (payload.schema_version === 2)').group(1) == '===')
+is_('the per-product expansion, put back in the rebuild, is caught',
+    'pricing_expand' in fp.replace('trim_scale(round(', 'pricing_expand(round('), True)
 
 print('\n%d passed, %d failed' % (passed, failed))
 sys.exit(1 if failed else 0)
