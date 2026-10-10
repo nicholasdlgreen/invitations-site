@@ -17,3 +17,8 @@ service-key*
 
 .DS_Store
 node_modules/
+
+# Documents written for a supplier or a partner. The repository is PUBLIC, and
+# this one sets out the 20% trade discount, our cost base and our whole pricing
+# method in one place. It is meant for PrintedEasy, not for everyone.
+foreverprint-pricing-method.pdf
