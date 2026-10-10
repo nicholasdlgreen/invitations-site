@@ -89,7 +89,17 @@ SLUGS.forEach(function (slug) {
     }
   });
 });
-is('configurations checked (all three products, every row)', checked, 12722);
+// 15,190 since 10 October. The fixture is a snapshot of pricing_for, and it
+// was last taken before greeting-cards gained papers in the 9 October product
+// work -- it held 2,184 rows for it where the rate tables imply 4,652.
+// wedding-invitations and rsvp-cards did not move. Checked from the rate
+// tables rather than from any payload: both now say 4,652.
+//
+// This number is pinned on purpose. It is the count of configurations the
+// check actually walked, so if the fixture is ever silently emptied or
+// truncated the check keeps passing while testing almost nothing. Refresh the
+// fixture with tools/refresh-price-fixture.py and update this deliberately.
+is('configurations checked (all three products, every row)', checked, 15190);
 is('floors above the price the site would charge', over, 0);
 if (over) print('        worst: ' + worstCase);
 
