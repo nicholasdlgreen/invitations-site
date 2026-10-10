@@ -74,7 +74,14 @@ route as (
 -- it -- two routes may share a fold and only the paper tells them apart.
 sheet as (
   select rt.fold, rt.rt, s.sides, s.paper, s.gsm, s.size, s.qty, s.ord,
-         round((s.cost) * (select mult from m), 2) as sell
+         -- trim_scale reproduces what the publisher's parseFloat(x.toFixed(2))
+         -- did: Postgres keeps the scale, so round(39.2, 2) serialises as
+         -- 39.20 where the old catalogue held 39.2, and round(52, 2) as 52.00.
+         -- Both parse to the same number in a browser, so no page would
+         -- misprice -- but an exact comparison against the old catalogue then
+         -- fails on every row and stops being able to tell a real difference
+         -- from a cosmetic one. Caught 10 October by that comparison.
+         trim_scale(round((s.cost) * (select mult from m), 2)) as sell
   from (
     select (r ->> 'family') family, (r ->> 'paper') paper,
            nullif(r ->> 'gsm','')::int gsm, (r ->> 'size') size,
@@ -113,7 +120,7 @@ flat as (
 ),
 finishes as (
   select fr.family, fr.finish, fr.option, fr.sides, fr.size, fr.qty, fr.ord,
-         round(fr.cost * (select mult from m), 2) as sell
+         trim_scale(round(fr.cost * (select mult from m), 2)) as sell
   from (
     select (r ->> 'family') family, (r ->> 'finish') finish, (r ->> 'option') option,
            (r ->> 'sides') sides, (r ->> 'size') size, (r ->> 'qty')::int qty,

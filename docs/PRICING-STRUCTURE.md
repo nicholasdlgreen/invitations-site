@@ -1,7 +1,18 @@
-# How pricing is stored, and why — 3 October 2026
+# How pricing is stored, and why — 3 October, rebuilt 10 October 2026
 
-The reference for setting margins. Written before restructuring the published
-payload, so the shape being changed and the shape replacing it are both here.
+The reference for setting margins.
+
+**BUILT AND LIVE as of 10 October 2026.** Sections 1 to 4 describe a change
+that has now happened: each cost is stored once, and the margin is applied when
+a price is read. The figures below were taken at 22 products and 15 MB; at 36
+products it had reached **26 MB and 220,240 rows, which deduped to 1,384 kB and
+9,556** — a 20x saving, and the fourteen products added on 9 October had
+introduced no new prices at all. Everything else about the design held.
+
+The one thing that changed in the building: the shape is identified by the
+PRESENCE of `rate_sets`, never by `schema_version`. The live payload has said 3
+for weeks, and a first draft that tested the number would have blanked every
+price on the site.
 
 ---
 

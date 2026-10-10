@@ -69,13 +69,30 @@ still shows a VAT split and is a separate code change.
 ```
 PrintedEasy list price
         ↓  less 20% (the agreement)
-   our COST            ← stored in `sheet_rates`
+   our COST            ← stored in `sheet_rates`, and published ONCE
         ↓  × (1 + margin %)   ← set per product in admin
-   our SELL PRICE      ← stored in `pricing_config`, read by the website
+   our SELL PRICE      ← computed when a page ASKS, by pricing_for()
 ```
 
 You only ever enter **cost**. Sell is derived, so the same cost sells at
 different prices on different products.
+
+**The margin is applied when a price is read, not when it is published**
+(10 October 2026). `pricing_config` used to carry a complete copy of the price
+list for every product, with the margin multiplied into each stored price: 26 MB
+holding 220,240 rows that were really 9,556, and changing one product's margin
+rewrote the whole document. It now stores each cost once in `rate_sets` and
+`finish_sets`, and `pricing_expand()` cuts out a product's share, applies that
+product's margin and runs the no-backward-steps flattening when the price is
+asked for. **A margin is now one number on one product; nothing is recomputed
+and nothing is republished.** About 1.3 MB, and adding a product costs 321 bytes
+whatever the price list holds.
+
+Nothing on the site reads anything different: `pricing_for(slug)` returns the
+same shape it always did, and it was proved against all 36 products — 152,620
+sheet prices and 67,620 finishing prices, identical values and identical order.
+See `docs/PRICING-STRUCTURE.md` and
+`supabase/migrations/20261009_pricing_payload_v3.sql`.
 
 Cost is keyed on **(family, paper, weight, size, quantity, printed_sides)**.
 Every part of that key earns its place:

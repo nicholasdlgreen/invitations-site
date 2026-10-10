@@ -4952,221 +4952,162 @@ function renderPublishStatus() {
   valDiv.innerHTML = html;
 }
 
-// PrintedEasy quote in whole pounds, so their curve is a staircase rather than
-// a line, and once in a while a tread goes backwards: 475 folded A5 cards cost
-// £2.40 less than 450 of them. Ten rungs out of 3,715 do this, seven of them
-// down at 20-30 where most wedding orders actually sit.
+// The no-backward-steps flattening used to live here, applied to the sell
+// prices as the catalogue was built. It now runs in the database, inside
+// pricing_expand(), because the catalogue stores costs once and the margin is
+// applied when a price is read -- so the flattening has to happen there too,
+// after the margin, exactly as it did here.
 //
-// We mirror their costs exactly — that is the whole point of sheet_rates, and
-// the Monday price watch diffs against it — so the backward treads are real
-// and stay in the cost table. What we will not do is quote a customer more for
+// The rule it implements has not changed and is worth keeping in sight:
+// PrintedEasy's own price list occasionally quotes MORE for fewer cards. We
+// mirror their costs exactly -- that is the point of sheet_rates, and the
+// Monday price watch diffs against it -- so the backward treads are real and
+// stay in the cost table. What we will not do is quote a customer more for
 // fewer cards. Walking each curve down from the largest quantity and never
-// letting a price stand above the one above it removes exactly those rungs and
-// leaves every other price alone. It can only ever lower a price.
+// letting a price stand above the one above it removes exactly those rungs
+// and leaves every other price alone. It can only ever lower a price.
 //
-// Returns how many it flattened, so publishing says so out loud.
-function noBackwardSteps(sells) {
-  const curves = new Map();
-  sells.forEach(r => {
-    // Callers already filter by fold and sides, but the key carries them too
-    // so this stays correct however it is called.
-    const k = r.paper + '|' + r.gsm + '|' + r.size + '|' + (r.fold || '') + '|' + (r.sides || 'single');
-    if (!curves.has(k)) curves.set(k, []);
-    curves.get(k).push(r);
-  });
-  let flattened = 0;
-  curves.forEach(rows => {
-    rows.sort((a, b) => b.qty - a.qty);            // largest quantity first
-    for (let i = 1; i < rows.length; i++) {
-      if (rows[i].sell > rows[i - 1].sell) {
-        rows[i].sell = rows[i - 1].sell;
-        flattened++;
-      }
-    }
-  });
-  return flattened;
-}
+// Flat and folded are separate curves, and printed sides splits them again:
+// single-sided is always cheaper, so one curve holding both would flatten
+// every double-sided price down onto the single-sided one. The partition is
+// paper|gsm|size|fold|sides. See docs/PRICING-STRUCTURE.md and
+// supabase/migrations/20261009_pricing_payload_v3.sql.
+
 
 async function publishHierarchical() {
   const btn = document.getElementById('pub_btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
   try {
     // Build snapshot
-    let flattenedSteps = 0;
+    // ─────────────────────────────────────────────────────────────────────
+    // The catalogue stores each cost ONCE; the site applies the margin when a
+    // price is READ.
+    //
+    // It used to carry a complete copy of the price list for every product.
+    // At 36 products that was 26 MB holding 220,240 rows that are really
+    // 9,556 — the fourteen products added on 9 October introduced no new
+    // prices at all, they each took a copy. Deduped it is about 1.3 MB.
+    //
+    // The size was never the real reason. Margin was multiplied into every
+    // stored price, so changing ONE product's margin rewrote the whole
+    // document. Now a margin is one number on one product and nothing is
+    // recomputed. See docs/PRICING-STRUCTURE.md.
+    //
+    // pricing_expand() in the database cuts each product's share back out,
+    // applies that product's margin and runs the no-backward-steps
+    // flattening, and returns exactly the shape this file used to publish.
+    // Verified against all 36 products before it shipped: 152,620 sheet
+    // prices and 67,620 finishing prices, identical values AND identical
+    // order. Nothing on the site reads anything different.
+    //
+    // DO NOT raise schema_version to signal this. The live payload has said 3
+    // for weeks, and on 24 September twenty of twenty-one landing pages
+    // tested `=== 2` against a payload that said 3 and showed no price for a
+    // day. The presence of rate_sets is the signal; the number is not.
+    // tools/test-payload-version-gate.py enforces that.
+    // ─────────────────────────────────────────────────────────────────────
+
+    // Every ACTIVE sheet rate, once. Ordered by id — the order sbFetchAll
+    // returns them in, and the order the per-product lists were always built
+    // in — so the rows a product gets back keep the order they have had.
+    //
+    // RAW cost, not a sell price. The rounding happens AFTER the margin, in
+    // the database, exactly where it happened here: round(cost * mult, 2).
+    // Storing a rounded cost and multiplying that would round twice.
+    //
+    // A rate switched off in sheet_rates is kept for evidence but must never
+    // reach a customer. Folded 400gsm is the reason that column exists: the
+    // scrape came back below every thinner weight and identical on two
+    // different papers, so the printer substituted something rather than
+    // creasing 400gsm card.
+    const rateSets = (sheetRates || [])
+      .filter(r => r.active !== false)
+      .map(r => ({
+        family: r.supplier_family,
+        paper:  r.paper_name,
+        gsm:    parseInt(r.weight_gsm, 10) || null,
+        size:   r.size,
+        sides:  r.printed_sides || 'single',
+        qty:    r.quantity,
+        cost:   parseFloat(r.cost)
+      }));
+
+    // The two GLOBAL finishing filters, applied once rather than 36 times.
+    // Which side a finish goes on is our decision, not the customer's — every
+    // lamination option is specified "both sides", corners is one operation on
+    // the card — and an option switched off in finish_types is not on sale.
+    // Publishing the other side shipped rows nothing could reach: 567 of them
+    // per product on the first run.
+    //
+    // Only family, size and the product's own available_finishes are per
+    // product, and the database applies those when the price is read.
+    const sidesWanted = name => (/lamination/i.test(name) ? 'both' : 'front');
+    const offeredOptions = {};
+    (finishTypes || []).filter(t => t.active !== false).forEach(t => {
+      offeredOptions[String(t.name).toLowerCase()] =
+        new Set((t.options || []).map(o => String(o.name || '').toLowerCase()));
+    });
+    const finishSets = (finishRates || []).filter(r => {
+      // finish_rates is already fetched with active=is.true. Repeating it is
+      // redundant today and costs nothing, and it holds if that fetch is ever
+      // relaxed — reading only the builder once suggested finishing rates were
+      // unfiltered, and that cost a wrong conclusion on 2026-10-03.
+      if (r.active === false) return false;
+      if (r.applies_to !== sidesWanted(r.finish_name)) return false;
+      // Envelopes are priced the same way but live in their own table and are
+      // gated on the product's envelopes_offered flag, not available_finishes.
+      if (/^envelopes$/i.test(r.finish_name)) return true;
+      const opts = offeredOptions[String(r.finish_name).toLowerCase()];
+      return !opts || opts.has(String(r.option_name).toLowerCase());
+    }).map(r => ({
+      family: r.supplier_family,
+      finish: r.finish_name,
+      option: r.option_name,
+      sides:  r.applies_to,
+      size:   r.size,
+      qty:    r.quantity,
+      cost:   parseFloat(r.cost)
+    }));
+
+    // EVERY paper's weights, including RETIRED ones. payload.papers carries
+    // only the active stocks, but a product may still name an inactive paper,
+    // and the weight filter has to keep working for it or it silently stops
+    // filtering — sheet_rates holds weights we decided not to sell, and
+    // Cartonboard 280gsm costs three times the 255.
+    const paperWeights = {};
+    (papers || []).forEach(p => {
+      paperWeights[p.name] = (Array.isArray(p.weights) ? p.weights : [])
+        .map(w => parseInt(w && w.gsm, 10)).filter(Boolean);
+    });
+
     const products = (productTypes || [])
       .filter(p => p.active !== false)
       .map(p => {
-        const margin = (p.margin_pct != null) ? parseFloat(p.margin_pct) : 0;
-        const multiplier = 1 + (margin / 100);
-        const sizes    = Array.isArray(p.available_sizes)    ? p.available_sizes    : [];
-        const papersOk = Array.isArray(p.available_papers)   ? p.available_papers   : [];
-        const finishes = Array.isArray(p.available_finishes) ? p.available_finishes : [];
-        const family   = p.supplier_family || '';
-        // Sheet sells: only rates in this product's family, on a paper, size
-        // AND weight it actually offers.
-        //
-        // A product that can also be sold folded is priced from a second
-        // family, and every row says which format it belongs to. The papers
-        // and sizes on offer when folded are simply whichever of this
-        // product's own that the folded family has rates for — so the fold
-        // cannot promise a paper or a size the printer does not do it in.
-        //
-        // sheet_rates mirrors what PrintedEasy charge, so it holds weights we
-        // have decided not to sell — Cartonboard 280gsm costs three times the
-        // 255, so we dropped it from the paper rather than from the costs.
-        // Without this check those prices would still ship in the payload,
-        // where nothing can reach them and they would quietly go stale.
-        const weightsOffered = {};
-        (papers || []).forEach(p => {
-          weightsOffered[p.name] = new Set(
-            (Array.isArray(p.weights) ? p.weights : [])
-              .map(w => parseInt(w && w.gsm, 10)).filter(Boolean));
-        });
-        const offersWeight = (paper, gsm) => {
-          const set = weightsOffered[paper];
-          return !set || !set.size ? true : set.has(gsm);
-        };
-
+        const margin       = (p.margin_pct != null) ? parseFloat(p.margin_pct) : 0;
+        const multiplier   = 1 + (margin / 100);
+        const family       = p.supplier_family || '';
         const foldedFamily = p.folded_family || null;
-        // How this product can be made. routes replaces the old two slots —
-        // supplier_family meaning "flat" and folded_family meaning "folded" —
-        // because that pair could not express "a table plan is flat on 5mm
-        // board OR on paper", which left 880 large-format rates unreachable.
-        // Anything not yet carrying routes falls back to the old pair, so no
-        // product changes behaviour until someone gives it a second route.
+        // routes replaced the old two slots — supplier_family meaning "flat"
+        // and folded_family meaning "folded" — because that pair could not
+        // express "a table plan is flat on 5mm board OR on paper", which left
+        // 880 large-format rates unreachable. Anything not yet carrying routes
+        // falls back to the old pair, so no product changes behaviour until
+        // someone gives it a second route.
         const routes = (Array.isArray(p.routes) && p.routes.length)
           ? p.routes.filter(rt => rt && rt.family)
           : [{ family: family, fold: 'flat' }]
               .concat(foldedFamily ? [{ family: foldedFamily, fold: 'folded' }] : []);
-        // Which route a row came from, so the site can pick the right press
-        // geometry from the paper the customer chose rather than guessing from
-        // the fold. Two routes may share a fold; only the paper tells them
-        // apart.
-        // A route may name the stocks it serves. Without that, two routes that
-        // both carry Silk would each claim it and the overlap guard would
-        // rightly refuse the publish — which is what happens when an order of
-        // service is sold on Luxury Folded for the Fedrigoni stocks AND on
-        // Greeting Cards for the standard ones. Naming the stocks per route is
-        // what makes the pair unambiguous.
-        const routeFor = (fam, paper) => {
-          for (let i = 0; i < routes.length; i++) {
-            if (routes[i].family !== fam) continue;
-            const only = routes[i].papers;
-            if (Array.isArray(only) && only.length && !only.includes(paper)) continue;
-            return i;
-          }
-          return -1;
-        };
-        const sidesOffered = !!p.sides_offered;
-        const sheetSells = [];
-        sheetRates.forEach(r => {
-          const rtIdx = routeFor(r.supplier_family, r.paper_name);
-          const fold = rtIdx < 0 ? null : (routes[rtIdx].fold || 'flat');
-          // A double-sided rate only belongs in the payload if the product
-          // offers the choice — a welcome sign has no back. Without this the
-          // rows ship where nothing can reach them and quietly go stale, the
-          // same trap the weight check above exists for.
-          const sidesOk = (r.printed_sides || 'single') === 'single' || sidesOffered;
-          // A rate switched off in sheet_rates is kept for evidence but must
-          // never reach a customer. Folded 400gsm is the reason the column
-          // exists: the scrape came back below every thinner weight and
-          // identical on two different papers, so the printer substituted
-          // something rather than creasing 400gsm card. The "from" price takes
-          // the cheapest row in the payload, so a bad cheap row does not sit
-          // quietly in a corner — it becomes the headline on the grid.
-          if (fold && sidesOk && r.active !== false &&
-              papersOk.includes(r.paper_name) &&
-              sizes.includes(r.size) &&
-              offersWeight(r.paper_name, parseInt(r.weight_gsm, 10))) {
-            sheetSells.push({
-              fold:  fold,
-              rt:    rtIdx,
-              sides: r.printed_sides || 'single',
-              paper: r.paper_name,
-              gsm:   parseInt(r.weight_gsm, 10) || null,
-              size:  r.size,
-              qty:   r.quantity,
-              sell:  parseFloat((r.cost * multiplier).toFixed(2))
-            });
-          }
-        });
-        // Flat and folded are separate curves and must be flattened apart, or
-        // a cheap folded price could drag a flat one down with it. Printed
-        // sides splits them again for the same reason: single-sided is always
-        // cheaper, so one curve holding both would flatten every double-sided
-        // price down onto the single-sided one.
-        [['flat','single'],['flat','double'],['folded','single'],['folded','double']].forEach(([f, sd]) => {
-          flattenedSteps += noBackwardSteps(
-            sheetSells.filter(r => r.fold === f && (r.sides || 'single') === sd));
-        });
-        // Finish sells, the OLD flat figure: one price per finishing type,
-        // whatever the option, size or quantity. Kept only so a page served
-        // from cache before this change still prices something rather than
-        // nothing. finish_prices below supersedes it.
+        const finishes = Array.isArray(p.available_finishes) ? p.available_finishes : [];
+        // finish_sells is the OLD flat figure: one price per finishing type,
+        // whatever the option, size or quantity. A different, tiny shape — not
+        // a duplication problem — kept so a page served from cache before the
+        // per-quantity finishing landed still prices something rather than
+        // nothing. It stays per product because it carries the margin.
         const finishSells = finishes.map(name => {
           const fo = (finishOptions || []).find(f => f.name === name);
           const cost = (fo && fo.cost_modifier != null) ? parseFloat(fo.cost_modifier) : 0;
-          return {
-            name,
-            sell: parseFloat((cost * multiplier).toFixed(2))
-          };
+          return { name, sell: parseFloat((cost * multiplier).toFixed(2)) };
         });
-
-        // Finishing priced the way the printer prices it: per option, per
-        // side, per size, per quantity. A flat £5 for lamination recovered £5
-        // on a job that costs £21.60, and rounded corners were sold as free
-        // when they cost £17.60 — PrintedEasy print the surcharge next to the
-        // option on their own page.
-        //
-        // Per product, not shared, for two reasons: margin is a product
-        // decision, so a shared table would apply the wrong one; and pricing_for
-        // filters the payload to one product, so this only costs a page the
-        // rows it actually needs.
-        const finishRouteFamilies = new Set(routes.map(rt => rt.family));
-        const offeredOptions = {};
-        (finishTypes || []).filter(t => t.active !== false).forEach(t => {
-          offeredOptions[String(t.name).toLowerCase()] =
-            new Set((t.options || []).map(o => String(o.name || '').toLowerCase()));
-        });
-        // Which side a finish goes on is decided by us, not the customer:
-        // every lamination option is specified "both sides", corners is one
-        // operation on the card. Publishing the other side ships rows nothing
-        // can reach — 567 of them per product on the first run, over half the
-        // finishing payload on a page that is already 600KB.
-        const sidesWanted = name => (/lamination/i.test(name) ? 'both' : 'front');
-        // Envelopes are priced here too, because they are charged the same way —
-        // per option, per size, per quantity — even though they live in their own
-        // table rather than in finish_types. They are gated on the product's
-        // envelopes_offered flag rather than available_finishes.
-        const wantsEnvelopes = p.envelopes_offered !== false;
-        const finishPrices = (finishRates || []).filter(r => {
-          // A finishing rate switched off in finish_rates is kept for evidence
-          // but must never reach a customer, the same rule sheet_rates has had
-          // since folded 400gsm. The two tables guard this in DIFFERENT places:
-          // the finish_rates FETCH above filters active=is.true, while
-          // sheet_rates is fetched whole and filtered in the loop below. Reading
-          // only the builder therefore suggests finishing rates are unfiltered —
-          // it cost a wrong conclusion while withdrawing red envelopes on
-          // 2026-10-03. Repeating the check here is redundant today and costs
-          // nothing, and it holds if either fetch is ever relaxed.
-          if (r.active === false) return false;
-          if (!finishRouteFamilies.has(r.supplier_family)) return false;
-          if (!sizes.includes(r.size)) return false;
-          if (/^envelopes$/i.test(r.finish_name)) {
-            if (!wantsEnvelopes) return false;
-          } else if (!finishes.includes(r.finish_name)) return false;
-          if (r.applies_to !== sidesWanted(r.finish_name)) return false;
-          const opts = offeredOptions[String(r.finish_name).toLowerCase()];
-          return !opts || opts.has(String(r.option_name).toLowerCase());
-        }).map(r => ({
-          family: r.supplier_family,
-          finish: r.finish_name,
-          option: r.option_name,
-          sides:  r.applies_to,
-          size:   r.size,
-          qty:    r.quantity,
-          sell:   parseFloat((parseFloat(r.cost) * multiplier).toFixed(2))
-        }));
         return {
           slug:               p.slug,
           name:               p.name,
@@ -5177,12 +5118,16 @@ async function publishHierarchical() {
           // on a flat sheet or supplied at the finished size.
           folded_family:      foldedFamily,
           routes:             routes,
-          available_sizes:    sizes,
-          available_papers:   papersOk,
+          available_sizes:    Array.isArray(p.available_sizes)  ? p.available_sizes  : [],
+          available_papers:   Array.isArray(p.available_papers) ? p.available_papers : [],
           available_finishes: finishes,
-          sheet_sells:        sheetSells,
-          finish_sells:       finishSells,
-          finish_prices:      finishPrices
+          // These two decided which rows a product got, and both used to be
+          // applied here. The filtering now happens when a price is read, so
+          // they have to travel with the product. A welcome sign has no back;
+          // envelopes are offered on most things but not all.
+          sides_offered:      !!p.sides_offered,
+          envelopes_offered:  p.envelopes_offered !== false,
+          finish_sells:       finishSells
         };
       });
 
@@ -5213,8 +5158,13 @@ async function publishHierarchical() {
     // an order came through at the wrong price. A publish that finds nothing to
     // publish has failed, whatever the reason, and must say so rather than
     // overwrite a good catalogue with an empty one.
-    const totalSheetRows = products.reduce(
-      (n, x) => n + ((x.sheet_sells && x.sheet_sells.length) || 0), 0);
+    //
+    // It counts the SHARED rate set now, not a per-product copy. Counting
+    // x.sheet_sells after the dedup would have counted a field that no longer
+    // exists, summed to zero and refused every publish — or, had the sum been
+    // written the other way, passed no matter what. A guard has to be moved
+    // with the thing it guards.
+    const totalSheetRows = rateSets.length;
     if (!totalSheetRows) {
       if (btn) { btn.disabled = false; btn.textContent = 'Publish'; }
       const why = (sheetRates && sheetRates.length)
@@ -5230,9 +5180,14 @@ async function publishHierarchical() {
     }
 
     const payload = {
+      // Still 3, deliberately. The presence of rate_sets is what tells the
+      // database this is the deduped shape; see the note above the builder.
       schema_version: 3,
       published_at:   new Date().toISOString(),
       papers:         paperCatalogue,
+      paper_weights:  paperWeights,
+      rate_sets:      rateSets,
+      finish_sets:    finishSets,
       products
     };
     // Insert/update the singleton pricing_config row.
@@ -5250,9 +5205,16 @@ async function publishHierarchical() {
       },
       body: JSON.stringify({ id: 'singleton', payload, published_at: new Date().toISOString() })
     });
-    const totalSells = products.reduce((sum, p) => sum + p.sheet_sells.length, 0);
-    const stepNote = flattenedSteps ? `, ${flattenedSteps} backward step${flattenedSteps!==1?'s':''} flattened` : '';
-    toast(`Published ✓ — ${products.length} product${products.length!==1?'s':''}, ${totalSells} sell price${totalSells!==1?'s':''}${stepNote}`);
+    // The count is of costs now, not of sell prices, and that is the point:
+    // it should stay roughly flat as products are added. If it climbs with the
+    // product count, something has started copying prices again.
+    //
+    // The "backward steps flattened" note has gone. Flattening happens when a
+    // price is read, so publish no longer knows the number — and reporting a
+    // stale one would be worse than reporting none.
+    const kb = Math.round(JSON.stringify(payload).length / 1024);
+    toast(`Published ✓ — ${products.length} product${products.length!==1?'s':''}, `
+        + `${rateSets.length} cost${rateSets.length!==1?'s':''} + ${finishSets.length} finishing, ${kb} kB`);
     renderPublishStatus();
   } catch (err) {
     toast('Publish failed: ' + err.message);
