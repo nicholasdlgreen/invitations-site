@@ -424,6 +424,15 @@ no error, on every product page, for a day. **A version bump in the payload is a
 breaking change to every page that reads it**; widen the test rather than
 raising the number.
 
+**`tools/test-payload-version-gate.py` now holds that line.** It fails if any
+page served to a visitor pins an exact version, if any page would refuse the
+number Publish actually writes, or if the dedup migration decides the
+catalogue's shape by reading the version instead of looking for the shared rate
+set. The trap was reintroduced on 9 October -- a first draft branched on
+`schema_version >= 3`, and the live payload has said 3 for weeks, so it would
+have blanked every price on the site. Caught before it was applied, and now
+caught by a test instead of by luck.
+
 ---
 
 ## 7. The three agreed changes, and where they stand

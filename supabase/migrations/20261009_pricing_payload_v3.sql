@@ -16,9 +16,22 @@
 -- page, create-checkout and upload-and-print already read through, and it
 -- still returns exactly what it returned before.
 --
--- SAFE TO APPLY BEFORE ANYTHING IS REPUBLISHED: pricing_for reads
--- schema_version and takes the old path unchanged for a v2 payload. The live
--- payload stays v2 until somebody presses Publish from the new admin.
+-- SAFE TO APPLY BEFORE ANYTHING IS REPUBLISHED: pricing_for asks whether the
+-- payload actually CARRIES a shared rate set, and takes the old path unchanged
+-- when it does not. The catalogue keeps its present shape until somebody
+-- presses Publish from the new admin.
+--
+-- IT ASKS THE DATA, NOT THE LABEL, AND THAT IS NOT A STYLE CHOICE. The first
+-- draft of this file branched on `schema_version >= 3`. The live payload has
+-- SAID 3 since the hierarchical publish, so that draft would have sent every
+-- page down the new path to look for a rate set that was not there yet, and
+-- every price on the site would have gone blank -- no error, just "Pricing to
+-- be confirmed" on all 36 products. That exact failure already happened here on
+-- 24 September, when twenty of twenty-one landing pages tested
+-- `schema_version === 2` against a payload that said 3. docs/PRICING.md section 6
+-- carries the rule that came out of it: widen the test rather than raise the
+-- number. A version number has already drifted once; the presence of a key
+-- cannot. tools/test-payload-version-gate.py holds this line.
 
 -- ---------------------------------------------------------------------------
 -- pricing_expand(payload, slug) -- pure, takes the payload as an argument so it
@@ -147,7 +160,7 @@ as $function$
     'published_at',   c.payload -> 'published_at',
     'papers',         coalesce(c.payload -> 'papers', '[]'::jsonb),
     'products',       coalesce(
-      case when coalesce((c.payload ->> 'schema_version')::int, 2) >= 3
+      case when c.payload ? 'rate_sets'
            then (select jsonb_agg(x) from (
                    select pricing_expand(c.payload, p ->> 'slug') x
                    from jsonb_array_elements(c.payload -> 'products') p
@@ -163,9 +176,9 @@ as $function$
 $function$;
 
 -- ---------------------------------------------------------------------------
--- The "from" price cache read sheet_sells straight out of the payload, so a v3
--- payload would have emptied it and taken the "from GBP x" off every landing
--- page. It now goes through the same expansion.
+-- The "from" price cache read sheet_sells straight out of the payload, so a
+-- deduped payload would have emptied it and taken the "from GBP x" off every
+-- landing page. It now goes through the same expansion.
 -- ---------------------------------------------------------------------------
 create or replace function public.rebuild_from_prices_cache()
 returns integer
@@ -178,7 +191,7 @@ begin
   with cfg as (select payload from pricing_config order by published_at desc limit 1),
   prods as (
     select p ->> 'slug' as slug,
-           case when coalesce((c.payload ->> 'schema_version')::int, 2) >= 3
+           case when c.payload ? 'rate_sets'
                 then pricing_expand(c.payload, p ->> 'slug')
                 else p end as prod
     from cfg c, jsonb_array_elements(c.payload -> 'products') p
