@@ -313,6 +313,50 @@ failures, 38 MB of databases, no bloat, autovacuum working. **A real page's
 price lookup uses no temp space at all** — `explain (analyze, buffers)` shows
 shared buffers only. Written up in the memory note; nothing to do.
 
+### Later the same day — DMARC moved, and two things reviewed
+
+**DMARC is at stage 1 of 3.** `_dmarc.foreverprint.com` now reads
+`p=quarantine; pct=10`, confirmed live at the authoritative nameserver and at
+Cloudflare, Google and Quad9. It was moved on evidence rather than on the
+calendar: two real aggregate reports were read for the first time, Outlook.com
+for 8 October and google.com for 9 October — **5 messages, 5 passes, 0
+failures**, covering BOTH sending paths (Resend via Amazon SES on 54.240.6.27,
+and Google Workspace) at two independent receivers.
+
+**Never add `aspf=s` or `adkim=s`.** Resend's SPF passes on
+`send.foreverprint.com`, a SUBDOMAIN, and only because alignment is relaxed.
+Strict alignment would reject every order confirmation and password reset we
+send. It reads as tightening security and is an outage.
+
+Remaining: drop `pct=10`, then `p=reject`. Roughly three days apart at this
+volume, and each is one DNS edit that reverts in an hour.
+
+### A pricing-method document for PrintedEasy
+
+Written at Nicholas's request so our supplier can verify our working: how we
+read their price list, how we interpret the quantity ladder, how finishing and
+delivery are derived, and how a cost becomes a price. Six pages. It ends with
+**eight questions**, three of which cost money to have wrong — whether the 20%
+covers the delivery line, whether they foil the Luxury products, and whether
+the price dip at quantity 475 is deliberate. Those three are the same open
+items already on this sheet; they are now written down in a form that can be
+answered.
+
+**The PDF is gitignored and must stay so** — this repository is public and the
+document puts the trade discount, the cost base and the whole method in one
+file. `tools/make-pricing-method-pdf.py` rebuilds it; the figures in it were
+measured on stated dates and should be re-measured before it is sent again.
+
+### Turnstile reviewed, not started — item 8
+
+Signups re-verified OFF against the live endpoint. The work is larger than it
+looks and the order matters: the CSP blocks `challenges.cloudflare.com` today,
+so the widget would fail silently; and Supabase's CAPTCHA gates sign-in and
+password reset as well as sign-up, so `login.html`, `register.html`,
+`forgot-password.html` and `account.html` all need it or **existing customers
+cannot log in**. Test before re-enabling signups, not after — while signups are
+off, a mistake can only break something nobody is using.
+
 ### Six bad checks in two days, and what they have in common
 
 A fingerprint that included the publish timestamp. A log filter on a field that
@@ -2810,7 +2854,7 @@ which was investigated today and was not real.
 | **5** | **Rewrite the welcome email** | 52 | **You** | **2 passages still blank** — the guard still refuses the send | How it started, and who is on the team. You judged the whole thing not good enough on 7 October, so it is a rewrite |
 | **6** | **Fix the Stripe merchant name** | 51b | **You** | **NOT verified** — needs your Stripe dashboard | It read "invitations sandbox" beside "Pay securely at…". I have no way to see it without creating a checkout session, so this row is on the 7 October report, not a fresh check |
 | **7** | **Enforce DMARC** — **STAGE 1 OF 3 DONE 10 Oct** | — | **You** | **`p=quarantine; pct=10` confirmed live** at the authoritative nameserver and at Cloudflare, Google and Quad9 | Two real aggregate reports read 10 Oct: **5 messages, 5 passes, 0 failures**, covering BOTH sending paths (Resend via Amazon SES, and Google Workspace) and reported independently by Outlook.com and google.com. Remaining: drop `pct=10`, then `p=reject`, which closes this. **Never add `aspf=s` or `adkim=s`** — Resend passes on the `send.` subdomain and strict alignment would reject every order email |
-| **8** | **Cloudflare Turnstile** | — | **You** | **Not implemented** (no reference anywhere); signups still off — `auth.users` is 2 and the newest is 12 May | Before launch, and a new third party so your call. Nothing is leaking meanwhile |
+| **8** | **Cloudflare Turnstile** | — | **You** (a Cloudflare account), then me | **Not implemented**; signups confirmed still OFF against the live auth settings endpoint 10 Oct (`disable_signup: true`), `auth.users` is 2 and the newest is 12 May | Before launch, and a new third party so your call. **Reviewed 10 Oct and it is bigger than one widget — see §0h.** Two things would break the site if missed: the CSP in `netlify.toml` does not allow `challenges.cloudflare.com`, so Turnstile would be blocked silently; and enabling CAPTCHA in Supabase gates sign-IN and password reset as well as sign-up, so four pages need it or existing customers cannot log in |
 | **9** | **Decide on place cards and table numbers** | 31 | **You** | **The claim is still live, verbatim** — `studio_fields` for `table-numbers` reads "Sample number — e.g. 1 (each card in your set will differ)", required and active | We tell customers each card will differ and nothing makes that true. Parked pending what PrintedEasy can actually do; separate jobs cost about £4.50 a card |
 | **10** | **The GitHub repository is public** | — | **You** | **Confirmed 9 Oct**, and **left as is at your direction** — anonymous requests still read `docs/STATUS.md`, `docs/PRICING.md` and `tools/printedeasy_refresh.py` | **Found 9 October.** No credential is exposed (checked, and Netlify's own scan agrees) but the 20% supplier discount, the cost-base method, this whole status file and the CRM plan are readable by anyone. `/docs` and `/tools` were deliberately 404'd on the site in September, which shows the intent — GitHub makes that moot. One setting to fix; Netlify keeps deploying from a private repo |
 
@@ -2840,6 +2884,7 @@ and again by Stripe.
 | Stop collecting the delivery address twice | Me | **Still doubled** — `create-checkout.js:538` sets `shipping_address_collection` as well as our own form |
 | Export the 10 holding-page signups | You | **10 confirmed** in Netlify Forms (`launch-signup`), last one 28 August. **Do NOT export them into this repository** — it is public, see item 11 |
 | `orders@` as a send-FROM address | You | **Not verified.** Resend sends FROM it successfully, so if this is about sending as `orders@` from Outlook, only you can confirm |
+| The register page shows Supabase's raw error | Me | **Confirmed 10 Oct.** Signups are off, so anyone who fills the form in gets *"Signups not allowed for this instance"* — not our words, and not an explanation. A minute's work, independent of Turnstile |
 | Glance at real disk usage once | You | **Not visible from SQL.** Supabase dashboard → Reports → Database. The 9 Oct "out of disk" alarm was mine and was wrong (§0h); this is a one-off look, not a job |
 
 **Done and removed on 9 October:** `ALERT_EMAIL` (was never broken — the alerts
