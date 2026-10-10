@@ -1,9 +1,18 @@
-# Where we are — 9 October 2026
+# Where we are — 10 October 2026
 
 *Every figure below was checked against the live site, the live database or a
 generated file, not against intention. Where something was measured and came
 back different from what was expected, the measurement won and the expectation
 is written down beside it.*
+
+**10 October. Item 10 is done: the catalogue stores each cost once, and a
+margin is now one number instead of a 26 MB rewrite.** That was the last thing
+on this list waiting on me. **Everything still open now waits on Nicholas.**
+It cost two self-inflicted outages on the way, both inside the hour, both
+written up in **§0h** — along with the disk alarm I raised on 9 October, which
+I investigated today and which **was not real**.
+
+---
 
 **9 October. Two items re-grounded, neither the way the sheet expected.** Publish
 turned out not to be broken, so the payload item was re-framed from a size fix
@@ -213,6 +222,113 @@ pdf.js ran on the UI thread; it had not since 3 October. In both cases something
 was fixed and then wrongly reported as still broken — once by a test that read a
 comment, once by a probe that tested a call the library never makes. A few
 minutes spent confirming the premise has now twice saved a day of building.
+
+## 0h. 10 October — the catalogue stores each cost once
+
+**Item 10 is closed.** `pricing_config` carried a complete copy of the price
+list for every product. It now stores each cost once and the margin is applied
+when a price is read.
+
+| | before | after |
+|---|---|---|
+| Published catalogue | **26 MB** | **1,385 kB** |
+| Rows in it | 220,240 | 9,556 (8,418 costs + 2,814 finishing) |
+| Copies of the price list | 36 | **0** |
+| `pricing_config` + TOAST on disk | ~7 MB | 920 kB |
+| One product on the order page | 932 kB | 961 kB (unchanged — it is expanded on read) |
+| Cost of adding a product | a full copy of every price | **321 bytes** |
+
+**The fourteen products added on 9 October had introduced no new prices at
+all.** The distinct count stayed at 6,994 before and after them; they each took
+a copy. That is the whole argument for the change in one number.
+
+**Why it mattered, and why it had to be before margins and not after.** Margin
+was multiplied into every stored price, so changing one product's margin
+rewrote the entire document. It is now one number on one product, recomputed by
+`pricing_expand()` when a page asks. And every margin is still 0, which is the
+only reason the 36 copies were identical and the equivalence could be proved at
+all — give two products in a family different margins and the duplication
+becomes real and permanent.
+
+**Verified, against the rate tables rather than against the old catalogue** —
+a comparison that never looks at a payload, so it cannot agree with itself:
+**152,620 prices across all 36 products, identical values and identical
+order**, in six batches. `from_prices_cache` unchanged. Live pages checked in a
+browser.
+
+### Four traps, three of them avoided and one not
+
+**1. The version number — avoided.** The first draft of the migration decided
+the catalogue's shape with `schema_version >= 3`. **The live payload has said 3
+since the hierarchical publish**, so it would have sent every page looking for
+a rate set that was not there and blanked every price on the site — the exact
+24 September failure, where twenty of twenty-one landing pages tested `=== 2`
+against a payload saying 3. Caught only by checking the live database instead
+of trusting the previous night's note. It now asks whether the payload
+*carries* a rate set. `tools/test-payload-version-gate.py` holds the line.
+
+**2. Publish timed out four times — not avoided.** `rebuild_from_prices_cache`
+runs from a trigger **inside** the publish, on a connection with
+`statement_timeout = 8s`. My deduped branch called `pricing_expand` once per
+product: **4,552 ms, building 18.8 MB of JSON to find 36 cheap prices.** The
+project already carried the note from 27 September — *before adding work to
+publish, measure what publish has left* — and I did not read it. Now one
+set-based pass over the flat single-sided rates only: **~950 ms**.
+
+**3. Every price page broke for about nineteen minutes — not avoided.** One
+`pricing_for` call took **41,453 ms**. I had measured `pricing_expand` against
+a payload held in a `materialized` CTE — already parsed, in memory — got about
+125 ms, and believed it. A payload read from the table is **TOASTed**, and
+`p_payload -> 'paper_weights' -> s.paper` sat in the WHERE clause, evaluated
+**once per rate row, 8,418 times a call**, each one detoasting 1.4 MB. Now
+every reference is its own `materialized` CTE: **413 ms**. The same pathology
+had been hit that morning in a verification query and fixed *there*, without
+the fix being carried back into the function the query existed to check.
+
+**4. `39.20` against `39.2` — avoided.** `round(numeric, 2)` keeps the scale
+where the publisher's `parseFloat(toFixed(2))` dropped it. The same number, and
+no page would misprice — but it made all 36 products look different and would
+have hidden a real difference behind a cosmetic one. `trim_scale` restores it.
+
+### Three things that would have broken silently
+
+None of them were in the code being changed, which is the point: moving a thing
+means moving what guards it.
+
+- The **empty-catalogue guard** counted per-product rows. Left alone it would
+  have summed to zero and refused every publish.
+- **`rebuild_from_prices_cache`** read `sheet_sells` out of the payload, so it
+  would have emptied the cache and taken "from £x" off every landing page.
+- **`step3/preview.html`** read `pricing_config` raw — 26 MB to draw one paper
+  step — and would have priced nothing.
+
+### The disk alarm of 9 October was not real
+
+I reported the database server as out of disk and called it a live-site risk.
+**Investigated today: it was not.** Every failing query was one of mine, and
+every one expanded the 26 MB payload, detoasting it repeatedly and generating
+enormous temp files — the same disease as the 41-second function. The exact
+query that failed now runs in 13.2 seconds. No replication slots, no archiver
+failures, 38 MB of databases, no bloat, autovacuum working. **A real page's
+price lookup uses no temp space at all** — `explain (analyze, buffers)` shows
+shared buffers only. Written up in the memory note; nothing to do.
+
+### Six bad checks in two days, and what they have in common
+
+A fingerprint that included the publish timestamp. A log filter on a field that
+does not exist, which said no request had been made when three had. A mutation
+assertion written backwards so it asserted something already true. A
+performance measurement against an in-memory copy rather than the stored row. A
+temp-space delta taken inside one transaction, where Postgres freezes the
+statistics so it is always zero. A synthetic probe whose work the planner
+discarded — `count(*)` drops a pointless `ORDER BY`.
+
+Each produced a clean-looking number. **The missing question every time: could
+this check have come out differently?** For plans and resource use, read
+`explain (analyze, buffers)` instead of building a probe — it reports
+`temp read=` and `written=` and cannot be fooled.
+
+---
 
 ## 0g. 9 October — every sending path proven, and two of my own errors
 
@@ -1036,8 +1152,9 @@ and the copy read-back is still outstanding and still growing.
 
 ## 0. Do this next
 
-**Margins are still the only thing between us and trading — and there is now an
-evidence base for setting them (§14).**
+**Margins are still the only thing between us and trading — there is an
+evidence base for setting them (§14), and as of 10 October the mechanics no
+longer fight you: a margin is one number, not a 26 MB rewrite (§0h).**
 
 > **Where foiling got to, 1 October.** It is now sellable end to end on both
 > routes, at measured prices, and published. What is left is listed in §9c and
@@ -1062,16 +1179,19 @@ evidence base for setting them (§14).**
 >
 > Nothing on this list is a blocker. Foiling is done for trading purposes.
 
-Published 27 September 19:04 and verified: **78,431 sheet prices** (up from
-69,887), **14,700 finishing prices**, 22 products, 10 live papers. The publish
-itself ran in **1.9 seconds**, a quarter of its budget, with zero dead rows —
-the autovacuum fix from §11 holding.
+Published 10 October 09:12 and verified: **8,418 costs** and **2,814
+finishing costs**, stored once each, expanding to **152,620 sheet prices** and
+**67,620 finishing prices** across **36 products**, 10 live papers. The whole
+catalogue is **1,385 kB**, down from 26 MB, with zero dead rows one minute
+later — the autovacuum fix from §11 still holding. (For the record it read
+78,431 and 14,700 across 22 products on 27 September, before the product work.)
 
 1. **Set the margins.** Confirmed 27 September: our price is
    `PrintedEasy list × 0.80`, which is our cost, sold on at **zero margin** —
    we pass the whole trade discount to the customer, deliberately. Verified:
-   22 products at zero margin, and of 64,151 published prices **63,852 are
-   exactly cost**. §14 shows what everyone else charges. Matching PrintedEasy
+   **36 products at zero margin** — the catalogue now stores cost and applies
+   the margin on read, so at 0% every price IS cost, exactly, by construction
+   rather than by coincidence. §14 shows what everyone else charges. Matching PrintedEasy
    is a 25% markup; reaching printed.com on Fedrigoni stock is 53%. Both are
    still below the market.
 
@@ -1896,7 +2016,7 @@ Measured against the live database, 27 September 19:04.
 | Published payload | **11 MB** — was 10MB this morning, and growing |
 | Publish duration | **1.9s** of an 8s hard limit |
 | Orders in the database | **0** (the 54 test orders were cleared) |
-| **Margins** | **0 on all 22 products — the site sells at cost** |
+| **Margins** | **0 on all 36 products — the site sells at cost** |
 
 ---
 
@@ -2324,6 +2444,15 @@ both axes, and which sizes may be offered the choice at all.
 
 ## 11. Publish stopped working — 27 September, and has worked ever since
 
+**Largely moot since 10 October.** The pressure described below came from a
+26 MB payload written as one jsonb value, rewritten whole on every publish. The
+catalogue is now **1,385 kB** and its TOAST table **416 kB**, so a publish
+writes a fraction of the chunks it used to and the window in which bloat can
+build is far smaller. Keep this section: the mechanism is unchanged, the
+mitigation is still what protects it, and **the 10 October timeouts were a
+different fault with the same error code** — work I had added inside the
+publish, not bloat. §0h.
+
 **Verified on the live site 9 October 2026.** Nicholas pressed Publish at
 11:19:42; 22 products and 15 MB written, and autovacuum cleared the TOAST table
 50 seconds later, taking dead rows back to 0 on its 25th run. The mitigation
@@ -2664,16 +2793,18 @@ the money bug: doing the thing rather than reading about it.
 fallback — now set explicitly anyway, and live) and the album imagery (deleted;
 only the storage bucket remains, which is a dashboard step).
 
-**Item 10 changed character on 9 October.** It was filed as "shrink the payload,
-and the reason Publish breaks". Publish is not broken — proven on the live site
-that morning. What the work actually buys is that **a margin becomes one number
-instead of a 15MB rewrite**, which makes it groundwork for item 2 rather than a
-size fix at the bottom of the list.
+**Item 10 is DONE, 10 October, and with it every row on this list now waits on
+Nicholas.** The catalogue stores each cost once: 26 MB to 1,385 kB, 152,620
+prices verified identical, and **setting a margin is now an edit rather than a
+republish**. It was filed as "shrink the payload, and the reason Publish
+breaks"; Publish was never broken, and the size was never the point. See §0h,
+including the two outages it caused on the way and the 9 October disk alarm,
+which was investigated today and was not real.
 
-| | What | Item | Waiting on | Checked 9 Oct | Why it is here |
+| | What | Item | Waiting on | Checked 10 Oct | Why it is here |
 |---|---|---|---|---|---|
 | **1** | **Stripe live keys and a live-mode webhook** | A4 | **You** | **Still test** — every stored session id begins `cs_test_` | Without the webhook, payments succeed and orders sit pending for ever. Also the only way to prove what Stripe COLLECTS rather than what it is asked for |
-| **2** | **Set the margins, and settle VAT** | A2, A3 | **You** | **Both halves true** — 22 active products at zero margin, and the live checkout still prints "VAT (20%)" | Deferred at your direction and kept because it gates trading. The VAT half is NOT a flag flip: "VAT (20%)" is hardcoded at `upload-and-print.html:907` and `:8570` while `VAT_REGISTERED` lives only in `admin.html` |
+| **2** | **Set the margins, and settle VAT** | A2, A3 | **You** | **Both halves true** — **36** active products at zero margin, and the live checkout still prints "VAT (20%)" | Gates trading. **Since 10 Oct a margin is one number on one product** — change it in admin, press Publish, nothing is recomputed (§0h). Do it before the catalogue grows again: with margins set, two products in a family stop agreeing and the dedup stops working. The VAT half is NOT a flag flip: "VAT (20%)" is hardcoded at `upload-and-print.html:907` and `:8570` while `VAT_REGISTERED` lives only in `admin.html` |
 | **3** | **Print one real sample through PrintedEasy** | A5 | **You** | **Cannot be checked from here** — physical | The geometry is verified; the handover to their press is not. Pair with **A6**: head to head or head to foot decides whether every double-sided job returns upside down |
 | **4** | **Read back the copy Claude wrote** | 44 | **You** | **Your judgement, not checkable** | Live, and none of it in your words. The largest item on the list and the only one where I cannot tell you whether it is right |
 | **5** | **Rewrite the welcome email** | 52 | **You** | **2 passages still blank** — the guard still refuses the send | How it started, and who is on the team. You judged the whole thing not good enough on 7 October, so it is a rewrite |
@@ -2681,8 +2812,7 @@ size fix at the bottom of the list.
 | **7** | **Enforce DMARC** | — | **You** | **`p=none` confirmed live**; all three sending paths measured passing (§0g) | The evidence is in and the fortnight of reports is no longer the constraint. `quarantine; pct=10` → `quarantine` → `reject`, at your pace. Add a Gmail filter first so the reports stop going to Spam |
 | **8** | **Cloudflare Turnstile** | — | **You** | **Not implemented** (no reference anywhere); signups still off — `auth.users` is 2 and the newest is 12 May | Before launch, and a new third party so your call. Nothing is leaking meanwhile |
 | **9** | **Decide on place cards and table numbers** | 31 | **You** | **The claim is still live, verbatim** — `studio_fields` for `table-numbers` reads "Sample number — e.g. 1 (each card in your set will differ)", required and active | We tell customers each card will differ and nothing makes that true. Parked pending what PrintedEasy can actually do; separate jobs cost about £4.50 a card |
-| **10** | **Make margins editable** (was "shrink the published payload") | 38 | Me | **Publish works** — proven live 9 Oct, and the 12x saving remeasured | Changing one margin today rewrites all 15MB. After this it is one number, which makes it groundwork for item 2 rather than a size fix |
-| **11** | **The GitHub repository is public** | — | **You** | **Confirmed today**, and **left as is at your direction** — anonymous requests still read `docs/STATUS.md`, `docs/PRICING.md` and `tools/printedeasy_refresh.py` | **Found 9 October.** No credential is exposed (checked, and Netlify's own scan agrees) but the 20% supplier discount, the cost-base method, this whole status file and the CRM plan are readable by anyone. `/docs` and `/tools` were deliberately 404'd on the site in September, which shows the intent — GitHub makes that moot. One setting to fix; Netlify keeps deploying from a private repo |
+| **10** | **The GitHub repository is public** | — | **You** | **Confirmed 9 Oct**, and **left as is at your direction** — anonymous requests still read `docs/STATUS.md`, `docs/PRICING.md` and `tools/printedeasy_refresh.py` | **Found 9 October.** No credential is exposed (checked, and Netlify's own scan agrees) but the 20% supplier discount, the cost-base method, this whole status file and the CRM plan are readable by anyone. `/docs` and `/tools` were deliberately 404'd on the site in September, which shows the intent — GitHub makes that moot. One setting to fix; Netlify keeps deploying from a private repo |
 
 **Closed, kept here so the count is honest:**
 
@@ -2695,6 +2825,7 @@ size fix at the bottom of the list.
 | ~~Arm the artwork sweep~~ | 40 | 8 Oct |
 | ~~Switch on the Send Email Hook~~ | 54 | 8 Oct |
 | ~~Self-host the pdf.js worker~~ — withdrawn, premise wrong | — | 8 Oct |
+| ~~Make margins editable — the catalogue stores each cost once~~ | 38 | **10 Oct** |
 
 **Smaller, and genuinely small:** `orders@` as a send-FROM address (mail TO it
 already arrives); **51c**, the delivery address collected twice, once by our form
@@ -2702,13 +2833,14 @@ and again by Stripe.
 
 **Small chores — re-checked 9 October, and this is what is genuinely left:**
 
-| Chore | Who | Checked 9 Oct |
+| Chore | Who | Checked 10 Oct |
 |---|---|---|
 | Delete the `album-photos` bucket and its six files | You | **Still there** — 6 files, 5.7MB, from 10 May. Needs the Storage dashboard; SQL cannot delete storage. The code side is done |
 | Remove the homepage holding overlay when you decide to open | You, then me | **Still live** — "final touches" and "NOTIFY ME" are on the home page now |
 | Stop collecting the delivery address twice | Me | **Still doubled** — `create-checkout.js:538` sets `shipping_address_collection` as well as our own form |
 | Export the 10 holding-page signups | You | **10 confirmed** in Netlify Forms (`launch-signup`), last one 28 August. **Do NOT export them into this repository** — it is public, see item 11 |
 | `orders@` as a send-FROM address | You | **Not verified.** Resend sends FROM it successfully, so if this is about sending as `orders@` from Outlook, only you can confirm |
+| Glance at real disk usage once | You | **Not visible from SQL.** Supabase dashboard → Reports → Database. The 9 Oct "out of disk" alarm was mine and was wrong (§0h); this is a one-off look, not a job |
 
 **Done and removed on 9 October:** `ALERT_EMAIL` (was never broken — the alerts
 had been delivering on the `FROM_EMAIL` fallback since September; now set to
@@ -2818,7 +2950,8 @@ real customer arrives.
 
 - ~~**A1. Checkout refuses every basket**~~ — **FIXED 3 October**, verified
   against the live payload 7 October: 7,262 configurations, 0 refused. §18.
-- **A2. Margins are 0 on 22 products.** The decision, not the build.
+- **A2. Margins are 0 on 36 products.** The decision, not the build — and
+  since 10 October changing one is a single number, not a republish (§0h).
 - **A3. VAT at checkout.** The grid is clean and driven by
   `site_config.pricing.vatRegistered`, but checkout still shows "VAT (20%)" and
   stores a VAT figure while we are not registered. Move checkout onto the same
@@ -2842,8 +2975,8 @@ real customer arrives.
     says 3, so it loaded no prices and floored every item on the
     `(qty/50) x GBP150` fallback — 741 of 741 configurations refused at 100
     cards. It now asks `pricing_for` per basket slug, the same function the
-    order page prices from, which also stops it pulling 15MB on every checkout.
-    Proved over 12,722 real published rows: the floor never exceeds what the
+    order page prices from, which also stops it pulling the whole catalogue on
+    every checkout. Proved over 15,190 real published rows: the floor never exceeds what the
     site would charge. §18 has the full account.
 37. ~~**The checkout price floor is weight-blind.**~~ **DONE 3 October**, same
     commit. The basket records no paper weight, so several rows matched and
